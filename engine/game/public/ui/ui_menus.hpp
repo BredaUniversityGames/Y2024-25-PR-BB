@@ -110,8 +110,8 @@ class ControlsMenu : public Canvas
 public:
     static std::shared_ptr<ControlsMenu> Create(const glm::uvec2& screenResolution, GraphicsContext& graphicsContext, ActionManager& actionManager, std::shared_ptr<UIFont> font);
 
-    ControlsMenu(const glm::uvec2& screenResolution, GraphicsContext& graphicsContext, ActionManager& actionManager, std::shared_ptr<UIFont> font)
-        : Canvas(screenResolution), _graphicsContext(graphicsContext), _actionManager(actionManager), _font(font), _screenResolution(screenResolution)
+    ControlsMenu(const glm::uvec2& screenResolution, const glm::ivec2 canvasResolution, GraphicsContext& graphicsContext, ActionManager& actionManager, std::shared_ptr<UIFont> font)
+        : Canvas(screenResolution), _graphicsContext(graphicsContext), _actionManager(actionManager), _font(font), _canvasResolution(canvasResolution)
     {
     }
 
@@ -148,7 +148,7 @@ private:
     GraphicsContext& _graphicsContext;
     ActionManager& _actionManager;
     std::shared_ptr<UIFont> _font;
-    const glm::uvec2 _screenResolution;
+    const glm::uvec2 _canvasResolution;
 
     std::unordered_map<std::string, ResourceHandle<GPUImage>> _glyphsCache {};
 

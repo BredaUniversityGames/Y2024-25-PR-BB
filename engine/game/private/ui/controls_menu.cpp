@@ -10,7 +10,9 @@
 
 std::shared_ptr<ControlsMenu> ControlsMenu::Create(const glm::uvec2 &screenResolution, GraphicsContext &graphicsContext, ActionManager &actionManager, std::shared_ptr<UIFont> font)
 {
-    auto menu = std::make_shared<ControlsMenu>(screenResolution, graphicsContext, actionManager, font);
+    constexpr glm::ivec2 popupResolution(2300.0f, 1300.0f);
+
+    auto menu = std::make_shared<ControlsMenu>(screenResolution, popupResolution, graphicsContext, actionManager, font);
     menu->anchorPoint = UIElement::AnchorPoint::eMiddle;
     menu->SetAbsoluteTransform(menu->GetAbsoluteLocation(), screenResolution);
 
@@ -59,7 +61,7 @@ std::shared_ptr<ControlsMenu> ControlsMenu::Create(const glm::uvec2 &screenResol
     backButton->AddChild<UITextElement>(font, "Back", buttonTextSize)->SetColor(glm::vec4(1, 1, 1, 1));
     menu->backButton = backButton;
 
-    auto popupPanel = menu->AddChild<Canvas>(screenResolution);
+    auto popupPanel = menu->AddChild<Canvas>(popupResolution);
     popupPanel->anchorPoint = UIElement::AnchorPoint::eMiddle;
     popupPanel->SetLocation(glm::vec2(0.0f, -80.0f));
 
@@ -70,11 +72,11 @@ std::shared_ptr<ControlsMenu> ControlsMenu::Create(const glm::uvec2 &screenResol
         commonImageData.isHDR = false;
 
         auto image = popupPanel->AddChild<UIImage>(graphicsContext.Resources()->ImageResourceManager().Create(commonImageData.FromPNG("assets/textures/ui/popup_background.png"), menu->sampler), glm::vec2(0.0f), glm::vec2(0.0f));
-        image->anchorPoint = UIElement::AnchorPoint::eMiddle;
-        image->SetScale({screenResolution.x * 1.2f, screenResolution.y * 1.2f });
+        image->anchorPoint = UIElement::AnchorPoint::eFill;
     }
 
-    menu->actionsPanel = popupPanel->AddChild<Canvas>(screenResolution);
+    menu->actionsPanel = popupPanel->AddChild<Canvas>(popupResolution);
+    menu->actionsPanel->anchorPoint = UIElement::AnchorPoint::eFill;
     menu->UpdateBindings();
 
     return menu;
@@ -86,7 +88,7 @@ void ControlsMenu::UpdateBindings()
 
     constexpr float actionSetTextSize = 60.0f;
     constexpr float actionHeightMarginY = actionSetTextSize + 10.0f;
-    float actionSetHeightLocation = 15.0f;
+    float actionSetHeightLocation = 120.0f;
     float actionHeightLocation = actionHeightMarginY;
     constexpr float heightIncrement = 60.0f;
 
@@ -98,7 +100,7 @@ void ControlsMenu::UpdateBindings()
         ActionSetControls& set = actionSetControls.emplace_back();
         set.canvas = actionsPanel->AddChild<Canvas>(glm::vec2{ 0.0f, 0.0f });
         set.canvas->anchorPoint = UIElement::AnchorPoint::eTopLeft;
-        set.canvas->SetLocation(glm::vec2(20.0f, actionSetHeightLocation));
+        set.canvas->SetLocation(glm::vec2(100.0f, actionSetHeightLocation));
 
         set.nameText = set.canvas->AddChild<UITextElement>(_font, actionSet.name, actionSetTextSize);
         set.nameText->SetColor(glm::vec4(1, 1, 1, 1));
@@ -138,7 +140,7 @@ ControlsMenu::ActionControls ControlsMenu::AddActionVisualization(const std::str
     constexpr float canvasScaleY = actionTextSize + 10.0f;
 
     ActionControls action {};
-    action.canvas = parent.AddChild<Canvas>(glm::vec2 { _screenResolution.x, canvasScaleY });
+    action.canvas = parent.AddChild<Canvas>(glm::vec2 { _canvasResolution.x, canvasScaleY });
     action.canvas->anchorPoint = UIElement::AnchorPoint::eTopLeft;
     action.canvas->SetLocation(glm::vec2(0.0f, positionY));
 
@@ -148,7 +150,7 @@ ControlsMenu::ActionControls ControlsMenu::AddActionVisualization(const std::str
     action.nameText->SetLocation({ 0.0f, 0.0f });
 
     const std::vector<GamepadOriginVisual> gamepadOrigins = isAnalogInput ? _actionManager.GetAnalogActionGamepadOriginVisual(actionName) : _actionManager.GetDigitalActionGamepadOriginVisual(actionName);
-    float horizontalOffset = _screenResolution.x / 6.0f;
+    float horizontalOffset = _canvasResolution.x / 6.0f;
 
     for (const GamepadOriginVisual& origin : gamepadOrigins)
     {
