@@ -8,6 +8,8 @@ import "gameplay/music_player.wren" for MusicPlayer, BGMPlayer
 import "gameplay/wave_system.wren" for WaveSystem, WaveConfig, SpawnLocationType
 import "analytics/analytics.wren" for AnalyticsManager
 
+import "gameplay/enemies/ranged_enemy.wren" for RangedEnemy
+
 class Main {
 
     static Start(engine) {
@@ -87,6 +89,7 @@ class Main {
         engine.LoadModel("assets/models/blockoutv6_0.glb")
 
         engine.PreloadModel("assets/models/Skeleton.glb")
+        engine.PreloadModel("assets/models/eye.glb")
 
         engine.PreloadModel("assets/models/Revolver.glb")
         engine.PreloadModel("assets/models/Shotgun.glb")
@@ -123,6 +126,9 @@ class Main {
 
         __pauseEnabled = false
 
+        __enemyShape = ShapeFactory.MakeCapsuleShape(70.0, 70.0)
+        __eyeShape = ShapeFactory.MakeSphereShape(0.65)
+
         // Music
 
         var ambientList = [
@@ -137,7 +143,7 @@ class Main {
         __ambientPlayer = MusicPlayer.new(engine.GetAudio(), ambientList, 0.1)
 
         var spawnLocations = []
-        for(i in 0..7) {
+        for(i in 0..8) {
             spawnLocations.add(engine.GetECS().GetEntityByName("Spawner_%(i)"))
         }
 
@@ -153,21 +159,26 @@ class Main {
             .AddSpawn("Skeleton", 2, 1, 1)
             .AddSpawn("Skeleton", 3, 1, 2)
             .AddSpawn("Skeleton", SpawnLocationType.Furthest, 7, 3)
+            .AddSpawn("Eye", SpawnLocationType.Closest, 8, 1)
             .AddSpawn("Skeleton", 0, 10, 1)
             .AddSpawn("Skeleton", 1, 15, 1)
             .AddSpawn("Skeleton", 2, 5, 1)
             .AddSpawn("Skeleton", 3, 15, 3)
+            .AddSpawn("Eye", SpawnLocationType.Closest, 25, 1)
         )
         waveConfigs.add(WaveConfig.new().SetDuration(60)
             .AddSpawn("Skeleton", 0, 1, 2)
             .AddSpawn("Skeleton", 1, 1, 2)
             .AddSpawn("Skeleton", 2, 1, 1)
             .AddSpawn("Skeleton", 3, 1, 2)
+            .AddSpawn("Eye", SpawnLocationType.Closest, 1, 1)
             .AddSpawn("Skeleton", SpawnLocationType.Furthest, 5, 5)
             .AddSpawn("Skeleton", 0, 15, 2)
             .AddSpawn("Skeleton", 1, 15, 1)
             .AddSpawn("Skeleton", 2, 15, 2)
             .AddSpawn("Skeleton", 3, 15, 3)
+            .AddSpawn("Eye", SpawnLocationType.Closest, 5, 1)
+            .AddSpawn("Eye", SpawnLocationType.Closest, 20, 1)
             .AddSpawn("Skeleton", SpawnLocationType.Furthest, 15, 5)
             .AddSpawn("Skeleton", 0, 40, 3)
             .AddSpawn("Skeleton", 1, 40, 1)
@@ -351,6 +362,11 @@ class Main {
                     __activeWeapon.reload(engine)
                 }
             }
+            
+            if (engine.GetInput().DebugGetKey(Keycode.eJ())) {
+                // shit
+                __enemyList.add(RangedEnemy.new(engine, Vec3.new(-27, 18, 7), Vec3.new(2.25,2.25,2.25), 5, "assets/models/eye.glb", __eyeShape))
+            }
         }
 
         // Check if pause key was pressed
@@ -388,7 +404,7 @@ class Main {
         var mousePosition = engine.GetInput().GetMousePosition()
         __playerMovement.lastMousePosition = mousePosition
 
-        var playerPos = __player.GetTransformComponent().translation
+        var playerPos = __playerController.GetRigidbodyComponent().GetPosition()
 
         for (enemy in __enemyList) {
 

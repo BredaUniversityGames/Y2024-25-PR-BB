@@ -33,10 +33,13 @@ enum class EmitterPresetID : uint8_t
     eBones,
     eImpact,
     eRay,
+    eRayEyeStart,
+    eRayEyeEnd,
     eStab,
     eShotgunShoot,
     eFireAnimated,
     eHealth,
+    eWorms,
     eNone
 };
 
