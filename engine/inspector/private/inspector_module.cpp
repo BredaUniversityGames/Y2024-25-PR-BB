@@ -8,7 +8,11 @@
 #include "magic_enum.hpp"
 #include "menus/particle_editor.hpp"
 #include "menus/performance_tracker.hpp"
+#include "passes/debug_pass.hpp"
 #include "passes/shadow_pass.hpp"
+#include "pathfinding_module.hpp"
+#include "physics/collision.hpp"
+#include "physics_module.hpp"
 #include "renderer.hpp"
 #include "renderer_module.hpp"
 #include "scripting_module.hpp"
@@ -132,6 +136,49 @@ void InspectorModule::Tick(MAYBE_UNUSED Engine& engine)
             engine.GetModule<RendererModule>().GetRenderer()->GetSettings().Write();
             ImGui::EndMenu();
         }
+
+        if (ImGui::BeginMenu("Debug Drawing"))
+        {
+            auto& physicsModule = engine.GetModule<PhysicsModule>();
+
+            ImGui::SeparatorText("Physics");
+
+            auto displayLayerToggle = [&physicsModule](JPH::ObjectLayer layer, const char* name)
+            {
+                bool state = physicsModule._debugLayersToRender.contains(layer);
+                ImGui::Checkbox(name, &state);
+
+                if (state)
+                    physicsModule._debugLayersToRender.emplace(layer);
+                else
+                    physicsModule._debugLayersToRender.erase(layer);
+            };
+
+            displayLayerToggle(PhysicsObjectLayer::ePLAYER, "Player");
+            displayLayerToggle(PhysicsObjectLayer::eINTERACTABLE, "Interactables");
+            displayLayerToggle(PhysicsObjectLayer::eENEMY, "Enemies");
+            displayLayerToggle(PhysicsObjectLayer::ePROJECTILE, "Projectiles");
+            displayLayerToggle(PhysicsObjectLayer::eSTATIC, "Static Geometry (SLOW)");
+
+            {
+                ImGui::Checkbox("Raycasts", &physicsModule._drawRays);
+
+                if (!physicsModule._drawRays)
+                    physicsModule.ResetPersistentDebugLines();
+            }
+
+            ImGui::SeparatorText("Pathfinding");
+
+            auto& pathfindingModule = engine.GetModule<PathfindingModule>();
+
+            bool enabled = pathfindingModule.GetDebugDrawState();
+            ImGui::Checkbox("Paths", &enabled);
+            pathfindingModule.SetDebugDrawState(enabled);
+
+            ImGui::EndMenu();
+        }
+
+        // This should be at the end of the menu bar
 
         if (ImGui::BeginMenu("Exit Program"))
         {
