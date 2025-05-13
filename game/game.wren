@@ -7,6 +7,7 @@ import "gameplay/player.wren" for PlayerVariables
 import "gameplay/music_player.wren" for MusicPlayer, BGMPlayer
 import "gameplay/wave_system.wren" for WaveSystem, WaveConfig, SpawnLocationType
 import "analytics/analytics.wren" for AnalyticsManager
+import "gameplay/enemies/tank_enemy.wren" for TankEnemy
 
 class Main {
 
@@ -87,6 +88,7 @@ class Main {
         engine.LoadModel("assets/models/blockoutv6_0.glb")
 
         engine.PreloadModel("assets/models/Skeleton.glb")
+        engine.PreloadModel("assets/models/Berserker.glb")
 
         engine.PreloadModel("assets/models/Revolver.glb")
         engine.PreloadModel("assets/models/Shotgun.glb")
@@ -122,6 +124,9 @@ class Main {
         __ultimateActive = false
 
         __pauseEnabled = false
+
+        __enemyShape = ShapeFactory.MakeCapsuleShape(100.0, 35.0)
+        __tankEnemyShape = ShapeFactory.MakeCapsuleShape(160.0, 35.0)
 
         // Music
 
@@ -351,6 +356,13 @@ class Main {
                     __activeWeapon.reload(engine)
                 }
             }
+
+            if (engine.GetInput().DebugGetKey(Keycode.eK())) {
+                __enemyList.add(TankEnemy.new(engine, Vec3.new(-27, 18, 7), Vec3.new(0.026, 0.026, 0.026), 6, "assets/models/Berserker.glb", __enemyShape))
+            }
+
+            __cameraVariables.Shake(engine, __camera, dt)
+            __cameraVariables.Tilt(engine, __camera, dt)
         }
 
         // Check if pause key was pressed

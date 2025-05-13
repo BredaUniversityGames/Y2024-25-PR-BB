@@ -1,5 +1,6 @@
 import "engine_api.wren" for Vec3, Random, Engine
 import "enemies.wren" for MeleeEnemy
+import "tank_enemy.wren" for TankEnemy
 
 class Spawner {
 
