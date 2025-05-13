@@ -166,7 +166,7 @@ void ParticlePass::RecordSimulate(vk::CommandBuffer commandBuffer, const CameraR
     vk::MemoryBarrier memoryBarrier {};
     memoryBarrier.srcAccessMask = vk::AccessFlagBits::eShaderWrite;
     memoryBarrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
-    commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eAllGraphics, vk::DependencyFlags { 0 }, memoryBarrier, {}, {});
+    // commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eAllGraphics, vk::DependencyFlags { 0 }, memoryBarrier, {}, {});
 
     util::EndLabel(commandBuffer, vkContext->Dldi());
 }
@@ -178,9 +178,9 @@ void ParticlePass::RecordRenderIndexed(vk::CommandBuffer commandBuffer, const Re
     auto culledIndicesBuffer = resources->BufferResourceManager().Access(_culledInstancesBuffer);
 
     // make sure the compute is done before the host reads from it
-    vk::BufferMemoryBarrier culledIndicesBarrier {}; // TODO: is this buffer memory barrier necessary?
+    vk::BufferMemoryBarrier culledIndicesBarrier {};
     culledIndicesBarrier.buffer = culledIndicesBuffer->buffer;
-    culledIndicesBarrier.size = sizeof(uint32_t) * (MAX_PARTICLES + 1);
+    culledIndicesBarrier.size = sizeof(ParticleInstance) * (MAX_PARTICLES) + sizeof(uint32_t);
     culledIndicesBarrier.offset = 0;
     culledIndicesBarrier.srcAccessMask = vk::AccessFlagBits::eShaderWrite;
     culledIndicesBarrier.dstAccessMask = vk::AccessFlagBits::eHostRead;
@@ -786,7 +786,7 @@ void ParticlePass::CreateBuffers()
             .SetSize(bufferSize)
             .SetIsMappable(true)
             .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE)
-            .SetUsageFlags(vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst);
+            .SetUsageFlags(vk::BufferUsageFlagBits::eStorageBuffer);
         _culledInstancesBuffer = resources->BufferResourceManager().Create(creation);
         cmdBuffer.CopyIntoLocalBuffer(culledInstances, 0, resources->BufferResourceManager().Access(_culledInstancesBuffer)->buffer);
     }
