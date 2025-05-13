@@ -45,7 +45,7 @@ private:
         eKickOff = 0,
         eEmit,
         eSimulate,
-        eRenderInstancedIndirect,
+        eRenderIndexedIndirect,
         eNone
     };
 

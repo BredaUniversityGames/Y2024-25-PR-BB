@@ -221,13 +221,13 @@ void ParticlePass::RecordRenderIndexedIndirect(vk::CommandBuffer commandBuffer, 
     commandBuffer.setViewport(0, 1, &_gBuffers.Viewport());
     commandBuffer.setScissor(0, 1, &_gBuffers.Scissor());
 
-    commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _pipelines[static_cast<uint32_t>(ShaderStages::eRenderInstancedIndirect)]);
+    commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _pipelines[static_cast<uint32_t>(ShaderStages::eRenderIndexedIndirect)]);
 
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eRenderInstancedIndirect)], 0, _context->BindlessSet(), {});
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eRenderInstancedIndirect)], 1, _culledInstancesDescriptorSet, {});
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eRenderInstancedIndirect)], 2, scene.gpuScene->MainCamera().DescriptorSet(currentFrame), {});
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eRenderInstancedIndirect)], 3, scene.gpuScene->GetSceneDescriptorSet(currentFrame), {});
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eRenderInstancedIndirect)], 4, _bloomSettings.GetDescriptorSetData(currentFrame), {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eRenderIndexedIndirect)], 0, _context->BindlessSet(), {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eRenderIndexedIndirect)], 1, _culledInstancesDescriptorSet, {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eRenderIndexedIndirect)], 2, scene.gpuScene->MainCamera().DescriptorSet(currentFrame), {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eRenderIndexedIndirect)], 3, scene.gpuScene->GetSceneDescriptorSet(currentFrame), {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eRenderIndexedIndirect)], 4, _bloomSettings.GetDescriptorSetData(currentFrame), {});
 
     vk::Buffer vertexBuffer = resources->BufferResourceManager().Access(_vertexBuffer)->buffer;
     vk::Buffer indexBuffer = resources->BufferResourceManager().Access(_indexBuffer)->buffer;
@@ -464,8 +464,8 @@ void ParticlePass::CreatePipelines()
                           .SetDepthStencilState(depthStencilStateCreateInfo)
                           .BuildPipeline();
 
-        _pipelineLayouts.at(static_cast<uint32_t>(ShaderStages::eRenderInstancedIndirect)) = std::get<0>(result);
-        _pipelines.at(static_cast<uint32_t>(ShaderStages::eRenderInstancedIndirect)) = std::get<1>(result);
+        _pipelineLayouts.at(static_cast<uint32_t>(ShaderStages::eRenderIndexedIndirect)) = std::get<0>(result);
+        _pipelines.at(static_cast<uint32_t>(ShaderStages::eRenderIndexedIndirect)) = std::get<1>(result);
     }
 }
 
@@ -845,7 +845,7 @@ void ParticlePass::CreateBuffers()
         BufferCreation creation {};
         creation.SetName("Culled Instance SSB")
             .SetSize(bufferSize)
-            .SetIsMappable(true)
+            .SetIsMappable(false)
             .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE)
             .SetUsageFlags(vk::BufferUsageFlagBits::eStorageBuffer);
         _culledInstancesBuffer = resources->BufferResourceManager().Create(creation);
