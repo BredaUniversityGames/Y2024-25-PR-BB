@@ -1,9 +1,0 @@
-{
-    "clangd.arguments": [
-        "-background-index",
-        "-compile-commands-dir=${workspaceFolder}/build/x64-Debug",
-        "-pretty",
-        "--clang-tidy",
-        "-header-insertion=never"
-    ],
-}
