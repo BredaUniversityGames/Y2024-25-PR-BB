@@ -1,4 +1,4 @@
-import "engine_api.wren" for Engine, TimeModule, ECS, ShapeFactory, Rigidbody, RigidbodyComponent, CollisionShape, Entity, Vec3, Vec2, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, EmitterPresetID, Random
+import "engine_api.wren" for Engine, TimeModule, ECS, ShapeFactory, PhysicsObjectLayer, Rigidbody, RigidbodyComponent, CollisionShape, Entity, Vec3, Vec2, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, EmitterPresetID, Random
 import "gameplay/movement.wren" for PlayerMovement
 import "gameplay/enemies/spawner.wren" for Spawner
 import "gameplay/weapon.wren" for Pistol, Shotgun, Knife, Weapons
@@ -8,6 +8,8 @@ import "gameplay/music_player.wren" for MusicPlayer, BGMPlayer
 import "gameplay/wave_system.wren" for WaveSystem, WaveConfig, SpawnLocationType
 import "analytics/analytics.wren" for AnalyticsManager
 import "gameplay/enemies/tank_enemy.wren" for TankEnemy
+
+import "gameplay/enemies/ranged_enemy.wren" for RangedEnemy
 
 class Main {
 
@@ -65,7 +67,7 @@ class Main {
         __playerController.AddCheatsComponent().noClip = false
 
         var shape = ShapeFactory.MakeCapsuleShape(1.7, 0.5) // height, circle radius
-        var rb = Rigidbody.new(engine.GetPhysics(), shape, true, false) // physics module, shape, isDynamic, allowRotation
+        var rb = Rigidbody.new(engine.GetPhysics(), shape, PhysicsObjectLayer.ePLAYER(), false) // physics module, shape, layer, allowRotation
         __playerController.AddRigidbodyComponent(rb)
 
         __cameraVariables = CameraVariables.new()
@@ -88,6 +90,7 @@ class Main {
         engine.LoadModel("assets/models/blockoutv6_0.glb")
 
         engine.PreloadModel("assets/models/Skeleton.glb")
+        engine.PreloadModel("assets/models/eye.glb")
         engine.PreloadModel("assets/models/Berserker.glb")
 
         engine.PreloadModel("assets/models/Revolver.glb")
@@ -125,6 +128,9 @@ class Main {
 
         __pauseEnabled = false
 
+        __enemyShape = ShapeFactory.MakeCapsuleShape(70.0, 70.0)
+        __eyeShape = ShapeFactory.MakeSphereShape(0.65)
+
         __enemyShape = ShapeFactory.MakeCapsuleShape(100.0, 35.0)
         __tankEnemyShape = ShapeFactory.MakeCapsuleShape(160.0, 35.0)
 
@@ -142,7 +148,7 @@ class Main {
         __ambientPlayer = MusicPlayer.new(engine.GetAudio(), ambientList, 0.1)
 
         var spawnLocations = []
-        for(i in 0..7) {
+        for(i in 0..8) {
             spawnLocations.add(engine.GetECS().GetEntityByName("Spawner_%(i)"))
         }
 
@@ -158,21 +164,26 @@ class Main {
             .AddSpawn("Skeleton", 2, 1, 1)
             .AddSpawn("Skeleton", 3, 1, 2)
             .AddSpawn("Skeleton", SpawnLocationType.Furthest, 7, 3)
+            .AddSpawn("Eye", SpawnLocationType.Closest, 8, 1)
             .AddSpawn("Skeleton", 0, 10, 1)
             .AddSpawn("Skeleton", 1, 15, 1)
             .AddSpawn("Skeleton", 2, 5, 1)
             .AddSpawn("Skeleton", 3, 15, 3)
+            .AddSpawn("Eye", SpawnLocationType.Closest, 25, 1)
         )
         waveConfigs.add(WaveConfig.new().SetDuration(60)
             .AddSpawn("Skeleton", 0, 1, 2)
             .AddSpawn("Skeleton", 1, 1, 2)
             .AddSpawn("Skeleton", 2, 1, 1)
             .AddSpawn("Skeleton", 3, 1, 2)
+            .AddSpawn("Eye", SpawnLocationType.Closest, 1, 1)
             .AddSpawn("Skeleton", SpawnLocationType.Furthest, 5, 5)
             .AddSpawn("Skeleton", 0, 15, 2)
             .AddSpawn("Skeleton", 1, 15, 1)
             .AddSpawn("Skeleton", 2, 15, 2)
             .AddSpawn("Skeleton", 3, 15, 3)
+            .AddSpawn("Eye", SpawnLocationType.Closest, 5, 1)
+            .AddSpawn("Eye", SpawnLocationType.Closest, 20, 1)
             .AddSpawn("Skeleton", SpawnLocationType.Furthest, 15, 5)
             .AddSpawn("Skeleton", 0, 40, 3)
             .AddSpawn("Skeleton", 1, 40, 1)
@@ -191,7 +202,7 @@ class Main {
             engine.GetInput().SetActiveActionSet("UserInterface")
             engine.GetInput().SetMouseHidden(false)
             engine.GetUI().SetSelectedElement(engine.GetGame().GetPauseMenu().continueButton)
-            __musicPlayer.SetVolume(engine.GetAudio(), 0.05)
+            __musicPlayer.SetVolume(engine.GetAudio(), 0.025)
             System.print("Pause Menu is %(__pauseEnabled)!")
         }
 
@@ -201,7 +212,7 @@ class Main {
             engine.GetGame().SetPauseMenuEnabled(false)
             engine.GetInput().SetActiveActionSet("Shooter")
             engine.GetInput().SetMouseHidden(true)
-            __musicPlayer.SetVolume(engine.GetAudio(), 0.15)
+            __musicPlayer.SetVolume(engine.GetAudio(), 0.05)
             System.print("Pause Menu is %(__pauseEnabled)!")
         }
 
@@ -361,8 +372,9 @@ class Main {
                 __enemyList.add(TankEnemy.new(engine, Vec3.new(-27, 18, 7), Vec3.new(0.026, 0.026, 0.026), 6, "assets/models/Berserker.glb", __enemyShape))
             }
 
-            __cameraVariables.Shake(engine, __camera, dt)
-            __cameraVariables.Tilt(engine, __camera, dt)
+            if (engine.GetInput().DebugGetKey(Keycode.eJ())) {
+                __enemyList.add(RangedEnemy.new(engine, Vec3.new(-27, 18, 7), Vec3.new(2.25,2.25,2.25), 5, "assets/models/eye.glb", __eyeShape))
+            }
         }
 
         // Check if pause key was pressed
@@ -400,7 +412,7 @@ class Main {
         var mousePosition = engine.GetInput().GetMousePosition()
         __playerMovement.lastMousePosition = mousePosition
 
-        var playerPos = __player.GetTransformComponent().translation
+        var playerPos = __playerController.GetRigidbodyComponent().GetPosition()
 
         for (enemy in __enemyList) {
 

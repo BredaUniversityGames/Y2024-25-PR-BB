@@ -1,4 +1,5 @@
-﻿#include "systems/physics_system.hpp"
+﻿
+#include "systems/physics_system.hpp"
 #include "components/name_component.hpp"
 #include "components/relationship_component.hpp"
 #include "components/relationship_helpers.hpp"
@@ -12,6 +13,8 @@
 #include "graphics_context.hpp"
 #include "imgui.h"
 #include "model_loading.hpp"
+#include "physics/collision.hpp"
+#include "physics/constants.hpp"
 #include "renderer.hpp"
 #include "renderer_module.hpp"
 #include "resource_management/mesh_resource_manager.hpp"
@@ -169,33 +172,35 @@ void PhysicsSystem::InspectRigidBody(RigidbodyComponent& rb)
         _physicsModule.GetBodyInterface().SetRotation(rb.bodyID, newRotation, JPH::EActivation::Activate);
     }
 
-    JPH::EMotionType rbType = _physicsModule.GetBodyInterface().GetMotionType(rb.bodyID);
-    const char* rbTypeNames[] = { "Static", "Kinematic", "Dynamic" };
-    const char* currentItem = rbTypeNames[static_cast<uint8_t>(rbType)];
+    // NOTE: Disabled because of the new layer system
 
-    if (ImGui::BeginCombo("Body type", currentItem))
-    {
-        for (int n = 0; n < IM_ARRAYSIZE(rbTypeNames); n++)
-        {
-            bool isSelected = (rbType == static_cast<JPH::EMotionType>(n));
-            if (ImGui::Selectable(rbTypeNames[n], isSelected))
-            {
-                _physicsModule.GetBodyInterface().SetMotionType(rb.bodyID, static_cast<JPH::EMotionType>(n), JPH::EActivation::Activate);
+    // JPH::EMotionType rbType = _physicsModule.GetBodyInterface().GetMotionType(rb.bodyID);
+    // const char* rbTypeNames[] = { "Static", "Kinematic", "Dynamic" };
+    // const char* currentItem = rbTypeNames[static_cast<uint8_t>(rbType)];
 
-                if (static_cast<JPH::EMotionType>(n) == JPH::EMotionType::Static)
-                {
-                    _physicsModule.GetBodyInterface().SetObjectLayer(rb.bodyID, eNON_MOVING_OBJECT);
-                }
-                else
-                {
-                    _physicsModule.GetBodyInterface().SetObjectLayer(rb.bodyID, eMOVING_OBJECT);
-                }
-            }
-            if (isSelected)
-                ImGui::SetItemDefaultFocus(); // Ensure the currently selected item is focused
-        }
-        ImGui::EndCombo();
-    }
+    // if (ImGui::BeginCombo("Body type", currentItem))
+    // {
+    //     for (int n = 0; n < IM_ARRAYSIZE(rbTypeNames); n++)
+    //     {
+    //         bool isSelected = (rbType == static_cast<JPH::EMotionType>(n));
+    //         if (ImGui::Selectable(rbTypeNames[n], isSelected))
+    //         {
+    //             _physicsModule.GetBodyInterface().SetMotionType(rb.bodyID, static_cast<JPH::EMotionType>(n), JPH::EActivation::Activate);
+
+    //             if (static_cast<JPH::EMotionType>(n) == JPH::EMotionType::Static)
+    //             {
+    //                 _physicsModule.GetBodyInterface().SetObjectLayer(rb.bodyID, eNON_MOVING_OBJECT);
+    //             }
+    //             else
+    //             {
+    //                 _physicsModule.GetBodyInterface().SetObjectLayer(rb.bodyID, eMOVING_OBJECT);
+    //             }
+    //         }
+    //         if (isSelected)
+    //             ImGui::SetItemDefaultFocus(); // Ensure the currently selected item is focused
+    //     }
+    //     ImGui::EndCombo();
+    // }
 
     ImGui::Text("Velocity: %f, %f, %f", _physicsModule.GetBodyInterface().GetLinearVelocity(rb.bodyID).GetX(), _physicsModule.GetBodyInterface().GetLinearVelocity(rb.bodyID).GetY(), _physicsModule.GetBodyInterface().GetLinearVelocity(rb.bodyID).GetZ());
     ImGui::Text("Speed %f", _physicsModule.GetBodyInterface().GetLinearVelocity(rb.bodyID).Length());

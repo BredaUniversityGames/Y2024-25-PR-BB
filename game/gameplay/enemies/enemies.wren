@@ -1,4 +1,4 @@
-import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, EmitterPresetID, Perlin
+import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, EmitterPresetID, Perlin
 import "../player.wren" for PlayerVariables
 
 class MeleeEnemy {
@@ -36,7 +36,7 @@ class MeleeEnemy {
         _pointLight.range = 2
         _pointLight.color = Vec3.new(0.0, 1.0, 0.0)
 
-        var rb = Rigidbody.new(engine.GetPhysics(), colliderShape, true, false)
+        var rb = Rigidbody.new(engine.GetPhysics(), colliderShape, PhysicsObjectLayer.eENEMY(), false)
         var body = _rootEntity.AddRigidbodyComponent(rb)
         body.SetGravityFactor(2.2)
 
@@ -100,6 +100,15 @@ class MeleeEnemy {
         var body = _rootEntity.GetRigidbodyComponent()
 
         _health = Math.Max(_health - amount, 0)
+
+        // Fly some bones out of him
+        var entity = engine.GetECS().NewEntity()
+        var transform = entity.AddTransformComponent()
+        transform.translation = body.GetPosition()
+        var lifetime = entity.AddLifetimeComponent()
+        lifetime.lifetime = 170.0
+        var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
+        engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eBones(),emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.0, 15.0, 0.0))
 
         if (_health <= 0 && _isAlive) {
             _isAlive = false

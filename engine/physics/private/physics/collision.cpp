@@ -8,10 +8,26 @@ public:
     {
         switch (inObject1)
         {
-        case eNON_MOVING_OBJECT:
-            return inObject2 == eMOVING_OBJECT; // Non moving only collides with moving
-        case eMOVING_OBJECT:
-            return true; // Moving collides with everything
+        case eSTATIC:
+        {
+            return inObject2 != eSTATIC;
+        }
+        case ePLAYER:
+        {
+            return inObject2 == eSTATIC || inObject2 == eINTERACTABLE || inObject2 == eENEMY || inObject2 == ePROJECTILE;
+        }
+        case eINTERACTABLE:
+        {
+            return inObject2 == eSTATIC || inObject2 == ePLAYER;
+        }
+        case ePROJECTILE:
+        {
+            return inObject2 == eSTATIC || inObject2 == ePLAYER || inObject2 == eENEMY;
+        }
+        case eENEMY:
+        {
+            return inObject2 == eSTATIC || inObject2 == ePLAYER || inObject2 == ePROJECTILE;
+        }
         default:
             JPH_ASSERT(false);
             return false;
@@ -27,23 +43,28 @@ public:
     BPLayerInterfaceImpl()
     {
         // Create a mapping table from object to broad phase layer
-        mObjectToBroadPhase[eNON_MOVING_OBJECT] = JPH::BroadPhaseLayer { eNON_MOVING_BROADPHASE };
-        mObjectToBroadPhase[eMOVING_OBJECT] = JPH::BroadPhaseLayer { eMOVING_BROADPHASE };
+        mObjectToBroadPhase[eSTATIC] = JPH::BroadPhaseLayer { eNON_MOVING_BROADPHASE };
+
+        mObjectToBroadPhase[eINTERACTABLE] = JPH::BroadPhaseLayer { eMOVING_BROADPHASE };
+
+        mObjectToBroadPhase[ePROJECTILE] = JPH::BroadPhaseLayer { eMOVING_BROADPHASE };
+        mObjectToBroadPhase[ePLAYER] = JPH::BroadPhaseLayer { eMOVING_BROADPHASE };
+        mObjectToBroadPhase[eENEMY] = JPH::BroadPhaseLayer { eMOVING_BROADPHASE };
     }
 
     virtual JPH::uint GetNumBroadPhaseLayers() const override
     {
-        return eNUM_LAYERS_BROADPHASE;
+        return eNUM_BROADPHASE_LAYERS;
     }
 
     virtual JPH::BroadPhaseLayer GetBroadPhaseLayer(JPH::ObjectLayer inLayer) const override
     {
-        JPH_ASSERT(inLayer < eNUM_LAYERS_BROADPHASE);
+        JPH_ASSERT(inLayer < eNUM_OBJECT_LAYERS);
         return mObjectToBroadPhase[inLayer];
     }
 
 #if defined(JPH_EXTERNAL_PROFILE) || defined(JPH_PROFILE_ENABLED)
-    virtual const char* GetBroadPhaseLayerName(JPH::BroadPhaseLayer inLayer) const override
+    NO_DISCARD virtual const char* GetBroadPhaseLayerName(JPH::BroadPhaseLayer inLayer) const override
     {
         switch (inLayer.GetValue())
         {
@@ -59,7 +80,7 @@ public:
 #endif // JPH_EXTERNAL_PROFILE || JPH_PROFILE_ENABLED
 
 private:
-    JPH::BroadPhaseLayer mObjectToBroadPhase[eNUM_LAYERS_BROADPHASE];
+    JPH::BroadPhaseLayer mObjectToBroadPhase[eNUM_OBJECT_LAYERS];
 };
 
 /// Class that determines if an object layer can collide with a broadphase layer
@@ -70,13 +91,10 @@ public:
     {
         switch (inLayer1)
         {
-        case eNON_MOVING_OBJECT:
+        case eSTATIC:
             return inLayer2 == JPH::BroadPhaseLayer { eMOVING_BROADPHASE };
-        case eMOVING_OBJECT:
-            return true;
         default:
-            JPH_ASSERT(false);
-            return false;
+            return true;
         }
     }
 };
