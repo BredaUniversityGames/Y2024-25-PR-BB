@@ -64,8 +64,8 @@ void UISlider::Update(const InputManagers& inputManagers, UIInputContext& inputC
 
         if (selected)
         {
-            float min = GetAbsoluteLocation().x;
-            float max = min + GetAbsoluteScale().x;
+            float min = GetAbsoluteLocation().x + style.margin;
+            float max = min + GetAbsoluteScale().x - style.margin;
 
             value = glm::clamp((mousePos.x - min) / (max - min), 0.0f, 1.0f);
 
@@ -95,16 +95,18 @@ void UISlider::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
             .textureIndex = style.empty.Index()
         };
 
-        glm::vec3 fullScale = { GetAbsoluteScale().x * value, GetAbsoluteScale().y, 0.0f };
+        float horizontalFullScale = GetAbsoluteScale().x - style.margin * 2.0f;
+        glm::vec2 fullScale = { horizontalFullScale * value, GetAbsoluteScale().y };
+        glm::vec2 fullStart = GetAbsoluteLocation() + glm::vec2(style.margin, 0.0f);
 
         QuadDrawInfo fullInfo {
-            .matrix = makeMat(GetAbsoluteLocation(), fullScale),
+            .matrix = makeMat(fullStart, fullScale),
             .color = selected ? SELECTED : NORMAL,
             .textureIndex = style.filled.Index()
         };
 
         glm::vec2 knobPos = GetAbsoluteLocation();
-        knobPos.x += fullScale.x - style.knobSize.x * 0.5f;
+        knobPos.x += fullScale.x - style.knobSize.x * 0.5f + style.margin;
         knobPos.y += GetAbsoluteScale().y * 0.5f - style.knobSize.y * 0.5f;
 
         QuadDrawInfo knobInfo {

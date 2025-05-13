@@ -12,6 +12,7 @@ public:
 
     struct SliderStyle
     {
+        float margin {};
         ResourceHandle<GPUImage> empty = {};
         ResourceHandle<GPUImage> filled = {};
         ResourceHandle<GPUImage> knob = {};

@@ -69,8 +69,8 @@ std::shared_ptr<SettingsMenu> SettingsMenu::Create(
         commonImageData.SetFlags(vk::ImageUsageFlagBits::eSampled);
         commonImageData.isHDR = false;
 
-        toggleStyle.empty = graphicsContext.Resources()->ImageResourceManager().Create(commonImageData.FromPNG("assets/textures/ui/circleempty.png"), sampler);
-        toggleStyle.filled = graphicsContext.Resources()->ImageResourceManager().Create(commonImageData.FromPNG("assets/textures/ui/circlefull.png"), sampler);
+        toggleStyle.empty = graphicsContext.Resources()->ImageResourceManager().Create(commonImageData.FromPNG("assets/textures/ui/toggle_empty.png"), sampler);
+        toggleStyle.filled = graphicsContext.Resources()->ImageResourceManager().Create(commonImageData.FromPNG("assets/textures/ui/toggle_full.png"), sampler);
     }
 
     UISlider::SliderStyle sliderStyle {};
@@ -82,9 +82,11 @@ std::shared_ptr<SettingsMenu> SettingsMenu::Create(
         commonImageData.SetFlags(vk::ImageUsageFlagBits::eSampled);
         commonImageData.isHDR = false;
 
-        sliderStyle.empty = graphicsContext.Resources()->ImageResourceManager().Create(commonImageData.FromPNG("assets/textures/ui/health_empty.png"), sampler);
-        sliderStyle.filled = graphicsContext.Resources()->ImageResourceManager().Create(commonImageData.FromPNG("assets/textures/ui/health_full.png"), sampler);
-        sliderStyle.knob = graphicsContext.Resources()->ImageResourceManager().Create(commonImageData.FromPNG("assets/textures/ui/grey_ellipse.png"), sampler);
+        sliderStyle.margin = 12.0f;
+        sliderStyle.knobSize = glm::vec2 { 8, 8 } * 6.0f;
+        sliderStyle.empty = graphicsContext.Resources()->ImageResourceManager().Create(commonImageData.FromPNG("assets/textures/ui/slider_empty.png"), sampler);
+        sliderStyle.filled = graphicsContext.Resources()->ImageResourceManager().Create(commonImageData.FromPNG("assets/textures/ui/slider_full.png"), sampler);
+        sliderStyle.knob = graphicsContext.Resources()->ImageResourceManager().Create(commonImageData.FromPNG("assets/textures/ui/slider_knob.png"), sampler);
     }
 
     // auto buttonPanel = settings->AddChild<Canvas>(glm::vec2 { 0.0f, 0.0f });
@@ -107,9 +109,9 @@ std::shared_ptr<SettingsMenu> SettingsMenu::Create(
         constexpr glm::vec2 increment = { 0.0f, 100.0f };
 
         constexpr glm::vec2 buttonBaseSize = glm::vec2(87, 22) * 5.0f;
-        constexpr glm::vec2 toggleSize = glm::vec2(22, 22) * 3.0f;
+        constexpr glm::vec2 toggleSize = glm::vec2(16, 16) * 4.0f;
 
-        constexpr glm::vec2 sliderSize = glm::vec2(174, 22) * 3.0f;
+        constexpr glm::vec2 sliderSize = glm::vec2(128, 16) * 4.0f;
         constexpr glm::vec2 toggleOffset = glm::vec2(400.0f, -toggleSize.y * 0.25f + textSize * 0.25f);
 
         // Sensitivity
