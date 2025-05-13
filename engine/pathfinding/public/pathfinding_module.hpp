@@ -97,6 +97,7 @@ public:
 
     bool SetDebugDrawState(bool state) { return _debugDraw = state; }
     bool GetDebugDrawState() const { return _debugDraw; }
+
     const std::vector<glm::vec3>& GetDebugLines() const { return _debugLines; }
 
 private:

@@ -7,6 +7,8 @@ target_link_libraries(Inspector
         PRIVATE Particles
         PUBLIC Game
         PUBLIC Settings
+        PRIVATE Physics
+        PRIVATE Pathfinding
 )
 
 target_include_directories(Inspector
