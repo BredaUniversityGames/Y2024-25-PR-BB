@@ -138,10 +138,10 @@ void ParticleModule::LoadEmitterPresets()
     { // FLAME
         EmitterPreset preset;
         preset.emitDelay = 0.1f;
-        preset.mass = -0.005f;
+        preset.mass = -0.003f;
         preset.rotationVelocity = glm::vec2(0.0f, 0.0f);
         preset.maxLife = 2.0f;
-        preset.count = 10;
+        preset.count = 20;
         preset.spawnRandomness = glm::vec3(0.05f, 0.05f, 0.05f);
         preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
         preset.color = glm::vec4(1.0f, 1.0f, 1.0f, 5.0f);
@@ -159,13 +159,13 @@ void ParticleModule::LoadEmitterPresets()
         preset.mass = 0.005f;
         preset.rotationVelocity = glm::vec2(0.0f, 0.0f);
         preset.maxLife = 8.0f;
-        preset.count = 20;
+        preset.count = 100;
         preset.spawnRandomness = glm::vec3(1.0f);
         preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
         preset.color = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
         preset.name = "Dust";
         SetEmitterPresetImage(preset, "point_03.png");
-        preset.size = glm::vec3(0.05f, 0.05f, 0.0f);
+        preset.size = glm::vec3(1.0f, 1.0f, 0.0f);
 
         _emitterPresets.emplace_back(preset);
     }

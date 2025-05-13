@@ -41,6 +41,13 @@ class Main {
         transform.translation = Vec3.new(-94.000, 174.800, 156.900)
         transform.rotation = Quat.new(0.544, -0.136, -0.800,-0.214)
 
+        // Inside cathedral: pentagram scene
+        {   // Dust emitter
+            var emitter = engine.GetECS().NewEntity()
+            var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomPosition() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
+            engine.GetParticles().SpawnEmitter(emitter, EmitterPresetID.eDust(), emitterFlags, Vec3.new(-17.0, 34.0, 196.0), Vec3.new(1.0, 0.0, 0.0))
+        }
+
         // Player Setup
 
         __playerVariables = PlayerVariables.new()
@@ -401,6 +408,6 @@ class Main {
             }
         }
 
-        __waveSystem.Update(dt)
+        //__waveSystem.Update(dt)
     }
 }
