@@ -152,7 +152,8 @@ void main()
         hdrColor = ComputeQuantizedColor(hdrColor, pc.ditherAmount, pc.paletteAmount);
     }
 
-    hdrColor += bloomColor * bloomSettings.strength;
+    vec3 bloom = bloomColor * bloomSettings.strength;
+    hdrColor += bloom;
     vec3 color = vec3(1.0) - exp(-hdrColor * pc.exposure);
 
     //sample the depth again, maybe we now need to use pixelization
@@ -177,6 +178,8 @@ void main()
         {
             color = ComputeQuantizedColor(color, pc.ditherAmount, pc.paletteAmount);
         }
+
+        color += bloom;
     }
 
     switch (pc.tonemappingFunction)

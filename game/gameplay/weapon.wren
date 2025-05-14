@@ -1,4 +1,4 @@
-import "engine_api.wren" for Engine, ECS, Entity, Vec3, Vec2, Math, AnimationControlComponent, TransformComponent, Input, SpawnEmitterFlagBits, EmitterPresetID
+import "engine_api.wren" for Engine, ECS, Entity, Vec3, Vec2, Math, AnimationControlComponent, TransformComponent, Input, SpawnEmitterFlagBits, EmitterPresetID, PhysicsObjectLayer
 import "camera.wren" for CameraVariables
 import "player.wren" for PlayerVariables
 
@@ -14,7 +14,7 @@ class Pistol {
         _headShotMultiplier = 2.0
         _range = 50
         _rangeVector = Vec3.new(_range, _range, _range)
-        _attackSpeed = 0.6 * 1000
+        _attackSpeed = 0.4 * 1000
         _maxAmmo = 6
         _ammo = _maxAmmo
         _cooldown = 0
@@ -23,7 +23,7 @@ class Pistol {
 
         _cameraShakeIntensity = 0.3
 
-        _attackSFX = "event:/Pistol"
+        _attackSFX = "event:/Revolver"
         _reloadSFX = "event:/ReloadPistol"
         _equipSFX = ""
 
@@ -109,6 +109,7 @@ class Pistol {
 
             // Play shooting audio
             var eventInstance = engine.GetAudio().PlayEventOnce(_attackSFX)
+            //engine.GetAudio().SetEventVolume(eventInstance, 5.0)
             var audioEmitter = player.GetAudioEmitterComponent()
             audioEmitter.AddEvent(eventInstance)
 
@@ -153,7 +154,9 @@ class Pistol {
                             }
                             break
                         }
-                        engine.SpawnDecal(normal, end, Vec2.new(0.001, 0.001), "bullet_hole.png")
+                        if(hitEntity.GetRigidbodyComponent().GetLayer() == PhysicsObjectLayer.eSTATIC()) {
+                            engine.SpawnDecal(normal, end, Vec2.new(0.001, 0.001), "bullet_hole.png")
+                        }
                         break
                     }
                 }

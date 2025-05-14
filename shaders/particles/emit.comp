@@ -20,9 +20,8 @@ struct Emitter
     float frameRate;
     ivec2 maxFrames;
     uint frameCount;
+    uint id;
 };
-
-const uint MAX_EMITTERS = 256;
 
 layout(set = 2, binding = 0) uniform EmitterUBO
 {
@@ -62,6 +61,7 @@ void main()
     particle.frameRate = emitter.frameRate;
     particle.frameCount = emitter.frameCount;
     particle.textureMultiplier = vec2(1.0f / particle.maxFrames.x, 1.0f / particle.maxFrames.y);
+    particle.emitterId = emitter.id;
 
     // new particle index retrieved from dead list
     uint deadCount = atomicAdd(particleCounters.deadCount, -1);
