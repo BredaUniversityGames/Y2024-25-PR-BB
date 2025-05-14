@@ -62,7 +62,7 @@ ParticlePass::~ParticlePass()
     util::vmaDestroyBuffer(vkContext->MemoryAllocator(), _emitterStagingBuffer, _emitterStagingBufferAllocation);
     util::vmaDestroyBuffer(vkContext->MemoryAllocator(), _localEmitterStagingBuffer, _localEmitterStagingBufferAllocation);
 
-    vkContext->Device().destroy(_localEmittersBufferDescriptorSetLayout);
+    vkContext->Device().destroy(_localEmittersDescriptorSetLayout);
     vkContext->Device().destroy(_particlesBuffersDescriptorSetLayout);
     vkContext->Device().destroy(_emittersBufferDescriptorSetLayout);
     vkContext->Device().destroy(_culledInstancesDescriptorSetLayout);
@@ -157,16 +157,13 @@ void ParticlePass::RecordSimulate(vk::CommandBuffer commandBuffer, const CameraR
     auto resources { _context->Resources() };
 
     // make sure the copy buffer command is done before dispatching
-    if (!_localEmitters.empty())
-    {
-        vk::BufferMemoryBarrier barrier {};
-        barrier.buffer = resources->BufferResourceManager().Access(_localEmittersBuffer)->buffer;
-        barrier.size = _localEmitters.size() * sizeof(LocalEmitter);
-        barrier.offset = 0;
-        barrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
-        barrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
-        commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eComputeShader, vk::DependencyFlags { 0 }, {}, barrier, {});
-    }
+    vk::BufferMemoryBarrier barrier {};
+    barrier.buffer = resources->BufferResourceManager().Access(_localEmittersBuffer)->buffer;
+    barrier.size = MAX_EMITTERS * sizeof(LocalEmitter);
+    barrier.offset = 0;
+    barrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
+    barrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
+    commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eComputeShader, vk::DependencyFlags { 0 }, {}, barrier, {});
 
     util::BeginLabel(commandBuffer, "Simulate particle pass", glm::vec3 { 255.0f, 105.0f, 180.0f } / 255.0f, vkContext->Dldi());
 
@@ -428,7 +425,7 @@ void ParticlePass::CreatePipelines()
 
     { // simulate
         vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo {};
-        std::array<vk::DescriptorSetLayout, 6> layouts = { _context->BindlessLayout(), _particlesBuffersDescriptorSetLayout, _instancesDescriptorSetLayout, CameraResource::DescriptorSetLayout(), _localEmittersBufferDescriptorSetLayout, _drawCommandsDescriptorSetLayout };
+        std::array<vk::DescriptorSetLayout, 6> layouts = { _context->BindlessLayout(), _particlesBuffersDescriptorSetLayout, _culledInstancesDescriptorSetLayout, CameraResource::DescriptorSetLayout(), _localEmittersDescriptorSetLayout, _drawCommandsDescriptorSetLayout };
         pipelineLayoutCreateInfo.setLayoutCount = layouts.size();
         pipelineLayoutCreateInfo.pSetLayouts = layouts.data();
 
@@ -465,7 +462,7 @@ void ParticlePass::CreatePipelines()
         vkContext->Device().destroy(shaderModule);
     }
 
-    { // instanced rendering (billboard)
+    { // indexed indirect rendering (billboard)
         std::array<vk::PipelineColorBlendAttachmentState, 2> colorBlendAttachmentState {};
         colorBlendAttachmentState[0].blendEnable = vk::False;
         colorBlendAttachmentState[0].colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
@@ -573,7 +570,7 @@ void ParticlePass::CreateDescriptorSetLayouts()
         createInfo.bindingCount = bindings.size();
         createInfo.pBindings = bindings.data();
 
-        util::VK_ASSERT(vkContext->Device().createDescriptorSetLayout(&createInfo, nullptr, &_localEmittersBufferDescriptorSetLayout),
+        util::VK_ASSERT(vkContext->Device().createDescriptorSetLayout(&createInfo, nullptr, &_localEmittersDescriptorSetLayout),
             "Failed creating local emitter buffer descriptor set layout!");
     }
 
@@ -600,7 +597,12 @@ void ParticlePass::CreateDescriptorSetLayouts()
         descriptorSetLayoutBinding.stageFlags = vk::ShaderStageFlagBits::eCompute;
         descriptorSetLayoutBinding.pImmutableSamplers = nullptr;
 
-        _drawCommandsDescriptorSetLayout = PipelineBuilder::CacheDescriptorSetLayout(*vkContext, bindings, { "DrawCommandsSSB" });
+        vk::DescriptorSetLayoutCreateInfo createInfo {};
+        createInfo.bindingCount = bindings.size();
+        createInfo.pBindings = bindings.data();
+
+        util::VK_ASSERT(vkContext->Device().createDescriptorSetLayout(&createInfo, nullptr, &_drawCommandsDescriptorSetLayout),
+            "Failed creating particle draw commands buffer descriptor set layout!");
     }
 }
 
@@ -655,14 +657,16 @@ void ParticlePass::CreateDescriptorSets()
         vk::DescriptorSetAllocateInfo allocateInfo {};
         allocateInfo.descriptorPool = vkContext->DescriptorPool();
         allocateInfo.descriptorSetCount = 1;
-        allocateInfo.pSetLayouts = &_localEmittersBufferDescriptorSetLayout;
+        allocateInfo.pSetLayouts = &_localEmittersDescriptorSetLayout;
 
         std::array<vk::DescriptorSet, 1> descriptorSets;
         util::VK_ASSERT(vkContext->Device().allocateDescriptorSets(&allocateInfo, descriptorSets.data()),
-            "Failed allocating Emitter Uniform Buffer descriptor sets!");
+            "Failed allocating Local Emitter Uniform Buffer descriptor sets!");
 
         _localEmittersDescriptorSet = descriptorSets[0];
         UpdateLocalEmittersBuffersDescriptorSets();
+    }
+
     { // Draw Commands buffer
         vk::DescriptorSetAllocateInfo allocateInfo {};
         allocateInfo.descriptorPool = vkContext->DescriptorPool();
@@ -806,6 +810,11 @@ void ParticlePass::UpdateEmittersBuffersDescriptorSets()
 
 void ParticlePass::UpdateLocalEmittersBuffersDescriptorSets()
 {
+    auto vkContext { _context->VulkanContext() };
+    auto resources { _context->Resources() };
+
+    std::array<vk::WriteDescriptorSet, 1> descriptorWrites {};
+
     // Local Emitter UB (binding = 0)
     vk::DescriptorBufferInfo localEmitterBufferInfo {};
     localEmitterBufferInfo.buffer = resources->BufferResourceManager().Access(_localEmittersBuffer)->buffer;
@@ -818,6 +827,8 @@ void ParticlePass::UpdateLocalEmittersBuffersDescriptorSets()
     localEmitterBufferWrite.descriptorType = vk::DescriptorType::eUniformBuffer;
     localEmitterBufferWrite.descriptorCount = 1;
     localEmitterBufferWrite.pBufferInfo = &localEmitterBufferInfo;
+
+    vkContext->Device().updateDescriptorSets(descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
 }
 
 void ParticlePass::UpdateDrawCommandsBufferDescriptorSet()
@@ -864,7 +875,7 @@ void ParticlePass::CreateBuffers()
             .SetSize(sizeof(DrawIndexedIndirectCommand))
             .SetIsMappable(false)
             .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE)
-            .SetUsageFlags(vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eIndirectBuffer);
+            .SetUsageFlags(vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eIndirectBuffer | vk::BufferUsageFlagBits::eTransferDst);
 
         _drawCommandsBuffer = resources->BufferResourceManager().Create(creation);
         cmdBuffer.CopyIntoLocalBuffer(data, 0, resources->BufferResourceManager().Access(_drawCommandsBuffer)->buffer);
@@ -932,7 +943,7 @@ void ParticlePass::CreateBuffers()
             .SetSize(bufferSize)
             .SetIsMappable(false)
             .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE)
-            .SetUsageFlags(vk::BufferUsageFlagBits::eStorageBuffer);
+            .SetUsageFlags(vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst);
         _culledInstancesBuffer = resources->BufferResourceManager().Create(creation);
         cmdBuffer.CopyIntoLocalBuffer(culledInstances, 0, resources->BufferResourceManager().Access(_culledInstancesBuffer)->buffer);
     }
@@ -970,6 +981,25 @@ void ParticlePass::CreateBuffers()
         cmdBuffer.CopyIntoLocalBuffer(billboardIndices, 0, resources->BufferResourceManager().Access(_indexBuffer)->buffer);
     }
 
+    { // Local Emitter UB
+        std::vector<LocalEmitter> localEmitters(MAX_EMITTERS);
+        vk::DeviceSize bufferSize = sizeof(LocalEmitter) * MAX_EMITTERS;
+
+        BufferCreation creation {};
+        creation.SetName("Local Emitter UB")
+            .SetSize(bufferSize)
+            .SetIsMappable(false)
+            .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE)
+            .SetUsageFlags(vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst);
+        _localEmittersBuffer = resources->BufferResourceManager().Create(creation);
+        cmdBuffer.CopyIntoLocalBuffer(localEmitters, 0, resources->BufferResourceManager().Access(_localEmittersBuffer)->buffer);
+    }
+
+    { // Local Emitter Staging buffer
+        vk::DeviceSize bufferSize = MAX_EMITTERS * sizeof(LocalEmitter);
+        util::CreateBuffer(vkContext, bufferSize, vk::BufferUsageFlagBits::eTransferSrc, _localEmitterStagingBuffer, true, _localEmitterStagingBufferAllocation, VMA_MEMORY_USAGE_CPU_ONLY, "Local Emitter Staging buffer");
+    }
+
     cmdBuffer.Submit();
 
     { // Emitter UB
@@ -986,21 +1016,5 @@ void ParticlePass::CreateBuffers()
     { // Emitter Staging buffer
         vk::DeviceSize bufferSize = MAX_EMITTERS * sizeof(Emitter);
         util::CreateBuffer(vkContext, bufferSize, vk::BufferUsageFlagBits::eTransferSrc, _emitterStagingBuffer, true, _emitterStagingBufferAllocation, VMA_MEMORY_USAGE_CPU_ONLY, "Emitter Staging buffer");
-    }
-
-    { // Local Emitter UB
-        vk::DeviceSize bufferSize = sizeof(LocalEmitter) * MAX_EMITTERS;
-        BufferCreation creation {};
-        creation.SetName("Local Emitter UB")
-            .SetSize(bufferSize)
-            .SetIsMappable(false)
-            .SetMemoryUsage(VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE)
-            .SetUsageFlags(vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst);
-        _localEmittersBuffer = resources->BufferResourceManager().Create(creation);
-    }
-
-    { // Local Emitter Staging buffer
-        vk::DeviceSize bufferSize = MAX_EMITTERS * sizeof(LocalEmitter);
-        util::CreateBuffer(vkContext, bufferSize, vk::BufferUsageFlagBits::eTransferSrc, _localEmitterStagingBuffer, true, _localEmitterStagingBufferAllocation, VMA_MEMORY_USAGE_CPU_ONLY, "Local Emitter Staging buffer");
     }
 }

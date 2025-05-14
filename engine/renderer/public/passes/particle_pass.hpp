@@ -95,7 +95,7 @@ private:
     // local emitter uniform buffer
     ResourceHandle<Buffer> _localEmittersBuffer;
     vk::DescriptorSet _localEmittersDescriptorSet;
-    vk::DescriptorSetLayout _localEmittersBufferDescriptorSetLayout;
+    vk::DescriptorSetLayout _localEmittersDescriptorSetLayout;
     // local emitter staging buffer
     vk::Buffer _localEmitterStagingBuffer;
     VmaAllocation _localEmitterStagingBufferAllocation;
