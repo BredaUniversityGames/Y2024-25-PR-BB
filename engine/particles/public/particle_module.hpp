@@ -20,7 +20,7 @@ enum class SpawnEmitterFlagBits : uint8_t
     eEmitOnce = 1 << 0,
     eIsActive = 1 << 1,
     eSetCustomPosition = 1 << 2,
-    eSetCustomVelocity = 1 << 3
+    eSetCustomVelocity = 1 << 3,
 };
 GENERATE_ENUM_FLAG_OPERATORS(SpawnEmitterFlagBits)
 
@@ -40,6 +40,7 @@ enum class EmitterPresetID : uint8_t
     eFireAnimated,
     eHealth,
     eWorms,
+    eSoulSheet,
     eNone
 };
 
@@ -92,6 +93,8 @@ private:
 
     std::vector<EmitterPreset> _emitterPresets;
     std::unordered_map<std::string, ResourceHandle<GPUImage>> _emitterImages;
+
+    uint32_t emitterCount = 0;
 
     friend class ParticleEditor;
 };

@@ -9,6 +9,7 @@ import "gameplay/wave_system.wren" for WaveSystem, WaveConfig, SpawnLocationType
 import "analytics/analytics.wren" for AnalyticsManager
 
 import "gameplay/enemies/ranged_enemy.wren" for RangedEnemy
+import "gameplay/soul.wren" for Soul, SoulManager
 
 class Main {
 
@@ -138,7 +139,7 @@ class Main {
 
         __musicPlayer = BGMPlayer.new(engine.GetAudio(),
             "event:/Gameplay",
-            0.05)
+            0.025)
 
         __ambientPlayer = MusicPlayer.new(engine.GetAudio(), ambientList, 0.1)
 
@@ -188,6 +189,9 @@ class Main {
         )
         __waveSystem = WaveSystem.new(engine, waveConfigs, __enemyList, spawnLocations, __player)
 
+        // Souls
+        __soulManager = SoulManager.new(engine, __player)
+
         // Pause Menu callbacks
 
         __pauseHandler = Fn.new {
@@ -207,7 +211,7 @@ class Main {
             engine.GetGame().SetPauseMenuEnabled(false)
             engine.GetInput().SetActiveActionSet("Shooter")
             engine.GetInput().SetMouseHidden(true)
-            __musicPlayer.SetVolume(engine.GetAudio(), 0.05)
+            __musicPlayer.SetVolume(engine.GetAudio(), 0.025)
             System.print("Pause Menu is %(__pauseEnabled)!")
         }
 
@@ -406,17 +410,22 @@ class Main {
 
         var playerPos = __playerController.GetRigidbodyComponent().GetPosition()
 
+        if(engine.GetInput().DebugGetKey(Keycode.eB())){
+           __soulManager.SpawnSoul(engine, Vec3.new(10.0,2.0,44.0))
+        }
+
         for (enemy in __enemyList) {
 
             // We delete the entity from the ecs when it dies
             // Then we check for entity validity, and remove it from the list if it is no longer valid
             if (enemy.entity.IsValid()) {
-                enemy.Update(playerPos, __playerVariables, engine, dt)
+                enemy.Update(playerPos, __playerVariables, engine, dt, __soulManager)
             } else {
                 __enemyList.removeAt(__enemyList.indexOf(enemy))
             }
         }
 
-        //__waveSystem.Update(dt)
+        __soulManager.Update(engine, __playerVariables, dt)
+        __waveSystem.Update(dt)
     }
 }
