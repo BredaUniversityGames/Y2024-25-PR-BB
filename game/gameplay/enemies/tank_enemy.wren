@@ -79,12 +79,12 @@ class TankEnemy {
         _deathTimerMax = 3000
         _deathTimer = _deathTimerMax
 
-        _hurtSFX = "event:/DemonHurt"
+        _hurtSFX = "event:/SFX/DemonHurt"
 
-        _stepSFX = "event:/DemonStep"
+        _stepSFX = "event:/SFX/DemonStep"
 
-        _attackSFX = "event:/DemonAttack"
-        _attackHitSFX = "event:/DemonAttackHit"
+        _attackSFX = "event:/SFX/DemonAttack"
+        _attackHitSFX = "event:/SFX/DemonAttackHit"
 
         _walkEventInstance = null
 
