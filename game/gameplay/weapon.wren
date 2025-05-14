@@ -96,14 +96,6 @@ class Pistol {
         } 
     }
 
-    playSlidingAnim(engine){
-    var gun = engine.GetECS().GetEntityByName(_entityName)
-        var gunAnimations = gun.GetAnimationControlComponent()
-        if(gunAnimations.AnimationFinished() || gunAnimations.CurrentAnimationName() == _walkAnim){
-            gunAnimations.Play("slide", 1.0, false, 0.2, false)
-        }
-    }
-
     attack(engine, deltaTime, playerVariables, enemies) {
 
         if ((_cooldown <= 0 || engine.GetInput().GetDigitalAction("Shoot").IsPressed()) && _ammo > 0 && _reloadTimer <= 0) {
@@ -162,10 +154,7 @@ class Pistol {
                                     var multiplier = 1.0
 
                                     playerVariables.hitmarkTimer = 200 //ms
-                                                 
-                                     engine.GetGame().GetHUD().ShowHitmarker(true)
                                    
-    
                                     if (enemy.IsHeadshot(rayHit.position.y)) {
                                         multiplier = _headShotMultiplier
                                     }
@@ -293,7 +282,6 @@ class Shotgun {
         _equipAnim = "equip" 
         _unequipAnim = "unequip"
         _entityName = "Gun" 
-
         _mesh = ""
     }
 
@@ -313,7 +301,6 @@ class Shotgun {
             _ammo = _ammo - 1
  
             playerVariables.cameraVariables.shakeIntensity = _cameraShakeIntensity            
-
             var player = engine.GetECS().GetEntityByName("Camera")
             var gun = engine.GetECS().GetEntityByName(_entityName)
 
@@ -334,8 +321,6 @@ class Shotgun {
             var direction = (end - start).normalize()
 
             var hitAnEnemy = false
- engine.GetGame().GetHUD().ShowHitmarker(false)
-        
           
             var i = 0
             while (i < _raysPerShot) {
@@ -352,7 +337,7 @@ class Shotgun {
                                 for (enemy in enemies) {
                                     if (enemy.entity == hitEntity) {
                                         hitAnEnemy = true
-                                        playerVariables.hitmarkTimer = 100   
+                                        playerVariables.hitmarkTimer = 200 //ms      
                                         enemy.DecreaseHealth(_damage,engine)
                                         playerVariables.multiplierTimer = playerVariables.multiplierMaxTime
                                         playerVariables.IncreaseHealth(0.1 * _damage)
@@ -410,7 +395,6 @@ class Shotgun {
         var gunAnimations =newGun .GetAnimationControlComponent()
         gunAnimations.Play(_equipAnim, 1.2, false, 0.0, false)
         newGun.RenderInForeground()
-
     }
 
     isUnequiping(engine){
@@ -440,14 +424,6 @@ class Shotgun {
         }
     }
 
-    playSlidingAnim(engine){
-        var gun = engine.GetECS().GetEntityByName(_entityName)
-        var gunAnimations = gun.GetAnimationControlComponent()
-        if(gunAnimations.AnimationFinished() || gunAnimations.CurrentAnimationName() == _walkAnim || gunAnimations.CurrentAnimationName() == _idleAnim){
-            gunAnimations.Play("slide", 1.0, false, 0.1, false)
-        }
-    }
-    
     cooldown {_cooldown}
     cooldown=(value) {_cooldown = value}
 

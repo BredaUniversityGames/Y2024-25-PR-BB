@@ -9,6 +9,7 @@ class CameraVariables {
         _slideFactorX = 0
         _recoilOffsetDesired = 0
         _recoilOffsetActual = 0
+        _recoilMaxAngleVal = 45
         _recoilMixFactor = 0.02
         _recoilDecayFactor = 0.02
     }
@@ -40,12 +41,15 @@ class CameraVariables {
     
     ProcessRecoil(engine,cameraEntity,dt){
        
-       //calculate recoil offset 
-       _recoilOffsetActual = Math.MixFloat(_recoilOffsetActual,_recoilOffsetDesired,_recoilMixFactor*dt)
+       // Calculate recoil offset 
+       _recoilOffsetActual = Math.MixFloat(_recoilOffsetActual,_recoilOffsetDesired,_recoilMixFactor*dt)  
+       _recoilOffsetActual = Math.Clamp(_recoilOffsetActual,0,_recoilMaxAngleVal)
        
-       _recoilOffsetActual = Math.Clamp(_recoilOffsetActual,0,45)
-        cameraEntity.GetTransformComponent().rotation = Math.ToQuat(Vec3.new(Math.Radians(_recoilOffsetActual),0,0))
-      _recoilOffsetDesired = Math.Clamp(_recoilOffsetDesired  -(_recoilDecayFactor*dt),0,45)
+       // Apply recoil to camera entity rotation  
+       cameraEntity.GetTransformComponent().rotation = Math.ToQuat(Vec3.new(Math.Radians(_recoilOffsetActual),0,0))
+     
+       // Decay recoil back to 0
+      _recoilOffsetDesired = Math.Clamp(_recoilOffsetDesired  -(_recoilDecayFactor*dt),0,_recoilMaxAngleVal)
     }
 
     Tilt(engine, cameraEntity, dt) {

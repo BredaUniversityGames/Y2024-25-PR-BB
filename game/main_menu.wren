@@ -26,7 +26,6 @@ class Main {
         __lightComponent.range = 35
         __lightComponent.intensity = 39
         
-        
         light.AddTransformComponent().translation = Vec3.new(4.8, 4.7, -10.6) // range: 91, intensity: 20
 
         // __background = engine.LoadModel("assets/models/main_menu.glb")

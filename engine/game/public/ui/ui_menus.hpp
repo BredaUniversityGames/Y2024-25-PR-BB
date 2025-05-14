@@ -14,7 +14,6 @@ inline constexpr size_t MAX_DASH_CHARGE_COUNT = 3;
 
 class HUD : public Canvas
 {
-
 public:
     static std::shared_ptr<HUD> Create(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution, std::shared_ptr<UIFont> font);
 

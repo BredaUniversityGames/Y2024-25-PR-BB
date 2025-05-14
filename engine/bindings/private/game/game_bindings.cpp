@@ -71,10 +71,6 @@ void SetGamepadActiveButton(UIModule& self, std::shared_ptr<UIElement> button)
     self.uiInputContext.focusedUIElement = button;
 }
 
-
-
-
-
 }
 
 void BindGameAPI(wren::ForeignModule& module)
@@ -101,7 +97,7 @@ void BindGameAPI(wren::ForeignModule& module)
 
     auto& ui = module.klass<UIModule>("UIModule");
     module.klass<UIElement>("UIElement");
- 
+
     ui.funcExt<bindings::SetGamepadActiveButton>("SetSelectedElement");
 
     BindGameUI(module);

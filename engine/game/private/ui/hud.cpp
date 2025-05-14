@@ -62,8 +62,10 @@ std::shared_ptr<HUD> HUD::Create(GraphicsContext& graphicsContext, const glm::uv
 {
 
     std::shared_ptr<HUD> hud = std::make_shared<HUD>(screenResolution);
-    
-    const UIProgressBar::BarStyle healtbarStyle = LoadHealthBarStyle(graphicsContext);
+    // resource loading.
+
+    const UIProgressBar::BarStyle healtbarStyle
+        = LoadHealthBarStyle(graphicsContext);
     const UIProgressBar::BarStyle circleBarStyle = LoadCircleBarStyle(graphicsContext);
     const UIProgressBar::BarStyle ultBarStyle = LoadUltBarStyle(graphicsContext);
 
@@ -75,7 +77,7 @@ std::shared_ptr<HUD> HUD::Create(GraphicsContext& graphicsContext, const glm::uv
     commonImageData.SetFlags(vk::ImageUsageFlagBits::eSampled);
     commonImageData.isHDR = false;
     auto crosshair = graphicsContext.Resources()->ImageResourceManager().Create(commonImageData.FromPNG("assets/textures/ui/cross_hair.png"));
-    hud->AddChild<UIImage>(crosshair, glm::vec2(0, 7), glm::vec2(25,42)*2.0f);
+    hud->AddChild<UIImage>(crosshair, glm::vec2(0, 7), glm::vec2(25, 42) * 2.0f);
 
     hud->healthBar = hud->AddChild<UIProgressBar>(healtbarStyle, glm::vec2(0, 100), glm::vec2(700, 50));
     hud->healthBar.lock()->AddChild<UITextElement>(font, "health", 50);
@@ -118,7 +120,7 @@ std::shared_ptr<HUD> HUD::Create(GraphicsContext& graphicsContext, const glm::uv
 
     auto gunPic = hud->AddChild<UIImage>(im, glm::vec2(460, 140), glm::vec2(720, 360) * 0.2f);
 
-    hud->hitmarker = hud->AddChild<UIImage>(hitmarkerImage, glm::vec2(0,7), glm::vec2(25, 42)*2.0f);
+    hud->hitmarker = hud->AddChild<UIImage>(hitmarkerImage, glm::vec2(0, 7), glm::vec2(25, 42) * 2.0f);
     hud->hitmarker.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     gunPic->anchorPoint = UIElement::AnchorPoint::eBottomRight;
 
