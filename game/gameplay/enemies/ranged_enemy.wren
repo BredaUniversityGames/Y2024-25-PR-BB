@@ -9,7 +9,7 @@ class RangedEnemy {
 
         _velocityDirection = Vec3.new(_maxVelocity, 0, 0)
         
-        _meshEntity = engine.LoadModel(enemyModel)
+        _meshEntity = engine.LoadModel(enemyModel,true)
 
         _rootEntity = engine.GetECS().NewEntity()
         _rootEntity.AddNameComponent().name = "Enemy"
@@ -141,7 +141,7 @@ class RangedEnemy {
         _rootEntity.GetTransformComponent().translation = newPos
     }
 
-    Update(playerPos, playerVariables, engine, dt, soulManager) {
+    Update(playerPos, playerVariables, engine, dt, soulManager, coinManager) {
         var body = _rootEntity.GetRigidbodyComponent()
         var pos = body.GetPosition()
         _rootEntity.GetTransformComponent().translation = pos
@@ -302,6 +302,14 @@ class RangedEnemy {
             if (_deathTimer <= 0) {
                 //spawn a soul
                 soulManager.SpawnSoul(engine, body.GetPosition())
+
+                // Spawn between 1 and 5 coins
+                var coinCount = Random.RandomIndex(2, 5)
+                for(i in 0...coinCount) {
+                    coinManager.SpawnCoin(engine, body.GetPosition() + Vec3.new(0, 1.0, 0))
+
+                }
+
                 engine.GetECS().DestroyEntity(_rootEntity) // Destroys the entity, and in turn this object
             } else {
                 // Wait for death animation before starting descent

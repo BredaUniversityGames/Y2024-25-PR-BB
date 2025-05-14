@@ -1,6 +1,7 @@
-import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, EmitterPresetID, Perlin
+import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, EmitterPresetID, Perlin, Random
 import "../player.wren" for PlayerVariables
 import "../soul.wren" for Soul, SoulManager
+import "../coin.wren" for Coin, CoinManager
 
 class MeleeEnemy {
 
@@ -13,7 +14,7 @@ class MeleeEnemy {
 
         _velocityDirection = Vec3.new(_maxVelocity, 0, 0)
         
-        _meshEntity = engine.LoadModel(enemyModel)
+        _meshEntity = engine.LoadModel(enemyModel, true)
 
         _rootEntity = engine.GetECS().NewEntity()
         _rootEntity.AddNameComponent().name = "Enemy"
@@ -87,6 +88,7 @@ class MeleeEnemy {
             __perlin = Perlin.new(0)
         }
         _noiseOffset = 0.0
+        
     }
 
     IsHeadshot(y) { // Will probably need to be changed when we have a different model
@@ -153,7 +155,7 @@ class MeleeEnemy {
         _rootEntity.GetTransformComponent().translation = newPos
     }
 
-    Update(playerPos, playerVariables, engine, dt, soulManager) {
+    Update(playerPos, playerVariables, engine, dt, soulManager, coinManager) {
         var body = _rootEntity.GetRigidbodyComponent()
         var pos = body.GetPosition()
         _rootEntity.GetTransformComponent().translation = pos
@@ -186,8 +188,8 @@ class MeleeEnemy {
                 var forwardVector = (playerPos - pos).normalize()
 
                 var endRotation = Math.LookAt(Vec3.new(forwardVector.x, 0, forwardVector.z), Vec3.new(0, 1, 0))
-                var startRotation = _rootEntity.GetTransformComponent().rotation
-                _rootEntity.GetTransformComponent().rotation = Math.Slerp(startRotation, endRotation, 0.01 *dt)
+                var startRotation = body.GetRotation()
+                body.SetRotation( Math.Slerp(startRotation, endRotation, 0.01 *dt))
 
                 _recoveryTime = _recoveryTime - dt
                 if (_recoveryTime <= 0) {
@@ -254,8 +256,14 @@ class MeleeEnemy {
             if (_deathTimer <= 0) {
                 //spawn a soul
                 soulManager.SpawnSoul(engine, body.GetPosition())
-                engine.GetECS().DestroyEntity(_rootEntity) // Destroys the entity, and in turn this object
 
+                // Spawn between 1 and 5 coins
+                var coinCount = Random.RandomIndex(2, 5)
+                for(i in 0...coinCount) {
+                    coinManager.SpawnCoin(engine, body.GetPosition() + Vec3.new(0, 1.0, 0))
+                }
+                engine.GetECS().DestroyEntity(_rootEntity) // Destroys the entity, and in turn this object
+                
 
             } else {
                 // Wait for death animation before starting descent
@@ -318,8 +326,8 @@ class MeleeEnemy {
             
             // Set forward rotation
             var endRotation = Math.LookAt(Vec3.new(forwardVector.x, 0, forwardVector.z), Vec3.new(0, 1, 0))
-            var startRotation = _rootEntity.GetTransformComponent().rotation
-            _rootEntity.GetTransformComponent().rotation = Math.Slerp(startRotation, endRotation, 0.01 *dt)
+            var startRotation = body.GetRotation()
+            body.SetRotation(Math.Slerp(startRotation, endRotation, 0.01 *dt))
         }else{
             var forwardVector = playerPos - position
             forwardVector.y = 0
@@ -333,8 +341,9 @@ class MeleeEnemy {
             _rootEntity.GetRigidbodyComponent().SetVelocity(forwardVector * factor)
 
             var endRotation = Math.LookAt(Vec3.new(forwardVector.x, 0, forwardVector.z), Vec3.new(0, 1, 0))
-            var startRotation = _rootEntity.GetTransformComponent().rotation
-            _rootEntity.GetTransformComponent().rotation = Math.Slerp(startRotation, endRotation, 0.01 *dt)
+                        var startRotation = body.GetRotation()
+
+            body.SetRotation(Math.Slerp(startRotation, endRotation, 0.01 *dt))
         }
     }
 

@@ -28,6 +28,7 @@
 #include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
 #include <Jolt/Physics/Collision/Shape/ScaledShape.h>
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
+#include <components/skinned_mesh_component.hpp>
 
 #include <tracy/Tracy.hpp>
 
@@ -79,9 +80,13 @@ void PhysicsSystem::Update(MAYBE_UNUSED ECSModule& ecs, MAYBE_UNUSED float delta
     }
 
     // We now update our transform system to match jolt's since the loop below us handles the dynamic objects that are being simulated by physics
-    const auto view = _ecs.GetRegistry().view<RigidbodyComponent, StaticMeshComponent, UpdateMeshAndPhysics>();
+    const auto view = _ecs.GetRegistry().view<RigidbodyComponent, RelationshipComponent, TransformComponent, UpdateMeshAndPhysics>();
     for (const auto entity : view)
     {
+
+        if (_ecs.GetRegistry().all_of<SkinnedMeshComponent>(entity))
+            continue;
+
         const RigidbodyComponent& rb = view.get<RigidbodyComponent>(entity);
 
         // if somehow is now not active or is static lets remove the update component

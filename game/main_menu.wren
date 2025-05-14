@@ -14,7 +14,7 @@ class Main {
         engine.GetGame().SetMainMenuEnabled(true)
         engine.GetUI().SetSelectedElement(engine.GetGame().GetMainMenu().playButton)
         
-        var helmet = engine.LoadModel("assets/models/plague_helmet.glb")
+        var helmet = engine.LoadModel("assets/models/plague_helmet.glb", true)
         helmet.GetTransformComponent().translation = Vec3.new(8.6, 1.2, -19.8)
         helmet.GetTransformComponent().rotation = Math.ToQuat(Vec3.new(0.0, -0.471239, 0.0))
         helmet.GetTransformComponent().scale = Vec3.new(1.5, 1.5, 1.5)

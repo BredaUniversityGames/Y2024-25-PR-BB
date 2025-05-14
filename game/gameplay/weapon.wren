@@ -208,7 +208,7 @@ class Pistol {
 
         var camera = engine.GetECS().GetEntityByName("Camera")
 
-        var newGun = engine.LoadModel("assets/models/Revolver.glb")
+        var newGun = engine.LoadModel("assets/models/Revolver.glb", false)
         newGun.GetNameComponent().name = _entityName
         var gunTransform = newGun.GetTransformComponent()
         gunTransform.rotation = Math.ToQuat(Vec3.new(0.0, -Math.PI()/2, 0.0))
