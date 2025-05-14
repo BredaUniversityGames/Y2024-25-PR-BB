@@ -14,8 +14,10 @@ import "gameplay/soul.wren" for Soul, SoulManager
 class Main {
 
     static Start(engine) {
+
+        engine.GetTime().SetScale(1.0)
         engine.GetInput().SetActiveActionSet("Shooter")
-        engine.GetGame().SetHUDEnabled(true)
+        engine.GetGame().SetUIMenu(engine.GetGame().GetHUD())
 
         engine.Fog = 0.005
 
@@ -197,9 +199,11 @@ class Main {
         __pauseHandler = Fn.new {
             __pauseEnabled = true
             engine.GetTime().SetScale(0.0)
-            engine.GetGame().SetPauseMenuEnabled(true)
-            engine.GetInput().SetActiveActionSet("UserInterface")
+
             engine.GetInput().SetMouseHidden(false)
+            engine.GetGame().PushUIMenu(engine.GetGame().GetPauseMenu())
+            engine.GetInput().SetActiveActionSet("UserInterface")
+            
             engine.GetUI().SetSelectedElement(engine.GetGame().GetPauseMenu().continueButton)
             __musicPlayer.SetVolume(engine.GetAudio(), 0.025)
             System.print("Pause Menu is %(__pauseEnabled)!")
@@ -208,7 +212,8 @@ class Main {
         __unpauseHandler = Fn.new {
             __pauseEnabled = false
             engine.GetTime().SetScale(1.0)
-            engine.GetGame().SetPauseMenuEnabled(false)
+
+            engine.GetGame().SetUIMenu(engine.GetGame().GetHUD())
             engine.GetInput().SetActiveActionSet("Shooter")
             engine.GetInput().SetMouseHidden(true)
             __musicPlayer.SetVolume(engine.GetAudio(), 0.025)
@@ -220,9 +225,6 @@ class Main {
 
         var backToMain = Fn.new {
             engine.TransitionToScript("game/main_menu.wren")
-            engine.GetGame().SetPauseMenuEnabled(false)
-            engine.GetGame().SetGameOverMenuEnabled(false)
-            engine.GetGame().SetHUDEnabled(false)
             engine.GetTime().SetScale(1.0)
         }
 
@@ -238,7 +240,6 @@ class Main {
         var retryButton = engine.GetGame().GetGameOverMenu().retryButton
         
         var retryHandler = Fn.new {
-            engine.GetGame().SetGameOverMenuEnabled(false)
             engine.TransitionToScript("game/game.wren")
             engine.GetTime().SetScale(1.0)
         }
@@ -256,6 +257,8 @@ class Main {
     }
 
     static Update(engine, dt) {
+
+        __playerMovement.lookSensitivity = engine.GetGame().GetSettings().aimSensitivity * (2.5 - 0.2) + 0.2
 
         if (__enemyList.count != 0) {
             __musicPlayer.SetAttribute(engine.GetAudio(), "Intensity", 1.0)
@@ -390,9 +393,11 @@ class Main {
         if (__alive && __playerVariables.health <= 0) {
             __alive = false
             engine.GetTime().SetScale(0.0)
-            engine.GetGame().SetGameOverMenuEnabled(true)
+
+            engine.GetGame().PushUIMenu(engine.GetGame().GetGameOverMenu())
             engine.GetInput().SetActiveActionSet("UserInterface")
             engine.GetInput().SetMouseHidden(false)
+
             engine.GetUI().SetSelectedElement(engine.GetGame().GetGameOverMenu().retryButton)
         }
 

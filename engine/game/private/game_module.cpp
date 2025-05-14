@@ -63,11 +63,22 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     _pauseMenu = viewport.AddElement(PauseMenu::Create(graphicsContext, viewportSize, font));
     _gameOver = viewport.AddElement(GameOverMenu::Create(graphicsContext, viewportSize, font));
 
+    // TODO: Load settings from file first
+    gameSettings = GameSettings::FromFile(GAME_SETTINGS_FILE);
+    _settingsMenu = viewport.AddElement(SettingsMenu::Create(engine, graphicsContext, viewportSize, font));
+
+    // Set all UI menus invisible
+
     _mainMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     _hud.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     _loadingScreen.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     _pauseMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     _gameOver.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
+    _settingsMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
+
+    _framerateCounter = viewport.AddElement(FrameCounter::Create(viewportSize, font));
+
+    // Useful callbacks
 
     auto OpenDiscordURL = [&engine]()
     {
@@ -84,6 +95,15 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     };
 
     _mainMenu.lock()->openLinkButton.lock()->OnPress(Callback { OpenDiscordURL });
+
+    auto openSettings = [this, &engine]()
+    {
+        this->PushUIMenu(this->_settingsMenu);
+        engine.GetModule<UIModule>().uiInputContext.focusedUIElement = _settingsMenu.lock()->sensitivitySlider;
+    };
+
+    _mainMenu.lock()->settingsButton.lock()->OnPress(Callback { openSettings });
+    _pauseMenu.lock()->settingsButton.lock()->OnPress(Callback { openSettings });
 
     auto& particleModule = engine.GetModule<ParticleModule>();
     particleModule.LoadEmitterPresets();
@@ -109,43 +129,58 @@ void GameModule::Shutdown(MAYBE_UNUSED Engine& engine)
 {
 }
 
-void GameModule::SetMainMenuEnabled(bool val)
+std::optional<std::shared_ptr<MainMenu>> GameModule::GetMainMenu()
 {
     if (auto lock = _mainMenu.lock())
     {
-        lock->visibility = val ? UIElement::VisibilityState::eUpdatedAndVisible : UIElement::VisibilityState::eNotUpdatedAndInvisible;
+        return lock;
     }
+    return std::nullopt;
 }
 
-void GameModule::SetLoadingScreenEnabled(bool val)
+std::optional<std::shared_ptr<PauseMenu>> GameModule::GetPauseMenu()
 {
-    if (auto lock = _loadingScreen.lock())
+    if (auto lock = _pauseMenu.lock())
+
     {
-        lock->visibility = val ? UIElement::VisibilityState::eUpdatedAndVisible : UIElement::VisibilityState::eNotUpdatedAndInvisible;
+        return lock;
     }
+    return std::nullopt;
 }
 
-void GameModule::SetGameOverMenuEnabled(bool val)
-{
-    if (auto lock = _gameOver.lock())
-    {
-        lock->visibility = val ? UIElement::VisibilityState::eUpdatedAndVisible : UIElement::VisibilityState::eNotUpdatedAndInvisible;
-    }
-}
-
-void GameModule::SetHUDEnabled(bool val)
+std::optional<std::shared_ptr<HUD>> GameModule::GetHUD()
 {
     if (auto lock = _hud.lock())
     {
-        lock->visibility = val ? UIElement::VisibilityState::eUpdatedAndVisible : UIElement::VisibilityState::eNotUpdatedAndInvisible;
+        return lock;
     }
+    return std::nullopt;
 }
 
-void GameModule::SetPauseMenuEnabled(bool val)
+std::optional<std::shared_ptr<GameOverMenu>> GameModule::GetGameOver()
 {
-    if (auto lock = _pauseMenu.lock())
+    if (auto lock = _gameOver.lock())
     {
-        lock->visibility = val ? UIElement::VisibilityState::eUpdatedAndVisible : UIElement::VisibilityState::eNotUpdatedAndInvisible;
+        return lock;
+    }
+    return std::nullopt;
+}
+
+void GameModule::SetUIMenu(std::weak_ptr<Canvas> menu)
+{
+    menuStack = {};
+    menuStack.push(menu);
+}
+void GameModule::PushUIMenu(std::weak_ptr<Canvas> menu)
+{
+    menuStack.push(menu);
+}
+
+void GameModule::PopUIMenu()
+{
+    if (!menuStack.empty())
+    {
+        menuStack.pop();
     }
 }
 
@@ -156,6 +191,11 @@ void GameModule::TransitionScene(const std::string& scriptFile)
 
 void GameModule::Tick(MAYBE_UNUSED Engine& engine)
 {
+    if (engine.GetModule<UIModule>().uiInputContext.focusedUIElement.expired())
+    {
+        bblog::info("NO UI ELEMENT SELECTED!");
+    }
+
     if (!_nextSceneToExecute.empty())
     {
         engine.GetModule<ScriptingModule>().SetMainScript(engine, _nextSceneToExecute);
@@ -177,6 +217,35 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
         using namespace std::chrono_literals;
         std::this_thread::sleep_for(16ms);
         return;
+    }
+
+    // Handle UI stack
+
+    _mainMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
+    _hud.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
+    _loadingScreen.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
+    _pauseMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
+    _gameOver.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
+    _settingsMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
+
+    if (!menuStack.empty())
+    {
+        menuStack.top().lock()->visibility = UIElement::VisibilityState::eUpdatedAndVisible;
+    }
+
+    // Frame counter
+
+    if (gameSettings.framerateCounter)
+    {
+        _framerateCounter.lock()->visibility = UIElement::VisibilityState::eUpdatedAndVisible;
+        auto dt = engine.GetModule<TimeModule>().GetRealDeltatime();
+
+        if (dt.count() != 0.0f)
+            _framerateCounter.lock()->SetVal(1000.0f / dt.count());
+    }
+    else
+    {
+        _framerateCounter.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     }
 
 #if !DISTRBUTION

@@ -1,6 +1,8 @@
 #pragma once
 #include "canvas.hpp"
 #include "fonts.hpp"
+#include "ui_slider.hpp"
+#include "ui_toggle.hpp"
 
 #include <array>
 #include <ui_button.hpp>
@@ -62,6 +64,22 @@ public:
     std::weak_ptr<UITextElement> text;
 };
 
+class FrameCounter : public Canvas
+{
+public:
+    static std::shared_ptr<FrameCounter> Create(const glm::uvec2& screenResolution, std::shared_ptr<UIFont> font);
+
+    FrameCounter(const glm::uvec2& screenResolution)
+        : Canvas(screenResolution)
+    {
+    }
+
+    void SetVal(float fps);
+
+    float runningAverage {};
+    std::weak_ptr<UITextElement> text;
+};
+
 class LoadingScreen : public Canvas
 {
 public:
@@ -100,4 +118,27 @@ public:
 
     std::weak_ptr<UIButton> continueButton;
     std::weak_ptr<UIButton> backToMainButton;
+};
+
+class Engine;
+
+class SettingsMenu : public Canvas
+{
+public:
+    static std::shared_ptr<SettingsMenu> Create(Engine& engine, GraphicsContext& graphicsContext, const glm::uvec2& screenResolution, std::shared_ptr<UIFont> font);
+
+    SettingsMenu(const glm::uvec2& screenResolution)
+        : Canvas(screenResolution)
+    {
+    }
+
+    std::weak_ptr<UIToggle> fpsToggle {};
+    std::weak_ptr<UISlider> sensitivitySlider {};
+    std::weak_ptr<UIToggle> aimAssistToggle {};
+    std::weak_ptr<UISlider> masterVolume {};
+    std::weak_ptr<UISlider> musicVolume {};
+    std::weak_ptr<UISlider> sfxVolume {};
+    std::weak_ptr<UIToggle> vsyncToggle {};
+    std::weak_ptr<UISlider> gammaSlider {};
+    std::weak_ptr<UIButton> backButton {};
 };
