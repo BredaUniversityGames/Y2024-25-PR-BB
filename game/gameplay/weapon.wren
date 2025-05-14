@@ -107,11 +107,11 @@ class Pistol {
     attack(engine, deltaTime, playerVariables, enemies) {
 
         if ((_cooldown <= 0 || engine.GetInput().GetDigitalAction("Shoot").IsPressed()) && _ammo > 0 && _reloadTimer <= 0) {
-            _ammo = _ammo - 1s
+            _ammo = _ammo - 1
 
             // Shake the camera
             playerVariables.cameraVariables.shakeIntensity = _cameraShakeIntensity            
-            playerVariables.cameraVariables.AddRecoil(2)
+            playerVariables.cameraVariables.AddRecoil(3)
     
             var player = engine.GetECS().GetEntityByName("Camera")
             var gun = engine.GetECS().GetEntityByName(_entityName)
@@ -161,7 +161,7 @@ class Pistol {
 
                                     var multiplier = 1.0
 
-                                    playerVariables.hitmarkTimer = 100   
+                                    playerVariables.hitmarkTimer = 200 //ms
                                                  
                                      engine.GetGame().GetHUD().ShowHitmarker(true)
                                    
