@@ -88,6 +88,11 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     auto& particleModule = engine.GetModule<ParticleModule>();
     particleModule.LoadEmitterPresets();
 
+    engine.GetModule<AudioModule>().LoadBank("assets/music/Master.bank");
+    engine.GetModule<AudioModule>().LoadBank("assets/music/Master.strings.bank");
+    engine.GetModule<AudioModule>().SetBusChannelVolume("bus:/", 0.0f);
+
+    // Input Setup
     engine.GetModule<ApplicationModule>().GetActionManager().SetGameActions(GAME_ACTIONS);
     return ModuleTickOrder::eTick;
 }
