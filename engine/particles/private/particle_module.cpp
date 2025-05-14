@@ -83,6 +83,33 @@ void ParticleModule::Tick(MAYBE_UNUSED Engine& engine)
             }
         }
     }
+
+    const auto testView = _ecs->GetRegistry().view<ParticleEmitterComponent, ActiveEmitterTag, TestEmitterTag>();
+    for (const auto entity : testView)
+    {
+        auto& testEmitter = _ecs->GetRegistry().get<ParticleEmitterComponent>(entity);
+        auto& preset = _emitterPresets[static_cast<uint8_t>(testEmitter.presetID)];
+
+        testEmitter.emitter.count = preset.count;
+        testEmitter.emitter.mass = preset.mass;
+        testEmitter.emitter.size = preset.size;
+        testEmitter.emitter.materialIndex = preset.materialIndex;
+        testEmitter.emitter.maxLife = preset.maxLife;
+        testEmitter.emitter.rotationVelocity = preset.rotationVelocity;
+        testEmitter.emitter.flags = preset.flags;
+        testEmitter.emitter.spawnRandomness = preset.spawnRandomness;
+        testEmitter.emitter.velocityRandomness = preset.velocityRandomness;
+        testEmitter.emitter.velocity = preset.startingVelocity;
+        testEmitter.emitter.color = preset.color;
+        testEmitter.emitter.maxFrames = preset.spriteDimensions;
+        testEmitter.emitter.frameRate = preset.frameRate;
+        testEmitter.emitter.frameCount = preset.frameCount;
+        testEmitter.maxEmitDelay = preset.emitDelay;
+        testEmitter.count = preset.count;
+
+        testEmitter.bursts.clear();
+        std::copy(preset.bursts.begin(), preset.bursts.end(), std::back_inserter(testEmitter.bursts));
+    }
 }
 
 ResourceHandle<GPUImage>& ParticleModule::GetEmitterImage(std::string fileName, bool& imageFound)
@@ -592,6 +619,7 @@ void ParticleModule::SpawnEmitter(entt::entity entity, int32_t emitterPresetID, 
     component.currentEmitDelay = 0.0f;
     component.emitOnce = emitOnce;
     component.count = emitter.count;
+    component.presetID = static_cast<EmitterPresetID>(emitterPresetID);
     std::copy(preset.bursts.begin(), preset.bursts.end(), std::back_inserter(component.bursts));
 
     _ecs->GetRegistry().emplace_or_replace<ParticleEmitterComponent>(entity, component);

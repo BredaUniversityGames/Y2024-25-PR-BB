@@ -232,6 +232,7 @@ void ParticleEditor::RenderEmitterPresetEditor()
                 const auto& cameraTransform = _ecsModule.GetRegistry().get<TransformComponent>(cameraEntity);
                 TransformHelpers::SetLocalPosition(_ecsModule.GetRegistry(), entity, cameraTransform.GetLocalPosition());
             }
+            _ecsModule.GetRegistry().emplace<TestEmitterTag>(entity);
             _particleModule.SpawnEmitter(entity, _selectedPresetIndex, SpawnEmitterFlagBits::eIsActive, { 8.0f, 35.0f, 300.0f });
         }
 

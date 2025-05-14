@@ -1,4 +1,5 @@
 #include "emitter_component.hpp"
+#include "particle_module.hpp"
 
 #include <magic_enum.hpp>
 
