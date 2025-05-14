@@ -18,6 +18,7 @@ class PlayerMovement{
         // Used for interpolation between crouching and standing
         currentPlayerHeight = playerHeight 
         isGrounded = false
+        _groundNormal = Vec3.new(0.0, 0.0, 0.0)
         isSliding = false
         slideForce = 3.0
         slideWishDirection = Vec3.new(0.0,0.0,0.0)
@@ -60,6 +61,7 @@ class PlayerMovement{
     playerHeight {_playerHeight}
     currentPlayerHeight {_currentPlayerHeight}
     isGrounded {_isGrounded}
+    groundNormal {_groundNormal}
 
     // Input
     lastMousePosition {_lastMousePosition}
@@ -89,6 +91,7 @@ class PlayerMovement{
     playerHeight=(value) { _playerHeight = value}
     currentPlayerHeight=(value) { _currentPlayerHeight = value}
     isGrounded=(value) { _isGrounded = value}
+    groundNormal=(value) { _groundNormal = value}
 
     // Input
     lastMousePosition=(value) {_lastMousePosition = value}
@@ -196,6 +199,7 @@ class PlayerMovement{
             if(hit.GetEntity(engine.GetECS()) != playerController) {
                 isGrounded = true
                 groundHitNormal = hit.normal
+                groundNormal = hit.normal // to be used outside the main movement function
                 break
             }
         }
@@ -306,19 +310,18 @@ class PlayerMovement{
     }
 
     Dash(engine, dt, playerController, camera){
-            //refill dashes
-            if(currentDashCount < 3){
-                currentDashRefillTime = currentDashRefillTime - dt
-                if(currentDashRefillTime <= 0.0){
-                    currentDashCount = currentDashCount + 1
-                    currentDashRefillTime = 3000.0
-                }
+        //refill dashes
+        if(currentDashCount < 3){
+            currentDashRefillTime = currentDashRefillTime - dt
+            if(currentDashRefillTime <= 0.0){
+                currentDashCount = currentDashCount + 1
+                currentDashRefillTime = 3000.0
             }
+        }
 
-            var playerBody = playerController.GetRigidbodyComponent()
-        if(engine.GetInput().GetDigitalAction("Dash").IsPressed() &&  currentDashCount > 0){
+        var playerBody = playerController.GetRigidbodyComponent()
+        if(engine.GetInput().GetDigitalAction("Dash").IsPressed() &&  currentDashCount > 0 ){
 
-            currentDashCount = currentDashCount - 1
             hasDashed = true
 
             var player = engine.GetECS().GetEntityByName("Camera")
@@ -349,17 +352,24 @@ class PlayerMovement{
             var dashLength = dashVector.length()
 
             var direction = Vec3.new(0.0, 0.0, 0.0)
-              // Check if the dash vector has a non-zero length before normalizing
-            if (dashLength > 0.001) { // Use a small epsilon for float comparison
+            
+            // Check if the dash vector has a non-zero length before normalizing
+            if (dashLength > 0.001) { 
                 direction = dashVector.mulScalar(1.0 / dashLength) // Manual normalization to avoid normalize() on zero
-                // Or simply: direction = dashVector.normalize(); if normalize() handles zero safely (some engines/libs do, some don't)
+                currentDashCount = currentDashCount - 1 // only decrement if dash is valid
+            }
+            
+            // Offset a bit by the ground normal
+            if(groundNormal.length() > 0.001 && isGrounded){
+                direction = direction + groundNormal.mulScalar(0.1)
+                direction = direction.normalize()
             }
 
             playerBody.SetVelocity(playerBody.GetVelocity() + direction.mulScalar(dashForce*15.0))
            
 
    
- 
+            // Keep using the raycast to determine end positions, it helps with cutting the dash and making it snappy
             var rayHitInfo = engine.GetPhysics().ShootRay(start, direction, dashForce)
             dashWishPosition = end
             if (!rayHitInfo.isEmpty) {
@@ -377,33 +387,38 @@ class PlayerMovement{
 
          if(hasDashed){
             dashTimer = dashTimer + dt
-            //playerBody.SetTranslation(Math.MixVec3(playerBody.GetPosition(), dashWishPosition, 0.1))
             var velocity = playerBody.GetVelocity()
+            var currentSpeed = velocity.length()
+
+            if( currentSpeed > 50.0){
+                var clampedVelocity = velocity.normalize().mulScalar(50.0)
+                playerBody.SetVelocity(clampedVelocity)
+            }
+
             if(Math.Distance(playerBody.GetPosition(), dashWishPosition) < 3.0){
                 hasDashed = false
                 dashTimer = 0.0
-                System.print("Dash ended")
                 playerBody.SetGravityFactor(gravityFactor)
                 //clamp velocity at the end
-                var clampedVelocity = playerBody.GetVelocity().normalize()
-                clampedVelocity = clampedVelocity.mulScalar(maxSpeed)
-                playerBody.SetVelocity(Math.MixVec3(velocity, clampedVelocity, 0.8))
+                if( currentSpeed > maxSpeed){
+                    var clampedVelocity = velocity.normalize().mulScalar(maxSpeed)
+                    playerBody.SetVelocity(clampedVelocity)
+                }
 
-                var direction = (dashWishPosition - playerBody.GetPosition()).normalize()
-                //playerBody.SetVelocity(velocity + direction.mulScalar(dashForce))
             }else{
                 playerBody.SetGravityFactor(0.0)
                 playerBody.SetFriction(99.0)
-                
             }
 
             if(dashTimer > 200.0){
                 hasDashed = false
                 dashTimer = 0.0
-
-                var direction = (dashWishPosition - playerBody.GetPosition()).normalize()
-                //playerBody.SetVelocity(velocity +direction.mulScalar(dashForce))
-
+                playerBody.SetGravityFactor(gravityFactor)
+                //clamp velocity at the end
+                if( currentSpeed > maxSpeed){
+                    var clampedVelocity = velocity.normalize().mulScalar(maxSpeed)
+                    playerBody.SetVelocity(clampedVelocity)
+                }
             }
          }
     }
