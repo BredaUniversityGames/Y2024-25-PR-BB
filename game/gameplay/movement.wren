@@ -213,8 +213,10 @@ class PlayerMovement{
 
         if(movement.length() > 0.1){
             playerBody.SetFriction(0.0)
+            _gun.playWalkAnim(engine)
         }else{
             playerBody.SetFriction(12.0)
+            _gun.playIdleAnim(engine)
         }
         
         playerBody.SetGravityFactor(gravityFactor)
