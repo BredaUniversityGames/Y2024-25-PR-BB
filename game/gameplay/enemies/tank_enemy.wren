@@ -1,4 +1,4 @@
-import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, EmitterPresetID, Perlin
+import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, EmitterPresetID, Perlin
 import "../player.wren" for PlayerVariables
 
 class TankEnemy {
@@ -23,13 +23,13 @@ class TankEnemy {
         transform.scale = size
 
         _rootEntity.AttachChild(_meshEntity)
-        _meshEntity.GetTransformComponent().translation = Vec3.new(0,-104,0)
+        _meshEntity.GetTransformComponent().translation = Vec3.new(0,-121,0)
         _meshEntity.GetTransformComponent().scale = Vec3.new(1.4, 1.4, 1.4)
 
         _lightEntity = engine.GetECS().NewEntity()
         _lightEntity.AddNameComponent().name = "EnemyLight"
         var lightTransform = _lightEntity.AddTransformComponent()
-        lightTransform.translation = Vec3.new(5.0, 50, 0.0)
+        lightTransform.translation = Vec3.new(-5.0, 50, 0.0)
         _pointLight = _lightEntity.AddPointLightComponent()
         _rootEntity.AttachChild(_lightEntity)
 
@@ -37,38 +37,41 @@ class TankEnemy {
         _pointLight.range = 2
         _pointLight.color = Vec3.new(0.0, 1.0, 0.0)
 
-        var rb = Rigidbody.new(engine.GetPhysics(), colliderShape, true, false)
+        var rb = Rigidbody.new(engine.GetPhysics(), colliderShape, PhysicsObjectLayer.eENEMY(), false)
         var body = _rootEntity.AddRigidbodyComponent(rb)
         body.SetGravityFactor(2.2)
 
         var animations = _meshEntity.GetAnimationControlComponent()
-        animations.Play("Run", 1.25, true, 1.0, true)
+        animations.Play("Walk", 0.4, true, 1.0, true)
 
         _isAlive = true
 
         _reasonTimer = 2000
 
-        _attackRange = 7
+        _attackRange = 9
         _attackDamage = 30
-        _shakeIntensity = 1.6
+        _shakeIntensity = 2.0
         
         _movingState = false
         _attackingState = false
         _recoveryState = false
         _hitState = false
 
-        _attackMaxCooldown = 2000
+        _attackMaxCooldown = 2500
         _attackCooldown = _attackMaxCooldown
 
-        _attackMaxTime = 1000
-        _attackTime = 0
+        _attackMaxTime = 2300
+        _attackTime = _attackMaxTime
+
+        _attackTiming = 1416
+        _attackTimer = _attackTiming
 
         _recoveryMaxTime = 1500
         _recoveryTime = 0
 
         _evaluateState = true
 
-        _health = 250
+        _health = 500
 
         _hitTimer = 0
 
@@ -80,6 +83,7 @@ class TankEnemy {
         _stepSFX = "event:/DemonStep"
 
         _attackSFX = "event:/DemonAttack"
+        _attackHitSFX = "event:/DemonAttackHit"
 
         _walkEventInstance = null
 
@@ -148,19 +152,36 @@ class TankEnemy {
         if (_isAlive) {
             if (_attackingState) {
                 _attackTime = _attackTime - dt
-                if (_attackTime <= 0 ) {
-                    if (Math.Distance(playerPos, pos) < _attackRange && !playerVariables.IsInvincible()) {
-                        playerVariables.DecreaseHealth(_attackDamage)
-                        playerVariables.cameraVariables.shakeIntensity = _shakeIntensity
-                        playerVariables.invincibilityTime = playerVariables.invincibilityMaxTime
+                _attackTimer = _attackTimer - dt
 
-                        engine.GetAudio().PlaySFX("assets/sounds/hit1.wav", 1.0)
-                        animations.Play("Swipe", 1.0, false, 0.1, false)
+                if (_attackTimer <= 0 ) {
+                    _rootEntity.GetAudioEmitterComponent().AddEvent(engine.GetAudio().PlayEventOnce(_attackHitSFX))
+                    if (!playerVariables.IsInvincible()) {
+
+                        var forward = Math.ToVector(_meshEntity.GetTransformComponent().rotation)
+                        var toPlayer = playerPos - pos
+
+                        if (Math.Dot(forward, toPlayer) >= 0.8 && Math.Distance(playerPos, pos) < _attackRange) {
+                            playerVariables.DecreaseHealth(_attackDamage)
+                            playerVariables.cameraVariables.shakeIntensity = _shakeIntensity
+                            playerVariables.invincibilityTime = playerVariables.invincibilityMaxTime
+
+                            engine.GetAudio().PlaySFX("assets/sounds/hit1.wav", 1.0)
+                        }
+
+                        animations.Play("Idle", 1.0, true, 1.0, false)
+                        animations.SetTime(0.0)
+
+                        _attackTimer = 999999
                     }
+                }
 
+                if (_attackTime <= 0 ) {
                     _attackingState = false
                     _recoveryState = true
                     _recoveryTime = _recoveryMaxTime
+                    _attackTime = _attackMaxTime
+                    _attackTimer = _attackTiming
                 }
             }
             if (_recoveryState) {
@@ -212,7 +233,7 @@ class TankEnemy {
 
                 } else if (_movingState == false) { // Enter attack state
                     body.SetFriction(0.0)
-                    animations.Play("Run", 0.6, true, 0.5, true)
+                    animations.Play("Walk", 0.4, true, 0.5, true)
                     _movingState = true
                 }
             }
@@ -226,7 +247,7 @@ class TankEnemy {
                     _evaluateState = true
                     _hitState = false
                     body.SetDynamic()
-                    animations.Play("Run", 1.25, true, 0.5, true)
+                    animations.Play("Walk", 0.4, true, 0.5, true)
                 }
             }
         } else {

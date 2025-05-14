@@ -26,7 +26,7 @@ public:
         }
         case eENEMY:
         {
-            return inObject2 == eSTATIC || inObject2 == ePLAYER || inObject2 == ePROJECTILE;
+            return inObject2 == eSTATIC || inObject2 == ePLAYER || inObject2 == ePROJECTILE || inObject2 == eENEMY;
         }
         default:
             JPH_ASSERT(false);

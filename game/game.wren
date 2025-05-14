@@ -130,9 +130,7 @@ class Main {
 
         __enemyShape = ShapeFactory.MakeCapsuleShape(70.0, 70.0)
         __eyeShape = ShapeFactory.MakeSphereShape(0.65)
-
-        __enemyShape = ShapeFactory.MakeCapsuleShape(100.0, 35.0)
-        __tankEnemyShape = ShapeFactory.MakeCapsuleShape(160.0, 35.0)
+        __tankEnemyShape = ShapeFactory.MakeCapsuleShape(140.0, 50.0)
 
         // Music
 
@@ -369,12 +367,15 @@ class Main {
             }
 
             if (engine.GetInput().DebugGetKey(Keycode.eK())) {
-                __enemyList.add(TankEnemy.new(engine, Vec3.new(-27, 18, 7), Vec3.new(0.026, 0.026, 0.026), 6, "assets/models/Berserker.glb", __enemyShape))
+                __enemyList.add(TankEnemy.new(engine, Vec3.new(0, 18, 7), Vec3.new(0.026, 0.026, 0.026), 4, "assets/models/Berserker.glb", __tankEnemyShape))
             }
 
             if (engine.GetInput().DebugGetKey(Keycode.eJ())) {
                 __enemyList.add(RangedEnemy.new(engine, Vec3.new(-27, 18, 7), Vec3.new(2.25,2.25,2.25), 5, "assets/models/eye.glb", __eyeShape))
             }
+
+            __cameraVariables.Shake(engine, __camera, dt)
+            __cameraVariables.Tilt(engine, __camera, dt)
         }
 
         // Check if pause key was pressed
@@ -425,6 +426,6 @@ class Main {
             }
         }
 
-        __waveSystem.Update(dt)
+        //__waveSystem.Update(dt)
     }
 }
