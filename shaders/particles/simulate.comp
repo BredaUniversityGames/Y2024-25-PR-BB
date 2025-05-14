@@ -4,6 +4,12 @@
 #include "particle_binds.glsl"
 #include "rng_helper.glsl"
 
+struct LocalEmitter
+{
+    vec3 position;
+    uint id;
+};
+
 layout (set = 2, binding = 0) buffer CulledInstancesSSB
 {
     ParticleInstance instances[MAX_PARTICLES];
@@ -14,14 +20,20 @@ layout (set = 3, binding = 0) uniform CameraUBO
     Camera camera;
 };
 
-layout (set = 4, binding = 0) buffer DrawCommandsSSB
+layout (set = 4, binding = 0) uniform LocalEmitterUBO
+{
+    LocalEmitter localEmitters[MAX_EMITTERS];
+};
+
+layout (set = 5, binding = 0) buffer DrawCommandsSSB
 {
     DrawCommands drawCommands;
 };
 
-layout (push_constant) uniform DeltaTime
+layout (push_constant) uniform PushConstants
 {
     float deltaTime;
+    uint localEmitterCount;
 };
 
 layout (local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
@@ -56,14 +68,27 @@ void main()
             return;
         }
 
-        // simulate movement
-        vec3 force = vec3(0.0);
-        force.y -= particle.mass;
-        vec3 rng = snoise3(vec3(float(index), particle.life / particle.maxLife, deltaTime));
-        force += particle.velocityRandomness * rng;
+        if ((particle.flags & ISLOCAL) == ISLOCAL)
+        { // get position from related emitter
+            for (int i = 0; i < localEmitterCount; ++i)
+            {
+                if (localEmitters[i].id == particle.emitterId)
+                {
+                    particle.position = localEmitters[i].position;
+                    break;
+                }
+            }
+        }
+        else
+        { // simulate movement
+            vec3 force = vec3(0.0);
+            force.y -= particle.mass;
+            vec3 rng = snoise3(vec3(float(index), particle.life / particle.maxLife, deltaTime));
+            force += particle.velocityRandomness * rng;
 
-        particle.velocity += force;
-        particle.position += particle.velocity * deltaTime;
+            particle.velocity += force;
+            particle.position += particle.velocity * deltaTime;
+        }
 
         // simulate angle
         particle.rotationVelocity.x += particle.rotationVelocity.y * deltaTime;

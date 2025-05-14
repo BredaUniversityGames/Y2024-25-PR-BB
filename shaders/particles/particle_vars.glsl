@@ -1,10 +1,12 @@
 const uint MAX_PARTICLES = 1024 * 64;
+const uint MAX_EMITTERS = 256;
 
 // particle rendering flags
 const uint UNLIT = 1 << 0;
 const uint NOSHADOW = 1 << 1;
 const uint FRAMEBLEND = 1 << 2;
 const uint LOCKY = 1 << 3;
+const uint ISLOCAL = 1 << 4;
 
 struct Particle
 {
@@ -23,6 +25,7 @@ struct Particle
     uint frameCount;
     ivec2 maxFrames;
     vec2 textureMultiplier;
+    uint emitterId;
 };
 
 struct ParticleCounters
