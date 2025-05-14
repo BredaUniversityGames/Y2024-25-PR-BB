@@ -1,5 +1,7 @@
 import "engine_api.wren" for Engine, ECS, Entity, Vec3, Vec2, Quat, Math, TransformComponent, Input, Random, ShapeFactory
 import "enemies/enemies.wren" for MeleeEnemy
+import "enemies/ranged_enemy.wren" for RangedEnemy
+
 
 class Spawn {
     construct new(enemyType, spawnLocationId, time, count) {
@@ -135,17 +137,40 @@ class WaveSystem {
     }
 
     Spawn(spawn) {
-        var enemyModelPath = "assets/models/Skeleton.glb"
-        if(spawn.SpawnLocationId > _spawnLocations.count) {
-            System.error("Invalid spawn location ID %(spawn.SpawnLocationId)")
+
+        if(spawn.EnemyType=="Skeleton"){
+            var enemyModelPath = "assets/models/Skeleton.glb"
+            if(spawn.SpawnLocationId > _spawnLocations.count) {
+                System.error("Invalid spawn location ID %(spawn.SpawnLocationId)")
+            }
+
+            var spawnerEntity = this.FindLocation(spawn)
+            var position = spawnerEntity.GetTransformComponent().translation
+
+            for(i in 0...spawn.Count) {
+                var enemy = _enemyList.add(MeleeEnemy.new(_engine, position, Vec3.new(0.02, 0.02, 0.02), 10, enemyModelPath, _enemyShape))
+                enemy.FindNewPath(_engine)
+            }
+            return
         }
 
-        var spawnerEntity = this.FindLocation(spawn)
-        var position = spawnerEntity.GetTransformComponent().translation
+        if(spawn.EnemyType=="Eye"){
+            var enemyModelPath = "assets/models/eye.glb"
+            var enemyShape = ShapeFactory.MakeSphereShape(0.65)
 
-        for(i in 0...spawn.Count) {
-            var enemy = _enemyList.add(MeleeEnemy.new(_engine, position, Vec3.new(0.02, 0.02, 0.02), 10, enemyModelPath, _enemyShape))
-            enemy.FindNewPath(_engine)
+            if(spawn.SpawnLocationId > _spawnLocations.count) {
+                System.error("Invalid spawn location ID %(spawn.SpawnLocationId)")
+            }
+
+            var spawnerEntity = this.FindLocation(spawn)
+            var position = spawnerEntity.GetTransformComponent().translation
+            position.y = position.y + 14.0
+
+            for(i in 0...spawn.Count) {
+                var enemy = _enemyList.add(RangedEnemy.new(_engine, position,  Vec3.new(2.25,2.25,2.25), 5, enemyModelPath, enemyShape))
+                enemy.FindNewPath(_engine)
+            }
+            return
         }
     }
 

@@ -17,6 +17,7 @@ class GraphicsContext;
 
 struct Buffer;
 struct Emitter;
+struct LocalEmitter;
 struct RenderSceneDescription;
 
 class ParticlePass final : public FrameGraphRenderPass
@@ -45,13 +46,14 @@ private:
         eKickOff = 0,
         eEmit,
         eSimulate,
-        eRenderInstanced,
+        eRenderIndexedIndirect,
         eNone
     };
 
     struct SimulatePushConstant
     {
         float deltaTime;
+        uint32_t localEmitterCount;
     } _simulatePushConstant;
     struct EmitPushConstant
     {
@@ -66,14 +68,19 @@ private:
     const BloomSettings& _bloomSettings;
 
     std::vector<Emitter> _emitters;
+    std::vector<LocalEmitter> _localEmitters;
 
     std::array<vk::Pipeline, 4> _pipelines;
     std::array<vk::PipelineLayout, 4> _pipelineLayouts;
 
-    // particle instances storage buffers
+    // indirect draw storage buffer
+    ResourceHandle<Buffer> _drawCommandsBuffer;
+    vk::DescriptorSet _drawCommandsDescriptorSet;
+    vk::DescriptorSetLayout _drawCommandsDescriptorSetLayout;
+    // particle instances storage buffer
     ResourceHandle<Buffer> _culledInstancesBuffer;
-    vk::DescriptorSet _instancesDescriptorSet;
-    vk::DescriptorSetLayout _instancesDescriptorSetLayout;
+    vk::DescriptorSet _culledInstancesDescriptorSet;
+    vk::DescriptorSetLayout _culledInstancesDescriptorSetLayout;
     // particle storage buffers
     std::array<ResourceHandle<Buffer>, 5> _particlesBuffers;
     vk::DescriptorSet _particlesBuffersDescriptorSet;
@@ -82,9 +89,16 @@ private:
     ResourceHandle<Buffer> _emittersBuffer;
     vk::DescriptorSet _emittersDescriptorSet;
     vk::DescriptorSetLayout _emittersBufferDescriptorSetLayout;
-    // staging buffer
-    vk::Buffer _stagingBuffer;
-    VmaAllocation _stagingBufferAllocation;
+    // emitter staging buffer
+    vk::Buffer _emitterStagingBuffer;
+    VmaAllocation _emitterStagingBufferAllocation;
+    // local emitter uniform buffer
+    ResourceHandle<Buffer> _localEmittersBuffer;
+    vk::DescriptorSet _localEmittersDescriptorSet;
+    vk::DescriptorSetLayout _localEmittersDescriptorSetLayout;
+    // local emitter staging buffer
+    vk::Buffer _localEmitterStagingBuffer;
+    VmaAllocation _localEmitterStagingBufferAllocation;
     // buffers for rendering
     ResourceHandle<Buffer> _vertexBuffer;
     ResourceHandle<Buffer> _indexBuffer;
@@ -92,7 +106,7 @@ private:
     void RecordKickOff(vk::CommandBuffer commandBuffer);
     void RecordEmit(vk::CommandBuffer commandBuffer);
     void RecordSimulate(vk::CommandBuffer commandBuffer, const CameraResource& camera, float deltaTime, uint32_t currentFrame);
-    void RecordRenderIndexed(vk::CommandBuffer commandBuffer, const RenderSceneDescription& scene, uint32_t currentFrame);
+    void RecordRenderIndexedIndirect(vk::CommandBuffer commandBuffer, const RenderSceneDescription& scene, uint32_t currentFrame);
 
     void UpdateEmitters(vk::CommandBuffer commandBuffer);
 
@@ -105,4 +119,6 @@ private:
     void UpdateParticleBuffersDescriptorSets();
     void UpdateParticleInstancesBufferDescriptorSet();
     void UpdateEmittersBuffersDescriptorSets();
+    void UpdateLocalEmittersBuffersDescriptorSets();
+    void UpdateDrawCommandsBufferDescriptorSet();
 };

@@ -8,6 +8,9 @@ import "gameplay/music_player.wren" for MusicPlayer, BGMPlayer
 import "gameplay/wave_system.wren" for WaveSystem, WaveConfig, SpawnLocationType
 import "analytics/analytics.wren" for AnalyticsManager
 
+import "gameplay/enemies/ranged_enemy.wren" for RangedEnemy
+import "gameplay/soul.wren" for Soul, SoulManager
+
 class Main {
 
     static Start(engine) {
@@ -87,6 +90,7 @@ class Main {
         engine.LoadModel("assets/models/blockoutv6_0.glb")
 
         engine.PreloadModel("assets/models/Skeleton.glb")
+        engine.PreloadModel("assets/models/eye.glb")
 
         engine.PreloadModel("assets/models/Revolver.glb")
         engine.PreloadModel("assets/models/Shotgun.glb")
@@ -123,6 +127,9 @@ class Main {
 
         __pauseEnabled = false
 
+        __enemyShape = ShapeFactory.MakeCapsuleShape(70.0, 70.0)
+        __eyeShape = ShapeFactory.MakeSphereShape(0.65)
+
         // Music
 
         var ambientList = [
@@ -132,12 +139,12 @@ class Main {
 
         __musicPlayer = BGMPlayer.new(engine.GetAudio(),
             "event:/Gameplay",
-            0.05)
+            0.025)
 
         __ambientPlayer = MusicPlayer.new(engine.GetAudio(), ambientList, 0.1)
 
         var spawnLocations = []
-        for(i in 0..7) {
+        for(i in 0..8) {
             spawnLocations.add(engine.GetECS().GetEntityByName("Spawner_%(i)"))
         }
 
@@ -153,21 +160,26 @@ class Main {
             .AddSpawn("Skeleton", 2, 1, 1)
             .AddSpawn("Skeleton", 3, 1, 2)
             .AddSpawn("Skeleton", SpawnLocationType.Furthest, 7, 3)
+            .AddSpawn("Eye", SpawnLocationType.Closest, 8, 1)
             .AddSpawn("Skeleton", 0, 10, 1)
             .AddSpawn("Skeleton", 1, 15, 1)
             .AddSpawn("Skeleton", 2, 5, 1)
             .AddSpawn("Skeleton", 3, 15, 3)
+            .AddSpawn("Eye", SpawnLocationType.Closest, 25, 1)
         )
         waveConfigs.add(WaveConfig.new().SetDuration(60)
             .AddSpawn("Skeleton", 0, 1, 2)
             .AddSpawn("Skeleton", 1, 1, 2)
             .AddSpawn("Skeleton", 2, 1, 1)
             .AddSpawn("Skeleton", 3, 1, 2)
+            .AddSpawn("Eye", SpawnLocationType.Closest, 1, 1)
             .AddSpawn("Skeleton", SpawnLocationType.Furthest, 5, 5)
             .AddSpawn("Skeleton", 0, 15, 2)
             .AddSpawn("Skeleton", 1, 15, 1)
             .AddSpawn("Skeleton", 2, 15, 2)
             .AddSpawn("Skeleton", 3, 15, 3)
+            .AddSpawn("Eye", SpawnLocationType.Closest, 5, 1)
+            .AddSpawn("Eye", SpawnLocationType.Closest, 20, 1)
             .AddSpawn("Skeleton", SpawnLocationType.Furthest, 15, 5)
             .AddSpawn("Skeleton", 0, 40, 3)
             .AddSpawn("Skeleton", 1, 40, 1)
@@ -176,6 +188,9 @@ class Main {
             .AddSpawn("Skeleton", SpawnLocationType.Furthest, 7, 5)
         )
         __waveSystem = WaveSystem.new(engine, waveConfigs, __enemyList, spawnLocations, __player)
+
+        // Souls
+        __soulManager = SoulManager.new(engine, __player)
 
         // Pause Menu callbacks
 
@@ -196,7 +211,7 @@ class Main {
             engine.GetGame().SetPauseMenuEnabled(false)
             engine.GetInput().SetActiveActionSet("Shooter")
             engine.GetInput().SetMouseHidden(true)
-            __musicPlayer.SetVolume(engine.GetAudio(), 0.05)
+            __musicPlayer.SetVolume(engine.GetAudio(), 0.025)
             System.print("Pause Menu is %(__pauseEnabled)!")
         }
 
@@ -351,6 +366,11 @@ class Main {
                     __activeWeapon.reload(engine)
                 }
             }
+            
+            if (engine.GetInput().DebugGetKey(Keycode.eJ())) {
+                // shit
+                __enemyList.add(RangedEnemy.new(engine, Vec3.new(-27, 18, 7), Vec3.new(2.25,2.25,2.25), 5, "assets/models/eye.glb", __eyeShape))
+            }
         }
 
         // Check if pause key was pressed
@@ -388,19 +408,24 @@ class Main {
         var mousePosition = engine.GetInput().GetMousePosition()
         __playerMovement.lastMousePosition = mousePosition
 
-        var playerPos = __player.GetTransformComponent().translation
+        var playerPos = __playerController.GetRigidbodyComponent().GetPosition()
+
+        if(engine.GetInput().DebugGetKey(Keycode.eB())){
+           __soulManager.SpawnSoul(engine, Vec3.new(10.0,2.0,44.0))
+        }
 
         for (enemy in __enemyList) {
 
             // We delete the entity from the ecs when it dies
             // Then we check for entity validity, and remove it from the list if it is no longer valid
             if (enemy.entity.IsValid()) {
-                enemy.Update(playerPos, __playerVariables, engine, dt)
+                enemy.Update(playerPos, __playerVariables, engine, dt, __soulManager)
             } else {
                 __enemyList.removeAt(__enemyList.indexOf(enemy))
             }
         }
 
+        __soulManager.Update(engine, __playerVariables, dt)
         __waveSystem.Update(dt)
     }
 }
