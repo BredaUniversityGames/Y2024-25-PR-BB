@@ -5,8 +5,10 @@
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
 #include "ecs_module.hpp"
+#include "game_module.hpp"
 
 #include "imgui.h"
+
 #include <magic_enum.hpp>
 #include <misc/cpp/imgui_stdlib.h>
 
@@ -226,14 +228,18 @@ void ParticleEditor::RenderEmitterPresetEditor()
 
             TransformComponent transform;
             _ecsModule.GetRegistry().emplace<TransformComponent>(entity, transform);
-            const auto view = _ecsModule.GetRegistry().view<CameraComponent, TransformComponent>();
-            for (const auto cameraEntity : view)
+            const auto view = _ecsModule.GetRegistry().view<NameComponent, TransformComponent>();
+            for (const auto viewEntity : view)
             {
-                const auto& cameraTransform = _ecsModule.GetRegistry().get<TransformComponent>(cameraEntity);
-                TransformHelpers::SetLocalPosition(_ecsModule.GetRegistry(), entity, cameraTransform.GetLocalPosition());
+                const auto& nameComponent = _ecsModule.GetRegistry().get<NameComponent>(viewEntity);
+                if (nameComponent.name == "Player") // hardcoded for now but should be alright
+                {
+                    const auto& cameraTransform = _ecsModule.GetRegistry().get<TransformComponent>(viewEntity);
+                    TransformHelpers::SetLocalPosition(_ecsModule.GetRegistry(), entity, cameraTransform.GetLocalPosition());
+                }
             }
             _ecsModule.GetRegistry().emplace<TestEmitterTag>(entity);
-            _particleModule.SpawnEmitter(entity, _selectedPresetIndex, SpawnEmitterFlagBits::eIsActive, { 8.0f, 35.0f, 300.0f });
+            _particleModule.SpawnEmitter(entity, _selectedPresetIndex, SpawnEmitterFlagBits::eIsActive);
         }
 
         ImGui::SameLine();
