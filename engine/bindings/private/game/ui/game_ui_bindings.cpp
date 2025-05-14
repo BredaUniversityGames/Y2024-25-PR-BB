@@ -113,7 +113,7 @@ void BindGameUI(wren::ForeignModule& module)
     auto& button = module.klass<UIButton, UIElement>("UIButton");
     button.funcExt<bindings::ButtonOnPress>("OnPress", "void callback() -> void");
 
-    auto& canvas = module.klass<Canvas, UIElement>("UIButton");
+    module.klass<Canvas, UIElement>("Canvas");
 
     auto& mainMenu = module.klass<MainMenu, Canvas>("MainMenu");
     mainMenu.propReadonlyExt<bindings::SettingsButton>("settingsButton");
