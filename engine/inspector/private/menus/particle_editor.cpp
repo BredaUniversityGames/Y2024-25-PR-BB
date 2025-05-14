@@ -5,10 +5,8 @@
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
 #include "ecs_module.hpp"
-#include "game_module.hpp"
 
 #include "imgui.h"
-
 #include <magic_enum.hpp>
 #include <misc/cpp/imgui_stdlib.h>
 
