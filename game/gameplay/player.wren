@@ -21,7 +21,7 @@ class PlayerVariables {
         _cameraVariablesRef = null
 
         _hitmarkTimer = 0
-
+        
         _multiplier = 1.0
         _multiplierIncrement = 0.2
 
@@ -56,7 +56,6 @@ class PlayerVariables {
     
     cameraVariables {_cameraVariablesRef}
     cameraVariables=(value) {_cameraVariablesRef = value}
-
 
     hitmarkTimer=(value){_hitmarkTimer = value}
     health=(value) {_health = value}

@@ -337,8 +337,11 @@ class Shotgun {
                                 for (enemy in enemies) {
                                     if (enemy.entity == hitEntity) {
                                         hitAnEnemy = true
-                                        playerVariables.hitmarkTimer = 200 //ms      
+                                        
+                                        playerVariables.hitmarkTimer = 200 //ms
+                                              
                                         enemy.DecreaseHealth(_damage,engine)
+                                        
                                         playerVariables.multiplierTimer = playerVariables.multiplierMaxTime
                                         playerVariables.IncreaseHealth(0.1 * _damage)
                                         if (enemy.health <= 0) {

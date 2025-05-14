@@ -217,7 +217,6 @@ class PlayerMovement{
             playerBody.SetFriction(12.0)
         }
         
-        
         playerBody.SetGravityFactor(gravityFactor)
 
         var isJumpHeld = engine.GetInput().GetDigitalAction("Jump").IsHeld()

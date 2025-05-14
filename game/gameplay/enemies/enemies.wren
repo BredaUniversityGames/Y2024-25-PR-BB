@@ -162,7 +162,7 @@ class MeleeEnemy {
                         playerVariables.cameraVariables.shakeIntensity = _shakeIntensity
                         playerVariables.invincibilityTime = playerVariables.invincibilityMaxTime
 
-                        engine.GetAudio().PlaySFX("assets/sounds/hit1.wav", 1.0)``                      
+                        engine.GetAudio().PlaySFX("assets/sounds/hit1.wav", 1.0)
                         animations.Play("Attack", 1.0, false, 0.1, false)
                     }
 

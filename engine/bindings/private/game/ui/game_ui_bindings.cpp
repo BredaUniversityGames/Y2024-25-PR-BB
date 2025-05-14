@@ -110,7 +110,7 @@ std::shared_ptr<UIElement> AsBaseClass(std::shared_ptr<UIButton> self)
 void ShowHitmarker(HUD& self, bool val)
 {
     auto hitmarker = self.hitmarker.lock();
-    if(!hitmarker )
+    if (!hitmarker)
     {
         return;
     }
@@ -119,7 +119,6 @@ void ShowHitmarker(HUD& self, bool val)
 }
 
 }
-
 
 void BindGameUI(wren::ForeignModule& module)
 {
@@ -150,7 +149,7 @@ void BindGameUI(wren::ForeignModule& module)
     hud.funcExt<bindings::UpdateMultiplierText>("UpdateMultiplierText", "Update multiplier number");
     hud.funcExt<bindings::UpdateUltReadyText>("UpdateUltReadyText", "Use bool to set if ultimate is ready");
     hud.funcExt<bindings::ShowHitmarker>("ShowHitmarker", "should show the hitmarker");
- 
+
     auto& gameOver = module.klass<GameOverMenu>("GameOverMenu");
 
     gameOver.propReadonlyExt<bindings::GameOverMenuButton>("backButton");

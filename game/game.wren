@@ -82,9 +82,6 @@ class Main {
         __camera.AddNameComponent().name = "Camera"
         __camera.AddAudioListenerTag()
 
-
-
-
         __player.AddTransformComponent().translation = startPos
         __player.AddNameComponent().name = "Player"
 
@@ -134,7 +131,6 @@ class Main {
             "assets/music/ambient/207841__speedenza__dark-swamp-theme-1.wav",
             ""
             ]
-
 
         __musicPlayer = BGMPlayer.new(engine.GetAudio(),
             "event:/Gameplay",
@@ -295,7 +291,7 @@ class Main {
 
         if (engine.GetInput().DebugIsInputEnabled()) {
 
-            __playerMovement.Update(engine, dt, __playerController, __camera,__activeWeapon)
+            __playerMovement.Update(engine, dt, __playerController, __camera)
 
             for (weapon in __armory) {
                 weapon.cooldown = Math.Max(weapon.cooldown - dt, 0)
