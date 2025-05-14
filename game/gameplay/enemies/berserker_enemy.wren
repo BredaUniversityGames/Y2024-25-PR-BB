@@ -2,7 +2,7 @@ import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, PhysicsObjec
 import "../player.wren" for PlayerVariables
 import "../soul.wren" for Soul, SoulManager
 
-class TankEnemy {
+class BerserkerEnemy {
 
     construct new(engine, spawnPosition, size, maxSpeed, enemyModel, colliderShape) {
         
@@ -16,7 +16,7 @@ class TankEnemy {
         _meshEntity = engine.LoadModel(enemyModel)
 
         _rootEntity = engine.GetECS().NewEntity()
-        _rootEntity.AddNameComponent().name = "TankEnemy"
+        _rootEntity.AddNameComponent().name = "BerserkerEnemy"
         _rootEntity.AddEnemyTag()
         _rootEntity.AddAudioEmitterComponent()
         var transform = _rootEntity.AddTransformComponent()
@@ -30,7 +30,7 @@ class TankEnemy {
         _lightEntity = engine.GetECS().NewEntity()
         _lightEntity.AddNameComponent().name = "EnemyLight"
         var lightTransform = _lightEntity.AddTransformComponent()
-        lightTransform.translation = Vec3.new(-5.0, 50, 0.0)
+        lightTransform.translation = Vec3.new(0, 12, 23)
         _pointLight = _lightEntity.AddPointLightComponent()
         _rootEntity.AttachChild(_lightEntity)
 
@@ -159,8 +159,8 @@ class TankEnemy {
                     _rootEntity.GetAudioEmitterComponent().AddEvent(engine.GetAudio().PlayEventOnce(_attackHitSFX))
                     if (!playerVariables.IsInvincible()) {
 
-                        var forward = Math.ToVector(_meshEntity.GetTransformComponent().rotation)
-                        var toPlayer = playerPos - pos
+                        var forward = Math.ToVector(_rootEntity.GetTransformComponent().rotation)
+                        var toPlayer = pos - playerPos
 
                         if (Math.Dot(forward, toPlayer) >= 0.8 && Math.Distance(playerPos, pos) < _attackRange) {
                             playerVariables.DecreaseHealth(_attackDamage)

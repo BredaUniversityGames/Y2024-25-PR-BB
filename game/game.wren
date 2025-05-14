@@ -7,7 +7,7 @@ import "gameplay/player.wren" for PlayerVariables
 import "gameplay/music_player.wren" for MusicPlayer, BGMPlayer
 import "gameplay/wave_system.wren" for WaveSystem, WaveConfig, SpawnLocationType
 import "analytics/analytics.wren" for AnalyticsManager
-import "gameplay/enemies/tank_enemy.wren" for TankEnemy
+import "gameplay/enemies/berserker_enemy.wren" for BerserkerEnemy
 
 import "gameplay/enemies/ranged_enemy.wren" for RangedEnemy
 import "gameplay/soul.wren" for Soul, SoulManager
@@ -131,7 +131,7 @@ class Main {
 
         __enemyShape = ShapeFactory.MakeCapsuleShape(70.0, 70.0)
         __eyeShape = ShapeFactory.MakeSphereShape(0.65)
-        __tankEnemyShape = ShapeFactory.MakeCapsuleShape(140.0, 50.0)
+        __berserkerEnemyShape = ShapeFactory.MakeCapsuleShape(140.0, 50.0)
 
         // Music
 
@@ -142,7 +142,7 @@ class Main {
 
         __musicPlayer = BGMPlayer.new(engine.GetAudio(),
             "event:/BGM/Gameplay",
-            0.025)
+            0.05)
 
         __ambientPlayer = MusicPlayer.new(engine.GetAudio(), ambientList, 0.1)
 
@@ -204,7 +204,7 @@ class Main {
             engine.GetInput().SetActiveActionSet("UserInterface")
             engine.GetInput().SetMouseHidden(false)
             engine.GetUI().SetSelectedElement(engine.GetGame().GetPauseMenu().continueButton)
-            __musicPlayer.SetVolume(engine.GetAudio(), 0.025)
+            __musicPlayer.SetVolume(engine.GetAudio(), 0.05)
             System.print("Pause Menu is %(__pauseEnabled)!")
         }
 
@@ -214,7 +214,7 @@ class Main {
             engine.GetGame().SetPauseMenuEnabled(false)
             engine.GetInput().SetActiveActionSet("Shooter")
             engine.GetInput().SetMouseHidden(true)
-            __musicPlayer.SetVolume(engine.GetAudio(), 0.025)
+            __musicPlayer.SetVolume(engine.GetAudio(), 0.05)
             System.print("Pause Menu is %(__pauseEnabled)!")
         }
 
@@ -371,7 +371,7 @@ class Main {
             }
 
             if (engine.GetInput().DebugGetKey(Keycode.eK())) {
-                __enemyList.add(TankEnemy.new(engine, Vec3.new(0, 18, 7), Vec3.new(0.026, 0.026, 0.026), 4, "assets/models/Berserker.glb", __tankEnemyShape))
+                __enemyList.add(BerserkerEnemy.new(engine, Vec3.new(0, 18, 7), Vec3.new(0.026, 0.026, 0.026), 4, "assets/models/Berserker.glb", __berserkerEnemyShape))
             }
 
             if (engine.GetInput().DebugGetKey(Keycode.eJ())) {
@@ -435,6 +435,6 @@ class Main {
         }
 
         __soulManager.Update(engine, __playerVariables, dt)
-        __waveSystem.Update(dt)
+        //__waveSystem.Update(dt)
     }
 }
