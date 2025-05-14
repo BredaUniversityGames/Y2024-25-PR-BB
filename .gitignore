@@ -3,6 +3,9 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
+# Visual Studio Code
+.vscode
+
 # Asset files (stored on Perforce)
 assets
 export_files

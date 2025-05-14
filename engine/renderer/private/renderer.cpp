@@ -265,6 +265,7 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
         .SetDebugLabelColor(GetColor(ColorType::Plum))
         .AddInput(_gBuffers->Depth(), FrameGraphResourceType::eAttachment)
         .AddOutput(_hdrTarget, FrameGraphResourceType::eAttachment)
+        .AddOutput(_gBuffers->Depth(), FrameGraphResourceType::eAttachment)
         .AddOutput(_bloomTarget, FrameGraphResourceType::eAttachment);
 
     FrameGraphNodeCreation bloomDownsamplePass { *_bloomDownsamplePass };

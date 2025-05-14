@@ -1,4 +1,4 @@
-import "engine_api.wren" for Engine, ECS, Entity, Vec3, Vec2, Math, AnimationControlComponent, TransformComponent, Input, SpawnEmitterFlagBits, EmitterPresetID
+import "engine_api.wren" for Engine, ECS, Entity, Vec3, Vec2, Math, AnimationControlComponent, TransformComponent, Input, SpawnEmitterFlagBits, EmitterPresetID, PhysicsObjectLayer
 import "camera.wren" for CameraVariables
 import "player.wren" for PlayerVariables, HitmarkerState
 
@@ -146,16 +146,6 @@ class Pistol {
                             for (enemy in enemies) {
                                 if (enemy.entity == hitEntity) {
                                     
-                                    var body = enemy.entity.GetRigidbodyComponent()
-                                     // Fly some bones out of him
-                                    var entity = engine.GetECS().NewEntity()
-                                    var transform = entity.AddTransformComponent()
-                                    transform.translation = body.GetPosition()
-                                    var lifetime = entity.AddLifetimeComponent()
-                                    lifetime.lifetime = 170.0
-                                    var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
-                                    engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eBones(),emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.0, 15.0, 0.0))
-
                                     var multiplier = 1.0
 
                                     if (enemy.IsHeadshot(rayHit.position.y)) {
@@ -178,7 +168,9 @@ class Pistol {
                             }
                             break
                         }
-                        engine.SpawnDecal(normal, end, Vec2.new(0.001, 0.001), "bullet_hole.png")
+                        if(hitEntity.GetRigidbodyComponent().GetLayer() == PhysicsObjectLayer.eSTATIC()) {
+                            engine.SpawnDecal(normal, end, Vec2.new(0.001, 0.001), "bullet_hole.png")
+                        }
                         break
                     }
                 }

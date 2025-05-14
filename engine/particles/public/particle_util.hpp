@@ -77,9 +77,3 @@ struct alignas(16) ParticleInstance
     glm::ivec2 frameOffsetNext = { 0, 0 };
     glm::vec2 textureMultiplier = { 1.0f, 1.0f };
 };
-
-struct alignas(16) CulledInstances
-{
-    uint32_t count = 0;
-    ParticleInstance instances[MAX_PARTICLES];
-};
