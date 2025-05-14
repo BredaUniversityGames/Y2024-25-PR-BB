@@ -122,11 +122,8 @@ void ShowHitmarker(HUD& self, bool val)
 
 void BindGameUI(wren::ForeignModule& module)
 {
-    auto& cls = module.klass<Callback>("Callback");
-    cls.ctor<wren::Variable>();
-
     auto& button = module.klass<UIButton, UIElement>("UIButton");
-    button.funcExt<bindings::ButtonOnPress>("OnPress", "Pass a wren function to define the logic that is called OnPress");
+    button.funcExt<bindings::ButtonOnPress>("OnPress", "void callback() -> void");
 
     auto& mainMenu = module.klass<MainMenu>("MainMenu");
     mainMenu.propReadonlyExt<bindings::SettingsButton>("settingsButton");

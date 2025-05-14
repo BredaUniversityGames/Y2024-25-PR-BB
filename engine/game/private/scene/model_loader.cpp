@@ -17,6 +17,7 @@
 #include "cpu_resources.hpp"
 #include "ecs_module.hpp"
 #include "model_loading.hpp"
+#include "physics/collision.hpp"
 #include "renderer.hpp"
 #include "renderer_module.hpp"
 #include "resource_management/mesh_resource_manager.hpp"
@@ -72,7 +73,11 @@ public:
 
                 // check if it should have collider
 
-                auto rb = RigidbodyComponent(_physics.GetBodyInterface(), _cpuModel.colliders.at(index), false);
+                auto rb = RigidbodyComponent(
+                    _physics.GetBodyInterface(),
+                    _cpuModel.colliders.at(index),
+                    PhysicsObjectLayer::eSTATIC);
+
                 _ecs.GetRegistry().emplace<RigidbodyComponent>(entity, std::move(rb));
 
                 break;
