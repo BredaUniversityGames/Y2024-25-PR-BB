@@ -1,5 +1,6 @@
 import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, EmitterPresetID, Perlin
 import "../player.wren" for PlayerVariables
+import "../soul.wren" for Soul, SoulManager
 
 class MeleeEnemy {
 
@@ -152,7 +153,7 @@ class MeleeEnemy {
         _rootEntity.GetTransformComponent().translation = newPos
     }
 
-    Update(playerPos, playerVariables, engine, dt) {
+    Update(playerPos, playerVariables, engine, dt, soulManager) {
         var body = _rootEntity.GetRigidbodyComponent()
         var pos = body.GetPosition()
         _rootEntity.GetTransformComponent().translation = pos
@@ -251,7 +252,11 @@ class MeleeEnemy {
             }
 
             if (_deathTimer <= 0) {
+                //spawn a soul
+                soulManager.SpawnSoul(engine, body.GetPosition())
                 engine.GetECS().DestroyEntity(_rootEntity) // Destroys the entity, and in turn this object
+
+
             } else {
                 // Wait for death animation before starting descent
                 if(_deathTimerMax - _deathTimer > 1800) {

@@ -14,6 +14,7 @@ enum class ParticleRenderFlagBits : uint8_t
     eNoShadow = 1 << 1,
     eFrameBlend = 1 << 2,
     eLockY = 1 << 3, // lock y-axis when rotating to camera
+    eIsLocal = 1 << 4, // particle follows emitter position
 };
 GENERATE_ENUM_FLAG_OPERATORS(ParticleRenderFlagBits)
 
@@ -36,6 +37,13 @@ struct alignas(16) Emitter
     float frameRate = 0.0f;
     glm::ivec2 maxFrames = { 1, 1 };
     uint32_t frameCount = 1;
+    uint32_t id = 0;
+};
+
+struct alignas(16) LocalEmitter
+{
+    glm::vec3 position = { 0.0f, 0.0f, 0.0f };
+    uint32_t id = 0;
 };
 
 struct alignas(16) Particle
@@ -55,6 +63,7 @@ struct alignas(16) Particle
     uint32_t frameCount = 1;
     glm::ivec2 maxFrames = { 1, 1 };
     glm::vec2 textureMultiplier = { 1.0f, 1.0f };
+    uint32_t emitterId = 0;
 };
 
 struct alignas(16) ParticleCounters
@@ -76,10 +85,4 @@ struct alignas(16) ParticleInstance
     glm::ivec2 frameOffsetCurrent = { 0, 0 };
     glm::ivec2 frameOffsetNext = { 0, 0 };
     glm::vec2 textureMultiplier = { 1.0f, 1.0f };
-};
-
-struct alignas(16) CulledInstances
-{
-    uint32_t count = 0;
-    ParticleInstance instances[MAX_PARTICLES];
 };

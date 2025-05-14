@@ -141,7 +141,7 @@ class RangedEnemy {
         _rootEntity.GetTransformComponent().translation = newPos
     }
 
-    Update(playerPos, playerVariables, engine, dt) {
+    Update(playerPos, playerVariables, engine, dt, soulManager) {
         var body = _rootEntity.GetRigidbodyComponent()
         var pos = body.GetPosition()
         _rootEntity.GetTransformComponent().translation = pos
@@ -300,6 +300,8 @@ class RangedEnemy {
             }
 
             if (_deathTimer <= 0) {
+                //spawn a soul
+                soulManager.SpawnSoul(engine, body.GetPosition())
                 engine.GetECS().DestroyEntity(_rootEntity) // Destroys the entity, and in turn this object
             } else {
                 // Wait for death animation before starting descent
