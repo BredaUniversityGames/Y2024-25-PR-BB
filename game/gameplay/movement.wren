@@ -335,11 +335,31 @@ class PlayerMovement{
 
             if(moveInputDir.length() > 0.01){
                 forward  = forward + moveInputDir
+            }else{
+                moveInputDir = forward.mulScalar(1.0) + right.mulScalar(0.0)
+                moveInputDir = moveInputDir.normalize()
+                forward  = forward + moveInputDir
+
             }
-   
+
             var start = translation + forward * Vec3.new(0.1, 0.1, 0.1) //- right * Vec3.new(0.09, 0.09, 0.09) //- up * Vec3.new(0.12, 0.12, 0.12)
             var end = translation + forward * Vec3.new(dashForce, dashForce,dashForce)
-            var direction = (end - start).normalize()
+            // Calculate the raw dash vector
+            var dashVector = end - start
+            var dashLength = dashVector.length()
+
+            var direction = Vec3.new(0.0, 0.0, 0.0)
+              // Check if the dash vector has a non-zero length before normalizing
+            if (dashLength > 0.001) { // Use a small epsilon for float comparison
+                direction = dashVector.mulScalar(1.0 / dashLength) // Manual normalization to avoid normalize() on zero
+                // Or simply: direction = dashVector.normalize(); if normalize() handles zero safely (some engines/libs do, some don't)
+            }
+
+            playerBody.SetVelocity(playerBody.GetVelocity() + direction.mulScalar(dashForce*15.0))
+           
+
+   
+ 
             var rayHitInfo = engine.GetPhysics().ShootRay(start, direction, dashForce)
             dashWishPosition = end
             if (!rayHitInfo.isEmpty) {
@@ -357,14 +377,24 @@ class PlayerMovement{
 
          if(hasDashed){
             dashTimer = dashTimer + dt
-            playerBody.SetTranslation(Math.MixVec3(playerBody.GetPosition(), dashWishPosition, 0.1))
+            //playerBody.SetTranslation(Math.MixVec3(playerBody.GetPosition(), dashWishPosition, 0.1))
             var velocity = playerBody.GetVelocity()
-            if(Math.Distance(playerBody.GetPosition(), dashWishPosition) < 1.0){
+            if(Math.Distance(playerBody.GetPosition(), dashWishPosition) < 3.0){
                 hasDashed = false
                 dashTimer = 0.0
+                System.print("Dash ended")
+                playerBody.SetGravityFactor(gravityFactor)
+                //clamp velocity at the end
+                var clampedVelocity = playerBody.GetVelocity().normalize()
+                clampedVelocity = clampedVelocity.mulScalar(maxSpeed)
+                playerBody.SetVelocity(Math.MixVec3(velocity, clampedVelocity, 0.8))
 
                 var direction = (dashWishPosition - playerBody.GetPosition()).normalize()
-                playerBody.SetVelocity(velocity + direction.mulScalar(dashForce))
+                //playerBody.SetVelocity(velocity + direction.mulScalar(dashForce))
+            }else{
+                playerBody.SetGravityFactor(0.0)
+                playerBody.SetFriction(99.0)
+                
             }
 
             if(dashTimer > 200.0){
@@ -372,7 +402,7 @@ class PlayerMovement{
                 dashTimer = 0.0
 
                 var direction = (dashWishPosition - playerBody.GetPosition()).normalize()
-                playerBody.SetVelocity(velocity +direction.mulScalar(dashForce))
+                //playerBody.SetVelocity(velocity +direction.mulScalar(dashForce))
 
             }
          }
