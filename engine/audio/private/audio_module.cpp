@@ -212,7 +212,7 @@ void AudioModule::SetBusChannelVolume(const std::string& name, float value)
 {
     if (auto it = _eventBusMap.find(name); it != _eventBusMap.end())
     {
-        FMOD_CHECKRESULT(FMOD_Studio_Bus_SetVolume(it->second, std::clamp(value, 0.0f, 1.0f)));
+        FMOD_CHECKRESULT(FMOD_Studio_Bus_SetVolume(it->second, std::clamp(value, 0.0f, 64.0f)));
     }
     else
     {
