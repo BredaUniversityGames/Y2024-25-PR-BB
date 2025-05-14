@@ -3,7 +3,7 @@ import "gameplay/movement.wren" for PlayerMovement
 import "gameplay/enemies/spawner.wren" for Spawner
 import "gameplay/weapon.wren" for Pistol, Shotgun, Knife, Weapons
 import "gameplay/camera.wren" for CameraVariables
-import "gameplay/player.wren" for PlayerVariables
+import "gameplay/player.wren" for PlayerVariables, HitmarkerState
 import "gameplay/music_player.wren" for MusicPlayer, BGMPlayer
 import "gameplay/wave_system.wren" for WaveSystem, WaveConfig, SpawnLocationType
 import "analytics/analytics.wren" for AnalyticsManager
@@ -389,7 +389,8 @@ class Main {
         engine.GetGame().GetHUD().UpdateGrenadeBar(__playerVariables.grenadeCharge / __playerVariables.grenadeMaxCharge)
         engine.GetGame().GetHUD().UpdateDashCharges(__playerMovement.currentDashCount)
         engine.GetGame().GetHUD().UpdateMultiplierText(__playerVariables.multiplier)
-        engine.GetGame().GetHUD().ShowHitmarker(__playerVariables.hitmarkTimer > 0)
+        engine.GetGame().GetHUD().ShowHitmarker(__playerVariables.hitmarkTimer > 0 && __playerVariables.hitmarkerState == HitmarkerState.normal)
+        engine.GetGame().GetHUD().ShowHitmarkerCrit(__playerVariables.hitmarkTimer > 0 && __playerVariables.hitmarkerState == HitmarkerState.crit)
         engine.GetGame().GetHUD().UpdateUltReadyText(__playerVariables.ultCharge == __playerVariables.ultMaxCharge)
 
         var mousePosition = engine.GetInput().GetMousePosition()

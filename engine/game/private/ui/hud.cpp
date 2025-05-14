@@ -117,12 +117,16 @@ std::shared_ptr<HUD> HUD::Create(GraphicsContext& graphicsContext, const glm::uv
     auto im = graphicsContext.Resources()->ImageResourceManager().Create(imageData.FromPNG("assets/textures/ui/gun.png"));
 
     auto hitmarkerImage = graphicsContext.Resources()->ImageResourceManager().Create(imageData.FromPNG("assets/textures/ui/hitmarker.png"));
+    auto hitmarkerCritImage = graphicsContext.Resources()->ImageResourceManager().Create(imageData.FromPNG("assets/textures/ui/hitmarker_crit.png"));
 
     auto gunPic = hud->AddChild<UIImage>(im, glm::vec2(460, 140), glm::vec2(720, 360) * 0.2f);
+    gunPic->anchorPoint = UIElement::AnchorPoint::eBottomRight;
 
     hud->hitmarker = hud->AddChild<UIImage>(hitmarkerImage, glm::vec2(0, 7), glm::vec2(25, 42) * 2.0f);
     hud->hitmarker.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
-    gunPic->anchorPoint = UIElement::AnchorPoint::eBottomRight;
+
+    hud->hitmarkerCrit = hud->AddChild<UIImage>(hitmarkerCritImage, glm::vec2(0, 7), glm::vec2(25, 42) * 2.0f);
+    hud->hitmarkerCrit.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
 
     auto dashCircle = graphicsContext.Resources()->ImageResourceManager().Create(imageData.FromPNG("assets/textures/ui/grey_ellipse.png"));
 

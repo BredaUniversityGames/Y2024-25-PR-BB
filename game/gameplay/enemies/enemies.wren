@@ -1,5 +1,5 @@
 import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, EmitterPresetID, Perlin
-import "../player.wren" for PlayerVariables
+import "../player.wren" for PlayerVariables, HitmarkerState
 
 class MeleeEnemy {
 

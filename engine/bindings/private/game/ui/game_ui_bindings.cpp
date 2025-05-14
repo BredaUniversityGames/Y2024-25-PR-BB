@@ -118,6 +118,16 @@ void ShowHitmarker(HUD& self, bool val)
     hitmarker->visibility = val ? UIElement::VisibilityState::eUpdatedAndVisible : UIElement::VisibilityState::eNotUpdatedAndInvisible;
 }
 
+void ShowHitmarkerCrit(HUD& self, bool val)
+{
+    auto hitmarkerCrit = self.hitmarkerCrit.lock();
+    if (!hitmarkerCrit)
+    {
+        return;
+    }
+
+    hitmarkerCrit->visibility = val ? UIElement::VisibilityState::eUpdatedAndVisible : UIElement::VisibilityState::eNotUpdatedAndInvisible;
+}
 }
 
 void BindGameUI(wren::ForeignModule& module)
@@ -149,6 +159,7 @@ void BindGameUI(wren::ForeignModule& module)
     hud.funcExt<bindings::UpdateMultiplierText>("UpdateMultiplierText", "Update multiplier number");
     hud.funcExt<bindings::UpdateUltReadyText>("UpdateUltReadyText", "Use bool to set if ultimate is ready");
     hud.funcExt<bindings::ShowHitmarker>("ShowHitmarker", "should show the hitmarker");
+    hud.funcExt<bindings::ShowHitmarkerCrit>("ShowHitmarkerCrit", "should show the critical hitmarker");
 
     auto& gameOver = module.klass<GameOverMenu>("GameOverMenu");
 

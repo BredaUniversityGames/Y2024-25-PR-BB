@@ -1,12 +1,13 @@
 import "engine_api.wren" for Engine, ECS, Entity, Vec3, Vec2, Math, AnimationControlComponent, TransformComponent, Input, SpawnEmitterFlagBits, EmitterPresetID
 import "camera.wren" for CameraVariables
-import "player.wren" for PlayerVariables
+import "player.wren" for PlayerVariables, HitmarkerState
 
 class Weapons {
     static pistol {0}
     static shotgun {1}
     static knife {2}
 }
+
 
 class Pistol {
     construct new(engine) {
@@ -15,6 +16,8 @@ class Pistol {
         _range = 50
         _rangeVector = Vec3.new(_range, _range, _range)
         _attackSpeed = 0.4 * 1000
+        
+        _manualTimer = 0
         _maxAmmo = 6
         _ammo = _maxAmmo
         _cooldown = 0
@@ -97,8 +100,14 @@ class Pistol {
     }
 
     attack(engine, deltaTime, playerVariables, enemies) {
+        
+        _manualTimer = Math.Max(_manualTimer-deltaTime,0)
+        
+        if(engine.GetInput().GetDigitalAction("Shoot").IsPressed() && _manualTimer ==0){
+            _manualTimer = 50 //ms
+        }
 
-        if ((_cooldown <= 0 || engine.GetInput().GetDigitalAction("Shoot").IsPressed()) && _ammo > 0 && _reloadTimer <= 0) {
+        if ((_cooldown <= 0 ||_manualTimer >=50) && _ammo > 0 && _reloadTimer <= 0) {
             _ammo = _ammo - 1
 
             // Shake the camera
@@ -122,10 +131,6 @@ class Pistol {
             var up = rotation.mulVec3(Vec3.new(0, 1, 0))
             var right = Math.Cross(forward, up)
             var start = translation + forward * Vec3.new(1, 1, 1) - right * Vec3.new(0.09, 0.09, 0.09) - up * Vec3.new(0.12, 0.12, 0.12)
-
-
-
-
             var end = translation + forward * _rangeVector
             var direction = (end - start).normalize()
             var rayHitInfo = engine.GetPhysics().ShootRay(start, direction, _range)
@@ -153,10 +158,15 @@ class Pistol {
 
                                     var multiplier = 1.0
 
-                                    playerVariables.hitmarkTimer = 200 //ms
-                                   
                                     if (enemy.IsHeadshot(rayHit.position.y)) {
                                         multiplier = _headShotMultiplier
+                                        // Critical hitmarker
+                                        playerVariables.hitmarkTimer = 200 //ms
+                                        playerVariables.hitmarkerState = HitmarkerState.crit
+                                    }else{
+                                        // Normal hitmarker
+                                        playerVariables.hitmarkTimer = 200 //ms
+                                        playerVariables.hitmarkerState = HitmarkerState.normal
                                     }
                                     playerVariables.UpdateMultiplier()
                                     enemy.DecreaseHealth(_damage * multiplier,engine)
