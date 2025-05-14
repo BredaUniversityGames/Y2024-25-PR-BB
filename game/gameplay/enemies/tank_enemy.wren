@@ -1,5 +1,6 @@
 import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, EmitterPresetID, Perlin
 import "../player.wren" for PlayerVariables
+import "../soul.wren" for Soul, SoulManager
 
 class TankEnemy {
 
@@ -142,7 +143,7 @@ class TankEnemy {
         _rootEntity.GetTransformComponent().translation = newPos
     }
 
-    Update(playerPos, playerVariables, engine, dt) {
+    Update(playerPos, playerVariables, engine, dt, soulManager) {
         var body = _rootEntity.GetRigidbodyComponent()
         var pos = body.GetPosition()
         _rootEntity.GetTransformComponent().translation = pos
@@ -259,6 +260,7 @@ class TankEnemy {
             }
 
             if (_deathTimer <= 0) {
+                soulManager.SpawnSoul(engine, body.GetPosition())
                 engine.GetECS().DestroyEntity(_rootEntity) // Destroys the entity, and in turn this object
             } else {
                 // Wait for death animation before starting descent
