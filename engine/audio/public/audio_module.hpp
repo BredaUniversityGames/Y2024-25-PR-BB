@@ -77,6 +77,7 @@ public:
 
     void SetEvent3DAttributes(EventInstance id, const glm::vec3& position, const glm::vec3& velocity, const glm::vec3& forward, const glm::vec3& up);
 
+    void RegisterChannelBus(const std::string& busName);
     void SetBusChannelVolume(const std::string& busName, float scale);
 
     std::vector<glm::vec3>&

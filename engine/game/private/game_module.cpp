@@ -88,9 +88,17 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     auto& particleModule = engine.GetModule<ParticleModule>();
     particleModule.LoadEmitterPresets();
 
-    engine.GetModule<AudioModule>().LoadBank("assets/music/Master.bank");
-    engine.GetModule<AudioModule>().LoadBank("assets/music/Master.strings.bank");
-    engine.GetModule<AudioModule>().SetBusChannelVolume("bus:/", 0.0f);
+    auto& audio = engine.GetModule<AudioModule>();
+
+    audio.LoadBank("assets/music/Master.strings.bank");
+    audio.LoadBank("assets/music/Master.bank");
+
+    audio.RegisterChannelBus("bus:/");
+    audio.RegisterChannelBus("bus:/SFX");
+    audio.RegisterChannelBus("bus:/BGM");
+
+    engine.GetModule<AudioModule>().SetBusChannelVolume("bus:/", 1.0f);
+    engine.GetModule<AudioModule>().SetBusChannelVolume("bus:/BGM", 0.0f);
 
     // Input Setup
     engine.GetModule<ApplicationModule>().GetActionManager().SetGameActions(GAME_ACTIONS);

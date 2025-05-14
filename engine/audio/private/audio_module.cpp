@@ -196,11 +196,16 @@ void AudioModule::LoadBank(std::string_view path)
 
     FMOD_STUDIO_BANK* bank = nullptr;
     FMOD_CHECKRESULT(FMOD_Studio_System_LoadBankFile(_studioSystem, path.data(), FMOD_STUDIO_LOAD_BANK_NORMAL, &bank));
+
     FMOD_CHECKRESULT(FMOD_Studio_Bank_LoadSampleData(bank));
     FMOD_CHECKRESULT(FMOD_Studio_System_FlushSampleLoading(_studioSystem));
-    FMOD_CHECKRESULT(FMOD_Studio_System_GetBus(_studioSystem, "bus:/", &_eventBusMap["bus:/"]));
 
     _banks[hash] = bank;
+}
+
+void AudioModule::RegisterChannelBus(const std::string& busName)
+{
+    FMOD_CHECKRESULT(FMOD_Studio_System_GetBus(_studioSystem, busName.c_str(), &_eventBusMap[busName]));
 }
 
 void AudioModule::SetBusChannelVolume(const std::string& name, float value)
