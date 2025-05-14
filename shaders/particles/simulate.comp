@@ -6,12 +6,17 @@
 
 layout (set = 2, binding = 0) buffer CulledInstancesSSB
 {
-    CulledInstances culledInstances;
+    ParticleInstance instances[MAX_PARTICLES];
 };
 
 layout (set = 3, binding = 0) uniform CameraUBO
 {
     Camera camera;
+};
+
+layout (set = 4, binding = 0) buffer DrawCommandsSSB
+{
+    DrawCommands drawCommands;
 };
 
 layout (push_constant) uniform DeltaTime
@@ -85,7 +90,8 @@ void main()
         float biggestSize = max(particle.size.x, particle.size.y);
         if (IsVisible(particle.position, biggestSize))
         {
-            uint culledIndex = atomicAdd(culledInstances.count, 1);
+            uint culledIndex = atomicAdd(drawCommands.instanceCount, 1);
+
             ParticleInstance instance;
             instance.position = particle.position;
             instance.materialIndex = particle.materialIndex;
@@ -97,7 +103,7 @@ void main()
             instance.frameOffsetCurrent = offset;
             instance.frameOffsetNext = offset2;
             instance.textureMultiplier = particle.textureMultiplier;
-            culledInstances.instances[culledIndex] = instance;
+            instances[culledIndex] = instance;
         }
     }
     else // if dead
