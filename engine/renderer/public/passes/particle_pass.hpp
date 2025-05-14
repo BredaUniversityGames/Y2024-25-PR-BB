@@ -46,7 +46,7 @@ private:
         eKickOff = 0,
         eEmit,
         eSimulate,
-        eRenderInstanced,
+        eRenderIndexedIndirect,
         eNone
     };
 
@@ -73,10 +73,14 @@ private:
     std::array<vk::Pipeline, 4> _pipelines;
     std::array<vk::PipelineLayout, 4> _pipelineLayouts;
 
-    // particle instances storage buffers
+    // indirect draw storage buffer
+    ResourceHandle<Buffer> _drawCommandsBuffer;
+    vk::DescriptorSet _drawCommandsDescriptorSet;
+    vk::DescriptorSetLayout _drawCommandsDescriptorSetLayout;
+    // particle instances storage buffer
     ResourceHandle<Buffer> _culledInstancesBuffer;
-    vk::DescriptorSet _instancesDescriptorSet;
-    vk::DescriptorSetLayout _instancesDescriptorSetLayout;
+    vk::DescriptorSet _culledInstancesDescriptorSet;
+    vk::DescriptorSetLayout _culledInstancesDescriptorSetLayout;
     // particle storage buffers
     std::array<ResourceHandle<Buffer>, 5> _particlesBuffers;
     vk::DescriptorSet _particlesBuffersDescriptorSet;
@@ -102,7 +106,7 @@ private:
     void RecordKickOff(vk::CommandBuffer commandBuffer);
     void RecordEmit(vk::CommandBuffer commandBuffer);
     void RecordSimulate(vk::CommandBuffer commandBuffer, const CameraResource& camera, float deltaTime, uint32_t currentFrame);
-    void RecordRenderIndexed(vk::CommandBuffer commandBuffer, const RenderSceneDescription& scene, uint32_t currentFrame);
+    void RecordRenderIndexedIndirect(vk::CommandBuffer commandBuffer, const RenderSceneDescription& scene, uint32_t currentFrame);
 
     void UpdateEmitters(vk::CommandBuffer commandBuffer);
 
@@ -116,4 +120,5 @@ private:
     void UpdateParticleInstancesBufferDescriptorSet();
     void UpdateEmittersBuffersDescriptorSets();
     void UpdateLocalEmittersBuffersDescriptorSets();
+    void UpdateDrawCommandsBufferDescriptorSet();
 };

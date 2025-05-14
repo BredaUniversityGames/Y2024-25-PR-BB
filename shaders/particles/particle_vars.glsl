@@ -49,8 +49,11 @@ struct ParticleInstance
     vec2 textureMultiplier;
 };
 
-struct CulledInstances
+struct DrawCommands
 {
-    uint count;
-    ParticleInstance instances[MAX_PARTICLES];
+    uint indexCount;
+    uint instanceCount;
+    uint firstIndex;
+    int vertexOffset;
+    uint firstInstance;
 };
