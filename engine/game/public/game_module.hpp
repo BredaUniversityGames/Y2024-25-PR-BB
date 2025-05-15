@@ -2,8 +2,11 @@
 
 #include "common.hpp"
 #include "engine.hpp"
+#include "game_settings.hpp"
 #include "scene/model_loader.hpp"
 #include "ui/ui_menus.hpp"
+
+#include <stack>
 
 inline const std::string DISCORD_URL = "https://discord.gg/8RmgD2sz9M";
 
@@ -28,54 +31,19 @@ public:
     GameModule() = default;
     ~GameModule() override = default;
 
-    void SetMainMenuEnabled(bool val);
-    void SetHUDEnabled(bool val);
-    void SetLoadingScreenEnabled(bool val);
-    void SetPauseMenuEnabled(bool val);
-    void SetGameOverMenuEnabled(bool val);
+    void SetUIMenu(std::weak_ptr<Canvas> menu);
+    void PushUIMenu(std::weak_ptr<Canvas> menu);
+    void PopUIMenu();
 
-    std::optional<std::shared_ptr<MainMenu>> GetMainMenu()
-    {
-        if (auto lock = _mainMenu.lock())
-        {
-            return lock;
-        }
-        return std::nullopt;
-    }
+    std::weak_ptr<UIElement> PopPreviousFocusedElement();
+    void PushPreviousFocusedElement(std::weak_ptr<UIElement> element);
 
-    std::optional<std::shared_ptr<PauseMenu>> GetPauseMenu()
-    {
-        if (auto lock = _pauseMenu.lock())
+    GameSettings& GetSettings() { return gameSettings; };
 
-        {
-            return lock;
-        }
-        return std::nullopt;
-    }
-
-    std::optional<std::shared_ptr<HUD>> GetHUD()
-    {
-        if (auto lock = _hud.lock())
-        {
-            return lock;
-        }
-        return std::nullopt;
-    }
-
-    std::optional<std::shared_ptr<GameOverMenu>> GetGameOver()
-    {
-        if (auto lock = _gameOver.lock())
-        {
-            return lock;
-        }
-        return std::nullopt;
-    }
-
-    std::weak_ptr<HUD> _hud;
-    std::weak_ptr<MainMenu> _mainMenu;
-    std::weak_ptr<LoadingScreen> _loadingScreen;
-    std::weak_ptr<PauseMenu> _pauseMenu;
-    std::weak_ptr<GameOverMenu> _gameOver;
+    std::optional<std::shared_ptr<MainMenu>> GetMainMenu();
+    std::optional<std::shared_ptr<PauseMenu>> GetPauseMenu();
+    std::optional<std::shared_ptr<HUD>> GetHUD();
+    std::optional<std::shared_ptr<GameOverMenu>> GetGameOver();
 
     NON_COPYABLE(GameModule);
     NON_MOVABLE(GameModule);
@@ -83,7 +51,26 @@ public:
     void TransitionScene(const std::string& scriptFile);
 
     ModelLoader _modelsLoaded {};
+    std::weak_ptr<MainMenu> _mainMenu;
 
-    bool _updateHud = false;
+private:
+    // UI
+
+    std::stack<std::weak_ptr<Canvas>> _menuStack {};
+    std::stack<std::weak_ptr<UIElement>> _focusedElementStack {};
+
+    std::weak_ptr<HUD> _hud;
+    std::weak_ptr<LoadingScreen> _loadingScreen;
+    std::weak_ptr<PauseMenu> _pauseMenu;
+    std::weak_ptr<GameOverMenu> _gameOver;
+    std::weak_ptr<SettingsMenu> _settingsMenu;
+    std::weak_ptr<FrameCounter> _framerateCounter {};
+
+    // Scene
+
     std::string _nextSceneToExecute {};
+
+    // Settings
+
+    GameSettings gameSettings {};
 };

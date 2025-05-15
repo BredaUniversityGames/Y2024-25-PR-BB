@@ -1,25 +1,18 @@
 #pragma once
 
-#include "log.hpp"
 #include "serialization_helpers.hpp"
 #include "tonemapping_functions.hpp"
 
 struct Settings
 {
-    VERSION(1);
-
     struct Fog
     {
-        VERSION(1);
-
         glm::vec3 color { 0.5, 0.6, 0.7 };
         float density { 0.2f };
     } fog;
 
     struct SSAO
     {
-        VERSION(0);
-
         float strength { 2.0f };
         float bias { 0.01f };
         float radius { 0.2f };
@@ -29,8 +22,6 @@ struct Settings
 
     struct FXAA
     {
-        VERSION(0);
-
         bool enableFXAA = true;
         float edgeThresholdMin = 0.0312;
         float edgeThresholdMax = 0.125;
@@ -40,8 +31,6 @@ struct Settings
 
     struct Bloom
     {
-        VERSION(1);
-
         glm::vec3 colorWeights { 0.2126f, 0.7152f, 0.0722f };
         float strength { 0.8f };
         float gradientStrength { 0.2f };
@@ -51,8 +40,6 @@ struct Settings
 
     struct Tonemapping
     {
-        VERSION(8);
-
         TonemappingFunctions tonemappingFunction { TonemappingFunctions::eAces };
         float exposure { 1.0f };
 
@@ -95,8 +82,6 @@ struct Settings
 
     struct Lighting
     {
-        VERSION(0);
-
         float ambientStrength { 1.0 };
         float ambientShadowStrength { 0.3 };
         float decalNormalThreshold { 55.0 };
@@ -104,29 +89,22 @@ struct Settings
 };
 
 VISITABLE_STRUCT(Settings::Fog, color, density);
-CLASS_SERIALIZE_VERSION(Settings::Fog);
-CLASS_VERSION(Settings::Fog);
+CLASS_SERIALIZE_VERSION(Settings::Fog, 1);
 
 VISITABLE_STRUCT(Settings::SSAO, strength, bias, radius, minDistance, maxDistance);
-CLASS_SERIALIZE_VERSION(Settings::SSAO);
-CLASS_VERSION(Settings::SSAO)
+CLASS_SERIALIZE_VERSION(Settings::SSAO, 0);
 
 VISITABLE_STRUCT(Settings::FXAA, enableFXAA, edgeThresholdMin, edgeThresholdMax, subPixelQuality, iterations);
-CLASS_SERIALIZE_VERSION(Settings::FXAA);
-CLASS_VERSION(Settings::FXAA);
+CLASS_SERIALIZE_VERSION(Settings::FXAA, 0);
 
 VISITABLE_STRUCT(Settings::Bloom, colorWeights, strength, gradientStrength, maxBrightnessExtraction, filterRadius);
-CLASS_SERIALIZE_VERSION(Settings::Bloom);
-CLASS_VERSION(Settings::Bloom);
+CLASS_SERIALIZE_VERSION(Settings::Bloom, 1);
 
 VISITABLE_STRUCT(Settings::Tonemapping, tonemappingFunction, exposure, enableVignette, vignetteIntensity, enableLensDistortion, lensDistortionIntensity, lensDistortionCubicIntensity, screenScale, enableToneAdjustments, brightness, contrast, saturation, vibrance, hue, enablePixelization, minPixelSize, maxPixelSize, pixelizationLevels, pixelizationDepthBias, enablePalette, ditherAmount, paletteAmount, palette, skyColor, sunColor, cloudsColor, voidColor, cloudsSpeed);
-CLASS_SERIALIZE_VERSION(Settings::Tonemapping);
-CLASS_VERSION(Settings::Tonemapping);
+CLASS_SERIALIZE_VERSION(Settings::Tonemapping, 8);
 
 VISITABLE_STRUCT(Settings::Lighting, ambientStrength, ambientShadowStrength, decalNormalThreshold);
-CLASS_SERIALIZE_VERSION(Settings::Lighting);
-CLASS_VERSION(Settings::Lighting);
+CLASS_SERIALIZE_VERSION(Settings::Lighting, 0);
 
 VISITABLE_STRUCT(Settings, fog, ssao, fxaa, bloom, tonemapping, lighting);
-CLASS_SERIALIZE_VERSION(Settings);
-CLASS_VERSION(Settings);
+CLASS_SERIALIZE_VERSION(Settings, 1);

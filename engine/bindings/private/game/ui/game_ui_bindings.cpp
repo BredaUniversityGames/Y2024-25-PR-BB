@@ -106,6 +106,28 @@ std::shared_ptr<UIElement> AsBaseClass(std::shared_ptr<UIButton> self)
 {
     return self;
 }
+
+void ShowHitmarker(HUD& self, bool val)
+{
+    auto hitmarker = self.hitmarker.lock();
+    if (!hitmarker)
+    {
+        return;
+    }
+
+    hitmarker->visibility = val ? UIElement::VisibilityState::eUpdatedAndVisible : UIElement::VisibilityState::eNotUpdatedAndInvisible;
+}
+
+void ShowHitmarkerCrit(HUD& self, bool val)
+{
+    auto hitmarkerCrit = self.hitmarkerCrit.lock();
+    if (!hitmarkerCrit)
+    {
+        return;
+    }
+
+    hitmarkerCrit->visibility = val ? UIElement::VisibilityState::eUpdatedAndVisible : UIElement::VisibilityState::eNotUpdatedAndInvisible;
+}
 }
 
 void BindGameUI(wren::ForeignModule& module)
@@ -113,17 +135,19 @@ void BindGameUI(wren::ForeignModule& module)
     auto& button = module.klass<UIButton, UIElement>("UIButton");
     button.funcExt<bindings::ButtonOnPress>("OnPress", "void callback() -> void");
 
-    auto& mainMenu = module.klass<MainMenu>("MainMenu");
+    module.klass<Canvas, UIElement>("Canvas");
+
+    auto& mainMenu = module.klass<MainMenu, Canvas>("MainMenu");
     mainMenu.propReadonlyExt<bindings::SettingsButton>("settingsButton");
     mainMenu.propReadonlyExt<bindings::QuitButton>("quitButton");
     mainMenu.propReadonlyExt<bindings::PlayButton>("playButton");
 
-    auto& pauseMenu = module.klass<PauseMenu>("PauseMenu");
+    auto& pauseMenu = module.klass<PauseMenu, Canvas>("PauseMenu");
     pauseMenu.propReadonlyExt<bindings::PauseSettingsButton>("settingsButton");
     pauseMenu.propReadonlyExt<bindings::BackButton>("backButton");
     pauseMenu.propReadonlyExt<bindings::ContinueButton>("continueButton");
 
-    auto& hud = module.klass<HUD>("HUD");
+    auto& hud = module.klass<HUD, Canvas>("HUD");
 
     hud.funcExt<bindings::UpdateHealthBar>("UpdateHealthBar", "Update health bar with value from 0 to 1");
     hud.funcExt<bindings::UpdateAmmoText>("UpdateAmmoText", "Update ammo bar with a current ammo count and max");
@@ -133,8 +157,10 @@ void BindGameUI(wren::ForeignModule& module)
     hud.funcExt<bindings::UpdateDashCharges>("UpdateDashCharges", "Update dash bar with number of remaining charges");
     hud.funcExt<bindings::UpdateMultiplierText>("UpdateMultiplierText", "Update multiplier number");
     hud.funcExt<bindings::UpdateUltReadyText>("UpdateUltReadyText", "Use bool to set if ultimate is ready");
+    hud.funcExt<bindings::ShowHitmarker>("ShowHitmarker", "should show the hitmarker");
+    hud.funcExt<bindings::ShowHitmarkerCrit>("ShowHitmarkerCrit", "should show the critical hitmarker");
 
-    auto& gameOver = module.klass<GameOverMenu>("GameOverMenu");
+    auto& gameOver = module.klass<GameOverMenu, Canvas>("GameOverMenu");
 
     gameOver.propReadonlyExt<bindings::GameOverMenuButton>("backButton");
     gameOver.propReadonlyExt<bindings::RetryButton>("retryButton");

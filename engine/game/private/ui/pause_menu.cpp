@@ -72,12 +72,11 @@ std::shared_ptr<PauseMenu> PauseMenu::Create(GraphicsContext& graphicsContext, c
         continueButton->anchorPoint = UIElement::AnchorPoint::eMiddle;
         continueButton->AddChild<UITextElement>(font, "Continue", textSize)->SetColor(glm::vec4(1, 1, 1, 1));
 
-        // buttonPos += increment;
+        buttonPos += increment;
 
         auto settingsButton = buttonPanel->AddChild<UIButton>(buttonStyle, buttonPos, buttonBaseSize);
         settingsButton->anchorPoint = UIElement::AnchorPoint::eMiddle;
         settingsButton->AddChild<UITextElement>(font, "Settings", textSize)->SetColor(glm::vec4(1, 1, 1, 1));
-        settingsButton->visibility = VisibilityState::eNotUpdatedAndInvisible;
 
         buttonPos += increment;
 
@@ -89,14 +88,14 @@ std::shared_ptr<PauseMenu> PauseMenu::Create(GraphicsContext& graphicsContext, c
         pause->backToMainButton = backToMainButton;
         pause->settingsButton = settingsButton;
 
-        continueButton->navigationTargets.down = pause->backToMainButton;
+        continueButton->navigationTargets.down = pause->settingsButton;
         continueButton->navigationTargets.up = pause->backToMainButton;
 
-        //settingsButton->navigationTargets.down = pause->backToMainButton;
-        //settingsButton->navigationTargets.up = pause->continueButton;
+        settingsButton->navigationTargets.down = pause->backToMainButton;
+        settingsButton->navigationTargets.up = pause->continueButton;
 
         backToMainButton->navigationTargets.down = pause->continueButton;
-        backToMainButton->navigationTargets.up = pause->continueButton;
+        backToMainButton->navigationTargets.up = pause->settingsButton;
     }
 
     pause->UpdateAllChildrenAbsoluteTransform();
