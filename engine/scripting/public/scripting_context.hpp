@@ -1,8 +1,10 @@
 #pragma once
 
+#include "bytes.hpp"
 #include "common.hpp"
 #include "log.hpp"
 #include "wren_common.hpp"
+
 
 #include <cstdint>
 #include <iostream>
@@ -14,8 +16,8 @@
 struct VMInitConfig
 {
     std::vector<std::string> includePaths;
-    size_t initialHeapSize = 1024ull * 1024ull * 10ull; // 10 MiB
-    size_t minHeapSize = 1024ull * 1024ull; // 1 MiB
+    size_t initialHeapSize = 10_mb; // 10 MiB
+    size_t minHeapSize = 10_mb; // 1 MiB
     uint32_t heapGrowthPercent = 50;
 };
 

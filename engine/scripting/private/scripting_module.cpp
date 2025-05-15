@@ -1,8 +1,10 @@
 #include "scripting_module.hpp"
 #include "file_io.hpp"
 #include "log.hpp"
+#include "profile_macros.hpp"
 #include "time_module.hpp"
 #include "wren_bindings.hpp"
+
 
 void ScriptingModule::ResetVM()
 {
@@ -52,7 +54,10 @@ void ScriptingModule::Tick(Engine& engine)
         _mainModule->Update(dt);
     }
 
-    _context->GetVM().gc();
+    {
+        ZoneScopedN("VM Garbage collect");
+        _context->GetVM().gc();
+    }
 }
 
 void ScriptingModule::SetMainScript(Engine& engine, const std::string& path)

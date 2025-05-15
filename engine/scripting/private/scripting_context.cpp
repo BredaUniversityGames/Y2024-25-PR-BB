@@ -46,6 +46,7 @@ std::string LoadFile(const std::string& path)
 
 void* ReallocFn(void* prev, size_t size, MAYBE_UNUSED void* user)
 {
+    ZoneScopedN("VM Realloc");
     TracyFree(prev);
 
     if (size == 0)
