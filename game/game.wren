@@ -260,6 +260,23 @@ class Main {
 
     static Update(engine, dt) {
 
+        // Check if pause key was pressed
+        if(__alive && engine.GetInput().GetDigitalAction("Menu").IsPressed()) {
+
+            __pauseEnabled = !__pauseEnabled
+
+            if (__pauseEnabled) {
+                __pauseHandler.call()
+            } else {
+                __unpauseHandler.call()
+            }
+        }
+
+        // Skip everything if paused
+        if (__pauseEnabled) {
+            return
+        }
+
         __playerMovement.lookSensitivity = engine.GetGame().GetSettings().aimSensitivity * (2.5 - 0.2) + 0.2
 
         if (__enemyList.count != 0) {
@@ -379,18 +396,6 @@ class Main {
             if (engine.GetInput().DebugGetKey(Keycode.eJ())) {
                 // shit
                 __enemyList.add(RangedEnemy.new(engine, Vec3.new(-27, 18, 7), Vec3.new(2.25,2.25,2.25), 5, "assets/models/eye.glb", __eyeShape))
-            }
-        }
-
-        // Check if pause key was pressed
-        if(__alive && engine.GetInput().GetDigitalAction("Menu").IsPressed()) {
-
-            __pauseEnabled = !__pauseEnabled
-
-            if (__pauseEnabled) {
-                __pauseHandler.call()
-            } else {
-                __unpauseHandler.call()
             }
         }
 
