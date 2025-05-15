@@ -1,11 +1,12 @@
 #pragma once
 
+#include "data_store.hpp"
+#include "emitter_preset_settings.hpp"
+
 #include "resource_manager.hpp"
 
 #include "common.hpp"
-#include "data_store.hpp"
 #include "emitter_component.hpp"
-#include "emitter_preset_settings.hpp"
 #include "entt/entity/entity.hpp"
 #include "module_interface.hpp"
 #include "particle_util.hpp"

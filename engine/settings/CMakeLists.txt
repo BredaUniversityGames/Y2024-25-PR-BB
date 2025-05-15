@@ -3,7 +3,6 @@ module_default_init(Settings)
 
 target_link_libraries(Settings
         PUBLIC Utility
-        PRIVATE Particles
 
         PRIVATE cereal
         PUBLIC glm::glm
