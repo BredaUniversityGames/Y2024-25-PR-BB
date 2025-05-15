@@ -57,7 +57,7 @@ private:
     // UI
 
     std::stack<std::weak_ptr<Canvas>> _menuStack {};
-    std::stack<std::weak_ptr<UIElement>> _focusedElementStack { }
+    std::stack<std::weak_ptr<UIElement>> _focusedElementStack {};
 
     std::weak_ptr<HUD> _hud;
     std::weak_ptr<LoadingScreen> _loadingScreen;

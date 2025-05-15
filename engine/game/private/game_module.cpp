@@ -235,9 +235,9 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
     _gameOver.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     _settingsMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
 
-    if (!menuStack.empty())
+    if (!_menuStack.empty())
     {
-        menuStack.top().lock()->visibility = UIElement::VisibilityState::eUpdatedAndVisible;
+        _menuStack.top().lock()->visibility = UIElement::VisibilityState::eUpdatedAndVisible;
     }
 
     // Frame counter
