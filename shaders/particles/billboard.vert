@@ -4,7 +4,7 @@
 
 layout (set = 1, binding = 0) buffer CulledInstancesSSB
 {
-    CulledInstances culledInstances;
+    ParticleInstance instances[MAX_PARTICLES];
 };
 
 layout (set = 2, binding = 0) uniform CameraUBO
@@ -28,7 +28,7 @@ layout (location = 7) out float frameBlend;
 
 void main()
 {
-    ParticleInstance instance = culledInstances.instances[gl_InstanceIndex];
+    ParticleInstance instance = instances[gl_InstanceIndex];
 
     // rotate towards camera + simulated rotation and size
     vec3 quadPos = inPosition;

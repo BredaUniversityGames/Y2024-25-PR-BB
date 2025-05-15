@@ -8,8 +8,12 @@ std::shared_ptr<GameVersionVisualization> GameVersionVisualization::Create(Graph
     auto visualization = std::make_shared<GameVersionVisualization>(screenResolution);
 
     visualization->SetAbsoluteTransform(visualization->GetAbsoluteLocation(), screenResolution);
-    
-    visualization->text = visualization->AddChild<UITextElement>(font, text, glm::vec2(10.0f, 50.0f), 50);
+
+    std::string cleanText = text;
+    cleanText.erase(std::remove(cleanText.begin(), cleanText.end(), '\n'), cleanText.end()); // Remove any new line
+    cleanText.erase(std::remove(cleanText.begin(), cleanText.end(), '\r'), cleanText.end()); // Remove any alignment
+
+    visualization->text = visualization->AddChild<UITextElement>(font, cleanText, glm::vec2(10.0f, 50.0f), 50);
     visualization->text.lock()->anchorPoint = UIElement::AnchorPoint::eBottomLeft;
     visualization->text.lock()->SetColor(glm::vec4(0.75f, 0.75f, 0.75f, 0.75f));
 

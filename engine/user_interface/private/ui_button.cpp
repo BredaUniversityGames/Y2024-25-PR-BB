@@ -69,8 +69,6 @@ void UIButton::Update(const InputManagers& inputManagers, UIInputContext& inputC
 
         if (pressAction.IsReleased())
         {
-            std::weak_ptr<UIElement> navTarget = GetUINavigationTarget(navigationTargets, UINavigationDirection::eForward);
-            inputContext.focusedUIElement = navTarget.lock() != nullptr ? navTarget : inputContext.focusedUIElement;
             _callback();
         }
     }

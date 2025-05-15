@@ -3,6 +3,7 @@
 #include "perlin_noise.hpp"
 #include "wren_common.hpp"
 #include <glm/glm.hpp>
+#include <glm/gtc/constants.hpp>
 
 #include <random>
 
@@ -52,6 +53,23 @@ public:
     {
         return { RandomFloatRange(min.x, max.x), RandomFloatRange(min.y, max.y), RandomFloatRange(min.z, max.z) };
     }
+
+    static glm::vec3 RandomPointOnUnitSphere()
+    {
+        // z is random in [-1, 1]
+        float z = RandomFloatRange(-1.0f, 1.0f);
+
+        // theta is random in [0, 2*pi]
+        float theta = RandomFloatRange(0.0f, 2.0f * glm::pi<float>());
+
+        // radius of the circle at height z
+        float r = std::sqrt(1.0f - z * z);
+
+        float x = r * std::cos(theta);
+        float y = r * std::sin(theta);
+
+        return glm::vec3(x, y, z);
+    }
 };
 
 class Perlin
@@ -81,6 +99,7 @@ inline void BindRandom(wren::ForeignModule& module)
     randomUtilClass.funcStatic<&RandomUtil::RandomVec3>("RandomVec3");
     randomUtilClass.funcStatic<&RandomUtil::RandomVec3Range>("RandomVec3Range");
     randomUtilClass.funcStatic<&RandomUtil::RandomVec3VectorRange>("RandomVec3VectorRange");
+    randomUtilClass.funcStatic<&RandomUtil::RandomPointOnUnitSphere>("RandomPointOnUnitSphere");
     randomUtilClass.funcStatic<&RandomUtil::RandomIndex>("RandomIndex");
 
     auto& perlinClass = module.klass<Perlin>("Perlin");

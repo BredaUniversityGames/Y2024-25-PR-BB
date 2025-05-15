@@ -3,16 +3,22 @@ import "gameplay/movement.wren" for PlayerMovement
 import "gameplay/enemies/spawner.wren" for Spawner
 import "gameplay/weapon.wren" for Pistol, Shotgun, Knife, Weapons
 import "gameplay/camera.wren" for CameraVariables
-import "gameplay/player.wren" for PlayerVariables
+import "gameplay/player.wren" for PlayerVariables, HitmarkerState
 import "gameplay/music_player.wren" for MusicPlayer, BGMPlayer
 import "gameplay/wave_system.wren" for WaveSystem, WaveConfig, SpawnLocationType
 import "analytics/analytics.wren" for AnalyticsManager
+import "gameplay/enemies/berserker_enemy.wren" for BerserkerEnemy
+
+import "gameplay/enemies/ranged_enemy.wren" for RangedEnemy
+import "gameplay/soul.wren" for Soul, SoulManager
 
 class Main {
 
     static Start(engine) {
+
+        engine.GetTime().SetScale(1.0)
         engine.GetInput().SetActiveActionSet("Shooter")
-        engine.GetGame().SetHUDEnabled(true)
+        engine.GetGame().SetUIMenu(engine.GetGame().GetHUD())
 
         engine.Fog = 0.005
 
@@ -25,8 +31,10 @@ class Main {
         engine.GetAudio().LoadSFX("assets/sounds/slide2.wav", true, true)
         engine.GetAudio().LoadSFX("assets/sounds/crows.wav", true, false)
 
+        engine.GetAudio().LoadSFX("assets/sounds/hitmarker.wav", false, false)
         engine.GetAudio().LoadSFX("assets/sounds/hit1.wav", false, false)
         engine.GetAudio().LoadSFX("assets/sounds/demon_roar.wav", true, false)
+        engine.GetAudio().LoadSFX("assets/sounds/shoot.wav", false, false)
 
         // Directional Light
         __directionalLight = engine.GetECS().NewEntity()
@@ -87,6 +95,8 @@ class Main {
         engine.LoadModel("assets/models/blockoutv6_0.glb")
 
         engine.PreloadModel("assets/models/Skeleton.glb")
+        engine.PreloadModel("assets/models/eye.glb")
+        engine.PreloadModel("assets/models/Berserker.glb")
 
         engine.PreloadModel("assets/models/Revolver.glb")
         engine.PreloadModel("assets/models/Shotgun.glb")
@@ -124,6 +134,10 @@ class Main {
         __pauseEnabled = false
         __controlsMenuOpen = false
 
+        __enemyShape = ShapeFactory.MakeCapsuleShape(70.0, 70.0)
+        __eyeShape = ShapeFactory.MakeSphereShape(0.65)
+        __berserkerEnemyShape = ShapeFactory.MakeCapsuleShape(140.0, 50.0)
+
         // Music
 
         var ambientList = [
@@ -132,13 +146,13 @@ class Main {
             ]
 
         __musicPlayer = BGMPlayer.new(engine.GetAudio(),
-            "event:/Gameplay",
-            0.05)
+            "event:/BGM/Gameplay",
+            0.12)
 
         __ambientPlayer = MusicPlayer.new(engine.GetAudio(), ambientList, 0.1)
 
         var spawnLocations = []
-        for(i in 0..7) {
+        for(i in 0..8) {
             spawnLocations.add(engine.GetECS().GetEntityByName("Spawner_%(i)"))
         }
 
@@ -154,21 +168,26 @@ class Main {
             .AddSpawn("Skeleton", 2, 1, 1)
             .AddSpawn("Skeleton", 3, 1, 2)
             .AddSpawn("Skeleton", SpawnLocationType.Furthest, 7, 3)
+            .AddSpawn("Eye", SpawnLocationType.Closest, 8, 1)
             .AddSpawn("Skeleton", 0, 10, 1)
             .AddSpawn("Skeleton", 1, 15, 1)
             .AddSpawn("Skeleton", 2, 5, 1)
             .AddSpawn("Skeleton", 3, 15, 3)
+            .AddSpawn("Eye", SpawnLocationType.Closest, 25, 1)
         )
         waveConfigs.add(WaveConfig.new().SetDuration(60)
             .AddSpawn("Skeleton", 0, 1, 2)
             .AddSpawn("Skeleton", 1, 1, 2)
             .AddSpawn("Skeleton", 2, 1, 1)
             .AddSpawn("Skeleton", 3, 1, 2)
+            .AddSpawn("Eye", SpawnLocationType.Closest, 1, 1)
             .AddSpawn("Skeleton", SpawnLocationType.Furthest, 5, 5)
             .AddSpawn("Skeleton", 0, 15, 2)
             .AddSpawn("Skeleton", 1, 15, 1)
             .AddSpawn("Skeleton", 2, 15, 2)
             .AddSpawn("Skeleton", 3, 15, 3)
+            .AddSpawn("Eye", SpawnLocationType.Closest, 5, 1)
+            .AddSpawn("Eye", SpawnLocationType.Closest, 20, 1)
             .AddSpawn("Skeleton", SpawnLocationType.Furthest, 15, 5)
             .AddSpawn("Skeleton", 0, 40, 3)
             .AddSpawn("Skeleton", 1, 40, 1)
@@ -178,23 +197,29 @@ class Main {
         )
         __waveSystem = WaveSystem.new(engine, waveConfigs, __enemyList, spawnLocations, __player)
 
+        // Souls
+        __soulManager = SoulManager.new(engine, __player)
+
         // Pause Menu callbacks
 
         __pauseHandler = Fn.new {
             __pauseEnabled = true
             engine.GetTime().SetScale(0.0)
-            engine.GetGame().SetPauseMenuEnabled(true)
-            engine.GetInput().SetActiveActionSet("UserInterface")
+
             engine.GetInput().SetMouseHidden(false)
+            engine.GetGame().PushUIMenu(engine.GetGame().GetPauseMenu())
+            engine.GetInput().SetActiveActionSet("UserInterface")
+            
             engine.GetUI().SetSelectedElement(engine.GetGame().GetPauseMenu().continueButton)
-            __musicPlayer.SetVolume(engine.GetAudio(), 0.025)
+            __musicPlayer.SetVolume(engine.GetAudio(), 0.05)
             System.print("Pause Menu is %(__pauseEnabled)!")
         }
 
         __unpauseHandler = Fn.new {
             __pauseEnabled = false
             engine.GetTime().SetScale(1.0)
-            engine.GetGame().SetPauseMenuEnabled(false)
+
+            engine.GetGame().SetUIMenu(engine.GetGame().GetHUD())
             engine.GetInput().SetActiveActionSet("Shooter")
             engine.GetInput().SetMouseHidden(true)
             __musicPlayer.SetVolume(engine.GetAudio(), 0.05)
@@ -206,9 +231,6 @@ class Main {
 
         var backToMain = Fn.new {
             engine.TransitionToScript("game/main_menu.wren")
-            engine.GetGame().SetPauseMenuEnabled(false)
-            engine.GetGame().SetGameOverMenuEnabled(false)
-            engine.GetGame().SetHUDEnabled(false)
             engine.GetTime().SetScale(1.0)
         }
 
@@ -244,7 +266,6 @@ class Main {
         var retryButton = engine.GetGame().GetGameOverMenu().retryButton
 
         var retryHandler = Fn.new {
-            engine.GetGame().SetGameOverMenuEnabled(false)
             engine.TransitionToScript("game/game.wren")
             engine.GetTime().SetScale(1.0)
         }
@@ -263,6 +284,25 @@ class Main {
 
     static Update(engine, dt) {
 
+        // Check if pause key was pressed
+        if(__alive && engine.GetInput().GetDigitalAction("Menu").IsPressed()) {
+
+            __pauseEnabled = !__pauseEnabled
+
+            if (__pauseEnabled) {
+                __pauseHandler.call()
+            } else {
+                __unpauseHandler.call()
+            }
+        }
+
+        // Skip everything if paused
+        if (__pauseEnabled) {
+            return
+        }
+
+        __playerMovement.lookSensitivity = engine.GetGame().GetSettings().aimSensitivity * (2.5 - 0.2) + 0.2
+
         if (__enemyList.count != 0) {
             __musicPlayer.SetAttribute(engine.GetAudio(), "Intensity", 1.0)
         } else {
@@ -272,7 +312,6 @@ class Main {
         var cheats = __playerController.GetCheatsComponent()
         var deltaTime = engine.GetTime().GetDeltatime()
         __timer = __timer + dt
-
         __playerVariables.grenadeCharge = Math.Min(__playerVariables.grenadeCharge + __playerVariables.grenadeChargeRate * dt / 1000, __playerVariables.grenadeMaxCharge)
 
         if (__playerVariables.ultActive) {
@@ -286,13 +325,18 @@ class Main {
         }
 
         if (!__playerVariables.wasUltReadyLastFrame && __playerVariables.ultCharge == __playerVariables.ultMaxCharge) {
-            engine.GetAudio().PlayEventOnce("event:/UltReady")
+            engine.GetAudio().PlayEventOnce("event:/SFX/UltReady")
             __playerVariables.wasUltReadyLastFrame = true
         }
 
         __playerVariables.invincibilityTime = Math.Max(__playerVariables.invincibilityTime - dt, 0)
 
         __playerVariables.multiplierTimer = Math.Max(__playerVariables.multiplierTimer - dt, 0)
+        __playerVariables.hitmarkTimer = Math.Max(__playerVariables.hitmarkTimer - dt, 0)
+
+        __cameraVariables.Shake(engine, __camera, dt)
+        __cameraVariables.Tilt(engine, __camera, dt)
+        __cameraVariables.ProcessRecoil(engine, __camera, dt)
 
         if (__playerVariables.multiplierTimer == 0 ) {
             __playerVariables.multiplier = 1.0
@@ -327,7 +371,7 @@ class Main {
                     __activeWeapon.equip(engine)
                     __playerVariables.ultActive = true
 
-                    engine.GetAudio().PlayEventOnce("event:/ActivateUlt")
+                    engine.GetAudio().PlayEventOnce("event:/SFX/ActivateUlt")
 
                     var particleEntity = engine.GetECS().NewEntity()
                     particleEntity.AddTransformComponent().translation = __player.GetTransformComponent().translation - Vec3.new(0,3.5,0)
@@ -372,21 +416,13 @@ class Main {
                     __activeWeapon.reload(engine)
                 }
             }
-        }
 
-        // Check if pause key was pressed
-        if(__alive && engine.GetInput().GetDigitalAction("Menu").IsPressed()) {
+            if (engine.GetInput().DebugGetKey(Keycode.eK())) {
+                __enemyList.add(BerserkerEnemy.new(engine, Vec3.new(0, 18, 7), Vec3.new(0.026, 0.026, 0.026), 4, "assets/models/Berserker.glb", __berserkerEnemyShape))
+            }
 
-            if (__controlsMenuOpen) {
-                __controlsBackHandler.call()
-            } else {
-                __pauseEnabled = !__pauseEnabled
-
-                if (__pauseEnabled) {
-                    __pauseHandler.call()
-                } else {
-                    __unpauseHandler.call()
-                }
+            if (engine.GetInput().DebugGetKey(Keycode.eJ())) {
+                __enemyList.add(RangedEnemy.new(engine, Vec3.new(-27, 18, 7), Vec3.new(2.25,2.25,2.25), 5, "assets/models/eye.glb", __eyeShape))
             }
         }
 
@@ -395,9 +431,11 @@ class Main {
         if (__alive && __playerVariables.health <= 0) {
             __alive = false
             engine.GetTime().SetScale(0.0)
-            engine.GetGame().SetGameOverMenuEnabled(true)
+
+            engine.GetGame().PushUIMenu(engine.GetGame().GetGameOverMenu())
             engine.GetInput().SetActiveActionSet("UserInterface")
             engine.GetInput().SetMouseHidden(false)
+
             engine.GetUI().SetSelectedElement(engine.GetGame().GetGameOverMenu().retryButton)
         }
 
@@ -408,24 +446,31 @@ class Main {
         engine.GetGame().GetHUD().UpdateGrenadeBar(__playerVariables.grenadeCharge / __playerVariables.grenadeMaxCharge)
         engine.GetGame().GetHUD().UpdateDashCharges(__playerMovement.currentDashCount)
         engine.GetGame().GetHUD().UpdateMultiplierText(__playerVariables.multiplier)
+        engine.GetGame().GetHUD().ShowHitmarker(__playerVariables.hitmarkTimer > 0 && __playerVariables.hitmarkerState == HitmarkerState.normal)
+        engine.GetGame().GetHUD().ShowHitmarkerCrit(__playerVariables.hitmarkTimer > 0 && __playerVariables.hitmarkerState == HitmarkerState.crit)
         engine.GetGame().GetHUD().UpdateUltReadyText(__playerVariables.ultCharge == __playerVariables.ultMaxCharge)
 
         var mousePosition = engine.GetInput().GetMousePosition()
         __playerMovement.lastMousePosition = mousePosition
 
-        var playerPos = __player.GetTransformComponent().translation
+        var playerPos = __playerController.GetRigidbodyComponent().GetPosition()
+
+        if(engine.GetInput().DebugGetKey(Keycode.eB())){
+           __soulManager.SpawnSoul(engine, Vec3.new(10.0,2.0,44.0))
+        }
 
         for (enemy in __enemyList) {
 
             // We delete the entity from the ecs when it dies
             // Then we check for entity validity, and remove it from the list if it is no longer valid
             if (enemy.entity.IsValid()) {
-                enemy.Update(playerPos, __playerVariables, engine, dt)
+                enemy.Update(playerPos, __playerVariables, engine, dt, __soulManager)
             } else {
                 __enemyList.removeAt(__enemyList.indexOf(enemy))
             }
         }
 
+        __soulManager.Update(engine, __playerVariables, dt)
         __waveSystem.Update(dt)
     }
 }

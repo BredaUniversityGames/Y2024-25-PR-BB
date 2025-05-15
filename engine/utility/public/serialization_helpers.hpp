@@ -6,6 +6,7 @@
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
 #include <visit_struct/visit_struct.hpp>
+#include "log.hpp"
 
 #define CLASS_SERIALIZE(Type)                                                 \
     template <class Archive>                                                  \
@@ -13,6 +14,21 @@
     {                                                                         \
         visit_struct::for_each(obj, [&archive](const char* name, auto& value) \
             { archive(cereal::make_nvp(name, value)); });                     \
+    }
+
+#define CLASS_SERIALIZE_VERSION(Type, Version)                                          \
+    CEREAL_CLASS_VERSION(Type, Version)                                                 \
+    template <class Archive>                                                            \
+    void serialize(Archive& archive, Type& obj, const uint32_t version)                 \
+    {                                                                                   \
+        if (version != Version)                                                         \
+        {                                                                               \
+            bblog::warn("Outdated serialization for: {}", visit_struct::get_name(obj)); \
+            return;                                                                     \
+        }                                                                               \
+                                                                                        \
+        visit_struct::for_each(obj, [&archive](const char* name, auto& value)           \
+            { archive(cereal::make_nvp(name, value)); });                               \
     }
 
 VISITABLE_STRUCT(glm::vec2, x, y);

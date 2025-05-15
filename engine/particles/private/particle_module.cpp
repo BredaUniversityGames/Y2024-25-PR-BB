@@ -327,6 +327,64 @@ void ParticleModule::LoadEmitterPresets()
         EmitterPreset preset;
         preset.emitDelay = 0.1f;
         preset.mass = 0.0f;
+        preset.rotationVelocity = glm::vec2(0.0f, 10.0f);
+        preset.maxLife = 1.0f;
+        preset.count = 5;
+        preset.spawnRandomness = glm::vec3(0.1f);
+        preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
+        preset.color = glm::vec4(1.0f);
+        preset.name = "RayEyeStart";
+        SetEmitterPresetImage(preset, "swoosh.png");
+        preset.size = glm::vec3(0.06f, 0.06f, 0.0f);
+
+        ParticleBurst burst;
+        burst.loop = true;
+        burst.count = 5;
+        burst.maxInterval = 0.05f;
+
+        ParticleBurst burst2;
+        burst2.loop = true;
+        burst2.count = 5;
+        burst2.maxInterval = 0.08f;
+
+        preset.bursts.emplace_back(burst);
+        preset.bursts.emplace_back(burst2);
+        _emitterPresets.emplace_back(preset);
+    }
+
+    {
+        EmitterPreset preset;
+        preset.emitDelay = 0.1f;
+        preset.mass = 0.0f;
+        preset.rotationVelocity = glm::vec2(0.0f, 10.0f);
+        preset.maxLife = 1.0f;
+        preset.count = 5;
+        preset.spawnRandomness = glm::vec3(0.1f);
+        preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
+        preset.color = glm::vec4(1.0f, 0.0f, 0.0f, 30.0f);
+        preset.name = "RayEyeEnd";
+        SetEmitterPresetImage(preset, "swoosh.png");
+        preset.size = glm::vec3(0.2f, 0.2f, 0.0f);
+
+        ParticleBurst burst;
+        burst.loop = true;
+        burst.count = 5;
+        burst.maxInterval = 0.05f;
+
+        ParticleBurst burst2;
+        burst2.loop = true;
+        burst2.count = 5;
+        burst2.maxInterval = 0.08f;
+
+        preset.bursts.emplace_back(burst);
+        preset.bursts.emplace_back(burst2);
+        _emitterPresets.emplace_back(preset);
+    }
+
+    {
+        EmitterPreset preset;
+        preset.emitDelay = 0.1f;
+        preset.mass = 0.0f;
         preset.rotationVelocity = glm::vec2(0.0f, 0.0f);
         preset.maxLife = 0.3f;
         preset.count = 20;
@@ -414,6 +472,53 @@ void ParticleModule::LoadEmitterPresets()
 
         _emitterPresets.emplace_back(preset);
     }
+
+    { // worms
+        EmitterPreset preset;
+        preset.emitDelay = 0.1f;
+        preset.mass = 0.02f;
+        preset.rotationVelocity = glm::vec2(0.0f, 10.0f);
+        preset.maxLife = 1.0f;
+        preset.count = 5;
+        preset.spawnRandomness = glm::vec3(0.1f, 0.2f, 0.5f);
+        preset.velocityRandomness = glm::vec3(0.5f, 0.2f, 0.5f);
+        preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
+        preset.color = glm::vec4(1.0f);
+        preset.name = "Worms";
+        SetEmitterPresetImage(preset, "swoosh.png");
+        preset.size = glm::vec3(0.3f, 0.3f, 0.0f);
+
+        ParticleBurst burst;
+        burst.loop = true;
+        burst.count = 15;
+        burst.maxInterval = 0.05f;
+
+        ParticleBurst burst2;
+        burst2.loop = true;
+        burst2.count = 15;
+        burst2.maxInterval = 0.08f;
+
+        preset.bursts.emplace_back(burst);
+        preset.bursts.emplace_back(burst2);
+        _emitterPresets.emplace_back(preset);
+    }
+
+    { // soul SHEET
+        EmitterPreset preset;
+        preset.emitDelay = 2.0f;
+        preset.mass = 0.0f;
+        preset.maxLife = 2.0f;
+        preset.count = 1;
+        preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow | ParticleRenderFlagBits::eFrameBlend | ParticleRenderFlagBits::eLockY | ParticleRenderFlagBits::eIsLocal);
+        preset.name = "SoulSheet";
+        preset.startingVelocity = glm::vec3(0.0f);
+        SetEmitterPresetImage(preset, "Soul2.png");
+        preset.size = glm::vec3(0.4f, 0.9, 0.0f);
+        preset.spriteDimensions = glm::ivec2(60, 1);
+        preset.frameCount = 60;
+
+        _emitterPresets.emplace_back(preset);
+    }
 }
 
 void ParticleModule::SpawnEmitter(entt::entity entity, EmitterPresetID emitterPreset, SpawnEmitterFlagBits flags, glm::vec3 position, glm::vec3 velocity)
@@ -443,6 +548,9 @@ void ParticleModule::SpawnEmitter(entt::entity entity, int32_t emitterPresetID, 
     emitter.maxFrames = preset.spriteDimensions;
     emitter.frameRate = preset.frameRate;
     emitter.frameCount = preset.frameCount;
+    emitter.id = emitterCount;
+
+    emitterCount++;
 
     // Set position and velocity according to which components the entity already has
     if (_ecs->GetRegistry().all_of<RigidbodyComponent>(entity))
@@ -481,7 +589,7 @@ void ParticleModule::SpawnEmitter(entt::entity entity, int32_t emitterPresetID, 
     ParticleEmitterComponent component;
     component.emitter = emitter;
     component.maxEmitDelay = preset.emitDelay;
-    component.currentEmitDelay = preset.emitDelay;
+    component.currentEmitDelay = 0.0f;
     component.emitOnce = emitOnce;
     component.count = emitter.count;
     std::copy(preset.bursts.begin(), preset.bursts.end(), std::back_inserter(component.bursts));
