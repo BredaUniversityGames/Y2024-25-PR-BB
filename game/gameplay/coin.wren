@@ -11,9 +11,6 @@ class Coin {
 
         _rootEntity = engine.GetECS().NewEntity()
         _rootEntity.AddNameComponent().name = "Coin"
-        _rootEntity.AddEnemyTag()
-        _rootEntity.AddAudioEmitterComponent()
-
         _rootEntity.AddAudioEmitterComponent()
 
         var transform = _rootEntity.AddTransformComponent()
