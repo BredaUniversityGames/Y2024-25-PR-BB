@@ -1,5 +1,5 @@
 import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, EmitterPresetID, Perlin
-import "../player.wren" for PlayerVariables
+import "../player.wren" for PlayerVariables, HitmarkerState
 import "../soul.wren" for Soul, SoulManager
 
 class MeleeEnemy {
@@ -119,8 +119,11 @@ class MeleeEnemy {
             body.SetStatic()
 
             var eventInstance = engine.GetAudio().PlayEventOnce(_bonesSFX)
+            
+            var hitmarkerSFX = engine.GetAudio().PlaySFX("assets/sounds/hitmarker.wav",1.6  )
             var audioEmitter = _rootEntity.GetAudioEmitterComponent()
             audioEmitter.AddEvent(eventInstance)
+            audioEmitter.AddSFX(hitmarkerSFX)
         } else {
             animations.Play("Hit", 1.0, false, 0.1, false)
             _rootEntity.GetRigidbodyComponent().SetVelocity(Vec3.new(0.0, 0.0, 0.0))
@@ -131,11 +134,11 @@ class MeleeEnemy {
             _recoveryState = false
             body.SetStatic()
 
+            var hitmarkerSFX = engine.GetAudio().PlaySFX("assets/sounds/hitmarker.wav",1.6  )
             var eventInstance = engine.GetAudio().PlayEventOnce(_bonesSFX)
             var audioEmitter = _rootEntity.GetAudioEmitterComponent()
             audioEmitter.AddEvent(eventInstance)
-
-           
+            audioEmitter.AddSFX(hitmarkerSFX)
         }
     }
 
