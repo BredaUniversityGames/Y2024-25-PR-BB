@@ -64,7 +64,7 @@ class BerserkerEnemy {
         _attackMaxTime = 2300
         _attackTime = _attackMaxTime
 
-        _attackTiming = 1416
+        _attackTiming = 1200
         _attackTimer = _attackTiming
 
         _recoveryMaxTime = 1500
