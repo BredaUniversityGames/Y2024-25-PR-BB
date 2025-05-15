@@ -27,6 +27,7 @@ class Pistol {
 
         _attackSFX = "event:/SFX/Revolver"
         _reloadSFX = "event:/SFX/ReloadPistol"
+        _shotSFX = "event:/SFX/Shoot"
         _equipSFX = ""
         __hitmarkTimer = 0
         _walkAnim = "walk"
@@ -118,9 +119,9 @@ class Pistol {
             
             
             // Play shooting audio
-            var eventInstance = engine.GetAudio().PlaySFX("assets/sounds/shoot.wav",0.7)
+            var eventInstance = engine.GetAudio().PlayEventOnce(_shotSFX)
             var audioEmitter = player.GetAudioEmitterComponent()
-            audioEmitter.AddSFX(eventInstance)
+            audioEmitter.AddEvent(eventInstance)
 
             // Spawn particles
             var playerTransform = player.GetTransformComponent()

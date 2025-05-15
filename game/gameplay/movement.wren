@@ -38,6 +38,9 @@ class PlayerMovement{
 
         _slideSoundInstance = null
         _crowsSoundInstance = null
+
+        _slideSFX = "event:/SFX/Slide"
+        _outofBounds = "event:/SFX/Crows"
     }
 
 //getters
@@ -460,13 +463,13 @@ class PlayerMovement{
 
             //play slide sound
             if(!_slideSoundInstance && isGrounded){
-                _slideSoundInstance = engine.GetAudio().PlaySFX("assets/sounds/slide2.wav", 1.0)
-                camera.GetAudioEmitterComponent().AddSFX(_slideSoundInstance)
+                _slideSoundInstance = engine.GetAudio().PlayEventOnce(_slideSFX)
+                camera.GetAudioEmitterComponent().AddEvent(_slideSoundInstance)
             }
             
         }else{
             if(_slideSoundInstance){
-                engine.GetAudio().StopSFX(_slideSoundInstance)
+                engine.GetAudio().StopEvent(_slideSoundInstance)
                 _slideSoundInstance = null
             }
             
@@ -488,8 +491,8 @@ class PlayerMovement{
             playerBody.SetTranslation(Vec3.new(-27.0, 30.5, 7.0))
 
             //play a sound effect
-            _crowsSoundInstance = engine.GetAudio().PlaySFX("assets/sounds/crows.wav", 1.0)
-            camera.GetAudioEmitterComponent().AddSFX(_crowsSoundInstance)
+            _crowsSoundInstance = engine.GetAudio().PlayEventOnce(_outofBounds)
+            camera.GetAudioEmitterComponent().AddEvent(_crowsSoundInstance)
 
             //play a particle effect
             var entity = engine.GetECS().NewEntity()
