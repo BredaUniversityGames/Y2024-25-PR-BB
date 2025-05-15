@@ -92,7 +92,7 @@ class Main {
         __player.AddNameComponent().name = "Player"
 
         // Load Map
-        engine.LoadModel("assets/models/blockoutv6_0.glb")
+        engine.LoadModel("assets/models/graveyard_level.glb")
 
         engine.PreloadModel("assets/models/Skeleton.glb")
         engine.PreloadModel("assets/models/eye.glb")
@@ -152,7 +152,10 @@ class Main {
 
         var spawnLocations = []
         for(i in 0..8) {
-            spawnLocations.add(engine.GetECS().GetEntityByName("Spawner_%(i)"))
+            var entity = engine.GetECS().GetEntityByName("Spawner_%(i)")
+            if(entity) {
+                spawnLocations.add(entity)
+            }
         }
 
         __enemyList = []
