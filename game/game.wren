@@ -450,6 +450,8 @@ class Main {
         }
 
         __soulManager.Update(engine, __playerVariables, dt)
-        __waveSystem.Update(dt)
+        //__waveSystem.Update(dt)
+
+        engine.GetGame().SetFlashColor(Vec3.new(1.0, 0.0, 0.0),0.90)
     }
 }

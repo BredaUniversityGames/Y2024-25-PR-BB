@@ -40,6 +40,8 @@ public:
 
     GameSettings& GetSettings() { return gameSettings; };
 
+    glm::vec4& GetFlashColor() { return flashColor; }
+
     std::optional<std::shared_ptr<MainMenu>> GetMainMenu();
     std::optional<std::shared_ptr<PauseMenu>> GetPauseMenu();
     std::optional<std::shared_ptr<HUD>> GetHUD();
@@ -73,4 +75,7 @@ private:
     // Settings
 
     GameSettings gameSettings {};
+
+    // Gameplay elements
+    glm::vec4 flashColor {};
 };
