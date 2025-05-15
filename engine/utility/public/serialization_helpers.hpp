@@ -1,6 +1,8 @@
 #pragma once
 
 #include <cereal/cereal.hpp>
+#include <cereal/types/list.hpp>
+#include <cereal/types/vector.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
@@ -62,3 +64,20 @@ void serialize(Archive& archive, std::array<T, S>& m)
         archive(i);
     }
 }
+
+#define VERSION(x) constexpr static uint32_t V = x
+#define CLASS_VERSION(x) CEREAL_CLASS_VERSION(x, x::V)
+
+#define CLASS_SERIALIZE_VERSION(Type)                                                   \
+    template <class Archive>                                                            \
+    void serialize(Archive& archive, Type& obj, const uint32_t version)                 \
+    {                                                                                   \
+        if (version != Type::V)                                                         \
+        {                                                                               \
+            bblog::warn("Outdated serialization for: {}", visit_struct::get_name(obj)); \
+            return;                                                                     \
+        }                                                                               \
+                                                                                        \
+        visit_struct::for_each(obj, [&archive](const char* name, auto& value)           \
+            { archive(cereal::make_nvp(name, value)); });                               \
+    }

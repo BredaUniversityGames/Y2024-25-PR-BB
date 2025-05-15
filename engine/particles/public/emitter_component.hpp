@@ -1,5 +1,6 @@
 #pragma once
 
+#include "emitter_preset_settings.hpp"
 #include "imgui_entt_entity_editor.hpp"
 #include "particle_util.hpp"
 #include <entt/entity/registry.hpp>
@@ -12,16 +13,6 @@ struct ActiveEmitterTag
 
 struct TestEmitterTag
 {
-};
-
-struct ParticleBurst
-{
-    float startTime = 0.0f;
-    uint32_t count = 0;
-    uint32_t cycles = 0;
-    float maxInterval = 0.0f;
-    float currentInterval = 0.0f;
-    bool loop = true;
 };
 
 struct ParticleEmitterComponent

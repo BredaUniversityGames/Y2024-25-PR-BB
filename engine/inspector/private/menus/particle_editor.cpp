@@ -41,15 +41,19 @@ void ParticleEditor::RenderEmitterPresetList()
 {
     if (ImGui::Button("+ New Preset##Emitter Preset"))
     {
-        ParticleModule::EmitterPreset newPreset;
-        newPreset.name += " " + std::to_string(_particleModule._emitterPresets.size());
-        _particleModule._emitterPresets.emplace_back(std::move(newPreset));
+        EmitterPreset newPreset;
+        newPreset.name += " " + std::to_string(_particleModule._emitterPresets.data.emitterPresets.size());
+        _particleModule._emitterPresets.data.emitterPresets.emplace_back(std::move(newPreset));
+    }
+    if (ImGui::Button("Save Presets##Emitter Preset"))
+    {
+        _particleModule._emitterPresets.Write();
     }
     ImGui::Text("Emitter Presets:");
 
-    for (uint32_t i = 0; i < _particleModule._emitterPresets.size(); i++)
+    for (uint32_t i = 0; i < _particleModule._emitterPresets.data.emitterPresets.size(); i++)
     {
-        auto& emitterPreset = _particleModule._emitterPresets[i];
+        auto& emitterPreset = _particleModule._emitterPresets.data.emitterPresets[i];
         static ImGuiTreeNodeFlags nodeFlags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
 
         ImGui::TreeNodeEx(emitterPreset.name.c_str(), nodeFlags | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen);
@@ -68,7 +72,7 @@ void ParticleEditor::RenderEmitterPresetEditor()
 
     if (_selectedPresetIndex > -1)
     {
-        auto& selectedPreset = _particleModule._emitterPresets[_selectedPresetIndex];
+        auto& selectedPreset = _particleModule._emitterPresets.data.emitterPresets[_selectedPresetIndex];
 
         ImGui::InputText("Name##Emitter Preset", &selectedPreset.name);
 
@@ -79,7 +83,7 @@ void ParticleEditor::RenderEmitterPresetEditor()
 
         if (ImGui::Button("Load Image##Emitter Preset"))
         {
-            if (_particleModule.SetEmitterPresetImage(selectedPreset, selectedPreset.imageName))
+            if (_particleModule.SetEmitterPresetImage(selectedPreset))
             {
                 _imageLoadMessage = "Loaded successfully!";
             }
@@ -248,7 +252,7 @@ void ParticleEditor::RenderEmitterPresetEditor()
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(1.f, 0.2f, 0.2f, 1.f));
         if (ImGui::Button("Delete Preset##Emitter Preset"))
         {
-            _particleModule._emitterPresets.erase(_particleModule._emitterPresets.begin() + _selectedPresetIndex);
+            _particleModule._emitterPresets.data.emitterPresets.erase(_particleModule._emitterPresets.data.emitterPresets.begin() + _selectedPresetIndex);
             _selectedPresetIndex = -1;
             ImGui::PopStyleColor(3);
             return;
