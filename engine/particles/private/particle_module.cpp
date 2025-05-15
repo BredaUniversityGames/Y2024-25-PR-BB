@@ -1,5 +1,3 @@
-#include "resource_management/image_resource_manager.hpp"
-
 #include "particle_module.hpp"
 
 #include "components/rigidbody_component.hpp"
@@ -13,6 +11,7 @@
 #include "physics_module.hpp"
 #include "renderer.hpp"
 #include "renderer_module.hpp"
+#include "resource_management/image_resource_manager.hpp"
 #include "time_module.hpp"
 
 #include <filesystem>
