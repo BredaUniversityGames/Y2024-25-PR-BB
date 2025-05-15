@@ -39,6 +39,8 @@ void UIToggle::Update(const InputManagers& inputManagers, UIInputContext& inputC
             state = !state;
             if (_callback)
                 _callback(state);
+
+            inputContext.ConsumeInput();
         }
     }
     else // Mouse controls

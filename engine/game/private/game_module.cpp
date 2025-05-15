@@ -63,7 +63,6 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     _pauseMenu = viewport.AddElement(PauseMenu::Create(graphicsContext, viewportSize, font));
     _gameOver = viewport.AddElement(GameOverMenu::Create(graphicsContext, viewportSize, font));
 
-    // TODO: Load settings from file first
     gameSettings = GameSettings::FromFile(GAME_SETTINGS_FILE);
     _settingsMenu = viewport.AddElement(SettingsMenu::Create(engine, graphicsContext, viewportSize, font));
 

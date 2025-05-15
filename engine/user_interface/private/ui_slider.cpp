@@ -42,6 +42,8 @@ void UISlider::Update(const InputManagers& inputManagers, UIInputContext& inputC
 
             if (_callback)
                 _callback(value);
+
+            inputContext.ConsumeInput();
         }
     }
     else // Mouse controls
