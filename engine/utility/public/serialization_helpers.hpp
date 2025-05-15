@@ -1,12 +1,14 @@
 #pragma once
 
+#include "log.hpp"
 #include <cereal/cereal.hpp>
+#include <cereal/types/list.hpp>
+#include <cereal/types/vector.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
 #include <visit_struct/visit_struct.hpp>
-#include "log.hpp"
 
 #define CLASS_SERIALIZE(Type)                                                 \
     template <class Archive>                                                  \

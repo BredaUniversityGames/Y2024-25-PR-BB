@@ -1,9 +1,5 @@
 #pragma once
 
-#include <cereal/cereal.hpp>
-#include <cereal/types/vector.hpp>
-#include <visit_struct/visit_struct.hpp>
-
 #include "serialization_helpers.hpp"
 #include "tonemapping_functions.hpp"
 
