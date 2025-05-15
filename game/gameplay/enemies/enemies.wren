@@ -98,7 +98,7 @@ class MeleeEnemy {
         return false
     }
 
-    DecreaseHealth(amount, engine) {
+    DecreaseHealth(amount, engine, coinManager) {
         var animations = _meshEntity.GetAnimationControlComponent()
         var body = _rootEntity.GetRigidbodyComponent()
 
@@ -119,6 +119,11 @@ class MeleeEnemy {
             animations.Play("Death", 1.0, false, 0.3, false)
             body.SetVelocity(Vec3.new(0,0,0))
             body.SetStatic()
+            // Spawn between 1 and 5 coins
+            var coinCount = Random.RandomIndex(2, 5)
+            for(i in 0...coinCount) {
+                coinManager.SpawnCoin(engine, body.GetPosition() + Vec3.new(0, 1.0, 0))
+            }
 
             var eventInstance = engine.GetAudio().PlayEventOnce(_bonesSFX)
             var audioEmitter = _rootEntity.GetAudioEmitterComponent()
@@ -257,11 +262,6 @@ class MeleeEnemy {
                 //spawn a soul
                 soulManager.SpawnSoul(engine, body.GetPosition())
 
-                // Spawn between 1 and 5 coins
-                var coinCount = Random.RandomIndex(2, 5)
-                for(i in 0...coinCount) {
-                    coinManager.SpawnCoin(engine, body.GetPosition() + Vec3.new(0, 1.0, 0))
-                }
                 engine.GetECS().DestroyEntity(_rootEntity) // Destroys the entity, and in turn this object
                 
 

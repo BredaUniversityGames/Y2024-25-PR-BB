@@ -95,7 +95,7 @@ class Pistol {
         }
     }
 
-    attack(engine, deltaTime, playerVariables, enemies) {
+    attack(engine, deltaTime, playerVariables, enemies, coinManager) {
 
         if (_cooldown <= 0 && _ammo > 0 && _reloadTimer <= 0) {
             _ammo = _ammo - 1
@@ -145,7 +145,7 @@ class Pistol {
                                         multiplier = _headShotMultiplier
                                     }
                                     playerVariables.UpdateMultiplier()
-                                    enemy.DecreaseHealth(_damage * multiplier,engine)
+                                    enemy.DecreaseHealth(_damage * multiplier,engine,coinManager)
                                     if (enemy.health <= 0) {
                                         playerVariables.IncreaseScore(5 * multiplier * playerVariables.multiplier)
                                         playerVariables.UpdateUltCharge(1.0)
@@ -284,7 +284,7 @@ class Shotgun {
         }
     }
 
-    attack(engine, deltaTime, playerVariables, enemies) {
+    attack(engine, deltaTime, playerVariables, enemies, coinManager) {
         if (_cooldown <= 0 && _ammo > 0 && _reloadTimer <= 0) {
             _ammo = _ammo - 1
 
@@ -325,7 +325,7 @@ class Shotgun {
                                 for (enemy in enemies) {
                                     if (enemy.entity == hitEntity) {
                                         hitAnEnemy = true
-                                        enemy.DecreaseHealth(_damage,engine)
+                                        enemy.DecreaseHealth(_damage,engine,coinManager)
                                         playerVariables.multiplierTimer = playerVariables.multiplierMaxTime
                                         playerVariables.IncreaseHealth(0.1 * _damage)
                                         if (enemy.health <= 0) {

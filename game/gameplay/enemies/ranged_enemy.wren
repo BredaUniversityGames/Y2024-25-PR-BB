@@ -1,6 +1,9 @@
 import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, EmitterPresetID, Random
 import "../player.wren" for PlayerVariables
 
+import "../soul.wren" for Soul, SoulManager
+import "../coin.wren" for Coin, CoinManager
+
 class RangedEnemy {
 
     construct new(engine, spawnPosition, size, maxSpeed, enemyModel, colliderShape) {
@@ -85,7 +88,7 @@ class RangedEnemy {
         return false
     }
 
-    DecreaseHealth(amount, engine) {
+    DecreaseHealth(amount, engine, coinManager) {
         var body = _rootEntity.GetRigidbodyComponent()
         _health = Math.Max(_health - amount, 0)
 
@@ -112,6 +115,13 @@ class RangedEnemy {
                 engine.GetAudio().StopEvent(_chargeSoundEventInstance)
                 _chargeSoundEventInstance = null
             }
+
+            // Spawn between 1 and 5 coins
+            var coinCount = Random.RandomIndex(2, 5)
+            for(i in 0...coinCount) {
+                coinManager.SpawnCoin(engine, body.GetPosition() + Vec3.new(0, 1.0, 0))
+            }
+
             body.SetDynamic()
             body.SetGravityFactor(2.0)
 
@@ -302,13 +312,6 @@ class RangedEnemy {
             if (_deathTimer <= 0) {
                 //spawn a soul
                 soulManager.SpawnSoul(engine, body.GetPosition())
-
-                // Spawn between 1 and 5 coins
-                var coinCount = Random.RandomIndex(2, 5)
-                for(i in 0...coinCount) {
-                    coinManager.SpawnCoin(engine, body.GetPosition() + Vec3.new(0, 1.0, 0))
-
-                }
 
                 engine.GetECS().DestroyEntity(_rootEntity) // Destroys the entity, and in turn this object
             } else {
