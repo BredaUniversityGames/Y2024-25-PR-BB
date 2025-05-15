@@ -28,6 +28,7 @@
 #include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
 #include <Jolt/Physics/Collision/Shape/ScaledShape.h>
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
+#include <components/skinned_mesh_component.hpp>
 
 #include <tracy/Tracy.hpp>
 
@@ -79,9 +80,13 @@ void PhysicsSystem::Update(MAYBE_UNUSED ECSModule& ecs, MAYBE_UNUSED float delta
     }
 
     // We now update our transform system to match jolt's since the loop below us handles the dynamic objects that are being simulated by physics
-    const auto view = _ecs.GetRegistry().view<RigidbodyComponent, StaticMeshComponent, UpdateMeshAndPhysics>();
+    const auto view = _ecs.GetRegistry().view<RigidbodyComponent, TransformComponent, UpdateMeshAndPhysics>();
     for (const auto entity : view)
     {
+
+        if (_ecs.GetRegistry().all_of<SkinnedMeshComponent>(entity))
+            continue;
+
         const RigidbodyComponent& rb = view.get<RigidbodyComponent>(entity);
 
         // if somehow is now not active or is static lets remove the update component
@@ -93,9 +98,10 @@ void PhysicsSystem::Update(MAYBE_UNUSED ECSModule& ecs, MAYBE_UNUSED float delta
         auto joltMatrix = _physicsModule.GetBodyInterface().GetWorldTransform(rb.bodyID);
 
         // We cant support objects simulated by jolt and our hierarchy system at the same time
-        RelationshipComponent& relationship = _ecs.GetRegistry().get<RelationshipComponent>(entity);
-        if (relationship.parent != entt::null)
-            RelationshipHelpers::DetachChild(_ecs.GetRegistry(), relationship.parent, entity);
+        RelationshipComponent* relationship = _ecs.GetRegistry().try_get<RelationshipComponent>(entity);
+
+        if (relationship && relationship->parent != entt::null)
+            RelationshipHelpers::DetachChild(_ecs.GetRegistry(), relationship->parent, entity);
 
         // Crazy jolt stuff that I dont like but it works to set the proper scale
         JPH::BodyLockWrite lock(_physicsModule._physicsSystem->GetBodyLockInterface(), rb.bodyID);

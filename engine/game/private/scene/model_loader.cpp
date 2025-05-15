@@ -43,7 +43,7 @@ public:
     {
     }
 
-    void Load(entt::entity entity, uint32_t currentNodeIndex, entt::entity parent)
+    void Load(entt::entity entity, uint32_t currentNodeIndex, entt::entity parent, bool hasPhysics)
     {
         const Node& currentNode = _hierarchy.nodes[currentNodeIndex];
 
@@ -72,13 +72,15 @@ public:
                 _ecs.GetRegistry().emplace<IsStaticDraw>(entity);
 
                 // check if it should have collider
+                if (hasPhysics)
+                {
+                    auto rb = RigidbodyComponent(
+                        _physics.GetBodyInterface(),
+                        _cpuModel.colliders.at(index),
+                        PhysicsObjectLayer::eSTATIC);
 
-                auto rb = RigidbodyComponent(
-                    _physics.GetBodyInterface(),
-                    _cpuModel.colliders.at(index),
-                    PhysicsObjectLayer::eSTATIC);
-
-                _ecs.GetRegistry().emplace<RigidbodyComponent>(entity, std::move(rb));
+                    _ecs.GetRegistry().emplace<RigidbodyComponent>(entity, std::move(rb));
+                }
 
                 break;
             }
@@ -134,7 +136,7 @@ public:
         for (const auto& nodeIndex : currentNode.childrenIndices)
         {
             const entt::entity childEntity = _ecs.GetRegistry().create();
-            Load(childEntity, nodeIndex, entity);
+            Load(childEntity, nodeIndex, entity, hasPhysics);
         }
     }
 
@@ -217,7 +219,7 @@ private:
     }
 };
 
-entt::entity LoadModelIntoECSAsHierarchy(ECSModule& ecs, PhysicsModule& physics, const GPUModel& gpuModel, const CPUModel& cpuModel)
+entt::entity LoadModelIntoECSAsHierarchy(ECSModule& ecs, PhysicsModule& physics, const GPUModel& gpuModel, const CPUModel& cpuModel, const bool hasPhysics)
 {
     ZoneScopedN("Instantiate Scene");
     entt::entity rootEntity = ecs.GetRegistry().create();
@@ -232,7 +234,7 @@ entt::entity LoadModelIntoECSAsHierarchy(ECSModule& ecs, PhysicsModule& physics,
     }
 
     RecursiveNodeLoader recursiveNodeLoader { ecs, physics, cpuModel.hierarchy, cpuModel, gpuModel, animationControlEntity, entityLUT, rootEntity };
-    recursiveNodeLoader.Load(rootEntity, cpuModel.hierarchy.root, entt::null);
+    recursiveNodeLoader.Load(rootEntity, cpuModel.hierarchy.root, entt::null, hasPhysics);
 
     entt::entity skeletonEntity = entt::null;
     if (cpuModel.hierarchy.skeletonRoot.has_value())
@@ -292,7 +294,7 @@ std::shared_ptr<ModelData> ModelLoader::LoadModel(Engine& engine, std::string_vi
     return ret;
 }
 
-entt::entity ModelData::Instantiate(Engine& engine)
+entt::entity ModelData::Instantiate(Engine& engine, bool hasPhysics)
 {
     auto& modelResourceManager = engine.GetModule<RendererModule>().GetRenderer()->GetContext()->Resources()->ModelResourceManager();
     const GPUModel& model = *modelResourceManager.Access(gpuModel);
@@ -301,5 +303,5 @@ entt::entity ModelData::Instantiate(Engine& engine)
         engine.GetModule<ECSModule>(),
         engine.GetModule<PhysicsModule>(),
         model,
-        cpuModel);
+        cpuModel, hasPhysics);
 }

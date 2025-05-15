@@ -98,7 +98,7 @@ class Pistol {
         } 
     }
 
-    attack(engine, deltaTime, playerVariables, enemies) {
+    attack(engine, deltaTime, playerVariables, enemies, coinManager) {
         
         _manualTimer = Math.Max(_manualTimer-deltaTime,0)
         
@@ -158,7 +158,7 @@ class Pistol {
                                         playerVariables.hitmarkerState = HitmarkerState.normal
                                     }
                                     playerVariables.UpdateMultiplier()
-                                    enemy.DecreaseHealth(_damage * multiplier,engine)
+                                    enemy.DecreaseHealth(_damage * multiplier,engine,coinManager)
                                     if (enemy.health <= 0) {
                                         playerVariables.IncreaseScore(5 * multiplier * playerVariables.multiplier)
                                         playerVariables.UpdateUltCharge(1.0)
@@ -221,7 +221,7 @@ class Pistol {
 
         var camera = engine.GetECS().GetEntityByName("Camera")
 
-        var newGun = engine.LoadModel("assets/models/Revolver.glb")
+        var newGun = engine.LoadModel("assets/models/Revolver.glb",false)
         newGun.GetNameComponent().name = _entityName
         var gunTransform = newGun.GetTransformComponent()
         gunTransform.rotation = Math.ToQuat(Vec3.new(0.0, -Math.PI()/2, 0.0))
@@ -297,7 +297,7 @@ class Shotgun {
         }
     }
 
-    attack(engine, deltaTime, playerVariables, enemies) {
+    attack(engine, deltaTime, playerVariables, enemies, coinManager) {
         if (_cooldown <= 0 && _ammo > 0 && _reloadTimer <= 0) {
             _ammo = _ammo - 1
  
@@ -339,9 +339,8 @@ class Shotgun {
                                     if (enemy.entity == hitEntity) {
                                         hitAnEnemy = true
                                         
-                                        playerVariables.hitmarkTimer = 200 //ms
-                                              
-                                        enemy.DecreaseHealth(_damage,engine)
+                                        playerVariables.hitmarkTimer = 200 //ms      
+                                        enemy.DecreaseHealth(_damage,engine,coinManager)
                                         
                                         playerVariables.multiplierTimer = playerVariables.multiplierMaxTime
                                         playerVariables.IncreaseHealth(0.1 * _damage)
@@ -390,7 +389,7 @@ class Shotgun {
 
         var camera = engine.GetECS().GetEntityByName("Camera")
 
-        var newGun =  engine.LoadModel("assets/models/Shotgun.glb")
+        var newGun =  engine.LoadModel("assets/models/Shotgun.glb", false)
         newGun.GetNameComponent().name = _entityName
         var gunTransform = newGun.GetTransformComponent()
         gunTransform.rotation = Math.ToQuat(Vec3.new(0.0, -Math.PI()/2, 0.0))

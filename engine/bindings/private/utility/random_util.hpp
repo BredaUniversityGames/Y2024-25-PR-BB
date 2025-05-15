@@ -15,11 +15,7 @@ class RandomUtil
 public:
     static uint32_t Random()
     {
-        std::random_device dev;
-        std::mt19937 rng(dev());
-        std::uniform_int_distribution<std::mt19937::result_type> dist6(0, std::numeric_limits<uint32_t>::max());
-
-        return dist6(rng);
+        return dist(rng);
     }
 
     static uint32_t RandomIndex(uint32_t start, uint32_t end)
@@ -35,8 +31,8 @@ public:
 
     static float RandomFloatRange(float min, float max)
     {
-        float v = RandomFloat();
-        return v * (max - min) + min;
+        std::uniform_real_distribution<float> range_dist(min, max);
+        return range_dist(rng);
     }
 
     static glm::vec3 RandomVec3()
@@ -70,7 +66,17 @@ public:
 
         return glm::vec3(x, y, z);
     }
+
+private:
+    static std::random_device dev;
+    static std::mt19937 rng;
+    static std::uniform_int_distribution<std::mt19937::result_type> dist;
 };
+
+// Define static members outside the class
+std::random_device RandomUtil::dev;
+std::mt19937 RandomUtil::rng(RandomUtil::dev());
+std::uniform_int_distribution<std::mt19937::result_type> RandomUtil::dist(0, std::numeric_limits<uint32_t>::max());
 
 class Perlin
 {
