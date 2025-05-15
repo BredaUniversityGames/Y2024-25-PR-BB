@@ -89,13 +89,6 @@ std::shared_ptr<SettingsMenu> SettingsMenu::Create(
         sliderStyle.knob = graphicsContext.Resources()->ImageResourceManager().Create(commonImageData.FromPNG("assets/textures/ui/slider_knob.png"), sampler);
     }
 
-    // auto buttonPanel = settings->AddChild<Canvas>(glm::vec2 { 0.0f, 0.0f });
-
-    // {
-    //     buttonPanel->anchorPoint = UIElement::AnchorPoint::eMiddle;
-    //     // buttonPanel->SetLocation(glm::vec2(screenResFloat.y * 0.1f, screenResFloat.y * 0.4f));
-    // }
-
     {
         // SETTINGS
         {
@@ -286,7 +279,7 @@ std::shared_ptr<SettingsMenu> SettingsMenu::Create(
             auto callback = [&engine]()
             {
                 auto& gameModule = engine.GetModule<GameModule>();
-                engine.GetModule<UIModule>().uiInputContext.focusedUIElement = gameModule._mainMenu.lock()->settingsButton;
+                engine.GetModule<UIModule>().uiInputContext.focusedUIElement = gameModule.PopPreviousFocusedElement();
                 gameModule.GetSettings().SaveToFile(GAME_SETTINGS_FILE);
                 gameModule.PopUIMenu();
             };

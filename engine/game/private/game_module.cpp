@@ -74,8 +74,8 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     _gameOver = viewport.AddElement(GameOverMenu::Create(graphicsContext, viewportSize, font));
 
     gameSettings = GameSettings::FromFile(GAME_SETTINGS_FILE);
-    ApplySettings(engine);
 
+    ApplySettings(engine);
     _settingsMenu = viewport.AddElement(SettingsMenu::Create(engine, graphicsContext, viewportSize, font));
 
     // Set all UI menus invisible
@@ -107,14 +107,22 @@ ModuleTickOrder GameModule::Init(Engine& engine)
 
     _mainMenu.lock()->openLinkButton.lock()->OnPress(Callback { OpenDiscordURL });
 
-    auto openSettings = [this, &engine]()
+    auto openSettingsMenu = [this, &engine]()
     {
         this->PushUIMenu(this->_settingsMenu);
+        this->PushPreviousFocusedElement(_mainMenu.lock()->settingsButton);
         engine.GetModule<UIModule>().uiInputContext.focusedUIElement = _settingsMenu.lock()->sensitivitySlider;
     };
 
-    _mainMenu.lock()->settingsButton.lock()->OnPress(Callback { openSettings });
-    _pauseMenu.lock()->settingsButton.lock()->OnPress(Callback { openSettings });
+    auto openSettingsPause = [this, &engine]()
+    {
+        this->PushUIMenu(this->_settingsMenu);
+        this->PushPreviousFocusedElement(_pauseMenu.lock()->settingsButton);
+        engine.GetModule<UIModule>().uiInputContext.focusedUIElement = _settingsMenu.lock()->sensitivitySlider;
+    };
+
+    _mainMenu.lock()->settingsButton.lock()->OnPress(Callback { openSettingsMenu });
+    _pauseMenu.lock()->settingsButton.lock()->OnPress(Callback { openSettingsPause });
 
     auto& particleModule = engine.GetModule<ParticleModule>();
     particleModule.LoadEmitterPresets();
@@ -167,51 +175,32 @@ std::optional<std::shared_ptr<GameOverMenu>> GameModule::GetGameOver()
 
 void GameModule::SetUIMenu(std::weak_ptr<Canvas> menu)
 {
-    menuStack = {};
-    menuStack.push(menu);
+    _menuStack = {};
+    _menuStack.push(menu);
 }
 void GameModule::PushUIMenu(std::weak_ptr<Canvas> menu)
 {
-    menuStack.push(menu);
+    _menuStack.push(menu);
 }
 
 void GameModule::PopUIMenu()
 {
-    if (!menuStack.empty())
+    if (!_menuStack.empty())
     {
-        menuStack.pop();
+        _menuStack.pop();
     }
 }
 
-void GameModule::ApplySettings(Engine& engine)
+std::weak_ptr<UIElement> GameModule::PopPreviousFocusedElement()
 {
-    auto curve = [](float normalized_val)
-    {
-        return normalized_val * normalized_val * 2.0f;
-    };
+    auto elem = _focusedElementStack.top();
+    _focusedElementStack.pop();
+    return elem;
+}
 
-    engine.GetModule<AudioModule>().SetBusChannelVolume("bus:/", curve(gameSettings.masterVolume));
-    engine.GetModule<AudioModule>().SetBusChannelVolume("bus:/BGM", curve(gameSettings.musicVolume));
-    engine.GetModule<AudioModule>().SetBusChannelVolume("bus:/SFX", curve(gameSettings.sfxVolume));
-
-    // Frame counter
-
-    if (auto counter = _framerateCounter.lock())
-    {
-
-        if (gameSettings.framerateCounter)
-        {
-            counter->visibility = UIElement::VisibilityState::eUpdatedAndVisible;
-            auto dt = engine.GetModule<TimeModule>().GetRealDeltatime();
-
-            if (dt.count() != 0.0f)
-                counter->SetVal(1000.0f / dt.count());
-        }
-        else
-        {
-            counter->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
-        }
-    }
+void GameModule::PushPreviousFocusedElement(std::weak_ptr<UIElement> element)
+{
+    _focusedElementStack.push(element);
 }
 
 void GameModule::TransitionScene(const std::string& scriptFile)
