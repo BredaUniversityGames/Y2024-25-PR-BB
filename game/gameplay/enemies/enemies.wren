@@ -1,6 +1,7 @@
 import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, EmitterPresetID, Perlin
 import "../player.wren" for PlayerVariables, HitmarkerState
 import "../soul.wren" for Soul, SoulManager
+import "gameplay/flash_system.wren" for FlashSystem
 
 class MeleeEnemy {
 
@@ -156,7 +157,7 @@ class MeleeEnemy {
         _rootEntity.GetTransformComponent().translation = newPos
     }
 
-    Update(playerPos, playerVariables, engine, dt, soulManager) {
+    Update(playerPos, playerVariables, engine, dt, soulManager, flashSystem) {
         var body = _rootEntity.GetRigidbodyComponent()
         var pos = body.GetPosition()
         _rootEntity.GetTransformComponent().translation = pos
@@ -171,6 +172,9 @@ class MeleeEnemy {
                         playerVariables.DecreaseHealth(_attackDamage)
                         playerVariables.cameraVariables.shakeIntensity = _shakeIntensity
                         playerVariables.invincibilityTime = playerVariables.invincibilityMaxTime
+
+                        //Flash the screen red
+                        flashSystem.Flash(Vec3.new(1.0, 0.0, 0.0),0.25)
 
                         engine.GetAudio().PlaySFX("assets/sounds/hit1.wav", 1.0)
                         animations.Play("Attack", 1.0, false, 0.1, false)

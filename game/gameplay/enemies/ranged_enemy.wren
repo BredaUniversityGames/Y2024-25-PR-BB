@@ -1,5 +1,6 @@
 import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, EmitterPresetID, Random
 import "../player.wren" for PlayerVariables
+import "gameplay/flash_system.wren" for FlashSystem
 
 class RangedEnemy {
 
@@ -141,7 +142,7 @@ class RangedEnemy {
         _rootEntity.GetTransformComponent().translation = newPos
     }
 
-    Update(playerPos, playerVariables, engine, dt, soulManager) {
+    Update(playerPos, playerVariables, engine, dt, soulManager, flashSystem) {
         var body = _rootEntity.GetRigidbodyComponent()
         var pos = body.GetPosition()
         _rootEntity.GetTransformComponent().translation = pos
@@ -207,6 +208,8 @@ class RangedEnemy {
                             playerVariables.DecreaseHealth(_attackDamage)
                             playerVariables.cameraVariables.shakeIntensity = _shakeIntensity
                             playerVariables.invincibilityTime = playerVariables.invincibilityMaxTime
+
+                            flashSystem.Flash(Vec3.new(1.0, 0.0, 0.0),0.25)
                         }
                     }
 

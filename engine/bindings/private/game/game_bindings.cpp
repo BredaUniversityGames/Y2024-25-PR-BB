@@ -48,9 +48,14 @@ void SetNoClip(WrenComponent<CheatsComponent>& self, bool noClip)
     self.component->noClip = noClip;
 }
 
-glm::vec4 GetFlashColor(GameModule& self)
+glm::vec3 GetFlashColor(GameModule& self)
 {
-    return self.GetFlashColor();
+    return glm::vec3(self.GetFlashColor().x, self.GetFlashColor().y, self.GetFlashColor().z);
+}
+
+float GetFlashIntensity(GameModule& self)
+{
+    return self.GetFlashColor().w;
 }
 
 void SetFlashColor(GameModule& self, const glm::vec3& color, const float intensity)
@@ -114,6 +119,7 @@ void BindGameAPI(wren::ForeignModule& module)
     auto& game = module.klass<GameModule>("Game");
     game.funcExt<bindings::AlterPlayerHeight>("AlterPlayerHeight");
     game.funcExt<&bindings::GetFlashColor>("GetFlashColor");
+    game.funcExt<&bindings::GetFlashIntensity>("GetFlashIntensity");
     game.funcExt<&bindings::SetFlashColor>("SetFlashColor");
 
     auto& settings = module.klass<GameSettings>("GameSettings");

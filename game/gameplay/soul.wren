@@ -1,6 +1,6 @@
 import "engine_api.wren" for Engine, ECS, Entity, Vec3, Vec2, Math, AnimationControlComponent, TransformComponent, Input, SpawnEmitterFlagBits, EmitterPresetID
 import "gameplay/player.wren" for PlayerVariables
-
+import "gameplay/flash_system.wren" for FlashSystem
 
 class Soul {
     construct new(engine, spawnPosition) {
@@ -31,7 +31,7 @@ class Soul {
         _collectSoundEvent = "event:/SFX/Soul"
     }
 
-    CheckRange(engine, playerPos, playerVariables, dt){
+    CheckRange(engine, playerPos, playerVariables,flashSystem, dt){
         var soulTransform = _rootEntity.GetTransformComponent()
         var soulPos = soulTransform.translation
         var distance = Math.Distance(soulPos, playerPos)
@@ -60,6 +60,10 @@ class Soul {
                 engine.GetAudio().SetEventVolume(eventInstance, 5.0)
                 var audioEmitter = player.GetAudioEmitterComponent()
                 audioEmitter.AddEvent(eventInstance)
+
+                // Play flash effect
+                flashSystem.Flash(Vec3.new(0.23, 0.71, 0.36),0.25)
+
 
                 this.Destroy() // Destroy the soul after it is collected
                
@@ -97,14 +101,14 @@ class SoulManager {
         _soulList.add(Soul.new(engine, spawnPosition)) // Add the soul to the list
     }
 
-    Update(engine, playerVariables, dt){
+    Update(engine, playerVariables,flashSystem, dt){
         var playerTransform = _playerEntity.GetTransformComponent()
         var playerPos = playerTransform.translation
         playerPos.y = playerPos.y - 1.0
 
         for(soul in _soulList){
             if(soul.entity.IsValid()){
-                soul.CheckRange(engine, playerPos, playerVariables, dt) // Check if the soul is within range of the player
+                soul.CheckRange(engine, playerPos, playerVariables, flashSystem, dt) // Check if the soul is within range of the player
                 soul.time = soul.time + dt
 
                 if(soul.time > _maxLifeTimeOfSoul && !soul.entity.GetLifetimeComponent()){
