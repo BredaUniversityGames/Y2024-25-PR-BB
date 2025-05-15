@@ -132,6 +132,37 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     return ModuleTickOrder::eTick;
 }
 
+void GameModule::ApplySettings(Engine& engine)
+{
+    auto curve = [](float normalized_val)
+    {
+        return normalized_val * normalized_val * 2.0f;
+    };
+
+    engine.GetModule<AudioModule>().SetBusChannelVolume("bus:/", curve(gameSettings.masterVolume));
+    engine.GetModule<AudioModule>().SetBusChannelVolume("bus:/BGM", curve(gameSettings.musicVolume));
+    engine.GetModule<AudioModule>().SetBusChannelVolume("bus:/SFX", curve(gameSettings.sfxVolume));
+
+    // Frame counter
+
+    if (auto counter = _framerateCounter.lock())
+    {
+
+        if (gameSettings.framerateCounter)
+        {
+            counter->visibility = UIElement::VisibilityState::eUpdatedAndVisible;
+            auto dt = engine.GetModule<TimeModule>().GetRealDeltatime();
+
+            if (dt.count() != 0.0f)
+                counter->SetVal(1000.0f / dt.count());
+        }
+        else
+        {
+            counter->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
+        }
+    }
+}
+
 void GameModule::Shutdown(MAYBE_UNUSED Engine& engine)
 {
 }
@@ -244,9 +275,9 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
     _gameOver.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     _settingsMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
 
-    if (!menuStack.empty())
+    if (!_menuStack.empty())
     {
-        menuStack.top().lock()->visibility = UIElement::VisibilityState::eUpdatedAndVisible;
+        _menuStack.top().lock()->visibility = UIElement::VisibilityState::eUpdatedAndVisible;
     }
 
 #if !DISTRBUTION

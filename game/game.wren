@@ -144,7 +144,7 @@ class Main {
             0.12)
 
         __ambientPlayer = BGMPlayer.new(engine.GetAudio(),
-            "event:/BGM/DarkSwampAmbient",
+            "event:/BGM/DarkSwampAmbience",
             0.1)
 
         var spawnLocations = []
