@@ -33,8 +33,10 @@ public:
 
     void SetUIMenu(std::weak_ptr<Canvas> menu);
     void PushUIMenu(std::weak_ptr<Canvas> menu);
-
     void PopUIMenu();
+
+    std::weak_ptr<UIElement> PopPreviousFocusedElement();
+    void PushPreviousFocusedElement(std::weak_ptr<UIElement> element);
 
     GameSettings& GetSettings() { return gameSettings; };
 
@@ -54,7 +56,8 @@ public:
 private:
     // UI
 
-    std::stack<std::weak_ptr<Canvas>> menuStack {};
+    std::stack<std::weak_ptr<Canvas>> _menuStack {};
+    std::stack<std::weak_ptr<UIElement>> _focusedElementStack { }
 
     std::weak_ptr<HUD> _hud;
     std::weak_ptr<LoadingScreen> _loadingScreen;

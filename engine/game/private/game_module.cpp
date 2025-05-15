@@ -96,14 +96,22 @@ ModuleTickOrder GameModule::Init(Engine& engine)
 
     _mainMenu.lock()->openLinkButton.lock()->OnPress(Callback { OpenDiscordURL });
 
-    auto openSettings = [this, &engine]()
+    auto openSettingsMenu = [this, &engine]()
     {
         this->PushUIMenu(this->_settingsMenu);
+        this->PushPreviousFocusedElement(_mainMenu.lock()->settingsButton);
         engine.GetModule<UIModule>().uiInputContext.focusedUIElement = _settingsMenu.lock()->sensitivitySlider;
     };
 
-    _mainMenu.lock()->settingsButton.lock()->OnPress(Callback { openSettings });
-    _pauseMenu.lock()->settingsButton.lock()->OnPress(Callback { openSettings });
+    auto openSettingsPause = [this, &engine]()
+    {
+        this->PushUIMenu(this->_settingsMenu);
+        this->PushPreviousFocusedElement(_pauseMenu.lock()->settingsButton);
+        engine.GetModule<UIModule>().uiInputContext.focusedUIElement = _settingsMenu.lock()->sensitivitySlider;
+    };
+
+    _mainMenu.lock()->settingsButton.lock()->OnPress(Callback { openSettingsMenu });
+    _pauseMenu.lock()->settingsButton.lock()->OnPress(Callback { openSettingsPause });
 
     auto& particleModule = engine.GetModule<ParticleModule>();
     particleModule.LoadEmitterPresets();
@@ -155,20 +163,32 @@ std::optional<std::shared_ptr<GameOverMenu>> GameModule::GetGameOver()
 
 void GameModule::SetUIMenu(std::weak_ptr<Canvas> menu)
 {
-    menuStack = {};
-    menuStack.push(menu);
+    _menuStack = {};
+    _menuStack.push(menu);
 }
 void GameModule::PushUIMenu(std::weak_ptr<Canvas> menu)
 {
-    menuStack.push(menu);
+    _menuStack.push(menu);
 }
 
 void GameModule::PopUIMenu()
 {
-    if (!menuStack.empty())
+    if (!_menuStack.empty())
     {
-        menuStack.pop();
+        _menuStack.pop();
     }
+}
+
+std::weak_ptr<UIElement> GameModule::PopPreviousFocusedElement()
+{
+    auto elem = _focusedElementStack.top();
+    _focusedElementStack.pop();
+    return elem;
+}
+
+void GameModule::PushPreviousFocusedElement(std::weak_ptr<UIElement> element)
+{
+    _focusedElementStack.push(element);
 }
 
 void GameModule::TransitionScene(const std::string& scriptFile)

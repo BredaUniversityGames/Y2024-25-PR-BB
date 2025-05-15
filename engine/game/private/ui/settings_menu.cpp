@@ -286,7 +286,7 @@ std::shared_ptr<SettingsMenu> SettingsMenu::Create(
             auto callback = [&engine]()
             {
                 auto& gameModule = engine.GetModule<GameModule>();
-                engine.GetModule<UIModule>().uiInputContext.focusedUIElement = gameModule._mainMenu.lock()->settingsButton;
+                engine.GetModule<UIModule>().uiInputContext.focusedUIElement = gameModule.PopPreviousFocusedElement();
                 gameModule.GetSettings().SaveToFile(GAME_SETTINGS_FILE);
                 gameModule.PopUIMenu();
             };
