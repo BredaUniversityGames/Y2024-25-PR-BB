@@ -28,7 +28,7 @@ class Soul {
         _gravity = Vec3.new(0, -0.098, 0) // gravity for arc
         _soulSpeed = 0.005
 
-        _collectSoundEvent = "event:/Soul"
+        _collectSoundEvent = "event:/SFX/Soul"
     }
 
     CheckRange(engine, playerPos, playerVariables, dt){

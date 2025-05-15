@@ -23,8 +23,8 @@ class Pistol {
 
         _cameraShakeIntensity = 0.3
 
-        _attackSFX = "event:/Revolver"
-        _reloadSFX = "event:/ReloadPistol"
+        _attackSFX = "event:/SFX/Revolver"
+        _reloadSFX = "event:/SFX/ReloadPistol"
         _equipSFX = ""
 
         _walkAnim = "walk"
@@ -208,7 +208,7 @@ class Pistol {
 
         var camera = engine.GetECS().GetEntityByName("Camera")
 
-        var newGun = engine.LoadModel("assets/models/Revolver.glb", false)
+        var newGun = engine.LoadModel("assets/models/Revolver.glb",false)
         newGun.GetNameComponent().name = _entityName
         var gunTransform = newGun.GetTransformComponent()
         gunTransform.rotation = Math.ToQuat(Vec3.new(0.0, -Math.PI()/2, 0.0))
@@ -259,7 +259,7 @@ class Shotgun {
         _spread = [Vec2.new(0, 0), Vec2.new(-1, 1), Vec2.new(0, 1), Vec2.new(1, 1), Vec2.new(0, 2), Vec2.new(-1, -1), Vec2.new(0, -1), Vec2.new(1, -1), Vec2.new(0, -2)]
         _cameraShakeIntensity = 0.5
 
-        _attackSFX = "event:/Explosion"
+        _attackSFX = "event:/SFX/Explosion"
         _reloadSFX = ""
         _equipSFX = ""
 
@@ -373,7 +373,7 @@ class Shotgun {
 
         var camera = engine.GetECS().GetEntityByName("Camera")
 
-        var newGun =  engine.LoadModel("assets/models/Shotgun.glb")
+        var newGun =  engine.LoadModel("assets/models/Shotgun.glb", false)
         newGun.GetNameComponent().name = _entityName
         var gunTransform = newGun.GetTransformComponent()
         gunTransform.rotation = Math.ToQuat(Vec3.new(0.0, -Math.PI()/2, 0.0))
@@ -420,7 +420,7 @@ class Knife {
         _reloadSpeed = 0
         _cameraShakeIntensity = 0.2
 
-        _attackSFX = "event:Explosion"
+        _attackSFX = "event:SFX/Explosion"
         _reloadSFX = ""
         _equipSFX = ""
 

@@ -76,9 +76,9 @@ class MeleeEnemy {
         _deathTimerMax = 3000
         _deathTimer = _deathTimerMax
 
-        _bonesSFX = "event:/Bones"
+        _bonesSFX = "event:/SFX/Bones"
 
-        _bonesStepsSFX = "event:/BonesSteps"
+        _bonesStepsSFX = "event:/SFX/BonesSteps"
         _walkEventInstance = null
 
         if(__perlin == null) {

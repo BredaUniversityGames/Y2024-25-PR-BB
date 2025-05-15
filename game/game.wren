@@ -139,7 +139,7 @@ class Main {
             ]
 
         __musicPlayer = BGMPlayer.new(engine.GetAudio(),
-            "event:/Gameplay",
+            "event:/BGM/Gameplay",
             0.025)
 
         __ambientPlayer = MusicPlayer.new(engine.GetAudio(), ambientList, 0.1)
@@ -282,7 +282,7 @@ class Main {
         }
 
         if (!__playerVariables.wasUltReadyLastFrame && __playerVariables.ultCharge == __playerVariables.ultMaxCharge) {
-            engine.GetAudio().PlayEventOnce("event:/UltReady")
+            engine.GetAudio().PlayEventOnce("event:/SFX/UltReady")
             __playerVariables.wasUltReadyLastFrame = true
         }
 
@@ -323,7 +323,7 @@ class Main {
                     __activeWeapon.equip(engine)
                     __playerVariables.ultActive = true
 
-                    engine.GetAudio().PlayEventOnce("event:/ActivateUlt")
+                    engine.GetAudio().PlayEventOnce("event:/SFX/ActivateUlt")
 
                     var particleEntity = engine.GetECS().NewEntity()
                     particleEntity.AddTransformComponent().translation = __player.GetTransformComponent().translation - Vec3.new(0,3.5,0)

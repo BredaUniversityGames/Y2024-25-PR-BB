@@ -14,6 +14,8 @@ class Coin {
         _rootEntity.AddEnemyTag()
         _rootEntity.AddAudioEmitterComponent()
 
+        _rootEntity.AddAudioEmitterComponent()
+
         var transform = _rootEntity.AddTransformComponent()
         transform.translation = spawnPosition
         transform.scale = Vec3.new(0.95, 0.95, 0.95)
@@ -32,12 +34,23 @@ class Coin {
         _pointLight.range = 0.5
         _pointLight.color = Vec3.new(0.9, 0.9, 0.08)
         _rootEntity.AttachChild(_lightEntity)
-
+        
         // Coin collision
+              // Physics callback with the two wren entities as parameters
+        var onEnterCoinSound = Fn.new { |self, other|
+
+            if (other.GetRigidbodyComponent().GetLayer() == PhysicsObjectLayer.eSTATIC()) {
+                if(_collisionSoundTimer > 400.0){
+                    this.PlaySound(engine,0.45)
+                    this.collisionSoundTimer = 0.0
+                }
+            }
+            return
+        }
 
         var colliderShape = ShapeFactory.MakeBoxShape(Vec3.new(0.45,0.45,0.45))
         var rb = Rigidbody.new(engine.GetPhysics(), colliderShape, PhysicsObjectLayer.eCOINS(), true)
-        var body = _rootEntity.AddRigidbodyComponent(rb)
+        var body = _rootEntity.AddRigidbodyComponent(rb).OnCollisionEnter(onEnterCoinSound)
 
         body.SetGravityFactor(2.5)
         body.SetFriction(9.0)
@@ -60,8 +73,8 @@ class Coin {
 
 
 
-
         _time = 0.0 // Time since the coin was spawned
+        _collisionSoundTimer = 0.0 // Timer for the collision sound
         
         // New velocity-based arc system variables
         _hasStartedFollowing = false
@@ -69,7 +82,9 @@ class Coin {
         _gravity = Vec3.new(0, -0.098, 0) // gravity for arc
         _coinSpeed = 0.005
 
-        _collectSoundEvent = "event:/Coin"
+        _collectSoundEvent = "event:/SFX/Coin"
+        this.PlaySound(engine,0.65)
+
     }
 
     CheckRange(engine, playerPos, playerVariables, dt){
@@ -107,6 +122,14 @@ class Coin {
         }
     }
 
+    PlaySound(engine, volume){
+        var player = engine.GetECS().GetEntityByName("Camera")
+        var eventInstance = engine.GetAudio().PlayEventOnce(_collectSoundEvent)
+        engine.GetAudio().SetEventVolume(eventInstance, volume)
+        var audioEmitter = _rootEntity.GetAudioEmitterComponent()
+        audioEmitter.AddEvent(eventInstance)
+    }
+
     Destroy(){
         var rb = _rootEntity.GetRigidbodyComponent()
         rb.SetTranslation(Vec3.new(0.0, -100.0, 0.0)) // Move the coin out of the way
@@ -124,6 +147,11 @@ class Coin {
 
     time {_time}
     time=(value) { _time  = value}
+
+    collisionSoundTimer {_collisionSoundTimer} 
+    collisionSoundTimer=(value) { _collisionSoundTimer  = value}
+
+
 }
 
 class CoinManager {
@@ -146,6 +174,7 @@ class CoinManager {
             if(coin.entity.IsValid()){
                 coin.CheckRange(engine, playerPos, playerVariables, dt) // Check if the coin is within range of the player
                 coin.time = coin.time + dt
+                coin.collisionSoundTimer = coin.collisionSoundTimer + dt
                 var body  = coin.entity.GetRigidbodyComponent()
 
                 if(coin.time > _maxLifeTimeOfCoin && !coin.entity.GetLifetimeComponent()){
