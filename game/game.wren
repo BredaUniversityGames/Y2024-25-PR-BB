@@ -24,17 +24,13 @@ class Main {
 
         // Set navigational mesh
         engine.GetPathfinding().SetNavigationMesh("assets/models/blockoutv5navmesh_04.glb")
-
-        // Loading sounds
-        engine.GetAudio().LoadBank("assets/music/Master.bank")
-        engine.GetAudio().LoadBank("assets/music/Master.strings.bank")
-        engine.GetAudio().LoadSFX("assets/sounds/slide2.wav", true, true)
-        engine.GetAudio().LoadSFX("assets/sounds/crows.wav", true, false)
-
-        engine.GetAudio().LoadSFX("assets/sounds/hitmarker.wav", false, false)
-        engine.GetAudio().LoadSFX("assets/sounds/hit1.wav", false, false)
-        engine.GetAudio().LoadSFX("assets/sounds/demon_roar.wav", true, false)
-        engine.GetAudio().LoadSFX("assets/sounds/shoot.wav", false, false)
+       
+        // engine.GetAudio().LoadSFX("assets/sounds/slide2.wav", true, true)
+        // engine.GetAudio().LoadSFX("assets/sounds/crows.wav", true, false)
+        // engine.GetAudio().LoadSFX("assets/sounds/hitmarker.wav", false, false)
+        // engine.GetAudio().LoadSFX("assets/sounds/hit1.wav", false, false)
+        // engine.GetAudio().LoadSFX("assets/sounds/demon_roar.wav", true, false)
+        // engine.GetAudio().LoadSFX("assets/sounds/shoot.wav", false, false)
 
         // Directional Light
         __directionalLight = engine.GetECS().NewEntity()
