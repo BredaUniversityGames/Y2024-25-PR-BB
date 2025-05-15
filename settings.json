@@ -40,7 +40,7 @@
         },
         "tonemapping": {
             "cereal_class_version": 8,
-            "tonemappingFunction": 0,
+            "tonemappingFunction": 2,
             "exposure": 1.0470000505447388,
             "enableVignette": true,
             "vignetteIntensity": 0.13899999856948853,
@@ -50,7 +50,7 @@
             "screenScale": 0.9879999756813049,
             "enableToneAdjustments": true,
             "brightness": 0.0,
-            "contrast": 1.399999976158142,
+            "contrast": 1.3650000095367432,
             "saturation": 0.8399999737739563,
             "vibrance": 0.9599999785423279,
             "hue": 0.0,
