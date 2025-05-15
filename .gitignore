@@ -3,6 +3,9 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
+# Settings
+game_settings.json
+
 # Visual Studio Code
 .vscode
 

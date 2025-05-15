@@ -15,7 +15,8 @@ public:
 
     TimeModule() = default;
     ~TimeModule() override = default;
-    DeltaMS GetDeltatime() const { return _currentDeltaTime; }
+    DeltaMS GetDeltatime() const { return _currentDeltaTime * _deltaTimeScale; }
+    DeltaMS GetRealDeltatime() const { return _currentDeltaTime; }
     DeltaMS GetTotalTime() const { return _totalTime; }
 
     void SetDeltatimeScale(float scale)
