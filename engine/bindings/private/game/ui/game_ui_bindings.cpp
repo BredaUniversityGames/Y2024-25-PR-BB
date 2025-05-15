@@ -170,7 +170,4 @@ void BindGameUI(wren::ForeignModule& module)
 
     gameOver.propReadonlyExt<bindings::GameOverMenuButton>("backButton");
     gameOver.propReadonlyExt<bindings::RetryButton>("retryButton");
-
-    auto& controlsMenu = module.klass<ControlsMenu>("ControlsMenu");
-    controlsMenu.propReadonlyExt<bindings::ControlsMenuBackButton>("backButton");
 }

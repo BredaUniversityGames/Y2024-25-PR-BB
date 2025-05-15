@@ -132,7 +132,6 @@ class Main {
         __ultimateActive = false
 
         __pauseEnabled = false
-        __controlsMenuOpen = false
 
         __enemyShape = ShapeFactory.MakeCapsuleShape(70.0, 70.0)
         __eyeShape = ShapeFactory.MakeSphereShape(0.65)
@@ -236,26 +235,6 @@ class Main {
 
         var menuButton = engine.GetGame().GetPauseMenu().backButton
         menuButton.OnPress(backToMain)
-
-        __controlsBackHandler = Fn.new {
-            engine.GetGame().SetControlsMenuEnabled(false)
-            engine.GetGame().SetPauseMenuEnabled(true)
-            engine.GetUI().SetSelectedElement(engine.GetGame().GetPauseMenu().continueButton)
-            __controlsMenuOpen = false
-        }
-
-        __pauseControlsHandler = Fn.new {
-            engine.GetGame().SetPauseMenuEnabled(false)
-            engine.GetGame().SetControlsMenuEnabled(true)
-            engine.GetUI().SetSelectedElement(engine.GetGame().GetControlsMenu().backButton)
-            __controlsMenuOpen = true
-        }
-
-        var controlsMenuBack = engine.GetGame().GetControlsMenu().backButton
-        controlsMenuBack.OnPress(__controlsBackHandler)
-
-        var pauseMenuControlsButton = engine.GetGame().GetPauseMenu().controlsButton
-        pauseMenuControlsButton.OnPress(__pauseControlsHandler)
 
         // Game over callbacks
         __alive = true

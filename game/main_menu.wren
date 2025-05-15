@@ -70,23 +70,9 @@ class Main {
             engine.TransitionToScript("game/game.wren")
         })
 
-        var controls = engine.GetGame().GetMainMenu().controlsButton
-        controls.OnPress(Fn.new {
-            engine.GetGame().SetMainMenuEnabled(false)
-            engine.GetGame().SetControlsMenuEnabled(true)
-            engine.GetUI().SetSelectedElement(engine.GetGame().GetControlsMenu().backButton)
-        })
-
         var exit = engine.GetGame().GetMainMenu().quitButton
         exit.OnPress(Fn.new {
             engine.SetExit(0)
-        })
-
-        var back = engine.GetGame().GetControlsMenu().backButton
-        back.OnPress(Fn.new {
-            engine.GetGame().SetControlsMenuEnabled(false)
-            engine.GetGame().SetMainMenuEnabled(true)
-            engine.GetUI().SetSelectedElement(engine.GetGame().GetMainMenu().playButton)
         })
 
         var musicList = [

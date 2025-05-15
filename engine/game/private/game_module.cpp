@@ -116,6 +116,32 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     _mainMenu.lock()->settingsButton.lock()->OnPress(Callback { openSettingsMenu });
     _pauseMenu.lock()->settingsButton.lock()->OnPress(Callback { openSettingsPause });
 
+    auto openControlsMenu = [this, &engine]()
+    {
+        this->PushUIMenu(this->_controlsMenu);
+        this->PushPreviousFocusedElement(_mainMenu.lock()->controlsButton);
+        engine.GetModule<UIModule>().uiInputContext.focusedUIElement = this->_controlsMenu.lock()->backButton;
+    };
+
+    auto openControlsPause = [this, &engine]()
+    {
+        this->PushUIMenu(this->_controlsMenu);
+        this->PushPreviousFocusedElement(_pauseMenu.lock()->controlsButton);
+        engine.GetModule<UIModule>().uiInputContext.focusedUIElement = this->_controlsMenu.lock()->backButton;
+    };
+
+    _mainMenu.lock()->controlsButton.lock()->OnPress(Callback { openControlsMenu });
+    _pauseMenu.lock()->controlsButton.lock()->OnPress(Callback { openControlsPause });
+
+    auto openControls = [&engine]()
+    {
+        auto& gameModule = engine.GetModule<GameModule>();
+        engine.GetModule<UIModule>().uiInputContext.focusedUIElement = gameModule.PopPreviousFocusedElement();
+        gameModule.PopUIMenu();
+    };
+
+    _controlsMenu.lock()->backButton.lock()->OnPress(Callback { openControls });
+
     auto& particleModule = engine.GetModule<ParticleModule>();
     particleModule.LoadEmitterPresets();
 
@@ -236,6 +262,7 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
     _pauseMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     _gameOver.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     _settingsMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
+    _controlsMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
 
     if (!_menuStack.empty())
     {
