@@ -3,7 +3,7 @@ import "gameplay/movement.wren" for PlayerMovement
 import "gameplay/enemies/spawner.wren" for Spawner
 import "gameplay/weapon.wren" for Pistol, Shotgun, Knife, Weapons
 import "gameplay/camera.wren" for CameraVariables
-import "gameplay/player.wren" for PlayerVariables
+import "gameplay/player.wren" for PlayerVariables, HitmarkerState
 import "gameplay/music_player.wren" for MusicPlayer, BGMPlayer
 import "gameplay/wave_system.wren" for WaveSystem, WaveConfig, SpawnLocationType
 import "analytics/analytics.wren" for AnalyticsManager
@@ -28,9 +28,11 @@ class Main {
         engine.GetAudio().LoadSFX("assets/sounds/slide2.wav", true, true)
         engine.GetAudio().LoadSFX("assets/sounds/crows.wav", true, false)
 
+        engine.GetAudio().LoadSFX("assets/sounds/hitmarker.wav", false, false)
         engine.GetAudio().LoadSFX("assets/sounds/hit1.wav", false, false)
         engine.GetAudio().LoadSFX("assets/sounds/demon_roar.wav", true, false)
-
+        engine.GetAudio().LoadSFX("assets/sounds/shoot.wav", false, false)
+      
         // Directional Light
         __directionalLight = engine.GetECS().NewEntity()
         __directionalLight.AddNameComponent().name = "Directional Light"
@@ -139,7 +141,7 @@ class Main {
 
         __musicPlayer = BGMPlayer.new(engine.GetAudio(),
             "event:/Gameplay",
-            0.025)
+            0.12)
 
         __ambientPlayer = MusicPlayer.new(engine.GetAudio(), ambientList, 0.1)
 
@@ -266,7 +268,6 @@ class Main {
         var cheats = __playerController.GetCheatsComponent()
         var deltaTime = engine.GetTime().GetDeltatime()
         __timer = __timer + dt
-
         __playerVariables.grenadeCharge = Math.Min(__playerVariables.grenadeCharge + __playerVariables.grenadeChargeRate * dt / 1000, __playerVariables.grenadeMaxCharge)
 
         if (__playerVariables.ultActive) {
@@ -287,7 +288,12 @@ class Main {
         __playerVariables.invincibilityTime = Math.Max(__playerVariables.invincibilityTime - dt, 0)
 
         __playerVariables.multiplierTimer = Math.Max(__playerVariables.multiplierTimer - dt, 0)
-
+        __playerVariables.hitmarkTimer = Math.Max(__playerVariables.hitmarkTimer - dt, 0)
+        
+        __cameraVariables.Shake(engine, __camera, dt)
+        __cameraVariables.Tilt(engine, __camera, dt)
+        __cameraVariables.ProcessRecoil(engine, __camera, dt)
+        
         if (__playerVariables.multiplierTimer == 0 ) {
             __playerVariables.multiplier = 1.0
             __playerVariables.consecutiveHits = 0
@@ -403,6 +409,8 @@ class Main {
         engine.GetGame().GetHUD().UpdateGrenadeBar(__playerVariables.grenadeCharge / __playerVariables.grenadeMaxCharge)
         engine.GetGame().GetHUD().UpdateDashCharges(__playerMovement.currentDashCount)
         engine.GetGame().GetHUD().UpdateMultiplierText(__playerVariables.multiplier)
+        engine.GetGame().GetHUD().ShowHitmarker(__playerVariables.hitmarkTimer > 0 && __playerVariables.hitmarkerState == HitmarkerState.normal)
+        engine.GetGame().GetHUD().ShowHitmarkerCrit(__playerVariables.hitmarkTimer > 0 && __playerVariables.hitmarkerState == HitmarkerState.crit)
         engine.GetGame().GetHUD().UpdateUltReadyText(__playerVariables.ultCharge == __playerVariables.ultMaxCharge)
 
         var mousePosition = engine.GetInput().GetMousePosition()

@@ -16,6 +16,7 @@ game/engine_api.wren
 # Build output for the project
 build
 package
+cmake-build-debug
 
 # User-specific files
 *.rsuser

@@ -1,5 +1,11 @@
 import "engine_api.wren" for Math
 
+
+class HitmarkerState {
+    static normal {0}
+    static crit {1}    
+}
+
 class PlayerVariables {
     construct new() {
         _maxHealth = 100.0
@@ -20,6 +26,9 @@ class PlayerVariables {
         
         _cameraVariablesRef = null
 
+        _hitmarkerState = HitmarkerState.normal
+        _hitmarkTimer = 0
+        
         _multiplier = 1.0
         _multiplierIncrement = 0.2
 
@@ -29,7 +38,8 @@ class PlayerVariables {
         _consecutiveHits = 0
         _consecutiveMaxHits = 5        
     }
-    
+    hitmarkerState{_hitmarkerState}
+    hitmarkTimer{_hitmarkTimer}
     health {_health}
     maxHealth {_maxHealth}
     score {_score}
@@ -54,6 +64,8 @@ class PlayerVariables {
     cameraVariables {_cameraVariablesRef}
     cameraVariables=(value) {_cameraVariablesRef = value}
 
+    hitmarkerState=(value) {_hitmarkerState = value}
+    hitmarkTimer=(value){_hitmarkTimer = value}
     health=(value) {_health = value}
     score=(value) {_score = value}
     ultCharge=(value) {_ultCharge = value}

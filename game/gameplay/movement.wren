@@ -219,10 +219,10 @@ class PlayerMovement{
             playerBody.SetFriction(0.0)
             _gun.playWalkAnim(engine)
         }else{
-            _gun.playIdleAnim(engine)
             playerBody.SetFriction(12.0)
+            _gun.playIdleAnim(engine)
         }
-
+        
         playerBody.SetGravityFactor(gravityFactor)
 
         var isJumpHeld = engine.GetInput().GetDigitalAction("Jump").IsHeld()
