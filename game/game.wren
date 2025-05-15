@@ -7,6 +7,7 @@ import "gameplay/player.wren" for PlayerVariables, HitmarkerState
 import "gameplay/music_player.wren" for MusicPlayer, BGMPlayer
 import "gameplay/wave_system.wren" for WaveSystem, WaveConfig, SpawnLocationType
 import "analytics/analytics.wren" for AnalyticsManager
+import "gameplay/enemies/berserker_enemy.wren" for BerserkerEnemy
 
 import "gameplay/enemies/ranged_enemy.wren" for RangedEnemy
 import "gameplay/soul.wren" for Soul, SoulManager
@@ -32,7 +33,7 @@ class Main {
         engine.GetAudio().LoadSFX("assets/sounds/hit1.wav", false, false)
         engine.GetAudio().LoadSFX("assets/sounds/demon_roar.wav", true, false)
         engine.GetAudio().LoadSFX("assets/sounds/shoot.wav", false, false)
-      
+
         // Directional Light
         __directionalLight = engine.GetECS().NewEntity()
         __directionalLight.AddNameComponent().name = "Directional Light"
@@ -93,6 +94,7 @@ class Main {
 
         engine.PreloadModel("assets/models/Skeleton.glb")
         engine.PreloadModel("assets/models/eye.glb")
+        engine.PreloadModel("assets/models/Berserker.glb")
 
         engine.PreloadModel("assets/models/Revolver.glb")
         engine.PreloadModel("assets/models/Shotgun.glb")
@@ -131,6 +133,7 @@ class Main {
 
         __enemyShape = ShapeFactory.MakeCapsuleShape(70.0, 70.0)
         __eyeShape = ShapeFactory.MakeSphereShape(0.65)
+        __berserkerEnemyShape = ShapeFactory.MakeCapsuleShape(140.0, 50.0)
 
         // Music
 
@@ -140,7 +143,7 @@ class Main {
             ]
 
         __musicPlayer = BGMPlayer.new(engine.GetAudio(),
-            "event:/Gameplay",
+            "event:/BGM/Gameplay",
             0.12)
 
         __ambientPlayer = MusicPlayer.new(engine.GetAudio(), ambientList, 0.1)
@@ -203,7 +206,7 @@ class Main {
             engine.GetInput().SetActiveActionSet("UserInterface")
             engine.GetInput().SetMouseHidden(false)
             engine.GetUI().SetSelectedElement(engine.GetGame().GetPauseMenu().continueButton)
-            __musicPlayer.SetVolume(engine.GetAudio(), 0.025)
+            __musicPlayer.SetVolume(engine.GetAudio(), 0.05)
             System.print("Pause Menu is %(__pauseEnabled)!")
         }
 
@@ -213,7 +216,7 @@ class Main {
             engine.GetGame().SetPauseMenuEnabled(false)
             engine.GetInput().SetActiveActionSet("Shooter")
             engine.GetInput().SetMouseHidden(true)
-            __musicPlayer.SetVolume(engine.GetAudio(), 0.025)
+            __musicPlayer.SetVolume(engine.GetAudio(), 0.05)
             System.print("Pause Menu is %(__pauseEnabled)!")
         }
 
@@ -281,7 +284,7 @@ class Main {
         }
 
         if (!__playerVariables.wasUltReadyLastFrame && __playerVariables.ultCharge == __playerVariables.ultMaxCharge) {
-            engine.GetAudio().PlayEventOnce("event:/UltReady")
+            engine.GetAudio().PlayEventOnce("event:/SFX/UltReady")
             __playerVariables.wasUltReadyLastFrame = true
         }
 
@@ -289,11 +292,11 @@ class Main {
 
         __playerVariables.multiplierTimer = Math.Max(__playerVariables.multiplierTimer - dt, 0)
         __playerVariables.hitmarkTimer = Math.Max(__playerVariables.hitmarkTimer - dt, 0)
-        
+
         __cameraVariables.Shake(engine, __camera, dt)
         __cameraVariables.Tilt(engine, __camera, dt)
         __cameraVariables.ProcessRecoil(engine, __camera, dt)
-        
+
         if (__playerVariables.multiplierTimer == 0 ) {
             __playerVariables.multiplier = 1.0
             __playerVariables.consecutiveHits = 0
@@ -327,7 +330,7 @@ class Main {
                     __activeWeapon.equip(engine)
                     __playerVariables.ultActive = true
 
-                    engine.GetAudio().PlayEventOnce("event:/ActivateUlt")
+                    engine.GetAudio().PlayEventOnce("event:/SFX/ActivateUlt")
 
                     var particleEntity = engine.GetECS().NewEntity()
                     particleEntity.AddTransformComponent().translation = __player.GetTransformComponent().translation - Vec3.new(0,3.5,0)
@@ -372,9 +375,12 @@ class Main {
                     __activeWeapon.reload(engine)
                 }
             }
-            
+
+            if (engine.GetInput().DebugGetKey(Keycode.eK())) {
+                __enemyList.add(BerserkerEnemy.new(engine, Vec3.new(0, 18, 7), Vec3.new(0.026, 0.026, 0.026), 4, "assets/models/Berserker.glb", __berserkerEnemyShape))
+            }
+
             if (engine.GetInput().DebugGetKey(Keycode.eJ())) {
-                // shit
                 __enemyList.add(RangedEnemy.new(engine, Vec3.new(-27, 18, 7), Vec3.new(2.25,2.25,2.25), 5, "assets/models/eye.glb", __eyeShape))
             }
         }

@@ -62,9 +62,9 @@ class RangedEnemy {
         _deathTimerMax = 1500
         _deathTimer = _deathTimerMax
 
-        _shootSFX = "event:/EyeLaserBlast" 
-        _chargeSFX = "event:/EyeLaserCharge"
-        _hitSFX = "event:/EyeHit"
+        _shootSFX = "event:/SFX/EyeLaserBlast" 
+        _chargeSFX = "event:/SFX/EyeLaserCharge"
+        _hitSFX = "event:/SFX/EyeHit"
 
         _changeDirectionTimerMax = 2000
         _changeDirectionTimer = 0
