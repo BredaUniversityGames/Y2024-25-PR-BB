@@ -4,7 +4,7 @@ import "gameplay/enemies/spawner.wren" for Spawner
 import "gameplay/weapon.wren" for Pistol, Shotgun, Knife, Weapons
 import "gameplay/camera.wren" for CameraVariables
 import "gameplay/player.wren" for PlayerVariables
-import "gameplay/music_player.wren" for MusicPlayer, BGMPlayer
+import "gameplay/music_player.wren" for BGMPlayer
 import "gameplay/wave_system.wren" for WaveSystem, WaveConfig, SpawnLocationType
 import "analytics/analytics.wren" for AnalyticsManager
 
@@ -134,16 +134,13 @@ class Main {
 
         // Music
 
-        var ambientList = [
-            "assets/music/ambient/207841__speedenza__dark-swamp-theme-1.wav",
-            ""
-            ]
-
         __musicPlayer = BGMPlayer.new(engine.GetAudio(),
-            "event:/Gameplay",
+            "event:/BGM/Gameplay",
             0.025)
 
-        __ambientPlayer = MusicPlayer.new(engine.GetAudio(), ambientList, 0.1)
+        __ambientPlayer = BGMPlayer.new(engine.GetAudio(),
+            "event:/BGM/DarkSwampAmbient",
+            0.1)
 
         var spawnLocations = []
         for(i in 0..8) {

@@ -223,11 +223,6 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
 {
     ApplySettings(engine);
 
-    if (engine.GetModule<UIModule>().uiInputContext.focusedUIElement.expired())
-    {
-        bblog::info("NO UI ELEMENT SELECTED!");
-    }
-
     if (!_nextSceneToExecute.empty())
     {
         engine.GetModule<ScriptingModule>().SetMainScript(engine, _nextSceneToExecute);
