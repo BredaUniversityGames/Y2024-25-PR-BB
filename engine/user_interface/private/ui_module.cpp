@@ -3,6 +3,7 @@
 #include "canvas.hpp"
 #include "renderer.hpp"
 #include "renderer_module.hpp"
+#include "time_module.hpp"
 
 ModuleTickOrder UIModule::Init(Engine& engine)
 {
@@ -16,6 +17,7 @@ ModuleTickOrder UIModule::Init(Engine& engine)
 void UIModule::Tick(Engine& engine)
 {
     uiInputContext._gamepadHasFocus = engine.GetModule<ApplicationModule>().GetInputDeviceManager().IsGamepadAvailable();
+    uiInputContext.deltatime = engine.GetModule<TimeModule>().GetRealDeltatime();
 
     InputManagers inputManagers {
         .inputDeviceManager = engine.GetModule<ApplicationModule>().GetInputDeviceManager(),

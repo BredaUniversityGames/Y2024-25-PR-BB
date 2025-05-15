@@ -1,9 +1,8 @@
-import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, EmitterPresetID, Perlin, Random
-import "../player.wren" for PlayerVariables, HitmarkerState
+import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, EmitterPresetID, Perlin
+import "../player.wren" for PlayerVariables
 import "../soul.wren" for Soul, SoulManager
-import "../coin.wren" for Coin, CoinManager
 
-class MeleeEnemy {
+class BerserkerEnemy {
 
     construct new(engine, spawnPosition, size, maxSpeed, enemyModel, colliderShape) {
         
@@ -14,10 +13,10 @@ class MeleeEnemy {
 
         _velocityDirection = Vec3.new(_maxVelocity, 0, 0)
         
-        _meshEntity = engine.LoadModel(enemyModel, true)
+        _meshEntity = engine.LoadModel(enemyModel)
 
         _rootEntity = engine.GetECS().NewEntity()
-        _rootEntity.AddNameComponent().name = "Enemy"
+        _rootEntity.AddNameComponent().name = "BerserkerEnemy"
         _rootEntity.AddEnemyTag()
         _rootEntity.AddAudioEmitterComponent()
         var transform = _rootEntity.AddTransformComponent()
@@ -25,12 +24,13 @@ class MeleeEnemy {
         transform.scale = size
 
         _rootEntity.AttachChild(_meshEntity)
-        _meshEntity.GetTransformComponent().translation = Vec3.new(0,-60,0)
+        _meshEntity.GetTransformComponent().translation = Vec3.new(0,-121,0)
+        _meshEntity.GetTransformComponent().scale = Vec3.new(1.4, 1.4, 1.4)
 
         _lightEntity = engine.GetECS().NewEntity()
         _lightEntity.AddNameComponent().name = "EnemyLight"
         var lightTransform = _lightEntity.AddTransformComponent()
-        lightTransform.translation = Vec3.new(0.0, 26, 0.0)
+        lightTransform.translation = Vec3.new(0, 12, 23)
         _pointLight = _lightEntity.AddPointLightComponent()
         _rootEntity.AttachChild(_lightEntity)
 
@@ -43,42 +43,49 @@ class MeleeEnemy {
         body.SetGravityFactor(2.2)
 
         var animations = _meshEntity.GetAnimationControlComponent()
-        animations.Play("Run", 1.25, true, 1.0, true)
+        animations.Play("Walk", 0.4, true, 1.0, true)
 
         _isAlive = true
 
         _reasonTimer = 2000
 
-        _attackRange = 7
+        _attackRange = 9
         _attackDamage = 30
-        _shakeIntensity = 1.6
+        _shakeIntensity = 2.0
         
         _movingState = false
         _attackingState = false
         _recoveryState = false
         _hitState = false
 
-        _attackMaxCooldown = 2000
+        _attackMaxCooldown = 2500
         _attackCooldown = _attackMaxCooldown
 
-        _attackMaxTime = 2500
-        _attackTime = 0
+        _attackMaxTime = 2300
+        _attackTime = _attackMaxTime
+
+        _attackTiming = 1200
+        _attackTimer = _attackTiming
 
         _recoveryMaxTime = 1500
         _recoveryTime = 0
 
         _evaluateState = true
 
-        _health = 100
+        _health = 500
 
         _hitTimer = 0
 
         _deathTimerMax = 3000
         _deathTimer = _deathTimerMax
 
-        _bonesSFX = "event:/SFX/Bones"
+        _hurtSFX = "event:/SFX/DemonHurt"
 
-        _bonesStepsSFX = "event:/SFX/BonesSteps"
+        _stepSFX = "event:/SFX/DemonStep"
+
+        _attackSFX = "event:/SFX/DemonAttack"
+        _attackHitSFX = "event:/SFX/DemonAttackHit"
+
         _walkEventInstance = null
 
         if(__perlin == null) {
@@ -88,7 +95,6 @@ class MeleeEnemy {
             __perlin = Perlin.new(0)
         }
         _noiseOffset = 0.0
-        
     }
 
     IsHeadshot(y) { // Will probably need to be changed when we have a different model
@@ -98,20 +104,11 @@ class MeleeEnemy {
         return false
     }
 
-    DecreaseHealth(amount, engine, coinManager) {
+    DecreaseHealth(amount, engine) {
         var animations = _meshEntity.GetAnimationControlComponent()
         var body = _rootEntity.GetRigidbodyComponent()
 
         _health = Math.Max(_health - amount, 0)
-
-        // Fly some bones out of him
-        var entity = engine.GetECS().NewEntity()
-        var transform = entity.AddTransformComponent()
-        transform.translation = body.GetPosition()
-        var lifetime = entity.AddLifetimeComponent()
-        lifetime.lifetime = 170.0
-        var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
-        engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eBones(),emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.0, 15.0, 0.0))
 
         if (_health <= 0 && _isAlive) {
             _isAlive = false
@@ -119,30 +116,15 @@ class MeleeEnemy {
             animations.Play("Death", 1.0, false, 0.3, false)
             body.SetVelocity(Vec3.new(0,0,0))
             body.SetStatic()
-            // Spawn between 1 and 5 coins
-            var coinCount = Random.RandomIndex(2, 5)
-            for(i in 0...coinCount) {
-                coinManager.SpawnCoin(engine, body.GetPosition() + Vec3.new(0, 1.0, 0))
-            }
 
-            var eventInstance = engine.GetAudio().PlayEventOnce(_bonesSFX)
-            
-            var hitmarkerSFX = engine.GetAudio().PlaySFX("assets/sounds/hitmarker.wav",1.6  )
+            var eventInstance = engine.GetAudio().PlayEventOnce(_hurtSFX)
             var audioEmitter = _rootEntity.GetAudioEmitterComponent()
             audioEmitter.AddEvent(eventInstance)
-            audioEmitter.AddSFX(hitmarkerSFX)
         } else {
-            animations.Play("Hit", 1.0, false, 0.1, false)
-            _rootEntity.GetRigidbodyComponent().SetVelocity(Vec3.new(0.0, 0.0, 0.0))
-            _hitState = true
-            _movingState = false
-            _evaluateState = false
-            _attackingState = false
-            _recoveryState = false
-            body.SetStatic()
-
+            //animations.Play("Hit", 1.0, false, 0.1, false)
+            //_rootEntity.GetRigidbodyComponent().SetVelocity(Vec3.new(0.0, 0.0, 0.0))
             var hitmarkerSFX = engine.GetAudio().PlaySFX("assets/sounds/hitmarker.wav",1.6  )
-            var eventInstance = engine.GetAudio().PlayEventOnce(_bonesSFX)
+            var eventInstance = engine.GetAudio().PlayEventOnce(_hurtSFX)
             var audioEmitter = _rootEntity.GetAudioEmitterComponent()
             audioEmitter.AddEvent(eventInstance)
             audioEmitter.AddSFX(hitmarkerSFX)
@@ -163,7 +145,7 @@ class MeleeEnemy {
         _rootEntity.GetTransformComponent().translation = newPos
     }
 
-    Update(playerPos, playerVariables, engine, dt, soulManager, coinManager) {
+    Update(playerPos, playerVariables, engine, dt, soulManager) {
         var body = _rootEntity.GetRigidbodyComponent()
         var pos = body.GetPosition()
         _rootEntity.GetTransformComponent().translation = pos
@@ -173,19 +155,36 @@ class MeleeEnemy {
         if (_isAlive) {
             if (_attackingState) {
                 _attackTime = _attackTime - dt
-                if (_attackTime <= 0 ) {
-                    if (Math.Distance(playerPos, pos) < _attackRange && !playerVariables.IsInvincible()) {
-                        playerVariables.DecreaseHealth(_attackDamage)
-                        playerVariables.cameraVariables.shakeIntensity = _shakeIntensity
-                        playerVariables.invincibilityTime = playerVariables.invincibilityMaxTime
+                _attackTimer = _attackTimer - dt
 
-                        engine.GetAudio().PlaySFX("assets/sounds/hit1.wav", 1.0)
-                        animations.Play("Attack", 1.0, false, 0.1, false)
+                if (_attackTimer <= 0 ) {
+                    _rootEntity.GetAudioEmitterComponent().AddEvent(engine.GetAudio().PlayEventOnce(_attackHitSFX))
+                    if (!playerVariables.IsInvincible()) {
+
+                        var forward = Math.ToVector(_rootEntity.GetTransformComponent().rotation)
+                        var toPlayer = pos - playerPos
+
+                        if (Math.Dot(forward, toPlayer) >= 0.8 && Math.Distance(playerPos, pos) < _attackRange) {
+                            playerVariables.DecreaseHealth(_attackDamage)
+                            playerVariables.cameraVariables.shakeIntensity = _shakeIntensity
+                            playerVariables.invincibilityTime = playerVariables.invincibilityMaxTime
+
+                            engine.GetAudio().PlaySFX("assets/sounds/hit1.wav", 1.0)
+                        }
+
+                        animations.Play("Idle", 1.0, true, 1.0, false)
+                        animations.SetTime(0.0)
+
+                        _attackTimer = 999999
                     }
+                }
 
+                if (_attackTime <= 0 ) {
                     _attackingState = false
                     _recoveryState = true
                     _recoveryTime = _recoveryMaxTime
+                    _attackTime = _attackMaxTime
+                    _attackTimer = _attackTiming
                 }
             }
             if (_recoveryState) {
@@ -196,8 +195,8 @@ class MeleeEnemy {
                 var forwardVector = (playerPos - pos).normalize()
 
                 var endRotation = Math.LookAt(Vec3.new(forwardVector.x, 0, forwardVector.z), Vec3.new(0, 1, 0))
-                var startRotation = body.GetRotation()
-                body.SetRotation( Math.Slerp(startRotation, endRotation, 0.01 *dt))
+                var startRotation = _rootEntity.GetTransformComponent().rotation
+                _rootEntity.GetTransformComponent().rotation = Math.Slerp(startRotation, endRotation, 0.01 *dt)
 
                 _recoveryTime = _recoveryTime - dt
                 if (_recoveryTime <= 0) {
@@ -211,8 +210,8 @@ class MeleeEnemy {
                 _evaluateState = true
 
                 if(_walkEventInstance == null || engine.GetAudio().IsEventPlaying(_walkEventInstance) == false) {
-                    _walkEventInstance = engine.GetAudio().PlayEventLoop(_bonesStepsSFX)
-                    engine.GetAudio().SetEventVolume(_walkEventInstance, 15.0)
+                    _walkEventInstance = engine.GetAudio().PlayEventLoop(_stepSFX)
+                    engine.GetAudio().SetEventVolume(_walkEventInstance, 5.0)
                     var audioEmitter = _rootEntity.GetAudioEmitterComponent()
                     audioEmitter.AddEvent(_walkEventInstance)
                 }
@@ -228,15 +227,16 @@ class MeleeEnemy {
                     _attackingState = true
                     _movingState = false
                     body.SetFriction(12.0)
-                    animations.Play("Attack", 1.0, false, 0.3, false)
+                    animations.Play("Swipe", 1.0, false, 0.3, false)
                     animations.SetTime(0.0)
                     _attackTime = _attackMaxTime
                     _evaluateState = false
-                    _rootEntity.GetAudioEmitterComponent().AddSFX(engine.GetAudio().PlaySFX("assets/sounds/demon_roar.wav", 1.0))
+
+                    _rootEntity.GetAudioEmitterComponent().AddEvent(engine.GetAudio().PlayEventOnce(_attackSFX))
 
                 } else if (_movingState == false) { // Enter attack state
                     body.SetFriction(0.0)
-                    animations.Play("Run", 1.25, true, 0.5, true)
+                    animations.Play("Walk", 0.4, true, 0.5, true)
                     _movingState = true
                 }
             }
@@ -250,7 +250,7 @@ class MeleeEnemy {
                     _evaluateState = true
                     _hitState = false
                     body.SetDynamic()
-                    animations.Play("Run", 1.25, true, 0.5, true)
+                    animations.Play("Walk", 0.4, true, 0.5, true)
                 }
             }
         } else {
@@ -262,12 +262,8 @@ class MeleeEnemy {
             }
 
             if (_deathTimer <= 0) {
-                //spawn a soul
                 soulManager.SpawnSoul(engine, body.GetPosition())
-
                 engine.GetECS().DestroyEntity(_rootEntity) // Destroys the entity, and in turn this object
-                
-
             } else {
                 // Wait for death animation before starting descent
                 if(_deathTimerMax - _deathTimer > 1800) {
@@ -329,8 +325,8 @@ class MeleeEnemy {
             
             // Set forward rotation
             var endRotation = Math.LookAt(Vec3.new(forwardVector.x, 0, forwardVector.z), Vec3.new(0, 1, 0))
-            var startRotation = body.GetRotation()
-            body.SetRotation(Math.Slerp(startRotation, endRotation, 0.01 *dt))
+            var startRotation = _rootEntity.GetTransformComponent().rotation
+            _rootEntity.GetTransformComponent().rotation = Math.Slerp(startRotation, endRotation, 0.01 *dt)
         }else{
             var forwardVector = playerPos - position
             forwardVector.y = 0
@@ -344,9 +340,8 @@ class MeleeEnemy {
             _rootEntity.GetRigidbodyComponent().SetVelocity(forwardVector * factor)
 
             var endRotation = Math.LookAt(Vec3.new(forwardVector.x, 0, forwardVector.z), Vec3.new(0, 1, 0))
-                        var startRotation = body.GetRotation()
-
-            body.SetRotation(Math.Slerp(startRotation, endRotation, 0.01 *dt))
+            var startRotation = _rootEntity.GetTransformComponent().rotation
+            _rootEntity.GetTransformComponent().rotation = Math.Slerp(startRotation, endRotation, 0.01 *dt)
         }
     }
 

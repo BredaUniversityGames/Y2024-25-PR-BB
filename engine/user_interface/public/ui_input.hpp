@@ -1,7 +1,9 @@
 #pragma once
+#include "timers.hpp"
 #include "ui_navigation.hpp"
 #include <glm/vec2.hpp>
 #include <string>
+
 class InputDeviceManager;
 class UIElement;
 
@@ -28,8 +30,10 @@ public:
     std::weak_ptr<UIElement> focusedUIElement = {};
 
     UINavigationDirection GetDirection(const ActionManager& actionManager);
-
     std::string_view GetPressActionName() { return _pressActionName; }
+
+    DeltaMS deltatime {};
+    float _inputDeadZone = 0.4f;
 
 private:
     friend class UIModule;
@@ -38,7 +42,6 @@ private:
 
     // If the input has been consumed this frame.
     bool _hasInputBeenConsumed = false;
-    float _inputDeadZone = 0.4f;
     std::string _pressActionName = "Interact";
     std::string _navigationActionName = "Navigate";
     UINavigationDirection _previousNavigationDirection {};

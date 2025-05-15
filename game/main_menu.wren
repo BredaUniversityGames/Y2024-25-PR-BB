@@ -11,7 +11,8 @@ class Main {
 
         engine.GetInput().SetActiveActionSet("UserInterface")
         engine.GetInput().SetMouseHidden(false)
-        engine.GetGame().SetMainMenuEnabled(true)
+
+        engine.GetGame().SetUIMenu(engine.GetGame().GetMainMenu())
         engine.GetUI().SetSelectedElement(engine.GetGame().GetMainMenu().playButton)
         
         var helmet = engine.LoadModel("assets/models/plague_helmet.glb", true)
@@ -63,12 +64,9 @@ class Main {
         var transform = __directionalLight.AddTransformComponent()
         transform.rotation = Math.ToQuat(Vec3.new(Math.Radians(144), Math.Radians(63), Math.Radians(-178)))
 
-        var settings = engine.GetGame().GetMainMenu().settingsButton
-        settings.OnPress(Fn.new { System.print("Settings Opened!")})
-
         var play = engine.GetGame().GetMainMenu().playButton
         play.OnPress(Fn.new {
-            engine.GetGame().SetMainMenuEnabled(false)
+            // engine.GetGame().SetMainMenuEnabled(false) TODO: ADD LOADING SCREEN HERE
             engine.TransitionToScript("game/game.wren")
         })
 

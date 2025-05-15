@@ -7,6 +7,11 @@ class CameraVariables {
         _shakeOffset = Vec2.new(0.0, 0.0)
         _tiltFactor = 0   
         _slideFactorX = 0
+        _recoilOffsetDesired = 0
+        _recoilOffsetActual = 0
+        _recoilMaxAngleVal = 45
+        _recoilMixFactor = 0.02
+        _recoilDecayFactor = 0.02
     }
 
     shakeIntensity {_shakeIntensity}
@@ -16,7 +21,10 @@ class CameraVariables {
     shakeIntensity=(value) {_shakeIntensity = value}
     shakeOffset=(value) {_shakeOffset = value}
     tiltFactor=(value) {_tiltFactor = value}
-
+    
+    AddRecoil(value){   
+        _recoilOffsetDesired = _recoilOffsetDesired + value
+    }
 
     Shake(engine, cameraEntity, timer) {
         if (_shakeIntensity > 0.001) {
@@ -29,6 +37,19 @@ class CameraVariables {
         }
 
         cameraEntity.GetTransformComponent().translation = Vec3.new(_shakeOffset.x, _shakeOffset.y, 0.0)
+    }
+    
+    ProcessRecoil(engine,cameraEntity,dt){
+       
+       // Calculate recoil offset 
+       _recoilOffsetActual = Math.MixFloat(_recoilOffsetActual,_recoilOffsetDesired,_recoilMixFactor*dt)  
+       _recoilOffsetActual = Math.Clamp(_recoilOffsetActual,0,_recoilMaxAngleVal)
+       
+       // Apply recoil to camera entity rotation  
+       cameraEntity.GetTransformComponent().rotation = Math.ToQuat(Vec3.new(Math.Radians(_recoilOffsetActual),0,0))
+     
+       // Decay recoil back to 0
+      _recoilOffsetDesired = Math.Clamp(_recoilOffsetDesired  -(_recoilDecayFactor*dt),0,_recoilMaxAngleVal)
     }
 
     Tilt(engine, cameraEntity, dt) {

@@ -60,13 +60,14 @@ UIProgressBar::BarStyle LoadUltBarStyle(GraphicsContext& graphicsContext)
 
 std::shared_ptr<HUD> HUD::Create(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution, std::shared_ptr<UIFont> font)
 {
+
     std::shared_ptr<HUD> hud = std::make_shared<HUD>(screenResolution);
     // resource loading.
 
-    UIProgressBar::BarStyle healtbarStyle
+    const UIProgressBar::BarStyle healtbarStyle
         = LoadHealthBarStyle(graphicsContext);
-    UIProgressBar::BarStyle circleBarStyle = LoadCircleBarStyle(graphicsContext);
-    UIProgressBar::BarStyle ultBarStyle = LoadUltBarStyle(graphicsContext);
+    const UIProgressBar::BarStyle circleBarStyle = LoadCircleBarStyle(graphicsContext);
+    const UIProgressBar::BarStyle ultBarStyle = LoadUltBarStyle(graphicsContext);
 
     hud->SetAbsoluteTransform(hud->GetAbsoluteLocation(), screenResolution);
 
@@ -76,7 +77,7 @@ std::shared_ptr<HUD> HUD::Create(GraphicsContext& graphicsContext, const glm::uv
     commonImageData.SetFlags(vk::ImageUsageFlagBits::eSampled);
     commonImageData.isHDR = false;
     auto crosshair = graphicsContext.Resources()->ImageResourceManager().Create(commonImageData.FromPNG("assets/textures/ui/cross_hair.png"));
-    hud->AddChild<UIImage>(crosshair, glm::vec2(0), glm::vec2(120, 160) * 0.15f);
+    hud->AddChild<UIImage>(crosshair, glm::vec2(0, 7), glm::vec2(25, 42) * 2.0f);
 
     hud->healthBar = hud->AddChild<UIProgressBar>(healtbarStyle, glm::vec2(0, 100), glm::vec2(700, 50));
     hud->healthBar.lock()->AddChild<UITextElement>(font, "health", 50);
@@ -115,8 +116,17 @@ std::shared_ptr<HUD> HUD::Create(GraphicsContext& graphicsContext, const glm::uv
 
     auto im = graphicsContext.Resources()->ImageResourceManager().Create(imageData.FromPNG("assets/textures/ui/gun.png"));
 
+    auto hitmarkerImage = graphicsContext.Resources()->ImageResourceManager().Create(imageData.FromPNG("assets/textures/ui/hitmarker.png"));
+    auto hitmarkerCritImage = graphicsContext.Resources()->ImageResourceManager().Create(imageData.FromPNG("assets/textures/ui/hitmarker_crit.png"));
+
     auto gunPic = hud->AddChild<UIImage>(im, glm::vec2(460, 140), glm::vec2(720, 360) * 0.2f);
     gunPic->anchorPoint = UIElement::AnchorPoint::eBottomRight;
+
+    hud->hitmarker = hud->AddChild<UIImage>(hitmarkerImage, glm::vec2(0, 7), glm::vec2(25, 42) * 2.0f);
+    hud->hitmarker.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
+
+    hud->hitmarkerCrit = hud->AddChild<UIImage>(hitmarkerCritImage, glm::vec2(0, 7), glm::vec2(25, 42) * 2.0f);
+    hud->hitmarkerCrit.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
 
     auto dashCircle = graphicsContext.Resources()->ImageResourceManager().Create(imageData.FromPNG("assets/textures/ui/grey_ellipse.png"));
 
