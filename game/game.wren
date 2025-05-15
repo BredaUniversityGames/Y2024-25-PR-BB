@@ -143,7 +143,7 @@ class Main {
             ]
 
         __musicPlayer = BGMPlayer.new(engine.GetAudio(),
-            "event:/Gameplay",
+            "event:/BGM/Gameplay",
             0.12)
 
         __ambientPlayer = MusicPlayer.new(engine.GetAudio(), ambientList, 0.1)
