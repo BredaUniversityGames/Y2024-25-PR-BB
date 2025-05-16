@@ -70,8 +70,13 @@ glm::vec2 ActionManager::GetAnalogAction(std::string_view actionName) const
     return CheckAnalogInput(*itr);
 }
 
-std::vector<std::string> ActionManager::GetDigitalActionGamepadGlyphImagePaths(std::string_view actionName) const
+std::vector<GamepadOriginVisual> ActionManager::GetDigitalActionGamepadOriginVisual(std::string_view actionName) const
 {
+    if (!_inputDeviceManager.IsGamepadAvailable())
+    {
+        return {};
+    }
+
     if (_gameActions.empty())
     {
         bblog::error("[Input] No game actions are set while trying to get action: \"{}\"", actionName);
@@ -97,7 +102,7 @@ std::vector<std::string> ActionManager::GetDigitalActionGamepadGlyphImagePaths(s
         return {};
     }
 
-    std::vector<std::string> glyphPaths {};
+    std::vector<GamepadOriginVisual> visuals {};
 
     for (const auto& inputBinding : actionItr->inputs)
     {
@@ -110,15 +115,22 @@ std::vector<std::string> ActionManager::GetDigitalActionGamepadGlyphImagePaths(s
         const auto digitalGlyph = customGlyphs->second.digitals.find(button);
         if (digitalGlyph != customGlyphs->second.digitals.end())
         {
-            glyphPaths.push_back(digitalGlyph->second);
+            GamepadOriginVisual& visual = visuals.emplace_back();
+            visual.bindingInputName = "bindingInput"; // TODO: Get proper name with magic enum
+            visual.glyphImagePath = digitalGlyph->second;
         }
     }
 
-    return glyphPaths;
+    return visuals;
 }
 
-std::vector<std::string> ActionManager::GetAnalogActionGamepadGlyphImagePaths(std::string_view actionName) const
+std::vector<GamepadOriginVisual> ActionManager::GetAnalogActionGamepadOriginVisual(std::string_view actionName) const
 {
+    if (!_inputDeviceManager.IsGamepadAvailable())
+    {
+        return {};
+    }
+
     if (_gameActions.empty())
     {
         bblog::error("[Input] No game actions are set while trying to get action: \"{}\"", actionName);
@@ -144,7 +156,7 @@ std::vector<std::string> ActionManager::GetAnalogActionGamepadGlyphImagePaths(st
         return {};
     }
 
-    std::vector<std::string> glyphPaths {};
+    std::vector<GamepadOriginVisual> visuals {};
 
     for (const auto& inputBinding : actionItr->inputs)
     {
@@ -157,11 +169,13 @@ std::vector<std::string> ActionManager::GetAnalogActionGamepadGlyphImagePaths(st
         const auto analogGlyph = customGlyphs->second.analogs.find(analog);
         if (analogGlyph != customGlyphs->second.analogs.end())
         {
-            glyphPaths.push_back(analogGlyph->second);
+            GamepadOriginVisual& visual = visuals.emplace_back();
+            visual.bindingInputName = "bindingInput"; // TODO: Get proper name with magic enum
+            visual.glyphImagePath = analogGlyph->second;
         }
     }
 
-    return glyphPaths;
+    return visuals;
 }
 
 DigitalActionType ActionManager::CheckDigitalInput(const DigitalAction& action) const

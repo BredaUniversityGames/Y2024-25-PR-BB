@@ -68,7 +68,7 @@ void SteamActionManager::SetActiveActionSet(std::string_view actionSetName)
     SteamInput()->RunFrame(); // Make sure a set is immediately used
 }
 
-std::vector<std::string> SteamActionManager::GetDigitalActionGamepadGlyphImagePaths(std::string_view actionName) const
+std::vector<GamepadOriginVisual> SteamActionManager::GetDigitalActionGamepadOriginVisual(std::string_view actionName) const
 {
     if (!_steamInputDeviceManager.IsGamepadAvailable())
     {
@@ -81,13 +81,12 @@ std::vector<std::string> SteamActionManager::GetDigitalActionGamepadGlyphImagePa
         return {};
     }
 
-    std::vector<std::string> glyphPaths = ActionManager::GetDigitalActionGamepadGlyphImagePaths(actionName);
+    std::vector<GamepadOriginVisual> visuals = ActionManager::GetDigitalActionGamepadOriginVisual(actionName);
 
-    // There is a chance we could only find 1 custom glyph for the input binding, but not for others bindings for the same action.
-    // In that case we return anyway as we also don't want to have multiple glyphs from different styles.
-    if (!glyphPaths.empty())
+    // We found custom visuals, so we use those
+    if (!visuals.empty())
     {
-        return glyphPaths;
+        return visuals;
     }
 
     const SteamActionSetCache& actionSetCache = _steamGameActionsCache[_activeActionSet];
@@ -102,21 +101,23 @@ std::vector<std::string> SteamActionManager::GetDigitalActionGamepadGlyphImagePa
     std::array<EInputActionOrigin, STEAM_INPUT_MAX_ORIGINS> origins {};
     uint32_t originsNum = SteamInput()->GetDigitalActionOrigins(_steamInputDeviceManager.GetGamepadHandle(), actionSetCache.actionSetHandle, itr->second, origins.data());
 
+    // Action not bound to any input
     if (originsNum == 0)
     {
-        bblog::error("[Input] Digital action \"{}\" is not bound to any input, couldn't find any glyph path", actionName);
         return {};
     }
 
     for (uint32_t i = 0; i < originsNum; ++i)
     {
-        glyphPaths.emplace_back(SteamInput()->GetGlyphPNGForActionOrigin(origins[i], k_ESteamInputGlyphSize_Large, 0));
+        GamepadOriginVisual& visual = visuals.emplace_back();
+        visual.bindingInputName = SteamInput()->GetStringForActionOrigin(origins[i]);
+        visual.glyphImagePath = SteamInput()->GetGlyphPNGForActionOrigin(origins[i], k_ESteamInputGlyphSize_Large, 0);
     }
 
-    return glyphPaths;
+    return visuals;
 }
 
-std::vector<std::string> SteamActionManager::GetAnalogActionGamepadGlyphImagePaths(std::string_view actionName) const
+std::vector<GamepadOriginVisual> SteamActionManager::GetAnalogActionGamepadOriginVisual(std::string_view actionName) const
 {
     if (!_steamInputDeviceManager.IsGamepadAvailable())
     {
@@ -129,13 +130,12 @@ std::vector<std::string> SteamActionManager::GetAnalogActionGamepadGlyphImagePat
         return {};
     }
 
-    std::vector<std::string> glyphPaths = ActionManager::GetAnalogActionGamepadGlyphImagePaths(actionName);
+    std::vector<GamepadOriginVisual> visuals = ActionManager::GetAnalogActionGamepadOriginVisual(actionName);
 
-    // There is a chance we could only find 1 custom glyph for the input binding, but not for others bindings for the same action.
-    // In that case we return anyway as we also don't want to have multiple glyphs from different styles.
-    if (!glyphPaths.empty())
+    // We found custom visuals, so we use those
+    if (!visuals.empty())
     {
-        return glyphPaths;
+        return visuals;
     }
 
     const SteamActionSetCache& actionSetCache = _steamGameActionsCache[_activeActionSet];
@@ -150,23 +150,20 @@ std::vector<std::string> SteamActionManager::GetAnalogActionGamepadGlyphImagePat
     std::array<EInputActionOrigin, STEAM_INPUT_MAX_ORIGINS> origins {};
     uint32_t originsNum = SteamInput()->GetAnalogActionOrigins(_steamInputDeviceManager.GetGamepadHandle(), actionSetCache.actionSetHandle, itr->second, origins.data());
 
-    if (origins[0] == k_EInputActionOrigin_None)
+    // Action not bound to any input
+    if (originsNum == 0)
     {
-        bblog::error("[Input] Analog action \"{}\" is not bound to any input, couldn't find any glyph path", actionName);
         return {};
     }
 
     for (uint32_t i = 0; i < originsNum; ++i)
     {
-        if (origins[i] == k_EInputActionOrigin_None)
-        {
-            break;
-        }
-
-        glyphPaths.push_back(SteamInput()->GetGlyphPNGForActionOrigin(origins[i], k_ESteamInputGlyphSize_Large, 0));
+        GamepadOriginVisual& visual = visuals.emplace_back();
+        visual.bindingInputName = SteamInput()->GetStringForActionOrigin(origins[i]);
+        visual.glyphImagePath = SteamInput()->GetGlyphPNGForActionOrigin(origins[i], k_ESteamInputGlyphSize_Large, 0);
     }
 
-    return glyphPaths;
+    return visuals;
 }
 
 DigitalActionType SteamActionManager::CheckInput(std::string_view actionName, MAYBE_UNUSED GamepadButton button) const
