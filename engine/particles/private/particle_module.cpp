@@ -132,7 +132,7 @@ ResourceHandle<GPUImage>& ParticleModule::GetEmitterImage(std::string fileName, 
             return resource;
         }
 
-        bblog::error("[Error] Particle image %s not found!", fileName);
+        bblog::error("[Particles] Emitter image %s not found!", fileName);
         imageFound = false;
         return _emitterImages.begin()->second;
     }
@@ -162,10 +162,6 @@ void ParticleModule::LoadEmitterPresets()
     {
         bool imageFound;
         _emitterPresets.data.emitterPresets[i].materialIndex = GetEmitterImage(_emitterPresets.data.emitterPresets[i].imageName, imageFound).Index();
-        if (!imageFound)
-        {
-            bblog::error("[Particles] Emitter Preset image %s not found", _emitterPresets.data.emitterPresets[i].imageName);
-        }
     }
 }
 
