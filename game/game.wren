@@ -11,6 +11,7 @@ import "gameplay/enemies/berserker_enemy.wren" for BerserkerEnemy
 
 import "gameplay/enemies/ranged_enemy.wren" for RangedEnemy
 import "gameplay/soul.wren" for Soul, SoulManager
+import "gameplay/coin.wren" for Coin, CoinManager
 
 class Main {
 
@@ -88,7 +89,7 @@ class Main {
         __player.AddNameComponent().name = "Player"
 
         // Load Map
-        engine.LoadModel("assets/models/graveyard_level.glb")
+        engine.LoadModel("assets/models/graveyard_level.glb", true)
 
         engine.PreloadModel("assets/models/Skeleton.glb")
         engine.PreloadModel("assets/models/eye.glb")
@@ -101,7 +102,7 @@ class Main {
         // engine.LoadModel("assets/models/light_test.glb")
 
         // Gun Setup
-        __gun = engine.LoadModel("assets/models/Revolver.glb")
+        __gun = engine.LoadModel("assets/models/Revolver.glb",false)
         __gun.RenderInForeground()
 
         __gun.GetNameComponent().name = "Gun"
@@ -194,6 +195,7 @@ class Main {
 
         // Souls
         __soulManager = SoulManager.new(engine, __player)
+        __coinManager = CoinManager.new(engine, __player)
 
         // Pause Menu callbacks
 
@@ -386,7 +388,7 @@ class Main {
             }
 
             if (engine.GetInput().GetDigitalAction("Shoot").IsHeld()  && __activeWeapon.isUnequiping(engine) == false ) {
-                __activeWeapon.attack(engine, dt, __playerVariables, __enemyList)
+                __activeWeapon.attack(engine, dt, __playerVariables, __enemyList, __coinManager)
                 if (__activeWeapon.ammo <= 0) {
                     __activeWeapon.reload(engine)
                 }
@@ -431,7 +433,13 @@ class Main {
         var playerPos = __playerController.GetRigidbodyComponent().GetPosition()
 
         if(engine.GetInput().DebugGetKey(Keycode.eB())){
-           __soulManager.SpawnSoul(engine, Vec3.new(10.0,2.0,44.0))
+
+            // Spawn between 1 and 5 coins
+                var coinCount = Random.RandomIndex(1, 5)
+                for(i in 0...coinCount) {
+                              __coinManager.SpawnCoin(engine, Vec3.new(10.0,2.0,44.0))
+
+                }
         }
 
         for (enemy in __enemyList) {
@@ -439,13 +447,14 @@ class Main {
             // We delete the entity from the ecs when it dies
             // Then we check for entity validity, and remove it from the list if it is no longer valid
             if (enemy.entity.IsValid()) {
-                enemy.Update(playerPos, __playerVariables, engine, dt, __soulManager)
+                enemy.Update(playerPos, __playerVariables, engine, dt, __soulManager, __coinManager)
             } else {
                 __enemyList.removeAt(__enemyList.indexOf(enemy))
             }
         }
 
         __soulManager.Update(engine, __playerVariables, dt)
+        __coinManager.Update(engine, __playerVariables, dt)
         __waveSystem.Update(dt)
     }
 }
