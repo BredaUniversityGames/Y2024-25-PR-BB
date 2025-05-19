@@ -39,6 +39,8 @@
 #include "ui/ui_menus.hpp"
 #include "ui_module.hpp"
 
+#include <passes/tonemapping_pass.hpp>
+
 ModuleTickOrder GameModule::Init(Engine& engine)
 {
     engine.GetModule<ApplicationModule>().GetActionManager().SetGameActions(GAME_ACTIONS);
@@ -314,6 +316,10 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
         std::this_thread::sleep_for(16ms);
         return;
     }
+
+    // Pass the flash color to rendering
+    auto& renderer = engine.GetModule<RendererModule>();
+    renderer.GetRenderer()->GetTonemappingPipeline().SetFlashColor(flashColor);
 
     // Handle UI stack
 
