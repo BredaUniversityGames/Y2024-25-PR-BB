@@ -2,6 +2,9 @@ import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, PhysicsObjec
 import "../player.wren" for PlayerVariables
 import "gameplay/flash_system.wren" for FlashSystem
 
+import "../soul.wren" for Soul, SoulManager
+import "../coin.wren" for Coin, CoinManager
+
 class RangedEnemy {
 
     construct new(engine, spawnPosition, size, maxSpeed, enemyModel, colliderShape) {
@@ -10,7 +13,7 @@ class RangedEnemy {
 
         _velocityDirection = Vec3.new(_maxVelocity, 0, 0)
         
-        _meshEntity = engine.LoadModel(enemyModel)
+        _meshEntity = engine.LoadModel(enemyModel,true)
 
         _rootEntity = engine.GetECS().NewEntity()
         _rootEntity.AddNameComponent().name = "Enemy"
@@ -86,7 +89,7 @@ class RangedEnemy {
         return false
     }
 
-    DecreaseHealth(amount, engine) {
+    DecreaseHealth(amount, engine, coinManager) {
         var body = _rootEntity.GetRigidbodyComponent()
         _health = Math.Max(_health - amount, 0)
 
@@ -113,6 +116,13 @@ class RangedEnemy {
                 engine.GetAudio().StopEvent(_chargeSoundEventInstance)
                 _chargeSoundEventInstance = null
             }
+
+            // Spawn between 1 and 5 coins
+            var coinCount = Random.RandomIndex(2, 5)
+            for(i in 0...coinCount) {
+                coinManager.SpawnCoin(engine, body.GetPosition() + Vec3.new(0, 1.0, 0))
+            }
+
             body.SetDynamic()
             body.SetGravityFactor(2.0)
 
@@ -142,21 +152,21 @@ class RangedEnemy {
         _rootEntity.GetTransformComponent().translation = newPos
     }
 
-    Update(playerPos, playerVariables, engine, dt, soulManager, flashSystem) {
+    Update(playerPos, playerVariables, engine, dt, soulManager, coinManager, flashSystem) {
         var body = _rootEntity.GetRigidbodyComponent()
         var pos = body.GetPosition()
         _rootEntity.GetTransformComponent().translation = pos
 
         if (_isAlive) {
             if (_attackingState) {
-                var forwardVector = Math.ToVector(_rootEntity.GetTransformComponent().rotation)
+                var forwardVector = Math.ToVector(body.GetRotation())
                 if (_attackTime > 0 ) {    
                     _attackPos = playerPos
                     
                     // Rotate towards the player
                     var endRotation = Math.LookAt((pos - _attackPos), Vec3.new(0, 1, 0))
-                    var startRotation = _rootEntity.GetTransformComponent().rotation
-                    _rootEntity.GetTransformComponent().rotation = Math.Slerp(startRotation, endRotation, 0.03 *dt)
+                    var startRotation = body.GetRotation()
+                    body.SetRotation(Math.Slerp(startRotation, endRotation, 0.03 *dt))
 
                     // Spawning white charging particles
                     _chargeTimer = _chargeTimer - dt
@@ -243,8 +253,8 @@ class RangedEnemy {
                 var forwardVector = (pos - playerPos).normalize()
 
                 var endRotation = Math.LookAt(forwardVector, Vec3.new(0, 1, 0))
-                var startRotation = _rootEntity.GetTransformComponent().rotation
-                _rootEntity.GetTransformComponent().rotation = Math.Slerp(startRotation, endRotation, 0.01 *dt)
+                var startRotation = body.GetRotation()
+                body.SetRotation(Math.Slerp(startRotation, endRotation, 0.01 *dt))
 
                 _recoveryTime = _recoveryTime - dt
                 if (_recoveryTime <= 0) {
@@ -305,6 +315,7 @@ class RangedEnemy {
             if (_deathTimer <= 0) {
                 //spawn a soul
                 soulManager.SpawnSoul(engine, body.GetPosition())
+
                 engine.GetECS().DestroyEntity(_rootEntity) // Destroys the entity, and in turn this object
             } else {
                 // Wait for death animation before starting descent
@@ -321,8 +332,8 @@ class RangedEnemy {
 
         var forwardVector = (pos - playerPos).normalize()
         var endRotation = Math.LookAt(forwardVector, Vec3.new(0, 1, 0))
-        var startRotation = _rootEntity.GetTransformComponent().rotation
-        _rootEntity.GetTransformComponent().rotation = Math.Slerp(startRotation, endRotation, 0.01 *dt)
+        var startRotation = body.GetRotation()
+        body.SetRotation(Math.Slerp(startRotation, endRotation, 0.01 *dt))
 
         if(_changeDirectionTimer > _changeDirectionTimerMax && !_hasDashedFromDamage){
             _hasDashed = true

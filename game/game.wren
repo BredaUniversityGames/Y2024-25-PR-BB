@@ -11,6 +11,7 @@ import "gameplay/enemies/berserker_enemy.wren" for BerserkerEnemy
 
 import "gameplay/enemies/ranged_enemy.wren" for RangedEnemy
 import "gameplay/soul.wren" for Soul, SoulManager
+import "gameplay/coin.wren" for Coin, CoinManager
 import "gameplay/flash_system.wren" for FlashSystem
 
 class Main {
@@ -25,17 +26,13 @@ class Main {
 
         // Set navigational mesh
         engine.GetPathfinding().SetNavigationMesh("assets/models/blockoutv5navmesh_04.glb")
-
-        // Loading sounds
-        engine.GetAudio().LoadBank("assets/music/Master.bank")
-        engine.GetAudio().LoadBank("assets/music/Master.strings.bank")
-        engine.GetAudio().LoadSFX("assets/sounds/slide2.wav", true, true)
-        engine.GetAudio().LoadSFX("assets/sounds/crows.wav", true, false)
-
-        engine.GetAudio().LoadSFX("assets/sounds/hitmarker.wav", false, false)
-        engine.GetAudio().LoadSFX("assets/sounds/hit1.wav", false, false)
-        engine.GetAudio().LoadSFX("assets/sounds/demon_roar.wav", true, false)
-        engine.GetAudio().LoadSFX("assets/sounds/shoot.wav", false, false)
+       
+        // engine.GetAudio().LoadSFX("assets/sounds/slide2.wav", true, true)
+        // engine.GetAudio().LoadSFX("assets/sounds/crows.wav", true, false)
+        // engine.GetAudio().LoadSFX("assets/sounds/hitmarker.wav", false, false)
+        // engine.GetAudio().LoadSFX("assets/sounds/hit1.wav", false, false)
+        // engine.GetAudio().LoadSFX("assets/sounds/demon_roar.wav", true, false)
+        // engine.GetAudio().LoadSFX("assets/sounds/shoot.wav", false, false)
 
         // Directional Light
         __directionalLight = engine.GetECS().NewEntity()
@@ -93,7 +90,7 @@ class Main {
         __player.AddNameComponent().name = "Player"
 
         // Load Map
-        engine.LoadModel("assets/models/blockoutv6_0.glb")
+        engine.LoadModel("assets/models/graveyard_level.glb", true)
 
         engine.PreloadModel("assets/models/Skeleton.glb")
         engine.PreloadModel("assets/models/eye.glb")
@@ -106,7 +103,7 @@ class Main {
         // engine.LoadModel("assets/models/light_test.glb")
 
         // Gun Setup
-        __gun = engine.LoadModel("assets/models/Revolver.glb")
+        __gun = engine.LoadModel("assets/models/Revolver.glb",false)
         __gun.RenderInForeground()
 
         __gun.GetNameComponent().name = "Gun"
@@ -140,20 +137,20 @@ class Main {
 
         // Music
 
-        var ambientList = [
-            "assets/music/ambient/207841__speedenza__dark-swamp-theme-1.wav",
-            ""
-            ]
-
         __musicPlayer = BGMPlayer.new(engine.GetAudio(),
             "event:/BGM/Gameplay",
             0.12)
 
-        __ambientPlayer = MusicPlayer.new(engine.GetAudio(), ambientList, 0.1)
+        __ambientPlayer = BGMPlayer.new(engine.GetAudio(),
+            "event:/BGM/DarkSwampAmbience",
+            0.1)
 
         var spawnLocations = []
         for(i in 0..8) {
-            spawnLocations.add(engine.GetECS().GetEntityByName("Spawner_%(i)"))
+            var entity = engine.GetECS().GetEntityByName("Spawner_%(i)")
+            if(entity) {
+                spawnLocations.add(entity)
+            }
         }
 
         __enemyList = []
@@ -199,6 +196,7 @@ class Main {
 
         // Souls
         __soulManager = SoulManager.new(engine, __player)
+        __coinManager = CoinManager.new(engine, __player)
 
         // Flash System
         __flashSystem = FlashSystem.new(engine)
@@ -394,7 +392,7 @@ class Main {
             }
 
             if (engine.GetInput().GetDigitalAction("Shoot").IsHeld()  && __activeWeapon.isUnequiping(engine) == false ) {
-                __activeWeapon.attack(engine, dt, __playerVariables, __enemyList)
+                __activeWeapon.attack(engine, dt, __playerVariables, __enemyList, __coinManager)
                 if (__activeWeapon.ammo <= 0) {
                     __activeWeapon.reload(engine)
                 }
@@ -439,7 +437,13 @@ class Main {
         var playerPos = __playerController.GetRigidbodyComponent().GetPosition()
 
         if(engine.GetInput().DebugGetKey(Keycode.eB())){
-           __soulManager.SpawnSoul(engine, Vec3.new(10.0,2.0,44.0))
+
+            // Spawn between 1 and 5 coins
+                var coinCount = Random.RandomIndex(1, 5)
+                for(i in 0...coinCount) {
+                              __coinManager.SpawnCoin(engine, Vec3.new(10.0,2.0,44.0))
+
+                }
         }
 
         for (enemy in __enemyList) {
@@ -447,13 +451,14 @@ class Main {
             // We delete the entity from the ecs when it dies
             // Then we check for entity validity, and remove it from the list if it is no longer valid
             if (enemy.entity.IsValid()) {
-                enemy.Update(playerPos, __playerVariables, engine, dt, __soulManager, __flashSystem)
+                enemy.Update(playerPos, __playerVariables, engine, dt, __soulManager, __coinManager, __flashSystem)
             } else {
                 __enemyList.removeAt(__enemyList.indexOf(enemy))
             }
         }
 
         __soulManager.Update(engine, __playerVariables,__flashSystem, dt)
+        __coinManager.Update(engine, __playerVariables, dt)
         __waveSystem.Update(dt)
 
         __flashSystem.Update(engine, dt)
