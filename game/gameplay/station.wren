@@ -101,7 +101,7 @@ class StationManager {
         _quadLightEntity = engine.GetECS().NewEntity()
         _quadLightEntity.AddNameComponent().name = "Quad Damage Light"
         var lightTransform = _quadLightEntity.AddTransformComponent()
-        lightTransform.translation = Vec3.new(0.0, -0.42, 0.0)
+        lightTransform.translation = Vec3.new(0.0, -0.32, 0.0)
         _pointLight = _quadLightEntity.AddPointLightComponent()
         _pointLight.intensity = 40
         _pointLight.range = 5.5
@@ -159,7 +159,7 @@ class StationManager {
             _stationList[randomIndex].time = 0.0 // Reset the time for the station
             _quadDamageTransparency.transparency = 0.0 // Reset the transparency to 0.0
 
-            var meshOffset = Vec3.new(0.0, 1.6, 0.0)
+            var meshOffset = Vec3.new(0.0, 2.1, 0.0)
             _quadDamageMeshEntity.GetTransformComponent().translation =  _stationList[randomIndex].entity.GetTransformComponent().translation + meshOffset
 
             System.print("Too much time has passed between stations, setting a new one active")
