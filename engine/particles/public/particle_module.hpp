@@ -56,7 +56,7 @@ class ParticleModule final : public ModuleInterface
 
 public:
     ParticleModule()
-        : _emitterPresets("emitter_presets.json") {};
+        : _emitterPresets("game/config/emitter_presets.json") {};
     ~ParticleModule() override = default;
 
     void LoadEmitterPresets();
