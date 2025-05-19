@@ -41,6 +41,8 @@
 
 ModuleTickOrder GameModule::Init(Engine& engine)
 {
+    engine.GetModule<ApplicationModule>().GetActionManager().SetGameActions(GAME_ACTIONS);
+
     // Audio Setup
     auto& audio = engine.GetModule<AudioModule>();
 
@@ -72,6 +74,7 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     _loadingScreen = viewport.AddElement(LoadingScreen::Create(graphicsContext, viewportSize, font));
     _pauseMenu = viewport.AddElement(PauseMenu::Create(graphicsContext, viewportSize, font));
     _gameOver = viewport.AddElement(GameOverMenu::Create(graphicsContext, viewportSize, font));
+    _controlsMenu = viewport.AddElement(ControlsMenu::Create(viewportSize, graphicsContext, engine.GetModule<ApplicationModule>().GetActionManager(), font));
 
     gameSettings = GameSettings::FromFile(GAME_SETTINGS_FILE);
 
@@ -85,6 +88,7 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     _loadingScreen.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     _pauseMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     _gameOver.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
+    _controlsMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     _settingsMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
 
     _framerateCounter = viewport.AddElement(FrameCounter::Create(viewportSize, font));
@@ -124,11 +128,35 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     _mainMenu.lock()->settingsButton.lock()->OnPress(Callback { openSettingsMenu });
     _pauseMenu.lock()->settingsButton.lock()->OnPress(Callback { openSettingsPause });
 
+    auto openControlsMenu = [this, &engine]()
+    {
+        this->PushUIMenu(this->_controlsMenu);
+        this->PushPreviousFocusedElement(_mainMenu.lock()->controlsButton);
+        engine.GetModule<UIModule>().uiInputContext.focusedUIElement = this->_controlsMenu.lock()->backButton;
+    };
+
+    auto openControlsPause = [this, &engine]()
+    {
+        this->PushUIMenu(this->_controlsMenu);
+        this->PushPreviousFocusedElement(_pauseMenu.lock()->controlsButton);
+        engine.GetModule<UIModule>().uiInputContext.focusedUIElement = this->_controlsMenu.lock()->backButton;
+    };
+
+    _mainMenu.lock()->controlsButton.lock()->OnPress(Callback { openControlsMenu });
+    _pauseMenu.lock()->controlsButton.lock()->OnPress(Callback { openControlsPause });
+
+    auto openControls = [&engine]()
+    {
+        auto& gameModule = engine.GetModule<GameModule>();
+        engine.GetModule<UIModule>().uiInputContext.focusedUIElement = gameModule.PopPreviousFocusedElement();
+        gameModule.PopUIMenu();
+    };
+
+    _controlsMenu.lock()->backButton.lock()->OnPress(Callback { openControls });
+
     auto& particleModule = engine.GetModule<ParticleModule>();
     particleModule.LoadEmitterPresets();
 
-    // Input Setup
-    engine.GetModule<ApplicationModule>().GetActionManager().SetGameActions(GAME_ACTIONS);
     return ModuleTickOrder::eTick;
 }
 
@@ -274,6 +302,7 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
     _pauseMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     _gameOver.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     _settingsMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
+    _controlsMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
 
     if (!_menuStack.empty())
     {
