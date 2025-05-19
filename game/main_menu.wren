@@ -1,6 +1,6 @@
 import "engine_api.wren" for Engine, Input, Vec3, Vec2, Quat, Math, Keycode, Random, Perlin
 import "gameplay/camera.wren" for CameraVariables
-import "gameplay/music_player.wren" for MusicPlayer
+import "gameplay/music_player.wren" for BGMPlayer
 
 class Main {
 
@@ -15,7 +15,7 @@ class Main {
         engine.GetGame().SetUIMenu(engine.GetGame().GetMainMenu())
         engine.GetUI().SetSelectedElement(engine.GetGame().GetMainMenu().playButton)
 
-        var helmet = engine.LoadModel("assets/models/plague_helmet.glb")
+        var helmet = engine.LoadModel("assets/models/plague_helmet.glb", true)
         helmet.GetTransformComponent().translation = Vec3.new(8.6, 1.2, -19.8)
         helmet.GetTransformComponent().rotation = Math.ToQuat(Vec3.new(0.0, -0.471239, 0.0))
         helmet.GetTransformComponent().scale = Vec3.new(1.5, 1.5, 1.5)
@@ -75,18 +75,12 @@ class Main {
             engine.SetExit(0)
         })
 
-        var musicList = [
-            "assets/music/main_menu/Alon Peretz - The Queens Quarters.wav",
-            ""
-            ]
-
-        var ambientList = [
-            "assets/music/ambient/Crow Cawing 2 - QuickSounds.com.mp3",
-            ""
-            ]
-
-        __musicPlayer = MusicPlayer.new(engine.GetAudio(), musicList, 0.3)
-        __ambientPlayer = MusicPlayer.new(engine.GetAudio(), ambientList, 0.1)
+        __musicPlayer = BGMPlayer.new(engine.GetAudio(),
+            "event:/BGM/MainMenu",
+            0.3)
+        __ambientPlayer = BGMPlayer.new(engine.GetAudio(),
+            "event:/SFX/CrowCrawling",
+            0.1)
 
         __perlin = Perlin.new(0)
         __baseIntensity = 20.0

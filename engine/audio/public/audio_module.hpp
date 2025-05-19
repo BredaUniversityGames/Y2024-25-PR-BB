@@ -48,7 +48,7 @@ public:
 
     // Load a .bank file
     // make sure to load the master bank and .strings.bank as well
-    void LoadBank(BankInfo& bankInfo);
+    void LoadBank(std::string_view path);
 
     // Unload a bank
     void UnloadBank(const BankInfo& bankInfo);
@@ -77,6 +77,9 @@ public:
 
     void SetEvent3DAttributes(EventInstance id, const glm::vec3& position, const glm::vec3& velocity, const glm::vec3& forward, const glm::vec3& up);
 
+    void RegisterChannelBus(const std::string& busName);
+    void SetBusChannelVolume(const std::string& busName, float scale);
+
     std::vector<glm::vec3>&
     GetDebugLines()
     {
@@ -96,8 +99,7 @@ public:
 
 private:
     friend class AudioSystem;
-    NO_DISCARD EventInstance
-    StartEvent(std::string_view name, bool isOneShot);
+    NO_DISCARD EventInstance StartEvent(std::string_view name, bool isOneShot);
 
     // This function is intended to be used bby the audio system only
     void StartEventInstance(EventInstance instance);
@@ -105,9 +107,12 @@ private:
     FMOD_SYSTEM* _coreSystem = nullptr;
     FMOD_STUDIO_SYSTEM* _studioSystem = nullptr;
 
+    std::unordered_map<std::string, FMOD_STUDIO_BUS*> _eventBusMap;
+
     static constexpr uint32_t MAX_CHANNELS = 1024;
 
     // All sounds go through this eventually
+    // USED ONLY FOR DSP VISUALIZATION: for events, we use event buses
     FMOD_CHANNELGROUP* _masterGroup = nullptr;
     FMOD_DSP* _fftDSP = nullptr;
 
