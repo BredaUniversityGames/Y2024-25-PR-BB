@@ -183,7 +183,7 @@ class MeleeEnemy {
                         playerVariables.invincibilityTime = playerVariables.invincibilityMaxTime
 
                         //Flash the screen red
-                        flashSystem.Flash(Vec3.new(1.0, 0.0, 0.0),0.25)
+                        flashSystem.Flash(Vec3.new(1.0, 0.0, 0.0),0.75)
 
                         engine.GetAudio().PlaySFX("assets/sounds/hit1.wav", 1.0)
                         animations.Play("Attack", 1.0, false, 0.1, false)

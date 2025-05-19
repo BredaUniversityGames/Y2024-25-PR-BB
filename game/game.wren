@@ -458,7 +458,7 @@ class Main {
         }
 
         __soulManager.Update(engine, __playerVariables,__flashSystem, dt)
-        __coinManager.Update(engine, __playerVariables, dt)
+        __coinManager.Update(engine, __playerVariables,__flashSystem, dt)
         __waveSystem.Update(dt)
 
         __flashSystem.Update(engine, dt)

@@ -20,9 +20,10 @@ class FlashSystem {
             _flashTimer = _flashTimer + dt
         }
 
-        engine.GetGame().SetFlashColor(Math.MixVec3(currentColor, _colorTarget, 0.02),Math.MixFloat(engine.GetGame().GetFlashIntensity(), _intensityTarget, 0.02))
+        engine.GetGame().SetFlashColor(_colorTarget,Math.MixFloat(engine.GetGame().GetFlashIntensity(), _intensityTarget, 0.02))
         if(!_isGoingTowardsTarget){
             this.SetFlashColor(_colorTarget, 0.0)
+            _intensityTarget = 0.0
         }
 
         if(_flashTimer > 200){
