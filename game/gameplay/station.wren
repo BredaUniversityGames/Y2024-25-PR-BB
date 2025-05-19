@@ -98,6 +98,15 @@ class StationManager {
         _quadDamageMeshEntity = engine.LoadModel("assets/models/quad_dmg.glb", false)
         _quadDamageTransparency = _quadDamageMeshEntity.AddTransparencyComponent()
         _quadDamageTransparency.transparency = 0.0 // Set the default transparency to 0.0
+        _quadLightEntity = engine.GetECS().NewEntity()
+        _quadLightEntity.AddNameComponent().name = "Quad Damage Light"
+        var lightTransform = _quadLightEntity.AddTransformComponent()
+        lightTransform.translation = Vec3.new(0.0, -0.42, 0.0)
+        _pointLight = _quadLightEntity.AddPointLightComponent()
+        _pointLight.intensity = 40
+        _pointLight.range = 5.5
+        _pointLight.color = Vec3.new(0.67, 0.06, 0.89)
+        _quadDamageMeshEntity.AttachChild(_quadLightEntity)
 
 
         // Load the stations
@@ -153,8 +162,8 @@ class StationManager {
             var meshOffset = Vec3.new(0.0, 1.6, 0.0)
             _quadDamageMeshEntity.GetTransformComponent().translation =  _stationList[randomIndex].entity.GetTransformComponent().translation + meshOffset
 
-
-            System.printAll(["New station is now available",randomIndex, _quadDamageMeshEntity.GetTransformComponent().translation.x, _quadDamageMeshEntity.GetTransformComponent().translation.y, _quadDamageMeshEntity.GetTransformComponent().translation.z]) //> 1[2, 3]4
+            System.print("Too much time has passed between stations, setting a new one active")
+            //System.printAll(["New station is now available",randomIndex, _quadDamageMeshEntity.GetTransformComponent().translation.x, _quadDamageMeshEntity.GetTransformComponent().translation.y, _quadDamageMeshEntity.GetTransformComponent().translation.z]) //> 1[2, 3]4
         }
 
 
@@ -173,6 +182,8 @@ class StationManager {
                     station.time = 0.0
                     station.SetStatus(false)
                     station.SetPowerUpType(PowerUpType.NONE)
+                    _anyActiveStation = false
+                    System.print("Station has been around for too long, deactivating it")
 
                 }
                 
