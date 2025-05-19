@@ -41,7 +41,7 @@ jobs:
       - name: Install Vulkan SDK
         uses: humbletim/install-vulkan-sdk@main
         with:
-          version: latest
+          version: 1.4.309.0
           cache: true
 
       - name: Install X11

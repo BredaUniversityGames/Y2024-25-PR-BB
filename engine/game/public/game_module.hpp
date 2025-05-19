@@ -50,6 +50,7 @@ public:
     NON_COPYABLE(GameModule);
     NON_MOVABLE(GameModule);
 
+    void ApplySettings(Engine& engine);
     void TransitionScene(const std::string& scriptFile);
 
     ModelLoader _modelsLoaded {};

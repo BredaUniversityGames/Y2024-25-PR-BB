@@ -15,7 +15,7 @@ void LifetimeSystem::Update(ECSModule& ecs, float dt)
 
         if (lifetime.lifetime <= 0.0f)
         {
-            ecs.GetRegistry().destroy(entity);
+            ecs.DestroyEntity(entity);
         }
     }
 }

@@ -1,6 +1,8 @@
-import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, EmitterPresetID, Perlin
+import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, EmitterPresetID, Perlin, Random
 import "../player.wren" for PlayerVariables
+
 import "../soul.wren" for Soul, SoulManager
+import "../coin.wren" for Coin, CoinManager
 
 class BerserkerEnemy {
 
@@ -13,7 +15,7 @@ class BerserkerEnemy {
 
         _velocityDirection = Vec3.new(_maxVelocity, 0, 0)
         
-        _meshEntity = engine.LoadModel(enemyModel)
+        _meshEntity = engine.LoadModel(enemyModel, false)
 
         _rootEntity = engine.GetECS().NewEntity()
         _rootEntity.AddNameComponent().name = "BerserkerEnemy"
@@ -86,6 +88,8 @@ class BerserkerEnemy {
         _attackSFX = "event:/SFX/DemonAttack"
         _attackHitSFX = "event:/SFX/DemonAttackHit"
 
+        _hitSFX = "event:/SFX/Hit"
+
         _walkEventInstance = null
 
         if(__perlin == null) {
@@ -104,7 +108,7 @@ class BerserkerEnemy {
         return false
     }
 
-    DecreaseHealth(amount, engine) {
+    DecreaseHealth(amount, engine, coinManager) {
         var animations = _meshEntity.GetAnimationControlComponent()
         var body = _rootEntity.GetRigidbodyComponent()
 
@@ -117,17 +121,23 @@ class BerserkerEnemy {
             body.SetVelocity(Vec3.new(0,0,0))
             body.SetStatic()
 
+            // Spawn between 1 and 5 coins
+            var coinCount = Random.RandomIndex(4, 5)
+            for(i in 0...coinCount) {
+                coinManager.SpawnCoin(engine, body.GetPosition() + Vec3.new(0, 1.0, 0))
+            }
+
             var eventInstance = engine.GetAudio().PlayEventOnce(_hurtSFX)
             var audioEmitter = _rootEntity.GetAudioEmitterComponent()
             audioEmitter.AddEvent(eventInstance)
         } else {
             //animations.Play("Hit", 1.0, false, 0.1, false)
             //_rootEntity.GetRigidbodyComponent().SetVelocity(Vec3.new(0.0, 0.0, 0.0))
-            var hitmarkerSFX = engine.GetAudio().PlaySFX("assets/sounds/hitmarker.wav",1.6  )
+            var hitmarkerSFX = engine.GetAudio().PlaySFX(_hitSFX,1.6  )
             var eventInstance = engine.GetAudio().PlayEventOnce(_hurtSFX)
             var audioEmitter = _rootEntity.GetAudioEmitterComponent()
             audioEmitter.AddEvent(eventInstance)
-            audioEmitter.AddSFX(hitmarkerSFX)
+            audioEmitter.AddEvent(hitmarkerSFX)
         }
     }
 
@@ -145,7 +155,7 @@ class BerserkerEnemy {
         _rootEntity.GetTransformComponent().translation = newPos
     }
 
-    Update(playerPos, playerVariables, engine, dt, soulManager) {
+    Update(playerPos, playerVariables, engine, dt, soulManager, coinManager) {
         var body = _rootEntity.GetRigidbodyComponent()
         var pos = body.GetPosition()
         _rootEntity.GetTransformComponent().translation = pos
@@ -169,7 +179,7 @@ class BerserkerEnemy {
                             playerVariables.cameraVariables.shakeIntensity = _shakeIntensity
                             playerVariables.invincibilityTime = playerVariables.invincibilityMaxTime
 
-                            engine.GetAudio().PlaySFX("assets/sounds/hit1.wav", 1.0)
+                            engine.GetAudio().PlaySFX(_hitSFX, 1.0)
                         }
 
                         animations.Play("Idle", 1.0, true, 1.0, false)
@@ -195,8 +205,8 @@ class BerserkerEnemy {
                 var forwardVector = (playerPos - pos).normalize()
 
                 var endRotation = Math.LookAt(Vec3.new(forwardVector.x, 0, forwardVector.z), Vec3.new(0, 1, 0))
-                var startRotation = _rootEntity.GetTransformComponent().rotation
-                _rootEntity.GetTransformComponent().rotation = Math.Slerp(startRotation, endRotation, 0.01 *dt)
+                var startRotation = body.GetRotation()
+                body.SetRotation(Math.Slerp(startRotation, endRotation, 0.01 *dt))
 
                 _recoveryTime = _recoveryTime - dt
                 if (_recoveryTime <= 0) {
@@ -325,8 +335,8 @@ class BerserkerEnemy {
             
             // Set forward rotation
             var endRotation = Math.LookAt(Vec3.new(forwardVector.x, 0, forwardVector.z), Vec3.new(0, 1, 0))
-            var startRotation = _rootEntity.GetTransformComponent().rotation
-            _rootEntity.GetTransformComponent().rotation = Math.Slerp(startRotation, endRotation, 0.01 *dt)
+            var startRotation = body.GetRotation()
+            body.SetRotation(Math.Slerp(startRotation, endRotation, 0.01 *dt))
         }else{
             var forwardVector = playerPos - position
             forwardVector.y = 0
@@ -340,8 +350,8 @@ class BerserkerEnemy {
             _rootEntity.GetRigidbodyComponent().SetVelocity(forwardVector * factor)
 
             var endRotation = Math.LookAt(Vec3.new(forwardVector.x, 0, forwardVector.z), Vec3.new(0, 1, 0))
-            var startRotation = _rootEntity.GetTransformComponent().rotation
-            _rootEntity.GetTransformComponent().rotation = Math.Slerp(startRotation, endRotation, 0.01 *dt)
+            var startRotation = body.GetRotation()
+            body.SetRotation(Math.Slerp(startRotation, endRotation, 0.01 *dt))
         }
     }
 
