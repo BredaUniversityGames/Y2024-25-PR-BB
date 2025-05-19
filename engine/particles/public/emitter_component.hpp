@@ -11,6 +11,7 @@ struct ActiveEmitterTag
 {
 };
 
+// Only given to emitters that can be live edited via their presets.
 struct TestEmitterTag
 {
 };

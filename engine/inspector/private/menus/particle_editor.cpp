@@ -5,6 +5,7 @@
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
 #include "ecs_module.hpp"
+#include "game_module.hpp"
 #include "resource_management/image_resource_manager.hpp"
 
 #include "imgui.h"
@@ -231,15 +232,11 @@ void ParticleEditor::RenderEmitterPresetEditor()
 
             TransformComponent transform;
             _ecsModule.GetRegistry().emplace<TransformComponent>(entity, transform);
-            const auto view = _ecsModule.GetRegistry().view<NameComponent, TransformComponent>();
+            const auto view = _ecsModule.GetRegistry().view<PlayerTag, TransformComponent>();
             for (const auto viewEntity : view)
             {
-                const auto& nameComponent = _ecsModule.GetRegistry().get<NameComponent>(viewEntity);
-                if (nameComponent.name == "Player") // hardcoded for now but should be alright
-                {
-                    const auto& cameraTransform = _ecsModule.GetRegistry().get<TransformComponent>(viewEntity);
-                    TransformHelpers::SetLocalPosition(_ecsModule.GetRegistry(), entity, cameraTransform.GetLocalPosition());
-                }
+                const auto& playerTransform = _ecsModule.GetRegistry().get<TransformComponent>(viewEntity);
+                TransformHelpers::SetLocalPosition(_ecsModule.GetRegistry(), entity, playerTransform.GetLocalPosition());
             }
             _ecsModule.GetRegistry().emplace<TestEmitterTag>(entity);
             _particleModule.SpawnEmitter(entity, _selectedPresetIndex, SpawnEmitterFlagBits::eIsActive);
