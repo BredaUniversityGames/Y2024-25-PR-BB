@@ -67,6 +67,7 @@ private:
     std::weak_ptr<PauseMenu> _pauseMenu;
     std::weak_ptr<GameOverMenu> _gameOver;
     std::weak_ptr<SettingsMenu> _settingsMenu;
+    std::weak_ptr<ControlsMenu> _controlsMenu;
     std::weak_ptr<FrameCounter> _framerateCounter {};
 
     // Scene
