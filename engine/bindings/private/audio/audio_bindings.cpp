@@ -10,10 +10,7 @@ namespace bindings
 {
 void LoadBank(AudioModule& self, const std::string& path)
 {
-    BankInfo bi {};
-    bi.path = path;
-
-    self.LoadBank(bi);
+    self.LoadBank(path);
 }
 
 void LoadSFX(AudioModule& self, const std::string& path, const bool is3D, const bool isLoop)

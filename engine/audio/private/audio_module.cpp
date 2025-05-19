@@ -185,22 +185,41 @@ bool AudioModule::isSFXLoaded(const std::string_view path) const
 {
     return _soundInfos.contains(path.data());
 }
-void AudioModule::LoadBank(BankInfo& bankInfo)
+void AudioModule::LoadBank(std::string_view path)
 {
-    const BankID hash = std::hash<std::string_view> {}(bankInfo.path);
-    bankInfo.uid = hash;
+    const BankID hash = std::hash<std::string_view> {}(path);
+
     if (_banks.contains(hash))
     {
         return;
     }
 
     FMOD_STUDIO_BANK* bank = nullptr;
-    FMOD_CHECKRESULT(FMOD_Studio_System_LoadBankFile(_studioSystem, bankInfo.path.data(), FMOD_STUDIO_LOAD_BANK_NORMAL, &bank));
+    FMOD_CHECKRESULT(FMOD_Studio_System_LoadBankFile(_studioSystem, path.data(), FMOD_STUDIO_LOAD_BANK_NORMAL, &bank));
+
     FMOD_CHECKRESULT(FMOD_Studio_Bank_LoadSampleData(bank));
     FMOD_CHECKRESULT(FMOD_Studio_System_FlushSampleLoading(_studioSystem));
 
     _banks[hash] = bank;
 }
+
+void AudioModule::RegisterChannelBus(const std::string& busName)
+{
+    FMOD_CHECKRESULT(FMOD_Studio_System_GetBus(_studioSystem, busName.c_str(), &_eventBusMap[busName]));
+}
+
+void AudioModule::SetBusChannelVolume(const std::string& name, float value)
+{
+    if (auto it = _eventBusMap.find(name); it != _eventBusMap.end())
+    {
+        FMOD_CHECKRESULT(FMOD_Studio_Bus_SetVolume(it->second, std::clamp(value, 0.0f, 64.0f)));
+    }
+    else
+    {
+        bblog::warn("No event bus with the name {}.", name);
+    }
+}
+
 void AudioModule::UnloadBank(const BankInfo& bankInfo)
 {
     if (!_banks.contains(bankInfo.uid))

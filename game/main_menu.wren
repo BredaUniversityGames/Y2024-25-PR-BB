@@ -1,6 +1,6 @@
 import "engine_api.wren" for Engine, Input, Vec3, Vec2, Quat, Math, Keycode, Random, Perlin
 import "gameplay/camera.wren" for CameraVariables
-import "gameplay/music_player.wren" for MusicPlayer
+import "gameplay/music_player.wren" for BGMPlayer
 
 class Main {
 
@@ -74,19 +74,13 @@ class Main {
         exit.OnPress(Fn.new {
             engine.SetExit(0)
         })
-        
-        var musicList = [
-            "assets/music/main_menu/Alon Peretz - The Queens Quarters.wav",
-            ""
-            ]
 
-        var ambientList = [
-            "assets/music/ambient/Crow Cawing 2 - QuickSounds.com.mp3",
-            ""
-            ]
-
-        __musicPlayer = MusicPlayer.new(engine.GetAudio(), musicList, 0.3)
-        __ambientPlayer = MusicPlayer.new(engine.GetAudio(), ambientList, 0.1)
+        __musicPlayer = BGMPlayer.new(engine.GetAudio(),
+            "event:/BGM/MainMenu",
+            0.3)
+        __ambientPlayer = BGMPlayer.new(engine.GetAudio(),
+            "event:/SFX/CrowCrawling",
+            0.1)
 
         __perlin = Perlin.new(0)
         __baseIntensity = 20.0
