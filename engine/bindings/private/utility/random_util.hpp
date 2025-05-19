@@ -73,11 +73,6 @@ private:
     static std::uniform_int_distribution<std::mt19937::result_type> dist;
 };
 
-// Define static members outside the class
-std::random_device RandomUtil::dev;
-std::mt19937 RandomUtil::rng(RandomUtil::dev());
-std::uniform_int_distribution<std::mt19937::result_type> RandomUtil::dist(0, std::numeric_limits<uint32_t>::max());
-
 class Perlin
 {
 public:
@@ -94,7 +89,7 @@ public:
     }
 };
 
-Perlin CreatePerlin(uint32_t seed) { return Perlin { seed }; }
+inline Perlin CreatePerlin(uint32_t seed) { return Perlin { seed }; }
 
 inline void BindRandom(wren::ForeignModule& module)
 {
