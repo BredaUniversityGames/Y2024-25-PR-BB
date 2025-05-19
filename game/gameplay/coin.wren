@@ -1,5 +1,6 @@
 import "engine_api.wren" for Engine, ECS, Entity, Vec3, Vec2, Math, AnimationControlComponent, TransformComponent, Input, SpawnEmitterFlagBits, EmitterPresetID,ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Random
 import "gameplay/player.wren" for PlayerVariables
+import "gameplay/flash_system.wren" for FlashSystem
 
 
 class Coin {
@@ -84,7 +85,7 @@ class Coin {
 
     }
 
-    CheckRange(engine, playerPos, playerVariables, dt){
+    CheckRange(engine, playerPos, playerVariables, flashSystem, dt){
         var coinTransform = _rootEntity.GetTransformComponent()
         var coinPos = coinTransform.translation
         var distance = Math.Distance(coinPos, playerPos)
@@ -112,6 +113,9 @@ class Coin {
                 engine.GetAudio().SetEventVolume(eventInstance, 1.0)
                 var audioEmitter = player.GetAudioEmitterComponent()
                 audioEmitter.AddEvent(eventInstance)
+
+                // Play flash effect
+                flashSystem.Flash(Vec3.new(0.89, 0.77, 0.06),0.1)
 
                 this.Destroy() // Destroy the coin after it is collected
                
@@ -162,14 +166,14 @@ class CoinManager {
         _coinList.add(Coin.new(engine, spawnPosition)) // Add the coin to the list
     }
 
-    Update(engine, playerVariables, dt){
+    Update(engine, playerVariables, flashSystem, dt){
         var playerTransform = _playerEntity.GetTransformComponent()
         var playerPos = playerTransform.translation
         playerPos.y = playerPos.y - 2.0
 
         for(coin in _coinList){
             if(coin.entity.IsValid()){
-                coin.CheckRange(engine, playerPos, playerVariables, dt) // Check if the coin is within range of the player
+                coin.CheckRange(engine, playerPos, playerVariables,flashSystem, dt) // Check if the coin is within range of the player
                 coin.time = coin.time + dt
                 coin.collisionSoundTimer = coin.collisionSoundTimer + dt
                 var body  = coin.entity.GetRigidbodyComponent()
