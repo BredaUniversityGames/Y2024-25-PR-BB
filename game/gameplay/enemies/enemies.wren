@@ -35,6 +35,9 @@ class MeleeEnemy {
         _pointLight = _lightEntity.AddPointLightComponent()
         _rootEntity.AttachChild(_lightEntity)
 
+
+        _transparencyComponent = _meshEntity.AddTransparencyComponent()
+
         _pointLight.intensity = 10
         _pointLight.range = 2
         _pointLight.color = Vec3.new(0.0, 1.0, 0.0)
@@ -44,7 +47,7 @@ class MeleeEnemy {
         body.SetGravityFactor(2.2)
 
         var animations = _meshEntity.GetAnimationControlComponent()
-        animations.Play("Run", 1.25, true, 1.0, true)
+        animations.Play("Stand-up", 1.0, false, 0.0, false)
 
         _isAlive = true
 
@@ -53,7 +56,8 @@ class MeleeEnemy {
         _attackRange = 7
         _attackDamage = 30
         _shakeIntensity = 1.6
-        
+
+        _getUpState = true
         _movingState = false
         _attackingState = false
         _recoveryState = false
@@ -73,6 +77,11 @@ class MeleeEnemy {
         _health = 100
 
         _hitTimer = 0
+
+        _getUpTimer = 3500
+        _getUpAppearMax = 1500
+        _getUpAppearTimer = _getUpAppearMax
+
 
         _deathTimerMax = 3000
         _deathTimer = _deathTimerMax
@@ -174,6 +183,19 @@ class MeleeEnemy {
 
 
         if (_isAlive) {
+            if (_getUpState) {
+                _getUpTimer = _getUpTimer - dt
+                _getUpAppearTimer = _getUpAppearTimer - dt
+
+                _transparencyComponent.transparency =  1.0 - _getUpAppearTimer / _getUpAppearMax
+
+                if(_getUpTimer < 0) {
+                    _getUpState = false
+                }
+
+                return
+            }
+
             if (_attackingState) {
                 _attackTime = _attackTime - dt
                 if (_attackTime <= 0 ) {
@@ -262,11 +284,6 @@ class MeleeEnemy {
         } else {
             _deathTimer = _deathTimer - dt
             
-            var transparencyComponent = _meshEntity.GetTransparencyComponent()
-            if(transparencyComponent==null) {
-                transparencyComponent = _meshEntity.AddTransparencyComponent()
-            }
-
             if (_deathTimer <= 0) {
                 //spawn a soul
                 soulManager.SpawnSoul(engine, body.GetPosition())
@@ -277,7 +294,7 @@ class MeleeEnemy {
             } else {
                 // Wait for death animation before starting descent
                 if(_deathTimerMax - _deathTimer > 1800) {
-                    transparencyComponent.transparency =  _deathTimer / (_deathTimerMax-1000)
+                    _transparencyComponent.transparency =  _deathTimer / (_deathTimerMax-1000)
 
                     var newPos = pos - Vec3.new(0, 1, 0).mulScalar(1.0 * 0.00075 * dt)
                     body.SetTranslation(newPos)
