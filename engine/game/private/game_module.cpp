@@ -39,8 +39,22 @@
 #include "ui/ui_menus.hpp"
 #include "ui_module.hpp"
 
+#include <passes/tonemapping_pass.hpp>
+
 ModuleTickOrder GameModule::Init(Engine& engine)
 {
+    engine.GetModule<ApplicationModule>().GetActionManager().SetGameActions(GAME_ACTIONS);
+
+    // Audio Setup
+    auto& audio = engine.GetModule<AudioModule>();
+
+    audio.LoadBank("assets/music/Master.strings.bank");
+    audio.LoadBank("assets/music/Master.bank");
+
+    audio.RegisterChannelBus("bus:/");
+    audio.RegisterChannelBus("bus:/SFX");
+    audio.RegisterChannelBus("bus:/BGM");
+
     auto& ECS = engine.GetModule<ECSModule>();
     ECS.AddSystem<LifetimeSystem>();
 
@@ -62,8 +76,11 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     _loadingScreen = viewport.AddElement(LoadingScreen::Create(graphicsContext, viewportSize, font));
     _pauseMenu = viewport.AddElement(PauseMenu::Create(graphicsContext, viewportSize, font));
     _gameOver = viewport.AddElement(GameOverMenu::Create(graphicsContext, viewportSize, font));
+    _controlsMenu = viewport.AddElement(ControlsMenu::Create(viewportSize, graphicsContext, engine.GetModule<ApplicationModule>().GetActionManager(), font));
 
     gameSettings = GameSettings::FromFile(GAME_SETTINGS_FILE);
+
+    ApplySettings(engine);
     _settingsMenu = viewport.AddElement(SettingsMenu::Create(engine, graphicsContext, viewportSize, font));
 
     // Set all UI menus invisible
@@ -73,6 +90,7 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     _loadingScreen.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     _pauseMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     _gameOver.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
+    _controlsMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     _settingsMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
 
     _framerateCounter = viewport.AddElement(FrameCounter::Create(viewportSize, font));
@@ -112,11 +130,67 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     _mainMenu.lock()->settingsButton.lock()->OnPress(Callback { openSettingsMenu });
     _pauseMenu.lock()->settingsButton.lock()->OnPress(Callback { openSettingsPause });
 
+    auto openControlsMenu = [this, &engine]()
+    {
+        this->PushUIMenu(this->_controlsMenu);
+        this->PushPreviousFocusedElement(_mainMenu.lock()->controlsButton);
+        engine.GetModule<UIModule>().uiInputContext.focusedUIElement = this->_controlsMenu.lock()->backButton;
+    };
+
+    auto openControlsPause = [this, &engine]()
+    {
+        this->PushUIMenu(this->_controlsMenu);
+        this->PushPreviousFocusedElement(_pauseMenu.lock()->controlsButton);
+        engine.GetModule<UIModule>().uiInputContext.focusedUIElement = this->_controlsMenu.lock()->backButton;
+    };
+
+    _mainMenu.lock()->controlsButton.lock()->OnPress(Callback { openControlsMenu });
+    _pauseMenu.lock()->controlsButton.lock()->OnPress(Callback { openControlsPause });
+
+    auto openControls = [&engine]()
+    {
+        auto& gameModule = engine.GetModule<GameModule>();
+        engine.GetModule<UIModule>().uiInputContext.focusedUIElement = gameModule.PopPreviousFocusedElement();
+        gameModule.PopUIMenu();
+    };
+
+    _controlsMenu.lock()->backButton.lock()->OnPress(Callback { openControls });
+
     auto& particleModule = engine.GetModule<ParticleModule>();
     particleModule.LoadEmitterPresets();
 
-    engine.GetModule<ApplicationModule>().GetActionManager().SetGameActions(GAME_ACTIONS);
     return ModuleTickOrder::eTick;
+}
+
+void GameModule::ApplySettings(Engine& engine)
+{
+    auto curve = [](float normalized_val)
+    {
+        return normalized_val * normalized_val * 2.0f;
+    };
+
+    engine.GetModule<AudioModule>().SetBusChannelVolume("bus:/", curve(gameSettings.masterVolume));
+    engine.GetModule<AudioModule>().SetBusChannelVolume("bus:/BGM", curve(gameSettings.musicVolume));
+    engine.GetModule<AudioModule>().SetBusChannelVolume("bus:/SFX", curve(gameSettings.sfxVolume));
+
+    // Frame counter
+
+    if (auto counter = _framerateCounter.lock())
+    {
+
+        if (gameSettings.framerateCounter)
+        {
+            counter->visibility = UIElement::VisibilityState::eUpdatedAndVisible;
+            auto dt = engine.GetModule<TimeModule>().GetRealDeltatime();
+
+            if (dt.count() != 0.0f)
+                counter->SetVal(1000.0f / dt.count());
+        }
+        else
+        {
+            counter->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
+        }
+    }
 }
 
 void GameModule::Shutdown(MAYBE_UNUSED Engine& engine)
@@ -197,10 +271,7 @@ void GameModule::TransitionScene(const std::string& scriptFile)
 
 void GameModule::Tick(MAYBE_UNUSED Engine& engine)
 {
-    if (engine.GetModule<UIModule>().uiInputContext.focusedUIElement.expired())
-    {
-        bblog::info("NO UI ELEMENT SELECTED!");
-    }
+    ApplySettings(engine);
 
     if (!_nextSceneToExecute.empty())
     {
@@ -225,6 +296,10 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
         return;
     }
 
+    // Pass the flash color to rendering
+    auto& renderer = engine.GetModule<RendererModule>();
+    renderer.GetRenderer()->GetTonemappingPipeline().SetFlashColor(flashColor);
+
     // Handle UI stack
 
     _mainMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
@@ -233,25 +308,11 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
     _pauseMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     _gameOver.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     _settingsMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
+    _controlsMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
 
     if (!_menuStack.empty())
     {
         _menuStack.top().lock()->visibility = UIElement::VisibilityState::eUpdatedAndVisible;
-    }
-
-    // Frame counter
-
-    if (gameSettings.framerateCounter)
-    {
-        _framerateCounter.lock()->visibility = UIElement::VisibilityState::eUpdatedAndVisible;
-        auto dt = engine.GetModule<TimeModule>().GetRealDeltatime();
-
-        if (dt.count() != 0.0f)
-            _framerateCounter.lock()->SetVal(1000.0f / dt.count());
-    }
-    else
-    {
-        _framerateCounter.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     }
 
 #if !DISTRBUTION

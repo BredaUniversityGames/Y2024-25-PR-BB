@@ -74,6 +74,12 @@ std::shared_ptr<PauseMenu> PauseMenu::Create(GraphicsContext& graphicsContext, c
 
         buttonPos += increment;
 
+        auto controlsButton = buttonPanel->AddChild<UIButton>(buttonStyle, buttonPos, buttonBaseSize);
+        controlsButton->anchorPoint = UIElement::AnchorPoint::eMiddle;
+        controlsButton->AddChild<UITextElement>(font, "Controls", textSize)->SetColor(glm::vec4(1, 1, 1, 1));
+
+        buttonPos += increment;
+
         auto settingsButton = buttonPanel->AddChild<UIButton>(buttonStyle, buttonPos, buttonBaseSize);
         settingsButton->anchorPoint = UIElement::AnchorPoint::eMiddle;
         settingsButton->AddChild<UITextElement>(font, "Settings", textSize)->SetColor(glm::vec4(1, 1, 1, 1));
@@ -87,12 +93,16 @@ std::shared_ptr<PauseMenu> PauseMenu::Create(GraphicsContext& graphicsContext, c
         pause->continueButton = continueButton;
         pause->backToMainButton = backToMainButton;
         pause->settingsButton = settingsButton;
+        pause->controlsButton = controlsButton;
 
-        continueButton->navigationTargets.down = pause->settingsButton;
+        continueButton->navigationTargets.down = pause->controlsButton;
         continueButton->navigationTargets.up = pause->backToMainButton;
 
+        controlsButton->navigationTargets.down = pause->settingsButton;
+        controlsButton->navigationTargets.up = pause->continueButton;
+
         settingsButton->navigationTargets.down = pause->backToMainButton;
-        settingsButton->navigationTargets.up = pause->continueButton;
+        settingsButton->navigationTargets.up = pause->controlsButton;
 
         backToMainButton->navigationTargets.down = pause->continueButton;
         backToMainButton->navigationTargets.up = pause->settingsButton;

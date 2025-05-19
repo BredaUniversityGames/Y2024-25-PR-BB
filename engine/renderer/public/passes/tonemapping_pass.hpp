@@ -19,6 +19,8 @@ public:
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
 
+    void SetFlashColor(const glm::vec4& color) { _pushConstants.flashColor = color; }
+
     NON_COPYABLE(TonemappingPass);
     NON_MOVABLE(TonemappingPass);
 
@@ -81,6 +83,8 @@ private:
         glm::vec4 sunColor;
         glm::vec4 cloudsColor;
         glm::vec4 voidColor;
+
+        glm::vec4 flashColor;
     } _pushConstants;
 
     std::shared_ptr<GraphicsContext> _context;
