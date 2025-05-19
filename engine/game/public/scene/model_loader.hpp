@@ -18,7 +18,7 @@ struct ModelData
     CPUModel cpuModel {};
     ResourceHandle<GPUModel> gpuModel {};
 
-    entt::entity Instantiate(Engine& engine);
+    entt::entity Instantiate(Engine& engine, bool loadWithCollision = true);
 };
 
 class ModelLoader
