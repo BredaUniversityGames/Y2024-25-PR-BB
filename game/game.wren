@@ -12,6 +12,7 @@ import "gameplay/enemies/berserker_enemy.wren" for BerserkerEnemy
 import "gameplay/enemies/ranged_enemy.wren" for RangedEnemy
 import "gameplay/soul.wren" for Soul, SoulManager
 import "gameplay/coin.wren" for Coin, CoinManager
+import "gameplay/flash_system.wren" for FlashSystem
 
 class Main {
 
@@ -197,6 +198,9 @@ class Main {
         __soulManager = SoulManager.new(engine, __player)
         __coinManager = CoinManager.new(engine, __player)
 
+        // Flash System
+        __flashSystem = FlashSystem.new(engine)
+
         // Pause Menu callbacks
 
         __pauseHandler = Fn.new {
@@ -241,7 +245,7 @@ class Main {
         menuButton2.OnPress(backToMain)
 
         var retryButton = engine.GetGame().GetGameOverMenu().retryButton
-        
+
         var retryHandler = Fn.new {
             engine.TransitionToScript("game/game.wren")
             engine.GetTime().SetScale(1.0)
@@ -447,14 +451,25 @@ class Main {
             // We delete the entity from the ecs when it dies
             // Then we check for entity validity, and remove it from the list if it is no longer valid
             if (enemy.entity.IsValid()) {
-                enemy.Update(playerPos, __playerVariables, engine, dt, __soulManager, __coinManager)
+                enemy.Update(playerPos, __playerVariables, engine, dt, __soulManager, __coinManager, __flashSystem)
             } else {
                 __enemyList.removeAt(__enemyList.indexOf(enemy))
             }
         }
 
-        __soulManager.Update(engine, __playerVariables, dt)
-        __coinManager.Update(engine, __playerVariables, dt)
+        __soulManager.Update(engine, __playerVariables,__flashSystem, dt)
+        __coinManager.Update(engine, __playerVariables,__flashSystem, dt)
         __waveSystem.Update(dt)
+
+        __flashSystem.Update(engine, dt)
+
+        if(engine.GetInput().DebugGetKey(Keycode.eB())){
+           __flashSystem.Flash(Vec3.new(1.0, 0.0, 0.0),0.25)
+        }
+
+        if(engine.GetInput().DebugGetKey(Keycode.eL())){
+           __flashSystem.Flash(Vec3.new(0.0, 1.0, 0.0),0.25)
+        }
+
     }
 }

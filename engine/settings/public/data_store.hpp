@@ -24,7 +24,7 @@ public:
 
     void Write()
     {
-        std::ofstream stream { "settings.json" };
+        std::ofstream stream { _path.c_str() };
 
         if (stream)
         {

@@ -3,6 +3,7 @@ import "../player.wren" for PlayerVariables
 
 import "../soul.wren" for Soul, SoulManager
 import "../coin.wren" for Coin, CoinManager
+import "gameplay/flash_system.wren" for FlashSystem
 
 class BerserkerEnemy {
 
@@ -158,7 +159,7 @@ class BerserkerEnemy {
         _rootEntity.GetTransformComponent().translation = newPos
     }
 
-    Update(playerPos, playerVariables, engine, dt, soulManager, coinManager) {
+    Update(playerPos, playerVariables, engine, dt, soulManager, coinManager, flashSystem) {
         var body = _rootEntity.GetRigidbodyComponent()
         var pos = body.GetPosition()
         _rootEntity.GetTransformComponent().translation = pos
@@ -182,6 +183,7 @@ class BerserkerEnemy {
                             playerVariables.cameraVariables.shakeIntensity = _shakeIntensity
                             playerVariables.invincibilityTime = playerVariables.invincibilityMaxTime
 
+                            flashSystem.Flash(Vec3.new(1.0, 0.0, 0.0),0.85)
                             engine.GetAudio().PlaySFX(_hitSFX, 1.0)
                         }
 

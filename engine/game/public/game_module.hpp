@@ -40,6 +40,8 @@ public:
 
     GameSettings& GetSettings() { return gameSettings; };
 
+    glm::vec4& GetFlashColor() { return flashColor; }
+
     std::optional<std::shared_ptr<MainMenu>> GetMainMenu();
     std::optional<std::shared_ptr<PauseMenu>> GetPauseMenu();
     std::optional<std::shared_ptr<HUD>> GetHUD();
@@ -65,6 +67,7 @@ private:
     std::weak_ptr<PauseMenu> _pauseMenu;
     std::weak_ptr<GameOverMenu> _gameOver;
     std::weak_ptr<SettingsMenu> _settingsMenu;
+    std::weak_ptr<ControlsMenu> _controlsMenu;
     std::weak_ptr<FrameCounter> _framerateCounter {};
 
     // Scene
@@ -74,4 +77,7 @@ private:
     // Settings
 
     GameSettings gameSettings {};
+
+    // Gameplay elements
+    glm::vec4 flashColor {};
 };
