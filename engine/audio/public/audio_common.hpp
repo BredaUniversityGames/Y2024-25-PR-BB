@@ -9,6 +9,7 @@ struct FMOD_STUDIO_BANK;
 struct FMOD_STUDIO_EVENTINSTANCE;
 struct FMOD_CHANNELGROUP;
 struct FMOD_CHANNEL;
+struct FMOD_STUDIO_BUS;
 struct FMOD_DSP;
 
 using BaseID = long;
