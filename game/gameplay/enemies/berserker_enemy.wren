@@ -88,6 +88,8 @@ class BerserkerEnemy {
         _attackSFX = "event:/SFX/DemonAttack"
         _attackHitSFX = "event:/SFX/DemonAttackHit"
 
+        _hitSFX = "event:/SFX/Hit"
+
         _walkEventInstance = null
 
         if(__perlin == null) {
@@ -131,11 +133,11 @@ class BerserkerEnemy {
         } else {
             //animations.Play("Hit", 1.0, false, 0.1, false)
             //_rootEntity.GetRigidbodyComponent().SetVelocity(Vec3.new(0.0, 0.0, 0.0))
-            var hitmarkerSFX = engine.GetAudio().PlaySFX("assets/sounds/hitmarker.wav",1.6  )
+            var hitmarkerSFX = engine.GetAudio().PlaySFX(_hitSFX,1.6  )
             var eventInstance = engine.GetAudio().PlayEventOnce(_hurtSFX)
             var audioEmitter = _rootEntity.GetAudioEmitterComponent()
             audioEmitter.AddEvent(eventInstance)
-            audioEmitter.AddSFX(hitmarkerSFX)
+            audioEmitter.AddEvent(hitmarkerSFX)
         }
     }
 
@@ -177,7 +179,7 @@ class BerserkerEnemy {
                             playerVariables.cameraVariables.shakeIntensity = _shakeIntensity
                             playerVariables.invincibilityTime = playerVariables.invincibilityMaxTime
 
-                            engine.GetAudio().PlaySFX("assets/sounds/hit1.wav", 1.0)
+                            engine.GetAudio().PlaySFX(_hitSFX, 1.0)
                         }
 
                         animations.Play("Idle", 1.0, true, 1.0, false)

@@ -77,8 +77,10 @@ class MeleeEnemy {
         _deathTimer = _deathTimerMax
 
         _bonesSFX = "event:/SFX/Bones"
-
+        _hitMarker = "event:/SFX/Hitmarker"
         _bonesStepsSFX = "event:/SFX/BonesSteps"
+        _roar = "event:/SFX/Roar"
+
         _walkEventInstance = null
 
         if(__perlin == null) {
@@ -127,10 +129,10 @@ class MeleeEnemy {
 
             var eventInstance = engine.GetAudio().PlayEventOnce(_bonesSFX)
             
-            var hitmarkerSFX = engine.GetAudio().PlaySFX("assets/sounds/hitmarker.wav",1.6  )
+            var hitmarkerSFX = engine.GetAudio().PlayEventOnce(_hitMarker)
             var audioEmitter = _rootEntity.GetAudioEmitterComponent()
             audioEmitter.AddEvent(eventInstance)
-            audioEmitter.AddSFX(hitmarkerSFX)
+            audioEmitter.AddEvent(hitmarkerSFX)
         } else {
             animations.Play("Hit", 1.0, false, 0.1, false)
             _rootEntity.GetRigidbodyComponent().SetVelocity(Vec3.new(0.0, 0.0, 0.0))
@@ -141,11 +143,11 @@ class MeleeEnemy {
             _recoveryState = false
             body.SetStatic()
 
-            var hitmarkerSFX = engine.GetAudio().PlaySFX("assets/sounds/hitmarker.wav",1.6  )
+            var hitmarkerSFX = engine.GetAudio().PlayEventOnce(_hitMarker)
             var eventInstance = engine.GetAudio().PlayEventOnce(_bonesSFX)
             var audioEmitter = _rootEntity.GetAudioEmitterComponent()
             audioEmitter.AddEvent(eventInstance)
-            audioEmitter.AddSFX(hitmarkerSFX)
+            audioEmitter.AddEvent(hitmarkerSFX)
         }
     }
 
@@ -232,7 +234,7 @@ class MeleeEnemy {
                     animations.SetTime(0.0)
                     _attackTime = _attackMaxTime
                     _evaluateState = false
-                    _rootEntity.GetAudioEmitterComponent().AddSFX(engine.GetAudio().PlaySFX("assets/sounds/demon_roar.wav", 1.0))
+                    _rootEntity.GetAudioEmitterComponent().AddEvent(engine.GetAudio().PlayEventOnce(_roar))
 
                 } else if (_movingState == false) { // Enter attack state
                     body.SetFriction(0.0)
