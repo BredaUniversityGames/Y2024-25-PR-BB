@@ -262,12 +262,12 @@ void GameModule::PushPreviousFocusedElement(std::weak_ptr<UIElement> element)
     _focusedElementStack.push(element);
 }
 
-glm::vec3 GameModule::GetAimAssistDirection(Engine& engine)
+glm::vec3 GameModule::GetAimAssistDirection(ECSModule& ecs)
 {
     const float minAngle = 1.0f;
     const float minDistance = 1000.0f;
 
-    auto& reg = engine.GetModule<ECSModule>().GetRegistry();
+    auto& reg = ecs.GetRegistry();
 
     auto& player = *reg.view<PlayerTag>().begin();
     glm::vec3 playerPosition = TransformHelpers::GetWorldPosition(reg, player);

@@ -132,7 +132,7 @@ class Pistol {
             var right = Math.Cross(forward, up)
             var start = translation + forward * Vec3.new(1, 1, 1) - right * Vec3.new(0.09, 0.09, 0.09) - up * Vec3.new(0.12, 0.12, 0.12)
             var end = translation + forward * _rangeVector
-            var direction = engine.GetGame().GetAimAssistDirection(engine).normalize()
+            var direction = engine.GetGame().GetAimAssistDirection(engine.GetECS())
             var rayHitInfo = engine.GetPhysics().ShootRay(start, direction, _range)
 
             if (!rayHitInfo.isEmpty) {
@@ -339,10 +339,10 @@ class Shotgun {
                                 for (enemy in enemies) {
                                     if (enemy.entity == hitEntity) {
                                         hitAnEnemy = true
-                                        
-                                        playerVariables.hitmarkTimer = 200 //ms      
+
+                                        playerVariables.hitmarkTimer = 200 //ms
                                         enemy.DecreaseHealth(_damage,engine,coinManager)
-                                        
+
                                         playerVariables.multiplierTimer = playerVariables.multiplierMaxTime
                                         playerVariables.IncreaseHealth(0.1 * _damage)
                                         if (enemy.health <= 0) {
