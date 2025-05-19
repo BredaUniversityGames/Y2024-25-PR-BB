@@ -233,6 +233,12 @@ glm::vec3 TransformHelpers::GetWorldScale(entt::registry& reg, entt::entity enti
 
     return glm::vec3(glm::length(col0), glm::length(col1), glm::length(col2));
 }
+glm::vec3 TransformHelpers::GetWorldForward(entt::registry& reg, entt::entity entity)
+{
+    constexpr glm::vec3 forward = { 0.0f, 0.0f, -1.0f };
+    const glm::quat rotation = GetWorldRotation(reg, entity);
+    return rotation * forward;
+}
 glm::mat4 TransformHelpers::ToMatrix(const glm::vec3& position, const glm::quat& rotation, const glm::vec3& scale)
 {
     // TODO Can be optimized

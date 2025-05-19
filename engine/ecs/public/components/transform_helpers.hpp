@@ -38,6 +38,8 @@ public:
     static glm::quat GetWorldRotation(entt::registry& reg, entt::entity entity);
     static glm::vec3 GetWorldScale(entt::registry& reg, entt::entity entity);
 
+    static glm::vec3 GetWorldForward(entt::registry& reg, entt::entity entity);
+
     static glm::mat4 ToMatrix(const glm::vec3& position, const glm::quat& rotation, const glm::vec3& scale);
 
     static void OnConstructTransform(entt::registry& reg, entt::entity entity);
