@@ -52,7 +52,7 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     , _application(application)
     , _viewport(viewport)
     , _ecs(ecs)
-    , _settings("settings.json")
+    , _settings("game/config/settings.json")
 {
     ZoneScopedN("Renderer Initialization");
     _bloomSettings = std::make_unique<BloomSettings>(_context, _settings.data.bloom);
