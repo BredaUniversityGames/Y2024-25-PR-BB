@@ -191,6 +191,7 @@ class MeleeEnemy {
 
                 if(_getUpTimer < 0) {
                     _getUpState = false
+                    _transparencyComponent.transparency = 1.0
                 }
 
                 return
