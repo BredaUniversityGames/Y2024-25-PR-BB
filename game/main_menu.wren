@@ -14,7 +14,7 @@ class Main {
 
         engine.GetGame().SetUIMenu(engine.GetGame().GetMainMenu())
         engine.GetUI().SetSelectedElement(engine.GetGame().GetMainMenu().playButton)
-        
+
         var helmet = engine.LoadModel("assets/models/plague_helmet.glb", true)
         helmet.GetTransformComponent().translation = Vec3.new(8.6, 1.2, -19.8)
         helmet.GetTransformComponent().rotation = Math.ToQuat(Vec3.new(0.0, -0.471239, 0.0))
@@ -26,18 +26,18 @@ class Main {
         __lightComponent.color = Vec3.new(220 / 255, 50 / 255, 50 / 255)
         __lightComponent.range = 35
         __lightComponent.intensity = 39
-        
+
         light.AddTransformComponent().translation = Vec3.new(4.8, 4.7, -10.6) // range: 91, intensity: 20
 
         // __background = engine.LoadModel("assets/models/main_menu.glb")
-       
+
         // __transform = __background.GetTransformComponent()
         // __transform.translation = Vec3.new(15.4,-20,-203)
         // __transform.rotation = Quat.new(0,0,-0.2,0.1)
-        
+
         __camera = engine.GetECS().NewEntity()
         __cameraVariables = CameraVariables.new()
-        
+
         var cameraProperties = __camera.AddCameraComponent()
         cameraProperties.fov = Math.Radians(28.0)
         cameraProperties.nearPlane = 0.5
