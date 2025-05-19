@@ -74,7 +74,7 @@ class BerserkerEnemy {
 
         _evaluateState = true
 
-        _health = 500
+        _health = 1200
 
         _hitTimer = 0
 
@@ -123,7 +123,7 @@ class BerserkerEnemy {
             body.SetStatic()
 
             // Spawn between 1 and 5 coins
-            var coinCount = Random.RandomIndex(4, 5)
+            var coinCount = Random.RandomIndex(7, 12)
             for(i in 0...coinCount) {
                 coinManager.SpawnCoin(engine, body.GetPosition() + Vec3.new(0, 1.0, 0))
             }

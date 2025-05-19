@@ -61,7 +61,7 @@ class Main {
         __camera = engine.GetECS().NewEntity()
         __player = engine.GetECS().NewEntity()
 
-        var startPos = Vec3.new(25.0, 10.0, 50.0)
+        var startPos = Vec3.new(0.0, 18.0, 80.0)
 
         __playerController.AddTransformComponent().translation = startPos
         __playerController.AddPlayerTag()
@@ -395,11 +395,11 @@ class Main {
             }
 
             if (engine.GetInput().DebugGetKey(Keycode.eK())) {
-                __enemyList.add(BerserkerEnemy.new(engine, Vec3.new(0, 18, 7), Vec3.new(0.026, 0.026, 0.026), 4, "assets/models/Berserker.glb", __berserkerEnemyShape))
+                __enemyList.add(BerserkerEnemy.new(engine, Vec3.new(0, 18, 80), Vec3.new(0.026, 0.026, 0.026), 4, "assets/models/Berserker.glb", __berserkerEnemyShape))
             }
 
             if (engine.GetInput().DebugGetKey(Keycode.eJ())) {
-                __enemyList.add(RangedEnemy.new(engine, Vec3.new(-27, 18, 7), Vec3.new(2.25,2.25,2.25), 5, "assets/models/eye.glb", __eyeShape))
+                __enemyList.add(RangedEnemy.new(engine, Vec3.new(0, 18, 80), Vec3.new(2.25,2.25,2.25), 5, "assets/models/eye.glb", __eyeShape))
             }
         }
 

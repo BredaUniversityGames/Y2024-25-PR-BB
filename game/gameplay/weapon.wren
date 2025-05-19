@@ -288,7 +288,7 @@ class Shotgun {
     }
 
     reload (engine) {
-        if(engine.GetInput().GetDigitalAction("Reload").IsPressed() || engine.GetInput().GetDigitalAction("Shoot").IsHeld() && _reloadTimer == 0) {
+        if((engine.GetInput().GetDigitalAction("Reload").IsPressed() || engine.GetInput().GetDigitalAction("Shoot").IsHeld()) && _reloadTimer == 0) {
             var gun = engine.GetECS().GetEntityByName(_entityName)
 
             var gunAnimations = gun.GetAnimationControlComponent()
