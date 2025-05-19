@@ -17,7 +17,7 @@
 #include <stb_image.h>
 
 constexpr static auto DEFAULT_LOAD_FLAGS = fastgltf::Options::DecomposeNodeMatrices | fastgltf::Options::LoadExternalBuffers | fastgltf::Options::LoadExternalImages;
-static fastgltf::Parser parser = fastgltf::Parser(fastgltf::Extensions::KHR_lights_punctual);
+static fastgltf::Parser parser = fastgltf::Parser(fastgltf::Extensions::KHR_lights_punctual | fastgltf::Extensions::KHR_texture_transform);
 
 namespace detail
 {
@@ -788,8 +788,8 @@ uint32_t RecurseHierarchy(const fastgltf::Node& gltfNode,
 
         NodeLightData lightData;
         lightData.color = detail::ToVec3(light.color);
-        lightData.range = light.range.has_value() ? light.range.value() : NodeLightData::DEFAULT_LIGHT_RANGE;
-        lightData.intensity = light.intensity / (4.f * glm::pi<float>()) / 100.f;
+        lightData.range = light.range.has_value() ? light.range.value() * 1000 : NodeLightData::DEFAULT_LIGHT_RANGE;
+        lightData.intensity = light.intensity;
         switch (light.type)
         {
         case fastgltf::LightType::Directional:
