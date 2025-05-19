@@ -56,15 +56,33 @@ class Main {
         __hasDashed = false
         __timer = 0
 
+
+        // Load Map
+        engine.LoadModel("assets/models/graveyard_level.glb", true)
+
+        engine.PreloadModel("assets/models/Skeleton.glb")
+        engine.PreloadModel("assets/models/eye.glb")
+        engine.PreloadModel("assets/models/Berserker.glb")
+
+        engine.PreloadModel("assets/models/Revolver.glb")
+        engine.PreloadModel("assets/models/Shotgun.glb")
+
         // Player stuff
         engine.GetInput().SetMouseHidden(true)
         __playerController = engine.GetECS().NewEntity()
         __camera = engine.GetECS().NewEntity()
         __player = engine.GetECS().NewEntity()
 
-        var startPos = Vec3.new(25.0, 10.0, 50.0)
 
-        __playerController.AddTransformComponent().translation = startPos
+        var playerTransform = __playerController.AddTransformComponent()
+        playerTransform.translation = Vec3.new(25.0, 10.0, 50.0)
+
+        var playerStart = engine.GetECS().GetEntityByName("PlayerStart")
+        if(playerStart) {
+            playerTransform.translation = playerStart.GetTransformComponent().translation
+            playerTransform.rotation = playerStart.GetTransformComponent().rotation
+        }
+
         __playerController.AddPlayerTag()
         __playerController.AddNameComponent().name = "PlayerController"
         __playerController.AddCheatsComponent().noClip = false
@@ -86,21 +104,9 @@ class Main {
         __camera.AddNameComponent().name = "Camera"
         __camera.AddAudioListenerTag()
 
-        __player.AddTransformComponent().translation = startPos
+        __player.AddTransformComponent().translation = playerTransform.translation
+        __player.GetTransformComponent().rotation = playerTransform.rotation
         __player.AddNameComponent().name = "Player"
-
-        // Load Map
-        engine.LoadModel("assets/models/graveyard_level.glb", true)
-
-        engine.PreloadModel("assets/models/Skeleton.glb")
-        engine.PreloadModel("assets/models/eye.glb")
-        engine.PreloadModel("assets/models/Berserker.glb")
-
-        engine.PreloadModel("assets/models/Revolver.glb")
-        engine.PreloadModel("assets/models/Shotgun.glb")
-
-        // Loading lights from gltf, uncomment to test
-        // engine.LoadModel("assets/models/light_test.glb")
 
         // Gun Setup
         __gun = engine.LoadModel("assets/models/Revolver.glb",false)
@@ -122,6 +128,8 @@ class Main {
         __nextWeapon = null
         // create the player movement
         __playerMovement = PlayerMovement.new(false,0.0,__activeWeapon)
+        var mousePosition = engine.GetInput().GetMousePosition()
+        __playerMovement.lastMousePosition = mousePosition
 
         __rayDistance = 1000.0
         __rayDistanceVector = Vec3.new(__rayDistance, __rayDistance, __rayDistance)
