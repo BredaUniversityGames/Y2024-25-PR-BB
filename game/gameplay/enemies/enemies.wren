@@ -25,7 +25,7 @@ class MeleeEnemy {
         transform.scale = size
 
         _rootEntity.AttachChild(_meshEntity)
-        _meshEntity.GetTransformComponent().translation = Vec3.new(0,-60,0)
+        _meshEntity.GetTransformComponent().translation = Vec3.new(0,-86,0)
 
         _lightEntity = engine.GetECS().NewEntity()
         _lightEntity.AddNameComponent().name = "EnemyLight"
@@ -77,7 +77,7 @@ class MeleeEnemy {
         _deathTimer = _deathTimerMax
 
         _bonesSFX = "event:/SFX/Bones"
-        _hitMarker = "event:/SFX/Hitmarker"
+        _hitMarkerSFX = "event:/SFX/Hitmarker"
         _bonesStepsSFX = "event:/SFX/BonesSteps"
         _roar = "event:/SFX/Roar"
 
@@ -94,7 +94,7 @@ class MeleeEnemy {
     }
 
     IsHeadshot(y) { // Will probably need to be changed when we have a different model
-        if (y >= _rootEntity.GetRigidbodyComponent().GetPosition().y + 1) {
+        if (y >= _rootEntity.GetRigidbodyComponent().GetPosition().y + 0.5) {
             return true
         }
         return false
@@ -129,7 +129,7 @@ class MeleeEnemy {
 
             var eventInstance = engine.GetAudio().PlayEventOnce(_bonesSFX)
             
-            var hitmarkerSFX = engine.GetAudio().PlayEventOnce(_hitMarker)
+            var hitmarkerSFX = engine.GetAudio().PlayEventOnce(_hitMarkerSFX)
             var audioEmitter = _rootEntity.GetAudioEmitterComponent()
             audioEmitter.AddEvent(eventInstance)
             audioEmitter.AddEvent(hitmarkerSFX)
@@ -143,7 +143,7 @@ class MeleeEnemy {
             _recoveryState = false
             body.SetStatic()
 
-            var hitmarkerSFX = engine.GetAudio().PlayEventOnce(_hitMarker)
+            var hitmarkerSFX = engine.GetAudio().PlayEventOnce(_hitMarkerSFX)
             var eventInstance = engine.GetAudio().PlayEventOnce(_bonesSFX)
             var audioEmitter = _rootEntity.GetAudioEmitterComponent()
             audioEmitter.AddEvent(eventInstance)

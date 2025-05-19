@@ -82,13 +82,14 @@ class BerserkerEnemy {
         _deathTimer = _deathTimerMax
 
         _hurtSFX = "event:/SFX/DemonHurt"
+        _growlSFX = "event:/SFX/DemonGrowl"
 
         _stepSFX = "event:/SFX/DemonStep"
 
         _attackSFX = "event:/SFX/DemonAttack"
         _attackHitSFX = "event:/SFX/DemonAttackHit"
 
-        _hitSFX = "event:/SFX/Hit"
+        _hitMarkerSFX = "event:/SFX/Hitmarker"
 
         _walkEventInstance = null
 
@@ -128,13 +129,15 @@ class BerserkerEnemy {
             }
 
             var eventInstance = engine.GetAudio().PlayEventOnce(_hurtSFX)
+            var growlInstance = engine.GetAudio().PlayEventOnce(_growlSFX)
             var audioEmitter = _rootEntity.GetAudioEmitterComponent()
             audioEmitter.AddEvent(eventInstance)
+            audioEmitter.AddEvent(growlInstance)    
         } else {
             //animations.Play("Hit", 1.0, false, 0.1, false)
             //_rootEntity.GetRigidbodyComponent().SetVelocity(Vec3.new(0.0, 0.0, 0.0))
-            var hitmarkerSFX = engine.GetAudio().PlaySFX(_hitSFX,1.6  )
-            var eventInstance = engine.GetAudio().PlayEventOnce(_hurtSFX)
+            var hitmarkerSFX = engine.GetAudio().PlayEventOnce(_hurtSFX)
+            var eventInstance = engine.GetAudio().PlayEventOnce(_hitMarkerSFX)
             var audioEmitter = _rootEntity.GetAudioEmitterComponent()
             audioEmitter.AddEvent(eventInstance)
             audioEmitter.AddEvent(hitmarkerSFX)
