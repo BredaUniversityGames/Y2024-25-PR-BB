@@ -219,7 +219,7 @@ private:
     }
 };
 
-entt::entity LoadModelIntoECSAsHierarchy(ECSModule& ecs, PhysicsModule& physics, const GPUModel& gpuModel, const CPUModel& cpuModel, const bool hasPhysics)
+entt::entity LoadModelIntoECSAsHierarchy(ECSModule& ecs, PhysicsModule& physics, const GPUModel& gpuModel, const CPUModel& cpuModel, const bool loadWithCollision)
 {
     ZoneScopedN("Instantiate Scene");
     entt::entity rootEntity = ecs.GetRegistry().create();
@@ -234,7 +234,7 @@ entt::entity LoadModelIntoECSAsHierarchy(ECSModule& ecs, PhysicsModule& physics,
     }
 
     RecursiveNodeLoader recursiveNodeLoader { ecs, physics, cpuModel.hierarchy, cpuModel, gpuModel, animationControlEntity, entityLUT, rootEntity };
-    recursiveNodeLoader.Load(rootEntity, cpuModel.hierarchy.root, entt::null, hasPhysics);
+    recursiveNodeLoader.Load(rootEntity, cpuModel.hierarchy.root, entt::null, loadWithCollision);
 
     entt::entity skeletonEntity = entt::null;
     if (cpuModel.hierarchy.skeletonRoot.has_value())
@@ -294,7 +294,7 @@ std::shared_ptr<ModelData> ModelLoader::LoadModel(Engine& engine, std::string_vi
     return ret;
 }
 
-entt::entity ModelData::Instantiate(Engine& engine, bool hasPhysics)
+entt::entity ModelData::Instantiate(Engine& engine, bool loadWithCollision)
 {
     auto& modelResourceManager = engine.GetModule<RendererModule>().GetRenderer()->GetContext()->Resources()->ModelResourceManager();
     const GPUModel& model = *modelResourceManager.Access(gpuModel);
@@ -303,5 +303,5 @@ entt::entity ModelData::Instantiate(Engine& engine, bool hasPhysics)
         engine.GetModule<ECSModule>(),
         engine.GetModule<PhysicsModule>(),
         model,
-        cpuModel, hasPhysics);
+        cpuModel, loadWithCollision);
 }
