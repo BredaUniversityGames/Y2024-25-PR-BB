@@ -62,6 +62,7 @@ public:
     SSAOPass& GetSSAOPipeline() const { return *_ssaoPass; }
     FXAAPass& GetFXAAPipeline() const { return *_fxaaPass; }
     ShadowPass& GetShadowPipeline() const { return *_shadowPass; }
+    TonemappingPass& GetTonemappingPipeline() const { return *_tonemappingPass; }
     GPUScene& GetGPUScene() { return *_gpuScene; }
 
     void FlushCommands();

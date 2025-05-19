@@ -1,5 +1,8 @@
 #pragma once
 
+#include "data_store.hpp"
+#include "emitter_preset_settings.hpp"
+
 #include "resource_manager.hpp"
 
 #include "common.hpp"
@@ -52,7 +55,8 @@ class ParticleModule final : public ModuleInterface
     std::string_view GetName() override { return "Particle Module"; }
 
 public:
-    ParticleModule() = default;
+    ParticleModule()
+        : _emitterPresets("game/config/emitter_presets.json") {};
     ~ParticleModule() override = default;
 
     void LoadEmitterPresets();
@@ -66,35 +70,12 @@ private:
     ECSModule* _ecs = nullptr;
     PhysicsModule* _physics = nullptr;
 
-    struct EmitterPreset
-    {
-        glm::vec3 size = { 1.0f, 1.0f, 0.0f }; // size (2) + size velocity (1)
-        float mass = 1.0f;
-        glm::vec2 rotationVelocity = { 0.0f, 0.0f }; // angle (1) + angle velocity (1)
-        float maxLife = 5.0f;
-        float emitDelay = 1.0f;
-        uint32_t count = 0;
-        uint32_t materialIndex = 0;
-        glm::vec3 spawnRandomness = { 0.0f, 0.0f, 0.0f };
-        uint32_t flags = 0;
-        glm::vec3 velocityRandomness = { 0.0f, 0.0f, 0.0f };
-        glm::vec3 startingVelocity = { 1.0f, 5.0f, 1.0f };
-        glm::ivec2 spriteDimensions = { 1.0f, 1.0f };
-        uint32_t frameCount = 1;
-        float frameRate = 0.0f;
-        glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f }; // color (3) + color multiplier (1)
-        std::list<ParticleBurst> bursts = {};
-        std::string name = "Emitter Preset";
-        std::string imageName = "null";
-    };
+    DataStore<EmitterPresetSettings> _emitterPresets;
+    std::unordered_map<std::string, ResourceHandle<GPUImage>> _emitterImages;
+    uint32_t emitterCount = 0;
 
     ResourceHandle<GPUImage>& GetEmitterImage(std::string fileName, bool& imageFound);
-    bool SetEmitterPresetImage(EmitterPreset& preset, std::string fileName);
-
-    std::vector<EmitterPreset> _emitterPresets;
-    std::unordered_map<std::string, ResourceHandle<GPUImage>> _emitterImages;
-
-    uint32_t emitterCount = 0;
+    bool SetEmitterPresetImage(EmitterPreset& preset);
 
     friend class ParticleEditor;
 };
