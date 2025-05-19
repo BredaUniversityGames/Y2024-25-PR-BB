@@ -12,6 +12,7 @@ import "gameplay/enemies/berserker_enemy.wren" for BerserkerEnemy
 import "gameplay/enemies/ranged_enemy.wren" for RangedEnemy
 import "gameplay/soul.wren" for Soul, SoulManager
 import "gameplay/coin.wren" for Coin, CoinManager
+import "gameplay/station.wren" for PowerUpType, Station, StationManager
 
 class Main {
 
@@ -195,7 +196,12 @@ class Main {
 
         // Souls
         __soulManager = SoulManager.new(engine, __player)
+
+        // Coins
         __coinManager = CoinManager.new(engine, __player)
+
+        // Power ups
+        __stationManager = StationManager.new(engine, __player)
 
         // Pause Menu callbacks
 
@@ -455,6 +461,7 @@ class Main {
 
         __soulManager.Update(engine, __playerVariables, dt)
         __coinManager.Update(engine, __playerVariables, dt)
-        __waveSystem.Update(dt)
+        __stationManager.Update(engine, __playerVariables, dt)
+        //__waveSystem.Update(dt)
     }
 }

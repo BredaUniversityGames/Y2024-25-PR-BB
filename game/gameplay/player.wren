@@ -1,10 +1,12 @@
 import "engine_api.wren" for Math
+import "gameplay/station.wren" for PowerUpType
 
 
 class HitmarkerState {
     static normal {0}
     static crit {1}    
 }
+
 
 class PlayerVariables {
     construct new() {
@@ -36,7 +38,9 @@ class PlayerVariables {
         _multiplierMaxTime = 5000
 
         _consecutiveHits = 0
-        _consecutiveMaxHits = 5        
+        _consecutiveMaxHits = 5    
+
+        _currentPowerUp = PowerUpType.NONE    
     }
     hitmarkerState{_hitmarkerState}
     hitmarkTimer{_hitmarkTimer}
@@ -94,6 +98,10 @@ class PlayerVariables {
 
     IncreaseScore(value) {
         _score = _score + value
+    }
+
+    SetCurrentPowerUp(powerUp) {
+        _currentPowerUp = powerUp
     }    
 
     UpdateMultiplier() {
