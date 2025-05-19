@@ -78,6 +78,12 @@ struct GamepadTypeGlyphs
 
 using GamepadGlyphs = std::unordered_map<GamepadType, GamepadTypeGlyphs>;
 
+struct GamepadOriginVisual
+{
+    std::string bindingInputName {};
+    std::string glyphImagePath {};
+};
+
 // Abstract class, which manages keyboard and mouse actions.
 // Inherit to handle gamepad actions.
 class ActionManager
@@ -101,11 +107,11 @@ public:
     // Axis actions.
     NO_DISCARD glm::vec2 GetAnalogAction(std::string_view actionName) const;
 
-    // Gets the path to the images containing the controller glyphs to be shown for the digital action given.
-    NO_DISCARD virtual std::vector<std::string> GetDigitalActionGamepadGlyphImagePaths(std::string_view actionName) const;
+    // Returns information to be visually displayed for all gamepad bindings for the given digital action.
+    NO_DISCARD virtual std::vector<GamepadOriginVisual> GetDigitalActionGamepadOriginVisual(std::string_view actionName) const;
 
-    // Gets the path to the images containing the controller glyphs to be shown for the analog action given.
-    NO_DISCARD virtual std::vector<std::string> GetAnalogActionGamepadGlyphImagePaths(std::string_view actionName) const;
+    // Returns information to be visually displayed for all gamepad bindings for the given analog action.
+    NO_DISCARD virtual std::vector<GamepadOriginVisual> GetAnalogActionGamepadOriginVisual(std::string_view actionName) const;
 
 protected:
     const InputDeviceManager& _inputDeviceManager;

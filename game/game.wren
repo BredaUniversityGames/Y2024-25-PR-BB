@@ -241,7 +241,7 @@ class Main {
         menuButton2.OnPress(backToMain)
 
         var retryButton = engine.GetGame().GetGameOverMenu().retryButton
-        
+
         var retryHandler = Fn.new {
             engine.TransitionToScript("game/game.wren")
             engine.GetTime().SetScale(1.0)
