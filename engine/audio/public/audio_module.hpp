@@ -112,7 +112,7 @@ private:
     static constexpr uint32_t MAX_CHANNELS = 1024;
 
     // All sounds go through this eventually
-    // NOT USED: for events, we use event buses
+    // USED ONLY FOR DSP VISUALIZATION: for events, we use event buses
     FMOD_CHANNELGROUP* _masterGroup = nullptr;
     FMOD_DSP* _fftDSP = nullptr;
 
