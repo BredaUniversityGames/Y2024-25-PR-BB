@@ -25,6 +25,9 @@ class MeleeEnemy {
         transform.translation = spawnPosition
         transform.scale = size
 
+        var rotation = Vec3.new(0.0, Random.RandomFloatRange(0.0, 3.14 * 2.0), 0.0)
+        transform.rotation = Math.ToQuat(rotation)
+
         _rootEntity.AttachChild(_meshEntity)
         _meshEntity.GetTransformComponent().translation = Vec3.new(0,-60,0)
 
@@ -179,6 +182,7 @@ class MeleeEnemy {
         var body = _rootEntity.GetRigidbodyComponent()
         var pos = body.GetPosition()
         _rootEntity.GetTransformComponent().translation = pos
+
         var animations = _meshEntity.GetAnimationControlComponent()
 
 
