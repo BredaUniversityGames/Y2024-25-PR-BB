@@ -47,7 +47,7 @@ public:
     std::optional<std::shared_ptr<HUD>> GetHUD();
     std::optional<std::shared_ptr<GameOverMenu>> GetGameOver();
 
-    glm::vec3 GetAimAssistDirection(ECSModule& ecs);
+    glm::vec3 GetAimAssistDirection(ECSModule& ecs, const glm::vec3& forward);
 
     NON_COPYABLE(GameModule);
     NON_MOVABLE(GameModule);

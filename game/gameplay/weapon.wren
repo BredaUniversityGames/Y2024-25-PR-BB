@@ -132,8 +132,10 @@ class Pistol {
             var right = Math.Cross(forward, up)
             var start = translation + forward * Vec3.new(1, 1, 1) - right * Vec3.new(0.09, 0.09, 0.09) - up * Vec3.new(0.12, 0.12, 0.12)
             var end = translation + forward * _rangeVector
-            var direction = engine.GetGame().GetAimAssistDirection(engine.GetECS())
+            var direction = engine.GetGame().GetAimAssistDirection(engine.GetECS(), forward)
             var rayHitInfo = engine.GetPhysics().ShootRay(start, direction, _range)
+
+            // TODO: Why search all the enemies here?
 
             if (!rayHitInfo.isEmpty) {
                 var normal = Vec3.new(0, 1, 0)
