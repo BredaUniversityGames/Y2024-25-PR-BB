@@ -26,6 +26,7 @@ struct UIFont
         uint16_t ascent {};
         uint16_t descent {};
         uint16_t lineGap {};
+        uint16_t charSpacing {};
     };
 
     std::unordered_map<uint8_t, Character> characters;
