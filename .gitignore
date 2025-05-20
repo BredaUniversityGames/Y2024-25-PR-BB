@@ -6,6 +6,7 @@
 # Settings
 game_settings.json
 
+cmake-build-release
 # Visual Studio Code
 .vscode
 

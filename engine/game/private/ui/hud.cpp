@@ -8,7 +8,9 @@
 #include "ui_progress_bar.hpp"
 #include "ui_text.hpp"
 
-UIProgressBar::BarStyle LoadHealthBarStyle(GraphicsContext& graphicsContext)
+#include <resource_management/sampler_resource_manager.hpp>
+
+UIProgressBar::BarStyle LoadHealthBarStyle(GraphicsContext& graphicsContext, auto sampler)
 {
     // common image data.
     CPUImage commonImageData;
@@ -18,43 +20,10 @@ UIProgressBar::BarStyle LoadHealthBarStyle(GraphicsContext& graphicsContext)
     commonImageData.isHDR = false;
 
     UIProgressBar::BarStyle barStyle;
-    barStyle.empty = graphicsContext.Resources()->ImageResourceManager().Create(commonImageData.FromPNG("assets/textures/ui/health_empty.png"));
-    barStyle.filled = graphicsContext.Resources()->ImageResourceManager().Create(commonImageData.FromPNG("assets/textures/ui/health_full.png"));
+    barStyle.empty = ResourceHandle<GPUImage>::Null();
+    barStyle.filled = graphicsContext.Resources()->ImageResourceManager().Create(commonImageData.FromPNG("assets/textures/ui/health_bar.png"), sampler);
     barStyle.fillStyle = UIProgressBar::BarStyle::FillStyle::eMask;
-    return barStyle;
-}
-
-UIProgressBar::BarStyle LoadCircleBarStyle(GraphicsContext& graphicsContext)
-{
-    // common image data.
-    CPUImage commonImageData;
-    commonImageData.format
-        = vk::Format::eR8G8B8A8Unorm;
-    commonImageData.SetFlags(vk::ImageUsageFlagBits::eSampled);
-    commonImageData.isHDR = false;
-
-    UIProgressBar::BarStyle barStyle;
-    barStyle.empty = graphicsContext.Resources()->ImageResourceManager().Create(commonImageData.FromPNG("assets/textures/ui/circleempty.png"));
-    barStyle.filled = graphicsContext.Resources()->ImageResourceManager().Create(commonImageData.FromPNG("assets/textures/ui/circlefull.png"));
-    barStyle.fillDirection = UIProgressBar::BarStyle::FillDirection::eFromBottom;
-    barStyle.fillStyle = UIProgressBar::BarStyle::FillStyle::eMask;
-    return barStyle;
-}
-
-UIProgressBar::BarStyle LoadUltBarStyle(GraphicsContext& graphicsContext)
-{
-    // common image data.
-    CPUImage commonImageData;
-    commonImageData.format
-        = vk::Format::eR8G8B8A8Unorm;
-    commonImageData.SetFlags(vk::ImageUsageFlagBits::eSampled);
-    commonImageData.isHDR = false;
-
-    UIProgressBar::BarStyle barStyle;
-    barStyle.empty = graphicsContext.Resources()->ImageResourceManager().Create(commonImageData.FromPNG("assets/textures/ui/ult_empty.png"));
-    barStyle.filled = graphicsContext.Resources()->ImageResourceManager().Create(commonImageData.FromPNG("assets/textures/ui/ult_full.png"));
-    barStyle.fillDirection = UIProgressBar::BarStyle::FillDirection::eFromBottom;
-    barStyle.fillStyle = UIProgressBar::BarStyle::FillStyle::eMask;
+    barStyle.fillDirection = UIProgressBar::BarStyle::FillDirection::eLeftToRight;
     return barStyle;
 }
 
@@ -62,65 +31,47 @@ std::shared_ptr<HUD> HUD::Create(GraphicsContext& graphicsContext, const glm::uv
 {
 
     std::shared_ptr<HUD> hud = std::make_shared<HUD>(screenResolution);
-    // resource loading.
-
-    const UIProgressBar::BarStyle healtbarStyle
-        = LoadHealthBarStyle(graphicsContext);
-    const UIProgressBar::BarStyle circleBarStyle = LoadCircleBarStyle(graphicsContext);
-    const UIProgressBar::BarStyle ultBarStyle = LoadUltBarStyle(graphicsContext);
-
-    hud->SetAbsoluteTransform(hud->GetAbsoluteLocation(), screenResolution);
 
     CPUImage commonImageData {};
     commonImageData.format
         = vk::Format::eR8G8B8A8Unorm;
     commonImageData.SetFlags(vk::ImageUsageFlagBits::eSampled);
     commonImageData.isHDR = false;
-    auto crosshair = graphicsContext.Resources()->ImageResourceManager().Create(commonImageData.FromPNG("assets/textures/ui/cross_hair.png"));
-    hud->AddChild<UIImage>(crosshair, glm::vec2(0, 7), glm::vec2(25, 42) * 2.0f);
 
-    hud->healthBar = hud->AddChild<UIProgressBar>(healtbarStyle, glm::vec2(0, 100), glm::vec2(700, 50));
-    hud->healthBar.lock()->AddChild<UITextElement>(font, "health", 50);
-    hud->healthBar.lock()->anchorPoint = UIElement::AnchorPoint::eBottomCenter;
+    SamplerCreation samplerData {};
 
-    hud->ultBar = hud->AddChild<UIProgressBar>(ultBarStyle, glm::vec2(440, 250), glm::vec2(1920, 770) * 0.35f);
-    hud->ultBar.lock()->anchorPoint = UIElement::AnchorPoint::eBottomRight;
-    hud->ultBar.lock()->AddChild<UITextElement>(font, "ult", glm::vec2(-55, -20), 50);
+    samplerData.minFilter = vk::Filter::eNearest;
+    samplerData.magFilter = vk::Filter::eNearest;
+    ResourceHandle<Sampler> HUDSampler = graphicsContext.Resources()->SamplerResourceManager().Create(samplerData);
 
-    hud->sprintBar = hud->AddChild<UIProgressBar>(circleBarStyle, glm::vec2(200, 405), glm::vec2(100));
-    hud->sprintBar.lock()->anchorPoint = UIElement::AnchorPoint::eBottomRight;
-    hud->sprintBar.lock()->AddChild<UITextElement>(font, "sprint", 30);
+    ImageResourceManager& imageManager = graphicsContext.Resources()->ImageResourceManager();
 
-    hud->grenadeBar = hud->AddChild<UIProgressBar>(circleBarStyle, glm::vec2(355, 335), glm::vec2(100));
-    hud->grenadeBar.lock()->anchorPoint = UIElement::AnchorPoint::eBottomRight;
-    hud->grenadeBar.lock()->AddChild<UITextElement>(font, "grenade", 30);
+    hud->SetAbsoluteTransform(hud->GetAbsoluteLocation(), screenResolution);
 
-    hud->ammoCounter = hud->AddChild<UITextElement>(font, "6/6", glm::vec2(550, 100), 80);
+    ResourceHandle<GPUImage> crosshairImage = imageManager.Create(commonImageData.FromPNG("assets/textures/ui/cross_hair.png"));
+    hud->AddChild<UIImage>(crosshairImage, glm::vec2(0, 7), glm::vec2(25, 42) * 2.0f);
+
+    // stats bg
+    ResourceHandle<GPUImage> statsBGImage = imageManager.Create(commonImageData.FromPNG("assets/textures/ui/stats_bg.png"), HUDSampler);
+    auto statsBG = hud->AddChild<UIImage>(statsBGImage, glm::vec2(0, 0), glm::vec2(113, 39) * 8.0f);
+    statsBG->anchorPoint = UIElement::AnchorPoint::eBottomLeft;
+
+    // gun
+    ResourceHandle<GPUImage> gunBGImage = imageManager.Create(commonImageData.FromPNG("assets/textures/ui/gun_bg.png"), HUDSampler);
+    auto gunBG = hud->AddChild<UIImage>(gunBGImage, glm::vec2(0, 0), glm::vec2(69, 35) * 8.0f);
+    gunBG->anchorPoint = UIElement::AnchorPoint::eBottomRight;
+
+    ResourceHandle<GPUImage> gunImage = imageManager.Create(commonImageData.FromPNG("assets/textures/ui/gun.png"), HUDSampler);
+    auto gun = hud->AddChild<UIImage>(gunImage, glm::vec2(16, 11) * 8.0f, glm::vec2(19, 8) * 8.0f);
+    gun->anchorPoint = UIElement::AnchorPoint::eBottomRight;
+
+    hud->ammoCounter = hud->AddChild<UITextElement>(font, "17", glm::vec2(52, 9) * 8.0f, 12 * 8.0);
     hud->ammoCounter.lock()->anchorPoint = UIElement::AnchorPoint::eBottomRight;
 
-    hud->scoreText = hud->AddChild<UITextElement>(font, "Score: 0", glm::vec2(100, 100), 100);
-    hud->scoreText.lock()->anchorPoint = UIElement::AnchorPoint::eTopLeft;
-
-    hud->multiplierText = hud->AddChild<UITextElement>(font, "1.0x", glm::vec2(150, 600), 100);
-    hud->multiplierText.lock()->anchorPoint = UIElement::AnchorPoint::eTopRight;
-
-    hud->ultReadyText = hud->AddChild<UITextElement>(font, "", glm::vec2(0, 135), 50);
-    hud->ultReadyText.lock()->anchorPoint = UIElement::AnchorPoint::eBottomCenter;
-
-    // common image data.
-    CPUImage imageData;
-    imageData.format
-        = vk::Format::eR8G8B8A8Unorm;
-    imageData.SetFlags(vk::ImageUsageFlagBits::eSampled);
-    imageData.isHDR = false;
-
-    auto im = graphicsContext.Resources()->ImageResourceManager().Create(imageData.FromPNG("assets/textures/ui/gun.png"));
-
-    auto hitmarkerImage = graphicsContext.Resources()->ImageResourceManager().Create(imageData.FromPNG("assets/textures/ui/hitmarker.png"));
-    auto hitmarkerCritImage = graphicsContext.Resources()->ImageResourceManager().Create(imageData.FromPNG("assets/textures/ui/hitmarker_crit.png"));
-
-    auto gunPic = hud->AddChild<UIImage>(im, glm::vec2(460, 140), glm::vec2(720, 360) * 0.2f);
-    gunPic->anchorPoint = UIElement::AnchorPoint::eBottomRight;
+    // hitmarker
+    auto hitmarkerImage
+        = imageManager.Create(commonImageData.FromPNG("assets/textures/ui/hitmarker.png"));
+    auto hitmarkerCritImage = graphicsContext.Resources()->ImageResourceManager().Create(commonImageData.FromPNG("assets/textures/ui/hitmarker_crit.png"));
 
     hud->hitmarker = hud->AddChild<UIImage>(hitmarkerImage, glm::vec2(0, 7), glm::vec2(25, 42) * 2.0f);
     hud->hitmarker.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
@@ -128,16 +79,37 @@ std::shared_ptr<HUD> HUD::Create(GraphicsContext& graphicsContext, const glm::uv
     hud->hitmarkerCrit = hud->AddChild<UIImage>(hitmarkerCritImage, glm::vec2(0, 7), glm::vec2(25, 42) * 2.0f);
     hud->hitmarkerCrit.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
 
-    auto dashCircle = graphicsContext.Resources()->ImageResourceManager().Create(imageData.FromPNG("assets/textures/ui/grey_ellipse.png"));
+    // dashes
+    ResourceHandle<GPUImage>
+        dashChargeImage
+        = imageManager.Create(commonImageData.FromPNG("assets/textures/ui/dash_charge.png"), HUDSampler);
 
     for (int32_t i = 0; i < static_cast<int32_t>(hud->dashCharges.size()); i++)
     {
-        hud->dashCharges[i] = hud->AddChild<UIImage>(dashCircle, glm::vec2((i * 60) + 100, 100), glm::vec2(50));
+        hud->dashCharges[i] = hud->AddChild<UIImage>(dashChargeImage, (glm::vec2(21 + 9.f * i, 19) * 8.0f), glm::vec2(6.f) * 8.f);
         hud->dashCharges[i].lock()->anchorPoint = UIElement::AnchorPoint::eBottomLeft;
     }
 
+    // healthbar
+    UIProgressBar::BarStyle healthBarStyle = LoadHealthBarStyle(graphicsContext, HUDSampler);
+    hud->healthBar = hud->AddChild<UIProgressBar>(healthBarStyle, glm::vec2(10, 11) * 8.0f, glm::vec2(94, 5) * 8.0f);
+    hud->healthBar.lock()->anchorPoint = UIElement::AnchorPoint::eBottomLeft;
+
+    // souls indicator
+    ResourceHandle<GPUImage> soulImage = imageManager.Create(commonImageData.FromPNG("assets/textures/ui/souls_indicator.png"), HUDSampler);
+    hud->soulIndicator = hud->AddChild<UIImage>(soulImage, glm::vec2(10, 18) * 8.0f, glm::vec2(5, 8) * 8.0f);
+    hud->soulIndicator.lock()->anchorPoint = UIElement::AnchorPoint::eBottomLeft;
+
+    // wave counter
+    auto bg_wave_text = hud->AddChild<UITextElement>(font, "17", glm::vec2(140, 20), 20 * 8.0);
+    bg_wave_text->anchorPoint = UIElement::AnchorPoint::eTopRight;
+    bg_wave_text->display_color = glm::vec4(0, 0, 0, 1);
+    hud->AddChild<UITextElement>(font, "17", glm::vec2(140, 26), 20 * 8.0)->anchorPoint = UIElement::AnchorPoint::eTopRight;
+
+    hud->scoreText = hud->AddChild<UITextElement>(font, "220", glm::vec2(66, 260), 10 * 8.0);
+    hud->scoreText.lock()->anchorPoint = UIElement::AnchorPoint::eBottomLeft;
+
     hud->UpdateAllChildrenAbsoluteTransform();
     graphicsContext.UpdateBindlessSet();
-
     return hud;
 }

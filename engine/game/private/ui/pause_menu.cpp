@@ -70,19 +70,19 @@ std::shared_ptr<PauseMenu> PauseMenu::Create(GraphicsContext& graphicsContext, c
 
         auto continueButton = buttonPanel->AddChild<UIButton>(buttonStyle, buttonPos, buttonBaseSize);
         continueButton->anchorPoint = UIElement::AnchorPoint::eMiddle;
-        continueButton->AddChild<UITextElement>(font, "Continue", textSize)->SetColor(glm::vec4(1, 1, 1, 1));
+        continueButton->AddChild<UITextElement>(font, "Continue", textSize);
 
         buttonPos += increment;
 
         auto settingsButton = buttonPanel->AddChild<UIButton>(buttonStyle, buttonPos, buttonBaseSize);
         settingsButton->anchorPoint = UIElement::AnchorPoint::eMiddle;
-        settingsButton->AddChild<UITextElement>(font, "Settings", textSize)->SetColor(glm::vec4(1, 1, 1, 1));
+        settingsButton->AddChild<UITextElement>(font, "Settings", textSize);
 
         buttonPos += increment;
 
         auto backToMainButton = buttonPanel->AddChild<UIButton>(buttonStyle, buttonPos, buttonBaseSize);
         backToMainButton->anchorPoint = UIElement::AnchorPoint::eMiddle;
-        backToMainButton->AddChild<UITextElement>(font, "Main Menu", textSize)->SetColor(glm::vec4(1, 1, 1, 1));
+        backToMainButton->AddChild<UITextElement>(font, "Main Menu", textSize);
 
         pause->continueButton = continueButton;
         pause->backToMainButton = backToMainButton;

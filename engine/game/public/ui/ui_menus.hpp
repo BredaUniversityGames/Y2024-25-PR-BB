@@ -33,6 +33,7 @@ public:
     std::weak_ptr<UITextElement> multiplierText;
     std::weak_ptr<UIImage> hitmarker;
     std::weak_ptr<UIImage> hitmarkerCrit;
+    std::weak_ptr<UIImage> soulIndicator;
     std::weak_ptr<UITextElement> ultReadyText;
 
     std::array<std::weak_ptr<UIImage>, MAX_DASH_CHARGE_COUNT> dashCharges;

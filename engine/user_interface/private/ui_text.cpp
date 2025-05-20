@@ -54,7 +54,7 @@ void UITextElement::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
         info.matrix = glm::scale(glm::translate(glm::mat4(1), localTranslation), localScale);
         info.textureIndex = _font->fontAtlas.Index();
         info.useRedAsAlpha = true;
-        info.color = _color;
+        info.color = display_color;
 
         info.uvMin = fontChar.uvMin;
         info.uvMax = fontChar.uvMax;

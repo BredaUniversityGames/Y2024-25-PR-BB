@@ -15,7 +15,7 @@ std::shared_ptr<GameVersionVisualization> GameVersionVisualization::Create(Graph
 
     visualization->text = visualization->AddChild<UITextElement>(font, cleanText, glm::vec2(10.0f, 50.0f), 50);
     visualization->text.lock()->anchorPoint = UIElement::AnchorPoint::eBottomLeft;
-    visualization->text.lock()->SetColor(glm::vec4(0.75f, 0.75f, 0.75f, 0.75f));
+    visualization->text.lock()->display_color = glm::vec4(0.75f, 0.75f, 0.75f, 0.75f);
 
     visualization->UpdateAllChildrenAbsoluteTransform();
     graphicsContext.UpdateBindlessSet();

@@ -274,7 +274,7 @@ std::shared_ptr<SettingsMenu> SettingsMenu::Create(
             constexpr glm::vec2 backPos = { 0.0f, 500.0f };
             auto back = settings->AddChild<UIButton>(buttonStyle, backPos, buttonBaseSize);
             back->anchorPoint = UIElement::AnchorPoint::eMiddle;
-            back->AddChild<UITextElement>(font, "Back", textSize)->SetColor(glm::vec4(1, 1, 1, 1));
+            back->AddChild<UITextElement>(font, "Back", textSize);
 
             auto callback = [&engine]()
             {

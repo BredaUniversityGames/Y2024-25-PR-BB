@@ -81,7 +81,7 @@ void UpdateDashCharges(HUD& self, int charges)
             }
             else // Charge empty
             {
-                locked->display_color = glm::vec4(1, 1, 1, 0.2);
+                locked->display_color = glm::vec4(1, 1, 1, 0.0);
             }
         }
     }
@@ -128,6 +128,16 @@ void ShowHitmarkerCrit(HUD& self, bool val)
 
     hitmarkerCrit->visibility = val ? UIElement::VisibilityState::eUpdatedAndVisible : UIElement::VisibilityState::eNotUpdatedAndInvisible;
 }
+
+void SetSoulsIndicatorOpacity(HUD& self, float opacity)
+{
+    auto soulsIndicator = self.soulIndicator.lock();
+    if (!soulsIndicator)
+    {
+        return;
+    }
+    soulsIndicator->display_color.a = opacity;
+}
 }
 
 void BindGameUI(wren::ForeignModule& module)
@@ -159,7 +169,7 @@ void BindGameUI(wren::ForeignModule& module)
     hud.funcExt<bindings::UpdateUltReadyText>("UpdateUltReadyText", "Use bool to set if ultimate is ready");
     hud.funcExt<bindings::ShowHitmarker>("ShowHitmarker", "should show the hitmarker");
     hud.funcExt<bindings::ShowHitmarkerCrit>("ShowHitmarkerCrit", "should show the critical hitmarker");
-
+    hud.funcExt<bindings::SetSoulsIndicatorOpacity>("SetSoulsIndicatorOpacity", "Set souls indicator opacity");
     auto& gameOver = module.klass<GameOverMenu, Canvas>("GameOverMenu");
 
     gameOver.propReadonlyExt<bindings::GameOverMenuButton>("backButton");

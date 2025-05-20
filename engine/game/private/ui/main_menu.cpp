@@ -75,8 +75,7 @@ std::shared_ptr<MainMenu> MainMenu::Create(GraphicsContext& graphicsContext, con
 
         auto openLinkButton = main->AddChild<UIButton>(buttonStyle, buttonBaseSize, buttonBaseSize);
         openLinkButton->anchorPoint = UIElement::AnchorPoint::eBottomRight;
-        openLinkButton->AddChild<UITextElement>(font, "Check out our Discord!", 50)->SetColor(glm::vec4(1, 1, 1, 1));
-
+        openLinkButton->AddChild<UITextElement>(font, "Check out our Discord!", 50);
         main->openLinkButton = openLinkButton;
 
         auto playButton = buttonPanel->AddChild<UIButton>(buttonStyle, buttonPos, buttonBaseSize);
@@ -87,14 +86,12 @@ std::shared_ptr<MainMenu> MainMenu::Create(GraphicsContext& graphicsContext, con
 
         auto settingsButton = buttonPanel->AddChild<UIButton>(buttonStyle, buttonPos, buttonBaseSize);
         settingsButton->anchorPoint = UIElement::AnchorPoint::eTopLeft;
-        settingsButton->AddChild<UITextElement>(font, "SETTINGS", textSize)->SetColor(glm::vec4(1, 1, 1, 1));
-
+        settingsButton->AddChild<UITextElement>(font, "SETTINGS", textSize);
         buttonPos += increment;
 
         auto quitButton = buttonPanel->AddChild<UIButton>(buttonStyle, buttonPos, buttonBaseSize);
         quitButton->anchorPoint = UIElement::AnchorPoint::eTopLeft;
-        quitButton->AddChild<UITextElement>(font, "QUIT", textSize)->SetColor(glm::vec4(1, 1, 1, 1));
-
+        quitButton->AddChild<UITextElement>(font, "QUIT", textSize);
         main->playButton = playButton;
         main->quitButton = quitButton;
         main->settingsButton = settingsButton;
