@@ -12,6 +12,7 @@ class MeleeEnemy {
         _currentPath = null
         _currentPathNodeIdx = null
         _honeInRadius = 30.0
+        _maxHoneInAltitudeDiff = 4.0
 
         _velocityDirection = Vec3.new(_maxVelocity, 0, 0)
         
@@ -295,7 +296,12 @@ class MeleeEnemy {
         var body = _rootEntity.GetRigidbodyComponent()
         var pos = body.GetPosition()
 
-        if(Math.Distance(position, engine.GetECS().GetEntityByName("Player").GetTransformComponent().GetWorldTranslation()) > _honeInRadius) {
+        var playerPosition = engine.GetECS().GetEntityByName("Player").GetTransformComponent().GetWorldTranslation()
+
+        var distanceToGoal = Math.Distance(position, playerPosition)
+        var altitudeToGoal = Math.Distance(Vec3.new(0.0, position.y, 0.0), Vec3.new(0.0, playerPosition.y, 0.0))
+
+        if(distanceToGoal > _honeInRadius || altitudeToGoal > _maxHoneInAltitudeDiff) {
             _reasonTimer = _reasonTimer + dt
             if(_reasonTimer > 2000) {
                 this.FindNewPath(engine)
