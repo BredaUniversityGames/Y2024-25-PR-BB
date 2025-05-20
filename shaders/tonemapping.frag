@@ -57,6 +57,8 @@ layout (push_constant) uniform PushConstants
     vec4 cloudsColor;
     vec4 voidColor;
 
+    vec4 flashColor;
+
 
 } pc;
 
@@ -83,6 +85,7 @@ layout (location = 0) in vec2 texCoords;
 layout (location = 0) out vec4 outColor;
 
 vec3 Vignette(in vec3 color, in vec2 texCoords, in float intensity);
+vec3 ScreenFlash(in vec3 color, in vec3 flashColor, in vec2 texCoords, in float intensity);
 vec2 LensDistortionUV(vec2 uv, float k, float kcube);
 void BrightnessAdjust(inout vec3 color, in float b);
 void ContrastAdjust(inout vec3 color, in float c);
@@ -212,6 +215,8 @@ void main()
     {
         color = Vignette(color, texCoords, pc.vignetteIntensity);
     }
+
+    color = ScreenFlash(color, pc.flashColor.rgb, texCoords, pc.flashColor.a);
 
 
     outColor = vec4(color, 1.0);
@@ -367,6 +372,18 @@ vec3 Vignette(in vec3 color, in vec2 uv, in float intensity)
     uv *= 1.0 - uv.yx;
     float vig = uv.x * uv.y * 15;
     return color * pow(vig, intensity);
+}
+
+vec3 ScreenFlash(in vec3 color, in vec3 flashColor, in vec2 uv, in float intensity)
+{
+    vec2 vignetteUV = uv * (1.0 - uv.yx);
+
+    float vignetteShape = vignetteUV.x * vignetteUV.y;
+
+
+    float flashFactor = clamp(1.0 - pow(vignetteShape * 16.0, intensity), 0.0, 1.0);
+
+    return mix(color, flashColor, flashFactor);
 }
 
 vec2 LensDistortionUV(vec2 uv, float k, float kCube) {

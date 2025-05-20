@@ -6,6 +6,7 @@ target_link_libraries(Utility
         PUBLIC Tracy::TracyClient
         PUBLIC spdlog::spdlog
         PUBLIC glm::glm
+        PUBLIC cereal::cereal
 )
 
 target_include_directories(Utility

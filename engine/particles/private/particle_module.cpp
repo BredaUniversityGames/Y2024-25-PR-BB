@@ -83,6 +83,33 @@ void ParticleModule::Tick(MAYBE_UNUSED Engine& engine)
             }
         }
     }
+
+    const auto testView = _ecs->GetRegistry().view<ParticleEmitterComponent, ActiveEmitterTag, TestEmitterTag>();
+    for (const auto entity : testView)
+    {
+        auto& testEmitter = _ecs->GetRegistry().get<ParticleEmitterComponent>(entity);
+        auto& preset = _emitterPresets.data.emitterPresets[static_cast<uint8_t>(testEmitter.presetID)];
+
+        testEmitter.emitter.count = preset.count;
+        testEmitter.emitter.mass = preset.mass;
+        testEmitter.emitter.size = preset.size;
+        testEmitter.emitter.materialIndex = preset.materialIndex;
+        testEmitter.emitter.maxLife = preset.maxLife;
+        testEmitter.emitter.rotationVelocity = preset.rotationVelocity;
+        testEmitter.emitter.flags = preset.flags;
+        testEmitter.emitter.spawnRandomness = preset.spawnRandomness;
+        testEmitter.emitter.velocityRandomness = preset.velocityRandomness;
+        testEmitter.emitter.velocity = preset.startingVelocity;
+        testEmitter.emitter.color = preset.color;
+        testEmitter.emitter.maxFrames = preset.spriteDimensions;
+        testEmitter.emitter.frameRate = preset.frameRate;
+        testEmitter.emitter.frameCount = preset.frameCount;
+        testEmitter.maxEmitDelay = preset.emitDelay;
+        testEmitter.count = preset.count;
+
+        testEmitter.bursts.clear();
+        std::copy(preset.bursts.begin(), preset.bursts.end(), std::back_inserter(testEmitter.bursts));
+    }
 }
 
 ResourceHandle<GPUImage>& ParticleModule::GetEmitterImage(std::string fileName, bool& imageFound)
@@ -105,419 +132,36 @@ ResourceHandle<GPUImage>& ParticleModule::GetEmitterImage(std::string fileName, 
             return resource;
         }
 
-        bblog::error("[Error] Particle image not found!");
+        bblog::error("[Particles] Emitter image %s not found!", fileName);
         imageFound = false;
         return _emitterImages.begin()->second;
     }
-
     imageFound = true;
     return got->second;
 }
 
-bool ParticleModule::SetEmitterPresetImage(EmitterPreset& preset, std::string fileName)
+bool ParticleModule::SetEmitterPresetImage(EmitterPreset& preset)
 {
     auto resources = _context->Resources();
 
     bool imageFound;
-    auto image = GetEmitterImage(fileName, imageFound);
+    auto image = GetEmitterImage(preset.imageName, imageFound);
 
-    preset.imageName = std::move(fileName);
     preset.materialIndex = image.Index();
     float biggestSize = glm::max(resources->ImageResourceManager().Access(image)->width, resources->ImageResourceManager().Access(image)->height);
     preset.size = glm::vec3(
-        resources->ImageResourceManager().Access(image)->width / biggestSize,
-        resources->ImageResourceManager().Access(image)->height / biggestSize, preset.size.z);
+        resources->ImageResourceManager().Access(image)->width / preset.spriteDimensions.x / biggestSize,
+        resources->ImageResourceManager().Access(image)->height / preset.spriteDimensions.y / biggestSize, preset.size.z);
 
     return imageFound;
 }
 
 void ParticleModule::LoadEmitterPresets()
 {
-    // TODO: serialize emitter presets and load from file
-
-    { // FLAME
-        EmitterPreset preset;
-        preset.emitDelay = 0.1f;
-        preset.mass = -0.005f;
-        preset.rotationVelocity = glm::vec2(0.0f, 0.0f);
-        preset.maxLife = 2.0f;
-        preset.count = 10;
-        preset.spawnRandomness = glm::vec3(0.05f, 0.05f, 0.05f);
-        preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
-        preset.color = glm::vec4(1.0f, 1.0f, 1.0f, 5.0f);
-        preset.name = "Flame";
-        preset.velocityRandomness = glm::vec3(0.05f, 0.05f, 0.05f);
-        SetEmitterPresetImage(preset, "flame_03.png");
-        preset.size.z = -0.8f;
-
-        _emitterPresets.emplace_back(preset);
-    }
-
-    { // DUST
-        EmitterPreset preset;
-        preset.emitDelay = 0.5f;
-        preset.mass = 0.005f;
-        preset.rotationVelocity = glm::vec2(0.0f, 0.0f);
-        preset.maxLife = 8.0f;
-        preset.count = 20;
-        preset.spawnRandomness = glm::vec3(1.0f);
-        preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
-        preset.color = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
-        preset.name = "Dust";
-        SetEmitterPresetImage(preset, "point_03.png");
-        preset.size = glm::vec3(0.05f, 0.05f, 0.0f);
-
-        _emitterPresets.emplace_back(preset);
-    }
-
-    { // Feathers
-        EmitterPreset preset;
-        preset.count = 10;
-        preset.startingVelocity = glm::vec3(1.0f, 5.0f, 1.0f);
-        preset.mass = 0.05f;
-        preset.rotationVelocity = glm::vec2(2.0f, 2.0f);
-        SetEmitterPresetImage(preset, "feather.png");
-        preset.size = glm::vec3(0.8f, 0.8f, 0.0f);
-        preset.name = "Feathers";
-        preset.color = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
-        preset.spawnRandomness = glm::vec3(5.0f);
-
-        ParticleBurst burst1;
-        burst1.loop = true;
-        burst1.count = 5;
-        burst1.maxInterval = 1.0f;
-
-        ParticleBurst burst2;
-        burst2.loop = true;
-        burst2.count = 5;
-        burst2.maxInterval = 1.5f;
-
-        preset.bursts.emplace_back(burst1);
-        preset.bursts.emplace_back(burst2);
-
-        _emitterPresets.emplace_back(preset);
-    }
-
-    { // Bullets
-        EmitterPreset preset;
-        preset.count = 2;
-        preset.startingVelocity = glm::vec3(0.2f, 2.0f, 0.2f);
-        preset.mass = 0.09f;
-        preset.rotationVelocity = glm::vec2(30.0f, 30.0f);
-        SetEmitterPresetImage(preset, "bullet.png");
-        preset.size = glm::vec3(0.2f, 0.2f, 0.0f);
-        preset.name = "Bullets";
-        preset.color = glm::vec4(161.0f / 256.0f, 118.0f / 256.0f, 18.0f / 256.0f, 1.0f);
-        preset.spawnRandomness = glm::vec3(0.5f);
-        preset.velocityRandomness = glm::vec3(0.01f);
-
-        ParticleBurst burst1;
-        burst1.loop = true;
-        burst1.count = 2;
-        burst1.maxInterval = 0.2f;
-
-        ParticleBurst burst2;
-        burst2.loop = true;
-        burst2.count = 2;
-        burst2.maxInterval = 0.05f;
-
-        preset.bursts.emplace_back(burst1);
-        preset.bursts.emplace_back(burst2);
-
-        _emitterPresets.emplace_back(preset);
-    }
-
-    { // Bones
-        EmitterPreset preset;
-        preset.count = 20;
-        preset.startingVelocity = glm::vec3(0.0f, 3.0f, 0.0f);
-        preset.mass = 0.3f;
-        preset.rotationVelocity = glm::vec2(15.0f, 15.0f);
-        SetEmitterPresetImage(preset, "bone.png");
-        preset.size = glm::vec3(0.4f, 0.4f, 0.0f);
-        preset.name = "Bones";
-        preset.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-        preset.spawnRandomness = glm::vec3(8.0f, 17.0f, 8.0f);
-        preset.velocityRandomness = glm::vec3(1.0f);
-        preset.maxLife = 5.0f;
-
-        ParticleBurst burst1;
-        burst1.loop = true;
-        burst1.count = 5;
-        burst1.maxInterval = 0.2f;
-
-        ParticleBurst burst2;
-        burst2.loop = true;
-        burst2.count = 2;
-        burst2.maxInterval = 0.05f;
-
-        preset.bursts.emplace_back(burst1);
-        preset.bursts.emplace_back(burst2);
-
-        _emitterPresets.emplace_back(preset);
-    }
-
-    { // IMPACT
-        EmitterPreset preset;
-        preset.emitDelay = 1.0f;
-        preset.startingVelocity = glm::vec3(0.0f, 0.08f, 0.0f);
-        preset.mass = 0.0f;
-        preset.rotationVelocity = glm::vec2(2.0f, 2.0f);
-        preset.maxLife = 2.0f;
-        preset.count = 1;
-        preset.spawnRandomness = glm::vec3(0.075f, 0.0f, 0.075f);
-        // preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
-        preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow | ParticleRenderFlagBits::eUnlit);
-
-        preset.color = glm::vec4(20.0f / 255.0f, 14.0f / 255.0f, 14.0f / 255.0f, 1.0f);
-        preset.name = "Impact";
-        SetEmitterPresetImage(preset, "swoosh.png");
-        preset.size = glm::vec3(0.08f, 0.08f, 0.0f);
-
-        preset.spriteDimensions = glm::ivec2(1, 1);
-        preset.frameCount = 1;
-
-        ParticleBurst burst1;
-        burst1.loop = true;
-        burst1.count = 2;
-        burst1.maxInterval = 0.1f;
-
-        ParticleBurst burst2;
-        burst2.loop = true;
-        burst2.count = 1;
-        burst2.maxInterval = 0.05f;
-
-        preset.bursts.emplace_back(burst1);
-        preset.bursts.emplace_back(burst2);
-
-        _emitterPresets.emplace_back(preset);
-    }
-
+    for (size_t i = 0; i < _emitterPresets.data.emitterPresets.size(); ++i)
     {
-        EmitterPreset preset;
-        preset.emitDelay = 0.1f;
-        preset.mass = 0.0f;
-        preset.rotationVelocity = glm::vec2(0.0f, 10.0f);
-        preset.maxLife = 1.0f;
-        preset.count = 3;
-        preset.spawnRandomness = glm::vec3(0.1f);
-        preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow | ParticleRenderFlagBits::eUnlit);
-        preset.color = glm::vec4(20.0f / 255.0f, 14.0f / 255.0f, 14.0f / 255.0f, 1.0f);
-
-        preset.name = "Ray";
-        SetEmitterPresetImage(preset, "swoosh.png");
-        preset.size = glm::vec3(0.1f, 0.1f, 0.0f);
-
-        ParticleBurst burst;
-        burst.loop = true;
-        burst.count = 2;
-        burst.maxInterval = 0.05f;
-
-        ParticleBurst burst2;
-        burst2.loop = true;
-        burst2.count = 2;
-        burst2.maxInterval = 0.08f;
-
-        preset.bursts.emplace_back(burst);
-        preset.bursts.emplace_back(burst2);
-        _emitterPresets.emplace_back(preset);
-    }
-
-    {
-        EmitterPreset preset;
-        preset.emitDelay = 0.1f;
-        preset.mass = 0.0f;
-        preset.rotationVelocity = glm::vec2(0.0f, 10.0f);
-        preset.maxLife = 1.0f;
-        preset.count = 5;
-        preset.spawnRandomness = glm::vec3(0.1f);
-        preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
-        preset.color = glm::vec4(1.0f);
-        preset.name = "RayEyeStart";
-        SetEmitterPresetImage(preset, "swoosh.png");
-        preset.size = glm::vec3(0.06f, 0.06f, 0.0f);
-
-        ParticleBurst burst;
-        burst.loop = true;
-        burst.count = 5;
-        burst.maxInterval = 0.05f;
-
-        ParticleBurst burst2;
-        burst2.loop = true;
-        burst2.count = 5;
-        burst2.maxInterval = 0.08f;
-
-        preset.bursts.emplace_back(burst);
-        preset.bursts.emplace_back(burst2);
-        _emitterPresets.emplace_back(preset);
-    }
-
-    {
-        EmitterPreset preset;
-        preset.emitDelay = 0.1f;
-        preset.mass = 0.0f;
-        preset.rotationVelocity = glm::vec2(0.0f, 10.0f);
-        preset.maxLife = 1.0f;
-        preset.count = 5;
-        preset.spawnRandomness = glm::vec3(0.1f);
-        preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
-        preset.color = glm::vec4(1.0f, 0.0f, 0.0f, 30.0f);
-        preset.name = "RayEyeEnd";
-        SetEmitterPresetImage(preset, "swoosh.png");
-        preset.size = glm::vec3(0.2f, 0.2f, 0.0f);
-
-        ParticleBurst burst;
-        burst.loop = true;
-        burst.count = 5;
-        burst.maxInterval = 0.05f;
-
-        ParticleBurst burst2;
-        burst2.loop = true;
-        burst2.count = 5;
-        burst2.maxInterval = 0.08f;
-
-        preset.bursts.emplace_back(burst);
-        preset.bursts.emplace_back(burst2);
-        _emitterPresets.emplace_back(preset);
-    }
-
-    {
-        EmitterPreset preset;
-        preset.emitDelay = 0.1f;
-        preset.mass = 0.0f;
-        preset.rotationVelocity = glm::vec2(0.0f, 0.0f);
-        preset.maxLife = 0.3f;
-        preset.count = 20;
-        preset.spawnRandomness = glm::vec3(0.5f);
-        preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
-        preset.color = glm::vec4(4.0f, 0.0f, 0.0f, 1.0f);
-        preset.name = "Stab";
-        SetEmitterPresetImage(preset, "star.png");
-        preset.size = glm::vec3(0.2f, 0.2f, -0.03f);
-
-        _emitterPresets.emplace_back(preset);
-    }
-
-    {
-        EmitterPreset preset;
-        preset.emitDelay = 0.1f;
-        preset.mass = 0.0f;
-        preset.rotationVelocity = glm::vec2(0.0f, 10.0f);
-        preset.maxLife = 1.0f;
-        preset.count = 5;
-        preset.spawnRandomness = glm::vec3(0.1f);
-        preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
-        preset.color = glm::vec4(0.6f, 0.6f, 0.6f, 1.0f);
-        preset.name = "ShotgunShoot";
-        SetEmitterPresetImage(preset, "swoosh.png");
-        preset.size = glm::vec3(0.2f, 0.2f, 0.0f);
-
-        _emitterPresets.emplace_back(preset);
-    }
-
-    { // FIRE SHEET
-        EmitterPreset preset;
-        preset.emitDelay = 2.0f;
-        preset.mass = 0.0f;
-        preset.maxLife = 2.0f;
-        preset.count = 1;
-        preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow | ParticleRenderFlagBits::eFrameBlend | ParticleRenderFlagBits::eLockY);
-        preset.name = "SpriteSheetTest";
-        preset.startingVelocity = glm::vec3(0.0f);
-        SetEmitterPresetImage(preset, "Fire+Sparks-Sheet.png");
-        preset.size *= 2.0f;
-        preset.spriteDimensions = glm::ivec2(4, 5);
-        preset.frameCount = 19;
-
-        _emitterPresets.emplace_back(preset);
-    }
-
-    { // Ult particles
-        EmitterPreset preset;
-        preset.emitDelay = 10000.0f;
-
-        preset.mass = 0.000f;
-        preset.maxLife = 8.0f;
-        preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow | ParticleRenderFlagBits::eFrameBlend | ParticleRenderFlagBits::eLockY);
-        preset.name = "Health";
-        preset.startingVelocity = glm::vec3(0.0f, 1.4f, 0.0f);
-        preset.spawnRandomness = glm::vec3(20.0f, 0.2f, 20.0f);
-        preset.velocityRandomness = glm::vec3(0.3f, 0.1f, 0.3f);
-        preset.color = glm::vec4(0.1686f, 1.0f, 0.086f, 3.0f);
-
-        ParticleBurst burst {
-            .startTime = 0.1f,
-            .count = 250,
-            .cycles = 1,
-            .loop = false,
-        };
-        ParticleBurst burst1 {
-            .startTime = 0.2f,
-            .count = 100,
-            .cycles = 1,
-            .loop = false,
-        };
-        ParticleBurst burst2 {
-            .startTime = 0.25f,
-            .count = 100,
-            .cycles = 1,
-            .loop = false,
-        };
-
-        preset.bursts.emplace_back(burst);
-        preset.bursts.emplace_back(burst1);
-        preset.bursts.emplace_back(burst2);
-
-        SetEmitterPresetImage(preset, "health.png");
-
-        _emitterPresets.emplace_back(preset);
-    }
-
-    { // worms
-        EmitterPreset preset;
-        preset.emitDelay = 0.1f;
-        preset.mass = 0.02f;
-        preset.rotationVelocity = glm::vec2(0.0f, 10.0f);
-        preset.maxLife = 1.0f;
-        preset.count = 5;
-        preset.spawnRandomness = glm::vec3(0.1f, 0.2f, 0.5f);
-        preset.velocityRandomness = glm::vec3(0.5f, 0.2f, 0.5f);
-        preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow);
-        preset.color = glm::vec4(1.0f);
-        preset.name = "Worms";
-        SetEmitterPresetImage(preset, "swoosh.png");
-        preset.size = glm::vec3(0.3f, 0.3f, 0.0f);
-
-        ParticleBurst burst;
-        burst.loop = true;
-        burst.count = 15;
-        burst.maxInterval = 0.05f;
-
-        ParticleBurst burst2;
-        burst2.loop = true;
-        burst2.count = 15;
-        burst2.maxInterval = 0.08f;
-
-        preset.bursts.emplace_back(burst);
-        preset.bursts.emplace_back(burst2);
-        _emitterPresets.emplace_back(preset);
-    }
-
-    { // soul SHEET
-        EmitterPreset preset;
-        preset.emitDelay = 2.0f;
-        preset.mass = 0.0f;
-        preset.maxLife = 2.0f;
-        preset.count = 1;
-        preset.flags = static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow | ParticleRenderFlagBits::eFrameBlend | ParticleRenderFlagBits::eLockY | ParticleRenderFlagBits::eIsLocal);
-        preset.name = "SoulSheet";
-        preset.startingVelocity = glm::vec3(0.0f);
-        SetEmitterPresetImage(preset, "Soul2.png");
-        preset.size = glm::vec3(0.4f, 0.9, 0.0f);
-        preset.spriteDimensions = glm::ivec2(60, 1);
-        preset.frameCount = 60;
-
-        _emitterPresets.emplace_back(preset);
+        bool imageFound;
+        _emitterPresets.data.emitterPresets[i].materialIndex = GetEmitterImage(_emitterPresets.data.emitterPresets[i].imageName, imageFound).Index();
     }
 }
 
@@ -528,10 +172,10 @@ void ParticleModule::SpawnEmitter(entt::entity entity, EmitterPresetID emitterPr
 
 void ParticleModule::SpawnEmitter(entt::entity entity, int32_t emitterPresetID, SpawnEmitterFlagBits flags, glm::vec3 position, glm::vec3 velocity)
 {
-    if (emitterPresetID > static_cast<int32_t>(_emitterPresets.size()) - 1)
+    if (emitterPresetID > static_cast<int32_t>(_emitterPresets.data.emitterPresets.size()) - 1)
         return;
 
-    auto& preset = _emitterPresets[emitterPresetID];
+    auto& preset = _emitterPresets.data.emitterPresets[emitterPresetID];
 
     Emitter emitter;
     emitter.count = preset.count;
@@ -592,6 +236,7 @@ void ParticleModule::SpawnEmitter(entt::entity entity, int32_t emitterPresetID, 
     component.currentEmitDelay = 0.0f;
     component.emitOnce = emitOnce;
     component.count = emitter.count;
+    component.presetID = static_cast<EmitterPresetID>(emitterPresetID);
     std::copy(preset.bursts.begin(), preset.bursts.end(), std::back_inserter(component.bursts));
 
     _ecs->GetRegistry().emplace_or_replace<ParticleEmitterComponent>(entity, component);
