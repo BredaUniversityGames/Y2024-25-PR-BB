@@ -159,7 +159,7 @@ class RangedEnemy {
         _rootEntity.GetTransformComponent().translation = pos
 
         // Debug lines for checking enemy height limit
-        if (true) {
+        if (false) {
             engine.DrawDebugLine(pos, Vec3.new(pos.x, _maxHeight, pos.z))
             engine.DrawDebugLine(pos, Vec3.new(pos.x, _minHeight, pos.z))
         }
