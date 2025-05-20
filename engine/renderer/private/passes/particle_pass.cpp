@@ -335,7 +335,7 @@ void ParticlePass::UpdateEmitters(vk::CommandBuffer commandBuffer)
     // copy over emitters
     if (!_emitters.empty())
     {
-        vk::DeviceSize BufferSize = glm::min(static_cast<uint32_t>(_emitters.size(), MAX_EMITTERS) * sizeof(Emitter);
+        vk::DeviceSize BufferSize = glm::min(static_cast<uint32_t>(_emitters.size()), MAX_EMITTERS) * sizeof(Emitter);
 
         vmaCopyMemoryToAllocation(vkContext->MemoryAllocator(), _emitters.data(), _emitterStagingBufferAllocation, 0, BufferSize);
         util::CopyBuffer(commandBuffer, _emitterStagingBuffer, resources->BufferResourceManager().Access(_emittersBuffer)->buffer, BufferSize);
