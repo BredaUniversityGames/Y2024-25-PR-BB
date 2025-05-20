@@ -1,4 +1,4 @@
-import "engine_api.wren" for Engine, ECS, Entity, Vec3, Vec2, Math, AnimationControlComponent, TransformComponent, Input, SpawnEmitterFlagBits, EmitterPresetID, Random
+import "engine_api.wren" for Engine, ECS, Entity, Vec4, Vec3, Vec2, Math, AnimationControlComponent, TransformComponent, Input, SpawnEmitterFlagBits, EmitterPresetID, Random
 import "gameplay/player.wren" for PlayerVariables
 
 
@@ -30,6 +30,10 @@ class Station {
         _time = 0.0 // Time since the station was spawned
         _collectSoundEvent = "event:/SFX/Soul"
         _powerUpType = PowerUpType.NONE
+
+
+        _textOpacity = 0.0 // Transparency of the text
+        _textColor = Vec3.new(1.0, 1.0, 1.0) // Color of the text
         _isActive = false
     }
 
@@ -39,17 +43,46 @@ class Station {
         var distance = Math.Distance(stationPos, playerPos)
 
 
-        if(distance < _interactRange &&  engine.GetInput().GetDigitalAction("Reload").IsPressed() && _isActive){
-            playerVariables.SetCurrentPowerUp(_powerUpType)
+        if(distance < _interactRange  && _isActive){
 
-            _time = 0.0
-            this.SetStatus(false)
-            this.SetPowerUpType(PowerUpType.NONE)
+            if(_powerUpType == PowerUpType.QUAD_DAMAGE){
+                engine.GetGame().GetHUD().SetPowerUpText("QUAD DAMAGE RELIC [COST: 1000]")
+            }
 
-            _stationManagerReference.anyActiveStation = false 
-
-            System.print("Picked up power up ")
+            _textOpacity = _textOpacity + dt * 0.005
+            _textOpacity = Math.Clamp(_textOpacity, 0.0, 1.0)
+            _textColor = Math.MixVec3(_textColor, Vec3.new(1.0, 1.0, 1.0), 0.01)
             
+            engine.GetGame().GetHUD().SetPowerUpTextColor(Vec4.new(_textColor.x,_textColor.y,_textColor.z,_textOpacity) )
+
+
+
+            if(engine.GetInput().GetDigitalAction("Reload").IsPressed()){
+                playerVariables.SetCurrentPowerUp(_powerUpType)
+
+                if(playerVariables.GetScore() >= 1000){
+                    playerVariables.DecreaseScore(1000)
+                    _time = 0.0
+                    this.SetStatus(false)
+                    this.SetPowerUpType(PowerUpType.NONE)
+
+                    _stationManagerReference.anyActiveStation = false 
+
+                    System.print("Picked up power up ")
+
+                }else{
+                    _textColor = Vec3.new(0.8, 0.0, 0.0) // Set the text color to red
+                }
+
+
+                
+            }
+            
+        }else{
+            _textOpacity = _textOpacity - dt * 0.005
+            _textOpacity = Math.Clamp(_textOpacity, 0.0, 1.0)
+            engine.GetGame().GetHUD().SetPowerUpTextColor(Vec4.new(1.0,1.0,1.0,_textOpacity) )
+
         }
     }
 
@@ -134,6 +167,13 @@ class StationManager {
         var playerPos = playerTransform.translation
         playerPos.y = playerPos.y - 1.0
 
+        var currentPowerUpColor =  engine.GetGame().GetHUD().GetPowerUpTextColor()
+
+        System.print("Current color:%(currentPowerUpColor.x),%(currentPowerUpColor.y),%(currentPowerUpColor.z),%(currentPowerUpColor.w)")
+        var newOpacity = currentPowerUpColor.w - dt * 0.005
+        newOpacity = Math.Clamp(newOpacity, 0.0, 1.0)
+
+        engine.GetGame().GetHUD().SetPowerUpTextColor(Vec4.new(currentPowerUpColor.x,currentPowerUpColor.y,currentPowerUpColor.z,newOpacity) )
         // Timer to set a random station active
         _timer = _timer + dt
         if(_timer > _intervalBetweenStations){

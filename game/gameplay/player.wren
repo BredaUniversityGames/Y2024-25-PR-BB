@@ -100,6 +100,14 @@ class PlayerVariables {
         _score = _score + value
     }
 
+    GetScore() {
+        return _score
+    }
+
+    DecreaseScore(value) {
+        _score = Math.Max(_score - value, 0)
+    }
+
     SetCurrentPowerUp(powerUp) {
         _currentPowerUp = powerUp
     }    

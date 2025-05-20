@@ -213,6 +213,16 @@ inline void BindMath(wren::ForeignModule& module)
     }
 
     {
+        auto& vector4 = module.klass<glm::vec4>("Vec4");
+        vector4.ctor<float, float, float, float>();
+        vector4.var<&glm::vec4::x>("x");
+        vector4.var<&glm::vec4::y>("y");
+        vector4.var<&glm::vec4::z>("z");
+        vector4.var<&glm::vec4::w>("w");
+        BindVectorTypeOperations(vector4);
+    }
+
+    {
         auto& quat = module.klass<glm::quat>("Quat");
         quat.ctor<float, float, float, float>();
         quat.var<&glm::quat::w>("w");
