@@ -35,7 +35,7 @@ class RangedEnemy {
 
         _reasonTimer = 2001
 
-        _attackRange = 80
+        _attackRange = 72
         _attackDamage = 10
         _shakeIntensity = 1.6
         
@@ -76,7 +76,8 @@ class RangedEnemy {
         _hasDashed = false
         _dashWishPosition = Vec3.new(0,0,0)
 
-        _maxHeight = 32.0
+        _maxHeight = 28.0
+        _minHeight = 16.0
 
         _hasTakenDamage = false
         _hasDashedFromDamage = false
@@ -156,6 +157,12 @@ class RangedEnemy {
         var body = _rootEntity.GetRigidbodyComponent()
         var pos = body.GetPosition()
         _rootEntity.GetTransformComponent().translation = pos
+
+        // Debug lines for checking enemy height limit
+        if (true) {
+            engine.DrawDebugLine(pos, Vec3.new(pos.x, _maxHeight, pos.z))
+            engine.DrawDebugLine(pos, Vec3.new(pos.x, _minHeight, pos.z))
+        }
 
         if (_isAlive) {
             if (_attackingState) {
@@ -342,8 +349,10 @@ class RangedEnemy {
             var direction = Random.RandomPointOnUnitSphere()
            
             if(pos.y > _maxHeight) {
-                direction.y = -1.0
-            } 
+                direction.y = direction.y - 1.0
+            } else if (pos.y < _minHeight) {
+                direction.y = direction.y + 1.0
+            }
 
             var end = direction.mulScalar(20.0) + start
             var rayHitInfo = engine.GetPhysics().ShootRay(start, direction, 20.0)
