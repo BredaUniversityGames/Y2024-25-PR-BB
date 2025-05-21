@@ -173,7 +173,7 @@ class Pistol {
                                     enemy.DecreaseHealth(_damage * multiplier * playerVariables.GetDamageMultiplier(),engine,coinManager)
                                     if (enemy.health <= 0) {
                                         playerVariables.IncreaseScore(5 * multiplier * playerVariables.multiplier)
-                                        playerVariables.UpdateUltCharge(1.0)
+                                        //playerVariables.UpdateUltCharge(1.0)
                                     }
                                 }
                             }
@@ -284,8 +284,8 @@ class Shotgun {
         _spread = [Vec2.new(0, 0), Vec2.new(-1, 1), Vec2.new(0, 1), Vec2.new(1, 1), Vec2.new(0, 2), Vec2.new(-1, -1), Vec2.new(0, -1), Vec2.new(1, -1), Vec2.new(0, -2)]
         _cameraShakeIntensity = 0.5
 
-        _attackSFX = "event:/SFX/Explosion"
-        _reloadSFX = ""
+        _attackSFX = "event:/SFX/Shotgun"
+        _reloadSFX = "event:/SFX/ShotgunReload"
         _equipSFX = ""
 
         _walkAnim = "walk"
@@ -299,13 +299,18 @@ class Shotgun {
     }
 
     reload (engine) {
-        var gun = engine.GetECS().GetEntityByName(_entityName)
-        var gunAnimations = gun.GetAnimationControlComponent()
+        if((engine.GetInput().GetDigitalAction("Reload").IsPressed() || engine.GetInput().GetDigitalAction("Shoot").IsHeld()) && _reloadTimer == 0) {
+            var gun = engine.GetECS().GetEntityByName(_entityName)
 
-        if(engine.GetInput().GetDigitalAction("Reload").IsPressed() || engine.GetInput().GetDigitalAction("Shoot").IsHeld() && _reloadTimer == 0) {
+            var gunAnimations = gun.GetAnimationControlComponent()
             gunAnimations.Play(_reloadAnim, 1.0, false, 0.2, false)
              _reloadTimer = _reloadSpeed
             _ammo = _maxAmmo
+
+            var player = engine.GetECS().GetEntityByName("Camera")
+            var eventInstance = engine.GetAudio().PlayEventOnce(_reloadSFX)
+            var audioEmitter = player.GetAudioEmitterComponent()
+            audioEmitter.AddEvent(eventInstance)
         }
     }
 
@@ -358,7 +363,7 @@ class Shotgun {
                                         playerVariables.IncreaseHealth(0.1 * _damage)
                                         if (enemy.health <= 0) {
                                             playerVariables.IncreaseScore(15 * playerVariables.multiplier)
-                                            playerVariables.UpdateUltCharge(0.1) // Allow the player to try and keep the ult active a bit longer
+                                            //playerVariables.UpdateUltCharge(0.1) // Allow the player to try and keep the ult active a bit longer
                                         }
                                     }
                                 }

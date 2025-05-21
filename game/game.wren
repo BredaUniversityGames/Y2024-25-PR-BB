@@ -76,9 +76,8 @@ class Main {
         __camera = engine.GetECS().NewEntity()
         __player = engine.GetECS().NewEntity()
 
-
         var playerTransform = __playerController.AddTransformComponent()
-        playerTransform.translation = Vec3.new(25.0, 10.0, 50.0)
+        playerTransform.translation = Vec3.new(0.0, 18.0, 80.0)
 
         var playerStart = engine.GetECS().GetEntityByName("PlayerStart")
         if(playerStart) {
@@ -137,8 +136,8 @@ class Main {
         __rayDistance = 1000.0
         __rayDistanceVector = Vec3.new(__rayDistance, __rayDistance, __rayDistance)
 
-        __ultimateCharge = 0
-        __ultimateActive = false
+        //__ultimateCharge = 0
+        //__ultimateActive = false
 
         __pauseEnabled = false
 
@@ -313,20 +312,20 @@ class Main {
         __timer = __timer + dt
         __playerVariables.grenadeCharge = Math.Min(__playerVariables.grenadeCharge + __playerVariables.grenadeChargeRate * dt / 1000, __playerVariables.grenadeMaxCharge)
 
-        if (__playerVariables.ultActive) {
-            __playerVariables.ultCharge = Math.Max(__playerVariables.ultCharge - __playerVariables.ultDecayRate * dt / 1000, 0)
-            if (__playerVariables.ultCharge <= 0) {
-                __activeWeapon = __armory[Weapons.pistol]
-                __activeWeapon.equip(engine)
-                __playerVariables.ultActive = false
-                __playerVariables.wasUltReadyLastFrame = false
-            }
-        }
+        // if (__playerVariables.ultActive) {
+        //     __playerVariables.ultCharge = Math.Max(__playerVariables.ultCharge - __playerVariables.ultDecayRate * dt / 1000, 0)
+        //     if (__playerVariables.ultCharge <= 0) {
+        //         __activeWeapon = __armory[Weapons.pistol]
+        //         __activeWeapon.equip(engine)
+        //         __playerVariables.ultActive = false
+        //         __playerVariables.wasUltReadyLastFrame = false
+        //     }
+        // }
 
-        if (!__playerVariables.wasUltReadyLastFrame && __playerVariables.ultCharge == __playerVariables.ultMaxCharge) {
-            engine.GetAudio().PlayEventOnce("event:/SFX/UltReady")
-            __playerVariables.wasUltReadyLastFrame = true
-        }
+        // if (!__playerVariables.wasUltReadyLastFrame && __playerVariables.ultCharge == __playerVariables.ultMaxCharge) {
+        //     engine.GetAudio().PlayEventOnce("event:/SFX/UltReady")
+        //     __playerVariables.wasUltReadyLastFrame = true
+        // }
 
         __playerVariables.invincibilityTime = Math.Max(__playerVariables.invincibilityTime - dt, 0)
 
@@ -362,24 +361,24 @@ class Main {
                 }
             }
 
-            // engine.GetInput().GetDigitalAction("Ultimate").IsPressed()
-            if (engine.GetInput().DebugGetKey(Keycode.eU())) {
-                if (__playerVariables.ultCharge >= __playerVariables.ultMaxCharge) {
-                    System.print("Activate ultimate")
-                    __activeWeapon = __armory[Weapons.shotgun]
-                    __activeWeapon.equip(engine)
-                    __playerVariables.ultActive = true
+            // // engine.GetInput().GetDigitalAction("Ultimate").IsPressed()
+            // if (engine.GetInput().DebugGetKey(Keycode.eU())) {
+            //     if (__playerVariables.ultCharge >= __playerVariables.ultMaxCharge) {
+            //         System.print("Activate ultimate")
+            //         __activeWeapon = __armory[Weapons.shotgun]
+            //         __activeWeapon.equip(engine)
+            //         __playerVariables.ultActive = true
 
-                    engine.GetAudio().PlayEventOnce("event:/SFX/ActivateUlt")
+            //         engine.GetAudio().PlayEventOnce("event:/SFX/ActivateUlt")
 
-                    var particleEntity = engine.GetECS().NewEntity()
-                    particleEntity.AddTransformComponent().translation = __player.GetTransformComponent().translation - Vec3.new(0,3.5,0)
-                    var lifetime = particleEntity.AddLifetimeComponent()
-                    lifetime.lifetime = 400.0
-                    var emitterFlags = SpawnEmitterFlagBits.eIsActive()
-                    engine.GetParticles().SpawnEmitter(particleEntity, EmitterPresetID.eHealth(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), Vec3.new(0.0, 0.0, 0.0))
-                }
-            }
+            //         var particleEntity = engine.GetECS().NewEntity()
+            //         particleEntity.AddTransformComponent().translation = __player.GetTransformComponent().translation - Vec3.new(0,3.5,0)
+            //         var lifetime = particleEntity.AddLifetimeComponent()
+            //         lifetime.lifetime = 400.0
+            //         var emitterFlags = SpawnEmitterFlagBits.eIsActive()
+            //         engine.GetParticles().SpawnEmitter(particleEntity, EmitterPresetID.eHealth(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), Vec3.new(0.0, 0.0, 0.0))
+            //     }
+            // }
 
             if (engine.GetInput().DebugGetKey(Keycode.eG()) && false) {
                 if (__playerVariables.grenadeCharge == __playerVariables.grenadeMaxCharge) {
@@ -421,11 +420,11 @@ class Main {
             }
 
             if (engine.GetInput().DebugGetKey(Keycode.eK())) {
-                __enemyList.add(BerserkerEnemy.new(engine, Vec3.new(0, 18, 7), Vec3.new(0.026, 0.026, 0.026), 4, "assets/models/Berserker.glb", __berserkerEnemyShape))
+                __enemyList.add(BerserkerEnemy.new(engine, Vec3.new(0, 18, 80), Vec3.new(0.026, 0.026, 0.026), 4, "assets/models/Berserker.glb", __berserkerEnemyShape))
             }
 
             if (engine.GetInput().DebugGetKey(Keycode.eJ())) {
-                __enemyList.add(RangedEnemy.new(engine, Vec3.new(-27, 18, 7), Vec3.new(2.25,2.25,2.25), 5, "assets/models/eye.glb", __eyeShape))
+                __enemyList.add(RangedEnemy.new(engine, Vec3.new(0, 18, 80), Vec3.new(2.25,2.25,2.25), 5, "assets/models/eye.glb", __eyeShape))
             }
         }
 
@@ -444,14 +443,14 @@ class Main {
 
         engine.GetGame().GetHUD().UpdateHealthBar(__playerVariables.health / __playerVariables.maxHealth)
         engine.GetGame().GetHUD().UpdateAmmoText(__activeWeapon.ammo, __activeWeapon.maxAmmo)
-        engine.GetGame().GetHUD().UpdateUltBar(__playerVariables.ultCharge / __playerVariables.ultMaxCharge)
         engine.GetGame().GetHUD().UpdateScoreText(__playerVariables.score)
         engine.GetGame().GetHUD().UpdateGrenadeBar(__playerVariables.grenadeCharge / __playerVariables.grenadeMaxCharge)
         engine.GetGame().GetHUD().UpdateDashCharges(__playerMovement.currentDashCount)
         engine.GetGame().GetHUD().UpdateMultiplierText(__playerVariables.multiplier)
         engine.GetGame().GetHUD().ShowHitmarker(__playerVariables.hitmarkTimer > 0 && __playerVariables.hitmarkerState == HitmarkerState.normal)
         engine.GetGame().GetHUD().ShowHitmarkerCrit(__playerVariables.hitmarkTimer > 0 && __playerVariables.hitmarkerState == HitmarkerState.crit)
-        engine.GetGame().GetHUD().UpdateUltReadyText(__playerVariables.ultCharge == __playerVariables.ultMaxCharge)
+        //engine.GetGame().GetHUD().UpdateUltBar(__playerVariables.ultCharge / __playerVariables.ultMaxCharge)
+        //engine.GetGame().GetHUD().UpdateUltReadyText(__playerVariables.ultCharge == __playerVariables.ultMaxCharge)
 
         var mousePosition = engine.GetInput().GetMousePosition()
         __playerMovement.lastMousePosition = mousePosition
