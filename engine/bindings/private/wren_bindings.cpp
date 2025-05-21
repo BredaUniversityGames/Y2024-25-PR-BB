@@ -18,7 +18,6 @@
 #include "physics/physics_bindings.hpp"
 #include "physics_module.hpp"
 #include "renderer/animation_bindings.hpp"
-#include "renderer/renderer_bindings.hpp"
 #include "renderer_module.hpp"
 #include "scene/model_loader.hpp"
 #include "scripting_module.hpp"
