@@ -1,7 +1,7 @@
 import "engine_api.wren" for Engine, TimeModule, ECS, ShapeFactory, PhysicsObjectLayer, Rigidbody, RigidbodyComponent, CollisionShape, Entity, Vec3, Vec2, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, EmitterPresetID, Random
 import "gameplay/movement.wren" for PlayerMovement
 import "gameplay/enemies/spawner.wren" for Spawner
-import "gameplay/weapon.wren" for Pistol, Shotgun, Knife, Weapons
+import "gameplay/weapon.wren" for Pistol, Shotgun, Weapons
 import "gameplay/camera.wren" for CameraVariables
 import "gameplay/player.wren" for PlayerVariables, HitmarkerState
 import "gameplay/music_player.wren" for MusicPlayer, BGMPlayer
@@ -14,6 +14,7 @@ import "gameplay/enemies/ranged_enemy.wren" for RangedEnemy
 import "gameplay/soul.wren" for Soul, SoulManager
 import "gameplay/coin.wren" for Coin, CoinManager
 import "gameplay/flash_system.wren" for FlashSystem
+import "debug_utils.wren" for DebugUtils
 
 class Main {
 
@@ -22,26 +23,21 @@ class Main {
         engine.GetTime().SetScale(1.0)
         engine.GetInput().SetActiveActionSet("Shooter")
         engine.GetGame().SetUIMenu(engine.GetGame().GetHUD())
+
         __hud = WrenHUD.new(engine.GetGame().GetHUD())
 
         engine.Fog = 0.005
+        engine.AmbientStrength = 0.35
 
         // Set navigational mesh
         engine.GetPathfinding().SetNavigationMesh("assets/models/blockoutv5navmesh_04.glb")
-       
-        // engine.GetAudio().LoadSFX("assets/sounds/slide2.wav", true, true)
-        // engine.GetAudio().LoadSFX("assets/sounds/crows.wav", true, false)
-        // engine.GetAudio().LoadSFX("assets/sounds/hitmarker.wav", false, false)
-        // engine.GetAudio().LoadSFX("assets/sounds/hit1.wav", false, false)
-        // engine.GetAudio().LoadSFX("assets/sounds/demon_roar.wav", true, false)
-        // engine.GetAudio().LoadSFX("assets/sounds/shoot.wav", false, false)
 
         // Directional Light
         __directionalLight = engine.GetECS().NewEntity()
         __directionalLight.AddNameComponent().name = "Directional Light"
 
         var comp = __directionalLight.AddDirectionalLightComponent()
-        comp.color = Vec3.new(4.0, 3.2, 1.2)
+        comp.color = Vec3.new(4.0, 3.2, 1.2).mulScalar(0.15)
         comp.planes = Vec2.new(-50.0, 500.0)
         comp.orthographicSize = 120.0
 
@@ -57,7 +53,6 @@ class Main {
         __groundedTimer = 0
         __hasDashed = false
         __timer = 0
-
 
         // Load Map
         engine.LoadModel("assets/models/graveyard_level.glb", true)
@@ -75,11 +70,9 @@ class Main {
         __camera = engine.GetECS().NewEntity()
         __player = engine.GetECS().NewEntity()
 
-
         var playerTransform = __playerController.AddTransformComponent()
-        playerTransform.translation = Vec3.new(25.0, 10.0, 50.0)
-
         var playerStart = engine.GetECS().GetEntityByName("PlayerStart")
+
         if(playerStart) {
             playerTransform.translation = playerStart.GetTransformComponent().translation
             playerTransform.rotation = playerStart.GetTransformComponent().rotation
@@ -90,7 +83,7 @@ class Main {
         __playerController.AddCheatsComponent().noClip = false
 
         var shape = ShapeFactory.MakeCapsuleShape(1.7, 0.5) // height, circle radius
-        var rb = Rigidbody.new(engine.GetPhysics(), shape, PhysicsObjectLayer.ePLAYER(), false) // physics module, shape, layer, allowRotation
+        var rb = Rigidbody.new(engine.GetPhysics(), shape, PhysicsObjectLayer.ePLAYER(), false) // physics module, __meleeEnemeyShapetation
         __playerController.AddRigidbodyComponent(rb)
 
         __cameraVariables = CameraVariables.new()
@@ -123,7 +116,7 @@ class Main {
         __player.AttachChild(__camera)
         __camera.AttachChild(__gun)
 
-        __armory = [Pistol.new(engine), Shotgun.new(engine), Knife.new(engine)]
+        __armory = [Pistol.new(engine), Shotgun.new(engine)]
 
         __activeWeapon = __armory[Weapons.pistol]
         __activeWeapon.equip(engine)
@@ -136,8 +129,8 @@ class Main {
         __rayDistance = 1000.0
         __rayDistanceVector = Vec3.new(__rayDistance, __rayDistance, __rayDistance)
 
-        __ultimateCharge = 0
-        __ultimateActive = false
+        //__ultimateCharge = 0
+        //__ultimateActive = false
 
         __pauseEnabled = false
 
@@ -180,6 +173,7 @@ class Main {
             .AddSpawn("Skeleton", 1, 15, 1)
             .AddSpawn("Skeleton", 2, 5, 1)
             .AddSpawn("Skeleton", 3, 15, 3)
+            .AddSpawn("Berserker", 3, 15, 3)
             .AddSpawn("Eye", SpawnLocationType.Closest, 25, 1)
         )
         waveConfigs.add(WaveConfig.new().SetDuration(2)
@@ -305,20 +299,20 @@ class Main {
         __timer = __timer + dt
         __playerVariables.grenadeCharge = Math.Min(__playerVariables.grenadeCharge + __playerVariables.grenadeChargeRate * dt / 1000, __playerVariables.grenadeMaxCharge)
 
-        if (__playerVariables.ultActive) {
-            __playerVariables.ultCharge = Math.Max(__playerVariables.ultCharge - __playerVariables.ultDecayRate * dt / 1000, 0)
-            if (__playerVariables.ultCharge <= 0) {
-                __activeWeapon = __armory[Weapons.pistol]
-                __activeWeapon.equip(engine)
-                __playerVariables.ultActive = false
-                __playerVariables.wasUltReadyLastFrame = false
-            }
-        }
+        // if (__playerVariables.ultActive) {
+        //     __playerVariables.ultCharge = Math.Max(__playerVariables.ultCharge - __playerVariables.ultDecayRate * dt / 1000, 0)
+        //     if (__playerVariables.ultCharge <= 0) {
+        //         __activeWeapon = __armory[Weapons.pistol]
+        //         __activeWeapon.equip(engine)
+        //         __playerVariables.ultActive = false
+        //         __playerVariables.wasUltReadyLastFrame = false
+        //     }
+        // }
 
-        if (!__playerVariables.wasUltReadyLastFrame && __playerVariables.ultCharge == __playerVariables.ultMaxCharge) {
-            engine.GetAudio().PlayEventOnce("event:/SFX/UltReady")
-            __playerVariables.wasUltReadyLastFrame = true
-        }
+        // if (!__playerVariables.wasUltReadyLastFrame && __playerVariables.ultCharge == __playerVariables.ultMaxCharge) {
+        //     engine.GetAudio().PlayEventOnce("event:/SFX/UltReady")
+        //     __playerVariables.wasUltReadyLastFrame = true
+        // }
 
         __playerVariables.invincibilityTime = Math.Max(__playerVariables.invincibilityTime - dt, 0)
 
@@ -354,24 +348,24 @@ class Main {
                 }
             }
 
-            // engine.GetInput().GetDigitalAction("Ultimate").IsPressed()
-            if (engine.GetInput().DebugGetKey(Keycode.eU())) {
-                if (__playerVariables.ultCharge >= __playerVariables.ultMaxCharge) {
-                    System.print("Activate ultimate")
-                    __activeWeapon = __armory[Weapons.shotgun]
-                    __activeWeapon.equip(engine)
-                    __playerVariables.ultActive = true
+            // // engine.GetInput().GetDigitalAction("Ultimate").IsPressed()
+            // if (engine.GetInput().DebugGetKey(Keycode.eU())) {
+            //     if (__playerVariables.ultCharge >= __playerVariables.ultMaxCharge) {
+            //         System.print("Activate ultimate")
+            //         __activeWeapon = __armory[Weapons.shotgun]
+            //         __activeWeapon.equip(engine)
+            //         __playerVariables.ultActive = true
 
-                    engine.GetAudio().PlayEventOnce("event:/SFX/ActivateUlt")
+            //         engine.GetAudio().PlayEventOnce("event:/SFX/ActivateUlt")
 
-                    var particleEntity = engine.GetECS().NewEntity()
-                    particleEntity.AddTransformComponent().translation = __player.GetTransformComponent().translation - Vec3.new(0,3.5,0)
-                    var lifetime = particleEntity.AddLifetimeComponent()
-                    lifetime.lifetime = 400.0
-                    var emitterFlags = SpawnEmitterFlagBits.eIsActive()
-                    engine.GetParticles().SpawnEmitter(particleEntity, EmitterPresetID.eHealth(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), Vec3.new(0.0, 0.0, 0.0))
-                }
-            }
+            //         var particleEntity = engine.GetECS().NewEntity()
+            //         particleEntity.AddTransformComponent().translation = __player.GetTransformComponent().translation - Vec3.new(0,3.5,0)
+            //         var lifetime = particleEntity.AddLifetimeComponent()
+            //         lifetime.lifetime = 400.0
+            //         var emitterFlags = SpawnEmitterFlagBits.eIsActive()
+            //         engine.GetParticles().SpawnEmitter(particleEntity, EmitterPresetID.eHealth(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), Vec3.new(0.0, 0.0, 0.0))
+            //     }
+            // }
 
             if (engine.GetInput().DebugGetKey(Keycode.eG()) && false) {
                 if (__playerVariables.grenadeCharge == __playerVariables.grenadeMaxCharge) {
@@ -406,15 +400,7 @@ class Main {
                 if (__activeWeapon.ammo <= 0) {
                     __activeWeapon.reload(engine)
                 }
-            }
-
-            if (engine.GetInput().DebugGetKey(Keycode.eK())) {
-                __enemyList.add(BerserkerEnemy.new(engine, Vec3.new(0, 18, 7), Vec3.new(0.026, 0.026, 0.026), 4, "assets/models/Berserker.glb", __berserkerEnemyShape))
-            }
-
-            if (engine.GetInput().DebugGetKey(Keycode.eJ())) {
-                __enemyList.add(RangedEnemy.new(engine, Vec3.new(-27, 18, 7), Vec3.new(2.25,2.25,2.25), 5, "assets/models/eye.glb", __eyeShape))
-            }
+            }            
         }
 
         // Check if player died
@@ -432,21 +418,10 @@ class Main {
         __playerVariables.UpdateSoulsTimer(dt)
         __hud.Update(engine, dt,__playerMovement,__playerVariables,__activeWeapon.ammo, __activeWeapon.maxAmmo)
         
-        var mousePosition = engine.GetInput().GetMousePosition()
+       var mousePosition = engine.GetInput().GetMousePosition()
         __playerMovement.lastMousePosition = mousePosition
 
         var playerPos = __playerController.GetRigidbodyComponent().GetPosition()
-
-        if(engine.GetInput().DebugGetKey(Keycode.eB())){
-
-            // Spawn between 1 and 5 coins
-                var coinCount = Random.RandomIndex(1, 5)
-                for(i in 0...coinCount) {
-                              __coinManager.SpawnCoin(engine, Vec3.new(10.0,2.0,44.0))
-
-                }
-        }
-
         for (enemy in __enemyList) {
 
             // We delete the entity from the ecs when it dies
@@ -464,13 +439,8 @@ class Main {
 
         __flashSystem.Update(engine, dt)
 
-        if(engine.GetInput().DebugGetKey(Keycode.eB())){
-           __flashSystem.Flash(Vec3.new(1.0, 0.0, 0.0),0.25)
+        if (!engine.IsDistribution()) {
+            DebugUtils.Tick(engine, __enemyList, __coinManager, __flashSystem, __enemyShape, __berserkerEnemyShape, __eyeShape, __playerVariables)
         }
-
-        if(engine.GetInput().DebugGetKey(Keycode.eL())){
-           __flashSystem.Flash(Vec3.new(0.0, 1.0, 0.0),0.25)
-        }
-
     }
 }

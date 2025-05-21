@@ -1,6 +1,7 @@
 import "engine_api.wren" for Engine, ECS, Entity, Vec3, Vec2, Quat, Math, TransformComponent, Input, Random, ShapeFactory
 import "enemies/enemies.wren" for MeleeEnemy
 import "enemies/ranged_enemy.wren" for RangedEnemy
+import "enemies/berserker_enemy.wren" for BerserkerEnemy
 
 
 class Spawn {
@@ -151,7 +152,7 @@ class WaveSystem {
             var position = spawnerEntity.GetTransformComponent().translation
 
             for(i in 0...spawn.Count) {
-                var enemy = _enemyList.add(MeleeEnemy.new(_engine, position, Vec3.new(0.02, 0.02, 0.02), 10, enemyModelPath, _enemyShape))
+                var enemy = _enemyList.add(MeleeEnemy.new(_engine, position, Vec3.new(0.0165, 0.0165, 0.0165), 10, enemyModelPath, _enemyShape))
                 enemy.FindNewPath(_engine)
             }
             return
@@ -171,6 +172,23 @@ class WaveSystem {
 
             for(i in 0...spawn.Count) {
                 var enemy = _enemyList.add(RangedEnemy.new(_engine, position,  Vec3.new(2.25,2.25,2.25), 5, enemyModelPath, enemyShape))
+                enemy.FindNewPath(_engine)
+            }
+            return
+        }
+        if(spawn.EnemyType=="Berserker"){
+            var enemyModelPath = "assets/models/Berserker.glb"
+            var enemyShape = ShapeFactory.MakeCapsuleShape(140.0, 50.0)
+
+            if(spawn.SpawnLocationId > _spawnLocations.count) {
+                System.error("Invalid spawn location ID %(spawn.SpawnLocationId)")
+            }
+
+            var spawnerEntity = this.FindLocation(spawn)
+            var position = spawnerEntity.GetTransformComponent().translation
+
+            for(i in 0...spawn.Count) {
+                var enemy = _enemyList.add(BerserkerEnemy.new(_engine, position, Vec3.new(0.026, 0.026, 0.026), 4, enemyModelPath, enemyShape))
                 enemy.FindNewPath(_engine)
             }
             return

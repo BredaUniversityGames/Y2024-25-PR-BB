@@ -25,8 +25,11 @@ class MeleeEnemy {
         transform.translation = spawnPosition
         transform.scale = size
 
+        var rotation = Vec3.new(0.0, Random.RandomFloatRange(0.0, 3.14 * 2.0), 0.0)
+        transform.rotation = Math.ToQuat(rotation)
+
         _rootEntity.AttachChild(_meshEntity)
-        _meshEntity.GetTransformComponent().translation = Vec3.new(0,-60,0)
+        _meshEntity.GetTransformComponent().translation = Vec3.new(0,-86,0)
 
         _lightEntity = engine.GetECS().NewEntity()
         _lightEntity.AddNameComponent().name = "EnemyLight"
@@ -34,6 +37,9 @@ class MeleeEnemy {
         lightTransform.translation = Vec3.new(0.0, 26, 0.0)
         _pointLight = _lightEntity.AddPointLightComponent()
         _rootEntity.AttachChild(_lightEntity)
+
+
+        _transparencyComponent = _meshEntity.AddTransparencyComponent()
 
         _pointLight.intensity = 10
         _pointLight.range = 2
@@ -44,7 +50,7 @@ class MeleeEnemy {
         body.SetGravityFactor(2.2)
 
         var animations = _meshEntity.GetAnimationControlComponent()
-        animations.Play("Run", 1.25, true, 1.0, true)
+        animations.Play("Stand-up", 1.0, false, 0.0, false)
 
         _isAlive = true
 
@@ -53,7 +59,8 @@ class MeleeEnemy {
         _attackRange = 7
         _attackDamage = 30
         _shakeIntensity = 1.6
-        
+
+        _getUpState = true
         _movingState = false
         _attackingState = false
         _recoveryState = false
@@ -74,13 +81,19 @@ class MeleeEnemy {
 
         _hitTimer = 0
 
+        _getUpTimer = 3500
+        _getUpAppearMax = 1500
+        _getUpAppearTimer = _getUpAppearMax
+
+
         _deathTimerMax = 3000
         _deathTimer = _deathTimerMax
 
         _bonesSFX = "event:/SFX/Bones"
-        _hitMarker = "event:/SFX/Hitmarker"
+        _hitMarkerSFX = "event:/SFX/Hitmarker"
         _bonesStepsSFX = "event:/SFX/BonesSteps"
         _roar = "event:/SFX/Roar"
+        _hitSFX = "event:/SFX/Hit"
 
         _walkEventInstance = null
 
@@ -95,7 +108,7 @@ class MeleeEnemy {
     }
 
     IsHeadshot(y) { // Will probably need to be changed when we have a different model
-        if (y >= _rootEntity.GetRigidbodyComponent().GetPosition().y + 1) {
+        if (y >= _rootEntity.GetRigidbodyComponent().GetPosition().y + 0.5) {
             return true
         }
         return false
@@ -130,7 +143,7 @@ class MeleeEnemy {
 
             var eventInstance = engine.GetAudio().PlayEventOnce(_bonesSFX)
             
-            var hitmarkerSFX = engine.GetAudio().PlayEventOnce(_hitMarker)
+            var hitmarkerSFX = engine.GetAudio().PlayEventOnce(_hitMarkerSFX)
             var audioEmitter = _rootEntity.GetAudioEmitterComponent()
             audioEmitter.AddEvent(eventInstance)
             audioEmitter.AddEvent(hitmarkerSFX)
@@ -144,7 +157,7 @@ class MeleeEnemy {
             _recoveryState = false
             body.SetStatic()
 
-            var hitmarkerSFX = engine.GetAudio().PlayEventOnce(_hitMarker)
+            var hitmarkerSFX = engine.GetAudio().PlayEventOnce(_hitMarkerSFX)
             var eventInstance = engine.GetAudio().PlayEventOnce(_bonesSFX)
             var audioEmitter = _rootEntity.GetAudioEmitterComponent()
             audioEmitter.AddEvent(eventInstance)
@@ -170,10 +183,25 @@ class MeleeEnemy {
         var body = _rootEntity.GetRigidbodyComponent()
         var pos = body.GetPosition()
         _rootEntity.GetTransformComponent().translation = pos
+
         var animations = _meshEntity.GetAnimationControlComponent()
 
 
         if (_isAlive) {
+            if (_getUpState) {
+                _getUpTimer = _getUpTimer - dt
+                _getUpAppearTimer = _getUpAppearTimer - dt
+
+                _transparencyComponent.transparency =  1.0 - _getUpAppearTimer / _getUpAppearMax
+
+                if(_getUpTimer < 0) {
+                    _getUpState = false
+                    _transparencyComponent.transparency = 1.0
+                }
+
+                return
+            }
+
             if (_attackingState) {
                 _attackTime = _attackTime - dt
                 if (_attackTime <= 0 ) {
@@ -183,9 +211,9 @@ class MeleeEnemy {
                         playerVariables.invincibilityTime = playerVariables.invincibilityMaxTime
 
                         //Flash the screen red
-                        flashSystem.Flash(Vec3.new(1.0, 0.0, 0.0),0.75)
+                        flashSystem.Flash(Vec3.new(105 / 255, 13 / 255, 1 / 255),0.75)
 
-                        engine.GetAudio().PlaySFX("assets/sounds/hit1.wav", 1.0)
+                        engine.GetAudio().PlayEventOnce(_hitSFX)
                         animations.Play("Attack", 1.0, false, 0.1, false)
                     }
 
@@ -262,11 +290,6 @@ class MeleeEnemy {
         } else {
             _deathTimer = _deathTimer - dt
             
-            var transparencyComponent = _meshEntity.GetTransparencyComponent()
-            if(transparencyComponent==null) {
-                transparencyComponent = _meshEntity.AddTransparencyComponent()
-            }
-
             if (_deathTimer <= 0) {
                 //spawn a soul
                 soulManager.SpawnSoul(engine, body.GetPosition())
@@ -277,7 +300,7 @@ class MeleeEnemy {
             } else {
                 // Wait for death animation before starting descent
                 if(_deathTimerMax - _deathTimer > 1800) {
-                    transparencyComponent.transparency =  _deathTimer / (_deathTimerMax-1000)
+                    _transparencyComponent.transparency =  _deathTimer / (_deathTimerMax-1000)
 
                     var newPos = pos - Vec3.new(0, 1, 0).mulScalar(1.0 * 0.00075 * dt)
                     body.SetTranslation(newPos)
