@@ -139,6 +139,9 @@ std::shared_ptr<HUD> HUD::Create(GraphicsContext& graphicsContext, const glm::uv
     hud->powerupText = hud->AddChild<UITextElement>(font, "220", glm::vec2(0, -320), 10 * 12.0);
     hud->powerupText.lock()->anchorPoint = UIElement::AnchorPoint::eMiddle;
 
+    hud->powerUpTimer = hud->AddChild<UITextElement>(font, "Timer", glm::vec2(0, -520), 10 * 16.0);
+    hud->powerUpTimer.lock()->anchorPoint = UIElement::AnchorPoint::eMiddle;
+
     hud->UpdateAllChildrenAbsoluteTransform();
     graphicsContext.UpdateBindlessSet();
 

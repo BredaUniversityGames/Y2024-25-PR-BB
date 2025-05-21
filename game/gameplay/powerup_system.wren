@@ -12,33 +12,63 @@ class PowerUpSystem {
 
         _maxPowerUpTime = 15000
         _powerUpTimer = _maxPowerUpTime
+
+        _timerTextOpacity = 0.0
+        _timerTextColor = Vec3.new(1.0, 1.0, 1.0)
         
 
     }
 
     Update(engine, playerVariables, flashSystem, dt){
         // Update screen effect
-
-        System.print(_powerUpTimer)
         var currentColor = engine.GetGame().GetFlashColor()
         flashSystem.SetBaseColor(_colorTarget, _intensityTarget)
+
+        // Update UI text for timer
+        engine.GetGame().GetHUD().SetPowerUpTimerTextColor(Vec4.new(_timerTextColor.x,_timerTextColor.y,_timerTextColor.z,_timerTextOpacity) )
+        
+        var timerInSeconds = Math.Round(_powerUpTimer / 1000)
+        if(timerInSeconds <= 0){
+           timerInSeconds = 0 
+        } 
+        engine.GetGame().GetHUD().SetPowerUpTimerText("%(timerInSeconds)")
+        
+
 
         var playerPowerUp = playerVariables.GetCurrentPowerUp()
         if(playerPowerUp != PowerUpType.NONE){
             _powerUpTimer = _powerUpTimer - dt
+            //make it go towards red when it reaches 0
+            var t = 1.0 - Math.Clamp(_powerUpTimer / _maxPowerUpTime, 0.0, 1.0)
+            _timerTextColor = Math.MixVec3(_timerTextColor, Vec3.new(1.0, 0.0, 0.0), t/1000.0)
+
+
             if(_powerUpTimer <= 0){
                 playerVariables.SetCurrentPowerUp(PowerUpType.NONE)
-                _powerUpTimer = _maxPowerUpTime
             }
+
+            
+            _timerTextOpacity = _timerTextOpacity + dt * 0.005
+            _timerTextOpacity = Math.Clamp(_timerTextOpacity, 0.0, 1.0)
+
+
+        }else{
+            _colorTarget = Vec3.new(0.0, 0.0, 0.0)
+            _intensityTarget = 0.0
+
+            if(_timerTextOpacity <= 0.01){
+                _powerUpTimer = _maxPowerUpTime
+                _timerTextColor = Vec3.new(1.0, 1.0, 1.0)
+            }
+
+            _timerTextOpacity = _timerTextOpacity - dt * 0.005
+            _timerTextOpacity = Math.Clamp(_timerTextOpacity, 0.0, 1.0)
         }
 
 
         if(playerPowerUp == PowerUpType.QUAD_DAMAGE){
             _intensityTarget = 0.5
             _colorTarget = _quadDamageColor
-        }else { 
-            _colorTarget = Vec3.new(0.0, 0.0, 0.0)
-            _intensityTarget = 0.0
         }
     }
 }
