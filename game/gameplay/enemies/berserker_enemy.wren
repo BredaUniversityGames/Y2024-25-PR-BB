@@ -191,9 +191,9 @@ class BerserkerEnemy {
 
                         animations.Play("Idle", 1.0, true, 1.0, false)
                         animations.SetTime(0.0)
-
-                        _attackTimer = 999999
                     }
+
+                    _attackTimer = 999999
                 }
 
                 if (_attackTime <= 0 ) {
