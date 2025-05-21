@@ -93,9 +93,6 @@ GPUScene::GPUScene(const GPUSceneCreation& creation, const Settings::Fog& settin
     _sceneData.brdfLUTIndex = brdfLUTMap.Index();
     _sceneData.staticShadowMapIndex = _staticShadowImage.Index();
     _sceneData.dynamicShadowMapIndex = _dynamicShadowImage.Index();
-
-    _sceneData.fogColor = _settings.color;
-    _sceneData.fogDensity = _settings.density;
 }
 
 GPUScene::~GPUScene()
@@ -118,6 +115,9 @@ GPUScene::~GPUScene()
 void GPUScene::Update(uint32_t frameIndex)
 {
     ZoneNamedN(zz, "GPUScene::Update", true);
+
+    _sceneData.fogColor = _settings.color;
+    _sceneData.fogDensity = _settings.density;
 
     UpdateSceneData(frameIndex);
     UpdatePointLightArray(frameIndex);
