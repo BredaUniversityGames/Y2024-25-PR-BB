@@ -8,6 +8,7 @@ import "gameplay/music_player.wren" for MusicPlayer, BGMPlayer
 import "gameplay/wave_system.wren" for WaveSystem, WaveConfig, SpawnLocationType
 import "analytics/analytics.wren" for AnalyticsManager
 import "gameplay/enemies/berserker_enemy.wren" for BerserkerEnemy
+import "gameplay/enemies/enemies.wren" for MeleeEnemy
 
 import "gameplay/enemies/ranged_enemy.wren" for RangedEnemy
 import "gameplay/soul.wren" for Soul, SoulManager
@@ -88,7 +89,7 @@ class Main {
         __playerController.AddCheatsComponent().noClip = false
 
         var shape = ShapeFactory.MakeCapsuleShape(1.7, 0.5) // height, circle radius
-        var rb = Rigidbody.new(engine.GetPhysics(), shape, PhysicsObjectLayer.ePLAYER(), false) // physics module, shape, layer, allowRotation
+        var rb = Rigidbody.new(engine.GetPhysics(), shape, PhysicsObjectLayer.ePLAYER(), false) // physics module, __meleeEnemeyShapetation
         __playerController.AddRigidbodyComponent(rb)
 
         __cameraVariables = CameraVariables.new()
@@ -178,6 +179,7 @@ class Main {
             .AddSpawn("Skeleton", 1, 15, 1)
             .AddSpawn("Skeleton", 2, 5, 1)
             .AddSpawn("Skeleton", 3, 15, 3)
+            .AddSpawn("Berserker", 3, 15, 3)
             .AddSpawn("Eye", SpawnLocationType.Closest, 25, 1)
         )
         waveConfigs.add(WaveConfig.new().SetDuration(60)
@@ -407,6 +409,10 @@ class Main {
             }
 
             __activeWeapon.rotateToTarget(engine)
+			
+            if (engine.GetInput().DebugGetKey(Keycode.eL())) {
+                __enemyList.add(MeleeEnemy.new(engine, Vec3.new(-10, 10, 78), Vec3.new(0.02, 0.02, 0.02), 10, "assets/models/Skeleton.glb", __enemyShape))
+            }
 
             if (engine.GetInput().DebugGetKey(Keycode.eK())) {
                 __enemyList.add(BerserkerEnemy.new(engine, Vec3.new(0, 18, 7), Vec3.new(0.026, 0.026, 0.026), 4, "assets/models/Berserker.glb", __berserkerEnemyShape))
