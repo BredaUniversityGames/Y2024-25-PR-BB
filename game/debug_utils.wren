@@ -1,17 +1,23 @@
 import "game.wren" for Main
 import "gameplay/coin.wren" for CoinManager
-import "gameplay/enemies/berserker_enemy.wren" for BerserkerEnemy
-import "gameplay/enemies/ranged_enemy.wren" for RangedEnemy
 import "engine_api.wren" for Vec3, Keycode, Random, ECS, Quat, TransformComponent
 import "gameplay/flash_system.wren" for FlashSystem
 
+import "gameplay/enemies/enemies.wren" for MeleeEnemy
+import "gameplay/enemies/berserker_enemy.wren" for BerserkerEnemy
+import "gameplay/enemies/ranged_enemy.wren" for RangedEnemy
+
 class DebugUtils {
-    static Tick(engine, enemyList, coinManager, flashSystem, berserkerShape, eyeShape, player) {
+    static Tick(engine, enemyList, coinManager, flashSystem, meleeShape, berserkerShape, eyeShape, player) {
 
         var playerEntity = engine.GetECS().GetEntityByName("Player")
         var playerRot = playerEntity.GetTransformComponent().rotation
         var playerPos = playerEntity.GetTransformComponent().translation
         var spawnPos = playerPos + playerRot.mulVec3(Vec3.new(0, 0, -15.0))
+
+        if (engine.GetInput().DebugGetKey(Keycode.eL())) {
+            enemyList.add(MeleeEnemy.new(engine, spawnPos, Vec3.new(0.02, 0.02, 0.02), 10, "assets/models/Skeleton.glb", meleeShape))
+        }
 
         if (engine.GetInput().DebugGetKey(Keycode.eK())) {
             enemyList.add(BerserkerEnemy.new(engine, spawnPos, Vec3.new(0.026, 0.026, 0.026), 4, "assets/models/Berserker.glb", berserkerShape))
