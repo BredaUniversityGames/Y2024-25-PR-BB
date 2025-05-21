@@ -73,7 +73,7 @@ class PowerUpSystem {
 
 
         if(playerPowerUp == PowerUpType.QUAD_DAMAGE){
-            _intensityTarget = 0.5
+            _intensityTarget = 0.3
             _colorTarget = _quadDamageColor
 
             playerVariables.SetDamageMultiplier(4.0)

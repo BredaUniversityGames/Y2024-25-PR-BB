@@ -42,7 +42,9 @@ class Station {
         var stationTransform = _rootEntity.GetTransformComponent()
         var stationPos = stationTransform.translation
         var distance = Math.Distance(stationPos, playerPos)
-
+        if(_isActive == false){
+            this.StopSound(engine) // Stop the sound if the station is not active
+        }
 
         if(distance < _interactRange  && _isActive){
 
@@ -60,7 +62,7 @@ class Station {
 
             if(engine.GetInput().GetDigitalAction("Reload").IsPressed()){
 
-                if(playerVariables.GetScore() >= 1000){
+                if(playerVariables.GetScore() >= 0){
 
                     if(_powerUpType == PowerUpType.QUAD_DAMAGE){
                         _stationManagerReference.PlayQuadHumSound(engine) 
@@ -253,14 +255,11 @@ class StationManager {
         for(station in _stationList){
             if(station.entity.IsValid()){
                 station.CheckRange(engine, playerPos, playerVariables, dt) // Check if the station is within range of the player
-
                 if(station.GetStatus()){
                     station.time = station.time + dt
 
                     station.PlaySound(engine, 1.6) // Play the sound if the station is active
 
-                }else{
-                    station.StopSound(engine) // Stop the sound if the station is not active
                 }
 
                 // Deactivate the station if it has been around for too long 
