@@ -228,7 +228,8 @@ class Pistol {
             _cooldown = _attackSpeed
         }
     }
-   equip (engine) {
+
+    equip (engine) {
         engine.GetECS().DestroyEntity(engine.GetECS().GetEntityByName(_entityName))
 
         var camera = engine.GetECS().GetEntityByName("Camera")
@@ -273,7 +274,7 @@ class Shotgun {
         _damage = 15
         _damageDropoff = 0.5
         _raysPerShot = 9
-        _range = 23
+        _range = 128
         _rangeVector = Vec3.new(_range, _range, _range)
         _attackSpeed = 0.3 * 1000
         _maxAmmo = 2
@@ -442,87 +443,6 @@ class Shotgun {
         if(gunAnimations.AnimationFinished() || (gunAnimations.CurrentAnimationName() == _walkAnim || gunAnimations.CurrentAnimationName() == "slide") ){
             gunAnimations.Play(_idleAnim, 1.0, false, 0.2, false)
         }
-    }
-
-    cooldown {_cooldown}
-    cooldown=(value) {_cooldown = value}
-
-    reloadTimer {_reloadTimer}
-    reloadTimer=(value) {_reloadTimer = value}
-
-    ammo {_ammo}
-    ammo=(value) {_ammo = value}
-
-    maxAmmo {_maxAmmo}
-}
-
-class Knife {
-    construct new(engine) {
-        _damage = 100
-        _range = 2
-        _rangeVector = Vec3.new(_range, _range, _range)
-        _attackSpeed = 0.2 * 1000
-        _cooldown = 0
-        _maxAmmo = 0
-        _ammo = _maxAmmo
-        _reloadTimer = 0
-        _reloadSpeed = 0
-        _cameraShakeIntensity = 0.2
-
-        _attackSFX = "event:SFX/Explosion"
-        _reloadSFX = ""
-        _equipSFX = ""
-
-        _attackAnim = "Shoot"
-        _reloadAnim = "Reload"
-        _mesh = ""
-    }
-
-    reload (engine) {
-        // Use some weapon inspect animation maybe?
-    }
-
-    attack(engine, deltaTime, playerVariables, enemies) {
-        if (_cooldown <= 0) {
-
-            playerVariables.cameraVariables.shakeIntensity = _cameraShakeIntensity
-
-            var player = engine.GetECS().GetEntityByName("Camera")
-            var gun = engine.GetECS().GetEntityByName(_entityName)
-
-            // Play shooting audio
-            var eventInstance = engine.GetAudio().PlayEventOnce(_attackSFX)
-            var audioEmitter = player.GetAudioEmitterComponent()
-            audioEmitter.AddEvent(eventInstance)
-
-            // Spawn particles
-            var playerTransform = player.GetTransformComponent()
-            var translation = playerTransform.GetWorldTranslation()
-            var rotation = playerTransform.GetWorldRotation()
-            var direction = Math.ToVector(rotation)
-            var up = rotation.mulVec3(Vec3.new(0, 1, 0))
-            var right = Math.Cross(direction, up)
-            var start = translation + direction * Vec3.new(0.01, 0.01, 0.01) - right * Vec3.new(0.1, 0.1, 0.1) - up * Vec3.new(0.1, 0.1, 0.1)
-            var rayHitInfo = engine.GetPhysics().ShootRay(start, direction, _range)
-
-            var entity = engine.GetECS().NewEntity()
-            var transform = entity.AddTransformComponent()
-            transform.translation = start
-            var lifetime = entity.AddLifetimeComponent()
-            lifetime.lifetime = 100.0
-            var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity() | SpawnEmitterFlagBits.eEmitOnce() // |
-            engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eStab(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), direction * Vec3.new(10, 10, 10))
-
-            // Play shooting animation
-            var gunAnimations = gun.GetAnimationControlComponent()
-            gunAnimations.Play(_attackAnim, 2.0, false, 0.0, false)
-
-            _cooldown = _attackSpeed
-        }
-    }
-
-    equip (engine) {
-        // Knife should not be equipped?
     }
 
     cooldown {_cooldown}

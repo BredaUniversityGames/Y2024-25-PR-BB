@@ -40,12 +40,17 @@ class PlayerVariables {
         _consecutiveHits = 0
         _consecutiveMaxHits = 5    
 
+        _godMode = false    
 
         _damageMultiplier = 1.0
         _currentPowerUp = PowerUpType.NONE  
         // Let's change this based on which PowerUp we have
         _gunSmokeRay = EmitterPresetID.eRay()  
     }
+
+    godMode=(v) { _godMode = v }
+    godMode { _godMode }
+
     hitmarkerState{_hitmarkerState}
     hitmarkTimer{_hitmarkTimer}
     health {_health}
@@ -89,11 +94,13 @@ class PlayerVariables {
     wasUltReadyLastFrame=(value) {_wasUltReadyLastFrame = value}
 
     IsInvincible() {
-        return _invincibilityTime > 0
+        return _invincibilityTime > 0 || _godMode
     }
 
     DecreaseHealth(value) {
-        _health = Math.Max(_health - value, 0)
+        if (!this.IsInvincible()) {
+            _health = Math.Max(_health - value, 0)
+        }
     }
 
     IncreaseHealth(value) {
