@@ -128,7 +128,7 @@ class Pistol {
             // Play quad damage audio if needed
             if(playerVariables.GetCurrentPowerUp() == PowerUpType.QUAD_DAMAGE){
                 var quadEventInstance = engine.GetAudio().PlayEventOnce(_quadHit)
-                engine.GetAudio().SetEventVolume(quadEventInstance, 2.0)
+                engine.GetAudio().SetEventVolume(quadEventInstance, 3.0)
 
                 audioEmitter.AddEvent(quadEventInstance)
             }

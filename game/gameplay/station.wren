@@ -28,7 +28,8 @@ class Station {
 
 
         _time = 0.0 // Time since the station was spawned
-        _collectSoundEvent = "event:/SFX/Soul"
+        _ambientStationSound = "event:/SFX/StationAmbient"
+        _ambientSoundEventInstance = null
         _powerUpType = PowerUpType.NONE
 
 
@@ -59,11 +60,12 @@ class Station {
 
             if(engine.GetInput().GetDigitalAction("Reload").IsPressed()){
 
-                if(_powerUpType == PowerUpType.QUAD_DAMAGE){
-                   _stationManagerReference.PlayQuadHumSound(engine) 
-                }
+                if(playerVariables.GetScore() >= 1000){
 
-                if(playerVariables.GetScore() >= 0){
+                    if(_powerUpType == PowerUpType.QUAD_DAMAGE){
+                        _stationManagerReference.PlayQuadHumSound(engine) 
+                    }
+
                     playerVariables.SetCurrentPowerUp(_powerUpType)
                     playerVariables.DecreaseScore(1000)
                     _time = 0.0
@@ -87,6 +89,22 @@ class Station {
             _textOpacity = Math.Clamp(_textOpacity, 0.0, 1.0)
             engine.GetGame().GetHUD().SetPowerUpTextColor(Vec4.new(1.0,1.0,1.0,_textOpacity) )
 
+        }
+    }
+
+    PlaySound(engine, volume){
+        if(_ambientSoundEventInstance == null){
+            _ambientSoundEventInstance = engine.GetAudio().PlayEventLoop(_ambientStationSound)
+            engine.GetAudio().SetEventVolume(_ambientSoundEventInstance, volume)
+            var audioEmitter = _rootEntity.GetAudioEmitterComponent()
+            audioEmitter.AddEvent(_ambientSoundEventInstance)
+        }
+    }
+
+    StopSound(engine){
+        if(_ambientSoundEventInstance != null){
+            engine.GetAudio().StopEvent(_ambientSoundEventInstance)
+            _ambientSoundEventInstance = null
         }
     }
 
@@ -145,6 +163,17 @@ class StationManager {
         _pointLight.color = Vec3.new(0.67, 0.06, 0.89)
         _quadDamageMeshEntity.AttachChild(_quadLightEntity)
         _quadHumEvent = "event:/SFX/QuadHum"
+
+        // quad damage emitter
+        _quadDamageEmitter = engine.GetECS().NewEntity()
+        _quadDamageEmitter.AddNameComponent().name = "Quad Damage Emitter"
+        var transform = _quadDamageEmitter.AddTransformComponent()
+        transform.translation = Vec3.new(0.0, -200.0, 0.0)
+        var emitterFlags = SpawnEmitterFlagBits.eIsActive()
+        engine.GetParticles().SpawnEmitter(_quadDamageEmitter, EmitterPresetID.eQuadStation(),emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.0, 0.0, 0.0))
+        
+        //
+
 
 
         // Load the stations
@@ -214,7 +243,7 @@ class StationManager {
 
             var meshOffset = Vec3.new(0.0, 2.1, 0.0)
             _quadDamageMeshEntity.GetTransformComponent().translation =  _stationList[randomIndex].entity.GetTransformComponent().translation + meshOffset
-
+            _quadDamageEmitter.GetTransformComponent().translation =  _stationList[randomIndex].entity.GetTransformComponent().translation + meshOffset + Vec3.new(0.0, 4.5, 0.0)
             System.print("Too much time has passed between stations, setting a new one active")
             //System.printAll(["New station is now available",randomIndex, _quadDamageMeshEntity.GetTransformComponent().translation.x, _quadDamageMeshEntity.GetTransformComponent().translation.y, _quadDamageMeshEntity.GetTransformComponent().translation.z]) //> 1[2, 3]4
         }
@@ -227,6 +256,11 @@ class StationManager {
 
                 if(station.GetStatus()){
                     station.time = station.time + dt
+
+                    station.PlaySound(engine, 1.6) // Play the sound if the station is active
+
+                }else{
+                    station.StopSound(engine) // Stop the sound if the station is not active
                 }
 
                 // Deactivate the station if it has been around for too long 
@@ -260,6 +294,7 @@ class StationManager {
         if(!_anyActiveStation){
             // hide all the pickups meshes and effects under the map
             _quadDamageMeshEntity.GetTransformComponent().translation = Vec3.new(0.0, -100.0, 0.0) // Move the mesh out of bounds
+            _quadDamageEmitter.GetTransformComponent().translation = Vec3.new(0.0, -200.0, 0.0) // Move the emitter out of bounds
 
         }
 
