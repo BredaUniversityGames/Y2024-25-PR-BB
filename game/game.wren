@@ -4,7 +4,7 @@ import "gameplay/weapon.wren" for Pistol, Shotgun, Weapons
 import "gameplay/camera.wren" for CameraVariables
 import "gameplay/player.wren" for PlayerVariables, HitmarkerState
 import "gameplay/music_player.wren" for MusicPlayer, BGMPlayer
-import "gameplay/wave_system.wren" for WaveSystem, WaveConfig, SpawnLocationType
+import "gameplay/wave_system.wren" for WaveSystem, WaveConfig, EnemyType, WaveGenerator
 import "analytics/analytics.wren" for AnalyticsManager
 import "gameplay/soul.wren" for Soul, SoulManager
 import "gameplay/coin.wren" for Coin, CoinManager
@@ -75,7 +75,7 @@ class Main {
         __playerController.AddCheatsComponent().noClip = false
 
         var shape = ShapeFactory.MakeCapsuleShape(1.7, 0.5) // height, circle radius
-        var rb = Rigidbody.new(engine.GetPhysics(), shape, PhysicsObjectLayer.ePLAYER(), false) // physics module, __meleeEnemeyShapetation
+        var rb = Rigidbody.new(engine.GetPhysics(), shape, PhysicsObjectLayer.ePLAYER(), false)
         __playerController.AddRigidbodyComponent(rb)
 
         __cameraVariables = CameraVariables.new()
@@ -140,51 +140,57 @@ class Main {
         for(i in 0..8) {
             var entity = engine.GetECS().GetEntityByName("Spawner_%(i)")
             if(entity) {
-                spawnLocations.add(entity)
+                spawnLocations.add(entity.GetTransformComponent().translation)
             }
         }
 
         __enemyList = []
+
         var waveConfigs = []
-        waveConfigs.add(WaveConfig.new().SetDuration(10)
-            .AddSpawn("Skeleton", SpawnLocationType.Closest, 1, 1)
-            .AddSpawn("Skeleton", SpawnLocationType.Furthest, 7, 3)
-        )
-        waveConfigs.add(WaveConfig.new().SetDuration(30)
-            .AddSpawn("Skeleton", 0, 1, 1)
-            .AddSpawn("Skeleton", 1, 1, 2)
-            .AddSpawn("Skeleton", 2, 1, 1)
-            .AddSpawn("Skeleton", 3, 1, 2)
-            .AddSpawn("Skeleton", SpawnLocationType.Furthest, 7, 3)
-            .AddSpawn("Eye", SpawnLocationType.Closest, 8, 1)
-            .AddSpawn("Skeleton", 0, 10, 1)
-            .AddSpawn("Skeleton", 1, 15, 1)
-            .AddSpawn("Skeleton", 2, 5, 1)
-            .AddSpawn("Skeleton", 3, 15, 3)
-            .AddSpawn("Berserker", 3, 15, 3)
-            .AddSpawn("Eye", SpawnLocationType.Closest, 25, 1)
-        )
-        waveConfigs.add(WaveConfig.new().SetDuration(60)
-            .AddSpawn("Skeleton", 0, 1, 2)
-            .AddSpawn("Skeleton", 1, 1, 2)
-            .AddSpawn("Skeleton", 2, 1, 1)
-            .AddSpawn("Skeleton", 3, 1, 2)
-            .AddSpawn("Eye", SpawnLocationType.Closest, 1, 1)
-            .AddSpawn("Skeleton", SpawnLocationType.Furthest, 5, 5)
-            .AddSpawn("Skeleton", 0, 15, 2)
-            .AddSpawn("Skeleton", 1, 15, 1)
-            .AddSpawn("Skeleton", 2, 15, 2)
-            .AddSpawn("Skeleton", 3, 15, 3)
-            .AddSpawn("Eye", SpawnLocationType.Closest, 5, 1)
-            .AddSpawn("Eye", SpawnLocationType.Closest, 20, 1)
-            .AddSpawn("Skeleton", SpawnLocationType.Furthest, 15, 5)
-            .AddSpawn("Skeleton", 0, 40, 3)
-            .AddSpawn("Skeleton", 1, 40, 1)
-            .AddSpawn("Skeleton", 2, 40, 2)
-            .AddSpawn("Skeleton", 3, 40, 2)
-            .AddSpawn("Skeleton", SpawnLocationType.Furthest, 7, 5)
-        )
-        __waveSystem = WaveSystem.new(engine, waveConfigs, __enemyList, spawnLocations, __player)
+        for (v in 0...30) {
+            waveConfigs.add(WaveGenerator.GenerateWave(v))
+        }
+
+        // waveConfigs.add(WaveConfig.new()
+        //     .SetEnemySpawnCount("Skeleton", 1)
+        //     .SetEnemySpawnCount("Skeleton", 3)
+        // )
+        // waveConfigs.add(WaveConfig.new()
+        //     .SetEnemySpawnCount("Skeleton", 1)
+        //     .SetEnemySpawnCount("Skeleton", 2)
+        //     .SetEnemySpawnCount("Skeleton", 1)
+        //     .SetEnemySpawnCount("Skeleton", 2)
+        //     .SetEnemySpawnCount("Skeleton", 3)
+        //     .SetEnemySpawnCount("Eye", 1)
+        //     .SetEnemySpawnCount("Skeleton", 1)
+        //     .SetEnemySpawnCount("Skeleton", 1)
+        //     .SetEnemySpawnCount("Skeleton", 1)
+        //     .SetEnemySpawnCount("Skeleton", 3)
+        //     .SetEnemySpawnCount("Berserker", 3)
+        //     .SetEnemySpawnCount("Eye", 1)
+        // )
+        // waveConfigs.add(WaveConfig.new().SetDuration(60)
+        //     .AddSpawn("Skeleton", 0, 1, 2)
+        //     .AddSpawn("Skeleton", 1, 1, 2)
+        //     .AddSpawn("Skeleton", 2, 1, 1)
+        //     .AddSpawn("Skeleton", 3, 1, 2)
+        //     .AddSpawn("Eye", SpawnLocationType.Closest, 1, 1)
+        //     .AddSpawn("Skeleton", SpawnLocationType.Furthest, 5, 5)
+        //     .AddSpawn("Skeleton", 0, 15, 2)
+        //     .AddSpawn("Skeleton", 1, 15, 1)
+        //     .AddSpawn("Skeleton", 2, 15, 2)
+        //     .AddSpawn("Skeleton", 3, 15, 3)
+        //     .AddSpawn("Eye", SpawnLocationType.Closest, 5, 1)
+        //     .AddSpawn("Eye", SpawnLocationType.Closest, 20, 1)
+        //     .AddSpawn("Skeleton", SpawnLocationType.Furthest, 15, 5)
+        //     .AddSpawn("Skeleton", 0, 40, 3)
+        //     .AddSpawn("Skeleton", 1, 40, 1)
+        //     .AddSpawn("Skeleton", 2, 40, 2)
+        //     .AddSpawn("Skeleton", 3, 40, 2)
+        //     .AddSpawn("Skeleton", SpawnLocationType.Furthest, 7, 5)
+        // )
+
+        __waveSystem = WaveSystem.new(waveConfigs, spawnLocations)
 
         // Souls
         __soulManager = SoulManager.new(engine, __player)
@@ -398,7 +404,7 @@ class Main {
 
         __soulManager.Update(engine, __playerVariables,__flashSystem, dt)
         __coinManager.Update(engine, __playerVariables,__flashSystem, dt)
-        __waveSystem.Update(dt)
+        __waveSystem.Update(engine, __player, __enemyList, dt)
 
         __flashSystem.Update(engine, dt)
 

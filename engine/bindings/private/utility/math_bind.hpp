@@ -50,6 +50,11 @@ float Distance(T& v) { return glm::distance(v); }
 class MathUtil
 {
 public:
+    static int Floor(float v)
+    {
+        return (int)v;
+    }
+
     static glm::vec3 ToEuler(glm::quat quat)
     {
         return glm::eulerAngles(quat);
@@ -252,6 +257,7 @@ inline void BindMath(wren::ForeignModule& module)
         mathUtilClass.funcStatic<&MathUtil::HalfPI>("HalfPI");
         mathUtilClass.funcStatic<&MathUtil::Distance>("Distance");
         mathUtilClass.funcStatic<&MathUtil::AngleAxis2D>("AngleAxis2D");
+        mathUtilClass.funcStatic<&MathUtil::Floor>("Floor");
     }
 }
 
