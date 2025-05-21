@@ -11,6 +11,7 @@
 #include "ui/game_ui_bindings.hpp"
 #include "ui_module.hpp"
 #include "wren_entity.hpp"
+#include "aim_assist.hpp"
 
 #include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
 
@@ -105,6 +106,11 @@ GameSettings* GetSettings(GameModule& self)
 {
     return &self.GetSettings();
 }
+
+glm::vec3 GetAimAssistDirection(GameModule&, ECSModule& ecs, const glm::vec3& forward)
+{
+    return AimAssist::GetAimAssistDirection(ecs, forward);
+}
 }
 
 void BindGameAPI(wren::ForeignModule& module)
@@ -131,7 +137,7 @@ void BindGameAPI(wren::ForeignModule& module)
     game.func<&GameModule::GetHUD>("GetHUD");
     game.func<&GameModule::GetGameOver>("GetGameOverMenu");
 
-    game.func<&GameModule::GetAimAssistDirection>("GetAimAssistDirection", "Returns the direction vector where to shoot to according to the aim assist");
+    game.funcExt<&bindings::GetAimAssistDirection>("GetAimAssistDirection", "Returns the direction vector where to shoot to according to the aim assist");
 
     game.funcExt<&bindings::GetSettings>("GetSettings");
     game.funcExt<&bindings::MenuStackSet>("SetUIMenu");

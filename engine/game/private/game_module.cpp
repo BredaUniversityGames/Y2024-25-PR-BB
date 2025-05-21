@@ -264,35 +264,6 @@ void GameModule::PushPreviousFocusedElement(std::weak_ptr<UIElement> element)
     _focusedElementStack.push(element);
 }
 
-glm::vec3 GameModule::GetAimAssistDirection(ECSModule& ecs, const glm::vec3& forward)
-{
-    const float minAngle = 0.8f;
-
-    glm::vec3 result = forward;
-    float closestParallel = minAngle;
-
-    auto& reg = ecs.GetRegistry();
-
-    auto& player = *reg.view<PlayerTag>().begin();
-    glm::vec3 playerPosition = TransformHelpers::GetWorldPosition(reg, player);
-
-    for (auto enemy : reg.view<TransformComponent, EnemyTag>())
-    {
-        glm::vec3 enemyPosition = TransformHelpers::GetWorldPosition(reg, enemy);
-        glm::vec3 playerToEnemy = glm::normalize(enemyPosition - playerPosition);
-        float parallel = glm::dot(forward, playerToEnemy);
-
-        if (parallel >= closestParallel)
-        {
-            result = playerToEnemy;
-            closestParallel = parallel;
-        }
-    }
-
-    return result;
-}
-
-
 void GameModule::TransitionScene(const std::string& scriptFile)
 {
     _nextSceneToExecute = scriptFile;
