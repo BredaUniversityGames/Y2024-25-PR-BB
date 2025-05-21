@@ -9,7 +9,7 @@ class FlashSystem {
         _intensityTarget = 0.0
 
         _flashTimer = 0.0
-
+        
         _isGoingTowardsTarget = false
     }
 
@@ -40,6 +40,10 @@ class FlashSystem {
     SetFlashColor(color, intensity){
         _colorTarget = color
         _intensityTarget = intensity
+    }
+    
+    GetIntensity(){
+    return _colorTarget.y
     }
 
 }

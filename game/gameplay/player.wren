@@ -29,6 +29,10 @@ class PlayerVariables {
         _hitmarkerState = HitmarkerState.normal
         _hitmarkTimer = 0
         
+        _soulsIndicatorTimerCurrent = 0
+        _soulsIndicatorTimerMax = 300
+        _soulsIndicatorFadeIn = true
+        
         _multiplier = 1.0
         _multiplierIncrement = 0.2
 
@@ -104,7 +108,27 @@ class PlayerVariables {
             _multiplier = _multiplier + _multiplierIncrement
         }
     }
-
+    
+    TriggerSoulsTimer() {
+        _soulsIndicatorFadeIn = true
+        _soulsIndicatorTimer = 0
+    }
+    
+    UpdateSoulsTimer(dt) {
+   
+        if(_soulsIndicatorFadeIn){
+            _soulsIndicatorTimerCurrent = Math.Clamp(_soulsIndicatorTimerCurrent + dt, 0,_soulsIndicatorTimerMax)
+             _soulsIndicatorFadeIn = !(_soulsIndicatorTimerCurrent == _soulsIndicatorTimerMax)
+               
+        }else{
+            _soulsIndicatorTimerCurrent = Math.Clamp(_soulsIndicatorTimerCurrent - dt, 0,_soulsIndicatorTimerMax)
+        } 
+    }
+    
+    GetSoulsValue() {
+       return _soulsIndicatorTimerCurrent / _soulsIndicatorTimerMax
+    }
+    
     UpdateUltCharge(multiplier) {
         _ultCharge =  Math.Min(_ultCharge + multiplier * Math.Min(2 * _multiplier, _ultMaxChargeMultiplier), _ultMaxCharge)
     }

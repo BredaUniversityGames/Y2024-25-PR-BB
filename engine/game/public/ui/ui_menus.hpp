@@ -32,6 +32,10 @@ public:
     std::weak_ptr<UITextElement> ammoCounter;
     std::weak_ptr<UITextElement> scoreText;
     std::weak_ptr<UITextElement> multiplierText;
+
+    std::weak_ptr<UITextElement> waveCounterText;
+    std::weak_ptr<UITextElement> waveCounterbgText;
+
     std::weak_ptr<UIImage> hitmarker;
     std::weak_ptr<UIImage> hitmarkerCrit;
     std::weak_ptr<UIImage> soulIndicator;

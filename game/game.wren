@@ -9,6 +9,7 @@ import "gameplay/wave_system.wren" for WaveSystem, WaveConfig, SpawnLocationType
 import "analytics/analytics.wren" for AnalyticsManager
 import "gameplay/enemies/berserker_enemy.wren" for BerserkerEnemy
 
+import "gameplay/hud.wren" for WrenHUD
 import "gameplay/enemies/ranged_enemy.wren" for RangedEnemy
 import "gameplay/soul.wren" for Soul, SoulManager
 import "gameplay/coin.wren" for Coin, CoinManager
@@ -21,6 +22,7 @@ class Main {
         engine.GetTime().SetScale(1.0)
         engine.GetInput().SetActiveActionSet("Shooter")
         engine.GetGame().SetUIMenu(engine.GetGame().GetHUD())
+        __hud = WrenHUD.new(engine.GetGame().GetHUD())
 
         engine.Fog = 0.005
 
@@ -163,11 +165,11 @@ class Main {
 
         __enemyList = []
         var waveConfigs = []
-        waveConfigs.add(WaveConfig.new().SetDuration(10)
+        waveConfigs.add(WaveConfig.new().SetDuration(2)
             .AddSpawn("Skeleton", SpawnLocationType.Closest, 1, 1)
             .AddSpawn("Skeleton", SpawnLocationType.Furthest, 7, 3)
         )
-        waveConfigs.add(WaveConfig.new().SetDuration(30)
+        waveConfigs.add(WaveConfig.new().SetDuration(2)
             .AddSpawn("Skeleton", 0, 1, 1)
             .AddSpawn("Skeleton", 1, 1, 2)
             .AddSpawn("Skeleton", 2, 1, 1)
@@ -180,7 +182,7 @@ class Main {
             .AddSpawn("Skeleton", 3, 15, 3)
             .AddSpawn("Eye", SpawnLocationType.Closest, 25, 1)
         )
-        waveConfigs.add(WaveConfig.new().SetDuration(60)
+        waveConfigs.add(WaveConfig.new().SetDuration(2)
             .AddSpawn("Skeleton", 0, 1, 2)
             .AddSpawn("Skeleton", 1, 1, 2)
             .AddSpawn("Skeleton", 2, 1, 1)
@@ -339,7 +341,7 @@ class Main {
 
         if (engine.GetInput().DebugIsInputEnabled()) {
 
-            __playerMovement.Update(engine, dt, __playerController, __camera)
+            __playerMovement.Update(engine, dt, __playerController, __camera,__hud)
 
             for (weapon in __armory) {
                 weapon.cooldown = Math.Max(weapon.cooldown - dt, 0)
@@ -416,7 +418,6 @@ class Main {
         }
 
         // Check if player died
-
         if (__alive && __playerVariables.health <= 0) {
             __alive = false
             engine.GetTime().SetScale(0.0)
@@ -427,19 +428,10 @@ class Main {
 
             engine.GetUI().SetSelectedElement(engine.GetGame().GetGameOverMenu().retryButton)
         }
-
-        engine.GetGame().GetHUD().UpdateHealthBar(__playerVariables.health / __playerVariables.maxHealth)
-        engine.GetGame().GetHUD().UpdateAmmoText(__activeWeapon.ammo, __activeWeapon.maxAmmo)
-        engine.GetGame().GetHUD().UpdateUltBar(__playerVariables.ultCharge / __playerVariables.ultMaxCharge)
-        engine.GetGame().GetHUD().UpdateScoreText(__playerVariables.score)
-        engine.GetGame().GetHUD().UpdateGrenadeBar(__playerVariables.grenadeCharge / __playerVariables.grenadeMaxCharge)
-        engine.GetGame().GetHUD().UpdateDashCharges(__playerMovement.currentDashCount)
-        engine.GetGame().GetHUD().UpdateMultiplierText(__playerVariables.multiplier)
-        engine.GetGame().GetHUD().ShowHitmarker(__playerVariables.hitmarkTimer > 0 && __playerVariables.hitmarkerState == HitmarkerState.normal)
-        engine.GetGame().GetHUD().ShowHitmarkerCrit(__playerVariables.hitmarkTimer > 0 && __playerVariables.hitmarkerState == HitmarkerState.crit)
-        engine.GetGame().GetHUD().UpdateUltReadyText(__playerVariables.ultCharge == __playerVariables.ultMaxCharge)
         
-        SetSoulsIndicatorOpacity 
+        __playerVariables.UpdateSoulsTimer(dt)
+        __hud.Update(engine, dt,__playerMovement,__playerVariables,__activeWeapon.ammo, __activeWeapon.maxAmmo)
+        
         var mousePosition = engine.GetInput().GetMousePosition()
         __playerMovement.lastMousePosition = mousePosition
 
@@ -468,7 +460,7 @@ class Main {
 
         __soulManager.Update(engine, __playerVariables,__flashSystem, dt)
         __coinManager.Update(engine, __playerVariables,__flashSystem, dt)
-        __waveSystem.Update(dt)
+        __waveSystem.Update(dt,__hud)
 
         __flashSystem.Update(engine, dt)
 

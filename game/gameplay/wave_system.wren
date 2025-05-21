@@ -60,7 +60,7 @@ class WaveSystem {
         _enemyList = enemyList
         _spawnLocations = spawnLocations
         _player = player
-
+    
         _currentWave = -1
         _status = WaveStatusType.NotStarted
         _waveTimer = 0.0
@@ -73,6 +73,8 @@ class WaveSystem {
 
     WaveDelay { 7.0 }
     
+    CurrentWave { _currentWave }
+    
     ActiveWaveConfig() { 
         if(_currentWave >= 0 && _currentWave < _waveConfigs.count) {
             return _waveConfigs[_currentWave]
@@ -81,7 +83,7 @@ class WaveSystem {
         return null
     }
 
-    Update(dt) {
+    Update(dt,hud) {
         _waveTimer = _waveTimer + dt / 1000.0
 
         if(_status == WaveStatusType.Ongoing) {
@@ -115,6 +117,7 @@ class WaveSystem {
 
                 if(_currentWave + 1 < _waveConfigs.count) {
                     this.StartNextWave()
+                    hud.IncrementWaveCounter(_currentWave)
                 } else if (_status != WaveStatusType.Finished) {
                     _status = WaveStatusType.Finished
                     System.print("Completed all waves")

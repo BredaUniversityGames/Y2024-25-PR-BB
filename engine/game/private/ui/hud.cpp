@@ -62,10 +62,10 @@ std::shared_ptr<HUD> HUD::Create(GraphicsContext& graphicsContext, const glm::uv
     gunBG->anchorPoint = UIElement::AnchorPoint::eBottomRight;
 
     ResourceHandle<GPUImage> gunImage = imageManager.Create(commonImageData.FromPNG("assets/textures/ui/gun.png"), HUDSampler);
-    auto gun = hud->AddChild<UIImage>(gunImage, glm::vec2(16, 11) * 8.0f, glm::vec2(19, 8) * 8.0f);
+    auto gun = hud->AddChild<UIImage>(gunImage, glm::vec2(16, 12) * 8.0f, glm::vec2(19, 8) * 8.0f);
     gun->anchorPoint = UIElement::AnchorPoint::eBottomRight;
 
-    hud->ammoCounter = hud->AddChild<UITextElement>(font, "17", glm::vec2(52, 9) * 8.0f, 12 * 8.0);
+    hud->ammoCounter = hud->AddChild<UITextElement>(font, "17", glm::vec2(52, 10) * 8.0f, 12 * 8.0);
     hud->ammoCounter.lock()->anchorPoint = UIElement::AnchorPoint::eBottomRight;
 
     // hitmarker
@@ -97,17 +97,25 @@ std::shared_ptr<HUD> HUD::Create(GraphicsContext& graphicsContext, const glm::uv
 
     // souls indicator
     ResourceHandle<GPUImage> soulImage = imageManager.Create(commonImageData.FromPNG("assets/textures/ui/souls_indicator.png"), HUDSampler);
-    hud->soulIndicator = hud->AddChild<UIImage>(soulImage, glm::vec2(10, 18) * 8.0f, glm::vec2(5, 8) * 8.0f);
+    hud->soulIndicator = hud->AddChild<UIImage>(soulImage, glm::vec2(11, 18) * 8.0f, glm::vec2(5, 8) * 8.0f);
     hud->soulIndicator.lock()->anchorPoint = UIElement::AnchorPoint::eBottomLeft;
 
-    // wave counter
-    auto bg_wave_text = hud->AddChild<UITextElement>(font, "17", glm::vec2(140, 20), 20 * 8.0);
-    bg_wave_text->anchorPoint = UIElement::AnchorPoint::eTopRight;
-    bg_wave_text->display_color = glm::vec4(0, 0, 0, 1);
-    hud->AddChild<UITextElement>(font, "17", glm::vec2(140, 26), 20 * 8.0)->anchorPoint = UIElement::AnchorPoint::eTopRight;
+    ResourceHandle<GPUImage> waveBGImage = imageManager.Create(commonImageData.FromPNG("assets/textures/ui/wave_bg.png"), HUDSampler);
+    hud->AddChild<UIImage>(waveBGImage, glm::vec2(0, 0) * 8.0f, glm::vec2(59, 54) * 8.0f)->anchorPoint = UIElement::AnchorPoint::eTopRight;
 
-    hud->scoreText = hud->AddChild<UITextElement>(font, "220", glm::vec2(66, 260), 10 * 8.0);
+    ResourceHandle<GPUImage> coinImage = imageManager.Create(commonImageData.FromPNG("assets/textures/ui/coin.png"), HUDSampler);
+    hud->AddChild<UIImage>(coinImage, glm::vec2(49, 20) * 8.0f + glm::vec2(300.f, 0), glm::vec2(4 * 8))->anchorPoint = UIElement::AnchorPoint::eBottomLeft;
+
+    // wave counter
+
+    hud->waveCounterText = hud->AddChild<UITextElement>(font, "0", glm::vec2(140, 26), 20 * 8.0);
+    hud->waveCounterText.lock()->anchorPoint = UIElement::AnchorPoint::eTopRight;
+    hud->waveCounterText.lock()->display_color = glm::vec4(0.459 * 2.0, 0.31 * 2.0, 0.28 * 2.0, 1);
+
+    hud->scoreText
+        = hud->AddChild<UITextElement>(font, "220", glm::vec2(445 + 300, 142), 10 * 8.0);
     hud->scoreText.lock()->anchorPoint = UIElement::AnchorPoint::eBottomLeft;
+    // hud->scoreText.lock()->display_color = glm::vec4(0.9, 0.8, 0.2, 1);
 
     hud->UpdateAllChildrenAbsoluteTransform();
     graphicsContext.UpdateBindlessSet();

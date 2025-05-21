@@ -86,7 +86,7 @@ std::shared_ptr<MainMenu> MainMenu::Create(GraphicsContext& graphicsContext, con
 
         auto controlsButton = buttonPanel->AddChild<UIButton>(buttonStyle, buttonPos, buttonBaseSize);
         controlsButton->anchorPoint = UIElement::AnchorPoint::eTopLeft;
-        controlsButton->AddChild<UITextElement>(font, "CONTROLS", textSize)->SetColor(glm::vec4(1, 1, 1, 1));
+        controlsButton->AddChild<UITextElement>(font, "CONTROLS", textSize);
 
         buttonPos += increment;
 
