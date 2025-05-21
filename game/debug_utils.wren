@@ -40,7 +40,7 @@ class DebugUtils {
                 coinManager.SpawnCoin(engine, spawnPos)
             }
         }
-        if(engine.GetInput().DebugGetKey(Keycode.eL())){
+        if(engine.GetInput().DebugGetKey(Keycode.eO())){
            flashSystem.Flash(Vec3.new(0.0, 1.0, 0.0),0.25)
         }
 
