@@ -1,4 +1,4 @@
-import "engine_api.wren" for Math
+import "engine_api.wren" for Math, EmitterPresetID
 import "gameplay/station.wren" for PowerUpType
 
 
@@ -40,7 +40,9 @@ class PlayerVariables {
         _consecutiveHits = 0
         _consecutiveMaxHits = 5    
 
-        _currentPowerUp = PowerUpType.NONE    
+        _currentPowerUp = PowerUpType.NONE  
+        // Let's change this based on which PowerUp we have
+        _gunSmokeRay = EmitterPresetID.eRay()  
     }
     hitmarkerState{_hitmarkerState}
     hitmarkTimer{_hitmarkTimer}
@@ -115,6 +117,13 @@ class PlayerVariables {
     GetCurrentPowerUp() {
         return _currentPowerUp
     }    
+
+    SetGunSmokeRay(gunSmokeRay) {
+        _gunSmokeRay = gunSmokeRay
+    }
+    GetGunSmokeRay() {
+        return _gunSmokeRay
+    }
 
     UpdateMultiplier() {
         _consecutiveHits = _consecutiveHits + 1

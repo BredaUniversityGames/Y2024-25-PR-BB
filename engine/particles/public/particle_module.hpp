@@ -36,6 +36,7 @@ enum class EmitterPresetID : uint8_t
     eBones,
     eImpact,
     eRay,
+    eRayQuadDamage,
     eRayEyeStart,
     eRayEyeEnd,
     eStab,
