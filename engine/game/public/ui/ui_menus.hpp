@@ -94,6 +94,8 @@ public:
         : Canvas(screenResolution)
     {
     }
+
+    std::weak_ptr<UITextElement> displayText;
 };
 
 class PauseMenu : public Canvas

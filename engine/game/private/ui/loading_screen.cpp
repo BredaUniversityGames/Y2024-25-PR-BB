@@ -32,7 +32,8 @@ std::shared_ptr<LoadingScreen> LoadingScreen::Create(GraphicsContext& graphicsCo
 
     {
         constexpr auto textSize = 100;
-        auto text = loading->AddChild<UITextElement>(font, "Loading", glm::vec2(), textSize);
+        loading->displayText = loading->AddChild<UITextElement>(font, "Loading", glm::vec2(), textSize);
+        auto text = loading->displayText.lock();
         text->anchorPoint = UIElement::AnchorPoint::eMiddle;
     }
 

@@ -25,6 +25,8 @@ std::shared_ptr<UIButton> GameOverMenuButton(GameOverMenu& self) { return self.b
 
 std::shared_ptr<UIButton> ControlsMenuBackButton(ControlsMenu& self) { return self.backButton.lock(); }
 
+std::shared_ptr<UITextElement> LoadingScreenText(LoadingScreen& self) { return self.displayText.lock(); }
+
 void UpdateHealthBar(HUD& self, const float health)
 {
     if (auto locked = self.healthBar.lock(); locked != nullptr)
@@ -132,12 +134,19 @@ void ShowHitmarkerCrit(HUD& self, bool val)
 
     hitmarkerCrit->visibility = val ? UIElement::VisibilityState::eUpdatedAndVisible : UIElement::VisibilityState::eNotUpdatedAndInvisible;
 }
+
 }
 
 void BindGameUI(wren::ForeignModule& module)
 {
     auto& button = module.klass<UIButton, UIElement>("UIButton");
     button.funcExt<bindings::ButtonOnPress>("OnPress", "void callback() -> void");
+
+    auto& text = module.klass<UITextElement, UIElement>("UITextElement");
+    text.func<&UITextElement::GetColor>("GetColor");
+    text.func<&UITextElement::SetColor>("SetColor");
+    text.func<&UITextElement::GetText>("GetText");
+    text.func<&UITextElement::SetText>("SetText");
 
     module.klass<Canvas, UIElement>("Canvas");
 
@@ -170,4 +179,8 @@ void BindGameUI(wren::ForeignModule& module)
 
     gameOver.propReadonlyExt<bindings::GameOverMenuButton>("backButton");
     gameOver.propReadonlyExt<bindings::RetryButton>("retryButton");
+
+    auto& loadingScreen = module.klass<LoadingScreen, Canvas>("LoadingScreen");
+    loadingScreen.propReadonlyExt<bindings::LoadingScreenText>("displayText");
+
 }
