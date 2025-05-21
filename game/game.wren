@@ -1,19 +1,19 @@
 import "engine_api.wren" for Engine, TimeModule, ECS, ShapeFactory, PhysicsObjectLayer, Rigidbody, RigidbodyComponent, CollisionShape, Entity, Vec3, Vec2, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, EmitterPresetID, Random
 import "gameplay/movement.wren" for PlayerMovement
 import "gameplay/enemies/spawner.wren" for Spawner
-import "gameplay/weapon.wren" for Pistol, Shotgun, Knife, Weapons
+import "gameplay/weapon.wren" for Pistol, Shotgun, Weapons
 import "gameplay/camera.wren" for CameraVariables
 import "gameplay/player.wren" for PlayerVariables, HitmarkerState
 import "gameplay/music_player.wren" for MusicPlayer, BGMPlayer
 import "gameplay/wave_system.wren" for WaveSystem, WaveConfig, SpawnLocationType
 import "analytics/analytics.wren" for AnalyticsManager
 import "gameplay/enemies/berserker_enemy.wren" for BerserkerEnemy
-import "gameplay/enemies/enemies.wren" for MeleeEnemy
 
 import "gameplay/enemies/ranged_enemy.wren" for RangedEnemy
 import "gameplay/soul.wren" for Soul, SoulManager
 import "gameplay/coin.wren" for Coin, CoinManager
 import "gameplay/flash_system.wren" for FlashSystem
+import "debug_utils.wren" for DebugUtils
 
 class Main {
 
@@ -22,18 +22,10 @@ class Main {
         engine.GetTime().SetScale(1.0)
         engine.GetInput().SetActiveActionSet("Shooter")
         engine.GetGame().SetUIMenu(engine.GetGame().GetHUD())
-
         engine.Fog = 0.005
 
         // Set navigational mesh
         engine.GetPathfinding().SetNavigationMesh("assets/models/blockoutv5navmesh_04.glb")
-       
-        // engine.GetAudio().LoadSFX("assets/sounds/slide2.wav", true, true)
-        // engine.GetAudio().LoadSFX("assets/sounds/crows.wav", true, false)
-        // engine.GetAudio().LoadSFX("assets/sounds/hitmarker.wav", false, false)
-        // engine.GetAudio().LoadSFX("assets/sounds/hit1.wav", false, false)
-        // engine.GetAudio().LoadSFX("assets/sounds/demon_roar.wav", true, false)
-        // engine.GetAudio().LoadSFX("assets/sounds/shoot.wav", false, false)
 
         // Directional Light
         __directionalLight = engine.GetECS().NewEntity()
@@ -57,7 +49,6 @@ class Main {
         __hasDashed = false
         __timer = 0
 
-
         // Load Map
         engine.LoadModel("assets/models/graveyard_level.glb", true)
 
@@ -75,9 +66,8 @@ class Main {
         __player = engine.GetECS().NewEntity()
 
         var playerTransform = __playerController.AddTransformComponent()
-        playerTransform.translation = Vec3.new(0.0, 18.0, 80.0)
-
         var playerStart = engine.GetECS().GetEntityByName("PlayerStart")
+
         if(playerStart) {
             playerTransform.translation = playerStart.GetTransformComponent().translation
             playerTransform.rotation = playerStart.GetTransformComponent().rotation
@@ -121,7 +111,7 @@ class Main {
         __player.AttachChild(__camera)
         __camera.AttachChild(__gun)
 
-        __armory = [Pistol.new(engine), Shotgun.new(engine), Knife.new(engine)]
+        __armory = [Pistol.new(engine), Shotgun.new(engine)]
 
         __activeWeapon = __armory[Weapons.pistol]
         __activeWeapon.equip(engine)
@@ -405,19 +395,7 @@ class Main {
                 if (__activeWeapon.ammo <= 0) {
                     __activeWeapon.reload(engine)
                 }
-            }
-
-            if (engine.GetInput().DebugGetKey(Keycode.eL())) {
-                __enemyList.add(MeleeEnemy.new(engine, Vec3.new(-10, 10, 78), Vec3.new(0.02, 0.02, 0.02), 10, "assets/models/Skeleton.glb", __enemyShape))
-            }
-
-            if (engine.GetInput().DebugGetKey(Keycode.eK())) {
-                __enemyList.add(BerserkerEnemy.new(engine, Vec3.new(0, 18, 80), Vec3.new(0.026, 0.026, 0.026), 4, "assets/models/Berserker.glb", __berserkerEnemyShape))
-            }
-
-            if (engine.GetInput().DebugGetKey(Keycode.eJ())) {
-                __enemyList.add(RangedEnemy.new(engine, Vec3.new(0, 18, 80), Vec3.new(2.25,2.25,2.25), 5, "assets/models/eye.glb", __eyeShape))
-            }
+            }            
         }
 
         // Check if player died
@@ -448,17 +426,6 @@ class Main {
         __playerMovement.lastMousePosition = mousePosition
 
         var playerPos = __playerController.GetRigidbodyComponent().GetPosition()
-
-        if(engine.GetInput().DebugGetKey(Keycode.eB())){
-
-            // Spawn between 1 and 5 coins
-                var coinCount = Random.RandomIndex(1, 5)
-                for(i in 0...coinCount) {
-                              __coinManager.SpawnCoin(engine, Vec3.new(10.0,2.0,44.0))
-
-                }
-        }
-
         for (enemy in __enemyList) {
 
             // We delete the entity from the ecs when it dies
@@ -476,13 +443,8 @@ class Main {
 
         __flashSystem.Update(engine, dt)
 
-        if(engine.GetInput().DebugGetKey(Keycode.eB())){
-           __flashSystem.Flash(Vec3.new(1.0, 0.0, 0.0),0.25)
+        if (!engine.IsDistribution()) {
+            DebugUtils.Tick(engine, __enemyList, __coinManager, __flashSystem, __enemyShape, __berserkerEnemyShape, __eyeShape, __playerVariables)
         }
-
-        if(engine.GetInput().DebugGetKey(Keycode.eL())){
-           __flashSystem.Flash(Vec3.new(0.0, 1.0, 0.0),0.25)
-        }
-
     }
 }
