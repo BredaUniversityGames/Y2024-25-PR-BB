@@ -10,17 +10,17 @@ class PingPongTween {
     }
     
     TriggerFromStart(){
-    _timerCurrent = 0
-    _doReverse = false
+        _timerCurrent = 0
+        _doReverse = false
     }
     
     Update(dt){
-           if(!_doReverse){
-                _timerCurrent = Math.Clamp(_timerCurrent + dt, 0,_timerMax)
-                 _doReverse = _timerCurrent == _timerMax             
-            }else{
-                _timerCurrent = Math.Clamp(_timerCurrent - dt, 0,_timerMax)
-            } 
+        if(!_doReverse){
+            _timerCurrent = Math.Clamp(_timerCurrent + dt, 0,_timerMax)
+            _doReverse = _timerCurrent == _timerMax             
+        }else{
+            _timerCurrent = Math.Clamp(_timerCurrent - dt, 0,_timerMax)
+        } 
     }
     
     GetValue(){
@@ -30,7 +30,7 @@ class PingPongTween {
     }
 }
 
-class LinearTween{
+class LinearTween {
     construct new(maxTime,minVal,maxVal){
         _timerCurrent = maxTime
         _timerMax = maxTime
@@ -42,36 +42,39 @@ class LinearTween{
         _timerCurrent = 0
     }
     
-       Update(dt){
-            _timerCurrent = Math.Clamp(_timerCurrent + dt, 0,_timerMax)  
-        }
+    Update(dt){
+        _timerCurrent = Math.Clamp(_timerCurrent + dt, 0,_timerMax)  
+    }
         
-        GetValue(){
-            var timeFract =  _timerCurrent / _timerMax
-            var valFract = (_maxVal-_minVal) * timeFract
-            return _minVal + valFract
-        }
+    GetValue(){
+        var timeFract =  _timerCurrent / _timerMax
+        var valFract = (_maxVal-_minVal) * timeFract
+        return _minVal + valFract
+    }
 }
 
 class WrenHUD {
+    
     construct new(hud) {
         _waveFlashTween = PingPongTween.new(200,0,1)
-       
         _dashColorRefillTween = PingPongTween.new(75,1,5)
+        _soulIndicatorOpacityTween = PingPongTween.new(100,0,1)
+
         _hud = hud
     }
     
     Update(engine, dt, playerMovement, playerVariables, currentAmmo, maxAmmo){
-
-        
         _waveFlashTween.Update(dt)
         _dashColorRefillTween.Update(dt)
+        _soulIndicatorOpacityTween.Update(dt)
+
+        // Wave transition
         _hud.PlayWaveCounterIncrementAnim(_waveFlashTween.GetValue())
-        
         engine.GetTime().SetScale(1-(_waveFlashTween.GetValue()*0.6))
         
+
+        // Dash charges
         _hud.UpdateDashCharges(playerMovement.currentDashCount)
-        
         var timeTillNextCharge = 1-(__playerMovement.currentDashRefillTime / 3000))
         var colorintenity = _dashColorRefillTween.GetValue()
         var color = Vec3.new(colorintenity,colorintenity,colorintenity)
@@ -82,13 +85,12 @@ class WrenHUD {
         _hud.UpdateHealthBar(playerVariables.health / playerVariables.maxHealth)
         _hud.UpdateAmmoText(currentAmmo,maxAmmo)
         _hud.UpdateScoreText(playerVariables.score)
-
-    
         _hud.UpdateMultiplierText(__playerVariables.multiplier)
-        _hud.ShowHitmarker(__playerVariables.hitmarkTimer > 0 && __playerVariables.hitmarkerState == HitmarkerState.normal)
-        _hud.ShowHitmarkerCrit(__playerVariables.hitmarkTimer > 0 && __playerVariables.hitmarkerState == HitmarkerState.crit)
-        _hud.SetSoulsIndicatorOpacity(__playerVariables.GetSoulsValue())
-           
+        _hud.ShowHitmarker(playerVariables.hitmarkTimer > 0 && playerVariables.hitmarkerState == HitmarkerState.normal)
+        _hud.ShowHitmarkerCrit(playerVariables.hitmarkTimer > 0 && playerVariables.hitmarkerState == HitmarkerState.crit)
+    
+
+        _hud.SetSoulsIndicatorOpacity(_soulIndicatorOpacityTween.GetValue())
     }
     
     IncrementWaveCounter(CurrentWave){
@@ -100,6 +102,7 @@ class WrenHUD {
        _dashColorRefillTween.TriggerFromStart()
     }
     
-    
-    
+    TriggerSoulIndicatorAnimation(){
+        _soulIndicatorOpacityTween.TriggerFromStart()
+    }
 }

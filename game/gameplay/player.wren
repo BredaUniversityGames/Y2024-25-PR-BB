@@ -7,7 +7,7 @@ class HitmarkerState {
 }
 
 class PlayerVariables {
-    construct new() {
+    construct new(cppHud) {
         _maxHealth = 100.0
         _health = _maxHealth
         _score = 0
@@ -20,6 +20,7 @@ class PlayerVariables {
         _grenadeMaxCharge = 100
         _grenadeChargeRate = 20
         _grenadeCharge = 0
+        _hud =  WrenHUD.new(cppHud)
 
         _invincibilityMaxTime = 500
         _invincibilityTime = 0
@@ -47,7 +48,7 @@ class PlayerVariables {
 
     godMode=(v) { _godMode = v }
     godMode { _godMode }
-
+    hud { _hud }
     hitmarkerState{_hitmarkerState}
     hitmarkTimer{_hitmarkTimer}
     health {_health}
@@ -116,27 +117,7 @@ class PlayerVariables {
             _multiplier = _multiplier + _multiplierIncrement
         }
     }
-    
-    TriggerSoulsTimer() {
-        _soulsIndicatorFadeIn = true
-        _soulsIndicatorTimer = 0
-    }
-    
-    UpdateSoulsTimer(dt) {
-   
-        if(_soulsIndicatorFadeIn){
-            _soulsIndicatorTimerCurrent = Math.Clamp(_soulsIndicatorTimerCurrent + dt, 0,_soulsIndicatorTimerMax)
-             _soulsIndicatorFadeIn = !(_soulsIndicatorTimerCurrent == _soulsIndicatorTimerMax)
-               
-        }else{
-            _soulsIndicatorTimerCurrent = Math.Clamp(_soulsIndicatorTimerCurrent - dt, 0,_soulsIndicatorTimerMax)
-        } 
-    }
-    
-    GetSoulsValue() {
-       return _soulsIndicatorTimerCurrent / _soulsIndicatorTimerMax
-    }
-    
+       
     UpdateUltCharge(multiplier) {
         _ultCharge =  Math.Min(_ultCharge + multiplier * Math.Min(2 * _multiplier, _ultMaxChargeMultiplier), _ultMaxCharge)
     }

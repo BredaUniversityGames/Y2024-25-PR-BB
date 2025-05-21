@@ -24,7 +24,6 @@ class Main {
         engine.GetInput().SetActiveActionSet("Shooter")
         engine.GetGame().SetUIMenu(engine.GetGame().GetHUD())
 
-        __hud = WrenHUD.new(engine.GetGame().GetHUD())
 
         engine.Fog = 0.005
         engine.AmbientStrength = 0.35
@@ -47,7 +46,7 @@ class Main {
 
         // Player Setup
 
-        __playerVariables = PlayerVariables.new()
+        __playerVariables = PlayerVariables.new(engine.GetGame().GetHUD())
         __counter = 0
         __frameTimer = 0
         __groundedTimer = 0
@@ -315,7 +314,6 @@ class Main {
         // }
 
         __playerVariables.invincibilityTime = Math.Max(__playerVariables.invincibilityTime - dt, 0)
-
         __playerVariables.multiplierTimer = Math.Max(__playerVariables.multiplierTimer - dt, 0)
         __playerVariables.hitmarkTimer = Math.Max(__playerVariables.hitmarkTimer - dt, 0)
 
@@ -415,8 +413,6 @@ class Main {
             engine.GetUI().SetSelectedElement(engine.GetGame().GetGameOverMenu().retryButton)
         }
         
-        __playerVariables.UpdateSoulsTimer(dt)
-        __hud.Update(engine, dt,__playerMovement,__playerVariables,__activeWeapon.ammo, __activeWeapon.maxAmmo)
         
        var mousePosition = engine.GetInput().GetMousePosition()
         __playerMovement.lastMousePosition = mousePosition
@@ -438,6 +434,8 @@ class Main {
         __waveSystem.Update(dt,__hud)
 
         __flashSystem.Update(engine, dt)
+
+        playerVariables.hud.Update(engine, dt,__playerMovement,__playerVariables,__activeWeapon.ammo, __activeWeapon.maxAmmo)
 
         if (!engine.IsDistribution()) {
             DebugUtils.Tick(engine, __enemyList, __coinManager, __flashSystem, __enemyShape, __berserkerEnemyShape, __eyeShape, __playerVariables)

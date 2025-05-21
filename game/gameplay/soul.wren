@@ -63,8 +63,8 @@ class Soul {
 
                 // Play flash effect
                 flashSystem.Flash(Vec3.new(0.23, 0.71, 0.36),0.75)
-                playerVariables.TriggerSoulsTimer()
- 
+                playerVariables.hud.TriggerSoulIndicatorAnimation()
+
                 this.Destroy() // Destroy the soul after it is collected
                
             }
