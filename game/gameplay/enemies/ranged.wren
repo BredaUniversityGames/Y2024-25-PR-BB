@@ -21,7 +21,7 @@ class RangedEnemy {
         _health = 5
         _deathTimerMax = 1500
         _changeDirectionTimerMax = 2000
-        _maxHeight = 28.0
+        _maxHeight = 34.0
         _minHeight = 16.0
 
         _shootSFX = "event:/SFX/EyeLaserBlast" 

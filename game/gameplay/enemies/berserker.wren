@@ -118,14 +118,16 @@ class BerserkerEnemy {
             body.SetStatic()
 
             // Spawn between 1 and 5 coins
-            var coinCount = Random.RandomIndex(4, 5)
+            var coinCount = Random.RandomIndex(7, 12)
             for(i in 0...coinCount) {
                 coinManager.SpawnCoin(engine, body.GetPosition() + Vec3.new(0, 1.0, 0))
             }
 
             var eventInstance = engine.GetAudio().PlayEventOnce(_hurtSFX)
+            var growlInstance = engine.GetAudio().PlayEventOnce(_growlSFX)
             var audioEmitter = _rootEntity.GetAudioEmitterComponent()
             audioEmitter.AddEvent(eventInstance)
+            audioEmitter.AddEvent(growlInstance)    
         } else {
             //animations.Play("Hit", 1.0, false, 0.1, false)
             //_rootEntity.GetRigidbodyComponent().SetVelocity(Vec3.new(0.0, 0.0, 0.0))
@@ -176,14 +178,14 @@ class BerserkerEnemy {
                             playerVariables.invincibilityTime = playerVariables.invincibilityMaxTime
 
                             flashSystem.Flash(Vec3.new(1.0, 0.0, 0.0),0.85)
-                            engine.GetAudio().PlaySFX(_hitSFX, 1.0)
+                            engine.GetAudio().PlayEventOnce(_hitSFX)
                         }
 
                         animations.Play("Idle", 1.0, true, 1.0, false)
                         animations.SetTime(0.0)
-
-                        _attackTimer = 999999
                     }
+
+                    _attackTimer = 999999
                 }
 
                 if (_attackTime <= 0 ) {

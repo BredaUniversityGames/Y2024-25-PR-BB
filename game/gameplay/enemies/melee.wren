@@ -101,7 +101,7 @@ class MeleeEnemy {
     }
 
     IsHeadshot(y) { // Will probably need to be changed when we have a different model
-        if (y >= _rootEntity.GetRigidbodyComponent().GetPosition().y + 1) {
+        if (y >= _rootEntity.GetRigidbodyComponent().GetPosition().y + 0.5) {
             return true
         }
         return false
@@ -136,7 +136,7 @@ class MeleeEnemy {
 
             var eventInstance = engine.GetAudio().PlayEventOnce(_bonesSFX)
             
-            var hitmarkerSFX = engine.GetAudio().PlayEventOnce(_hitMarker)
+            var hitmarkerSFX = engine.GetAudio().PlayEventOnce(_hitMarkerSFX)
             var audioEmitter = _rootEntity.GetAudioEmitterComponent()
             audioEmitter.AddEvent(eventInstance)
             audioEmitter.AddEvent(hitmarkerSFX)
@@ -150,7 +150,7 @@ class MeleeEnemy {
             _recoveryState = false
             body.SetStatic()
 
-            var hitmarkerSFX = engine.GetAudio().PlayEventOnce(_hitMarker)
+            var hitmarkerSFX = engine.GetAudio().PlayEventOnce(_hitMarkerSFX)
             var eventInstance = engine.GetAudio().PlayEventOnce(_bonesSFX)
             var audioEmitter = _rootEntity.GetAudioEmitterComponent()
             audioEmitter.AddEvent(eventInstance)
@@ -206,7 +206,7 @@ class MeleeEnemy {
                         //Flash the screen red
                         flashSystem.Flash(Vec3.new(105 / 255, 13 / 255, 1 / 255),0.75)
 
-                        engine.GetAudio().PlaySFX("assets/sounds/hit1.wav", 1.0)
+                        engine.GetAudio().PlayEventOnce(_hitSFX)
                         animations.Play("Attack", 1.0, false, 0.1, false)
                     }
 
