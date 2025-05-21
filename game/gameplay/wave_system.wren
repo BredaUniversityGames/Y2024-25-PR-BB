@@ -149,7 +149,7 @@ class WaveSystem {
             var position = spawnerEntity.GetTransformComponent().translation
 
             for(i in 0...spawn.Count) {
-                var enemy = _enemyList.add(MeleeEnemy.new(_engine, position, Vec3.new(0.02, 0.02, 0.02), 10, enemyModelPath, _enemyShape))
+                var enemy = _enemyList.add(MeleeEnemy.new(_engine, position, Vec3.new(0.0165, 0.0165, 0.0165), 10, enemyModelPath, _enemyShape))
                 enemy.FindNewPath(_engine)
             }
             return

@@ -75,7 +75,7 @@ class BerserkerEnemy {
 
         _evaluateState = true
 
-        _health = 500
+        _health = 1200
 
         _hitTimer = 0
 
@@ -83,11 +83,14 @@ class BerserkerEnemy {
         _deathTimer = _deathTimerMax
 
         _hurtSFX = "event:/SFX/DemonHurt"
+        _growlSFX = "event:/SFX/DemonGrowl"
 
         _stepSFX = "event:/SFX/DemonStep"
 
         _attackSFX = "event:/SFX/DemonAttack"
         _attackHitSFX = "event:/SFX/DemonAttackHit"
+
+        _hitMarkerSFX = "event:/SFX/Hitmarker"
 
         _hitSFX = "event:/SFX/Hit"
 
@@ -123,19 +126,21 @@ class BerserkerEnemy {
             body.SetStatic()
 
             // Spawn between 1 and 5 coins
-            var coinCount = Random.RandomIndex(4, 5)
+            var coinCount = Random.RandomIndex(7, 12)
             for(i in 0...coinCount) {
                 coinManager.SpawnCoin(engine, body.GetPosition() + Vec3.new(0, 1.0, 0))
             }
 
             var eventInstance = engine.GetAudio().PlayEventOnce(_hurtSFX)
+            var growlInstance = engine.GetAudio().PlayEventOnce(_growlSFX)
             var audioEmitter = _rootEntity.GetAudioEmitterComponent()
             audioEmitter.AddEvent(eventInstance)
+            audioEmitter.AddEvent(growlInstance)    
         } else {
             //animations.Play("Hit", 1.0, false, 0.1, false)
             //_rootEntity.GetRigidbodyComponent().SetVelocity(Vec3.new(0.0, 0.0, 0.0))
-            var hitmarkerSFX = engine.GetAudio().PlaySFX(_hitSFX,1.6  )
-            var eventInstance = engine.GetAudio().PlayEventOnce(_hurtSFX)
+            var hitmarkerSFX = engine.GetAudio().PlayEventOnce(_hurtSFX)
+            var eventInstance = engine.GetAudio().PlayEventOnce(_hitMarkerSFX)
             var audioEmitter = _rootEntity.GetAudioEmitterComponent()
             audioEmitter.AddEvent(eventInstance)
             audioEmitter.AddEvent(hitmarkerSFX)
@@ -181,14 +186,14 @@ class BerserkerEnemy {
                             playerVariables.invincibilityTime = playerVariables.invincibilityMaxTime
 
                             flashSystem.Flash(Vec3.new(1.0, 0.0, 0.0),0.85)
-                            engine.GetAudio().PlaySFX(_hitSFX, 1.0)
+                            engine.GetAudio().PlayEventOnce(_hitSFX)
                         }
 
                         animations.Play("Idle", 1.0, true, 1.0, false)
                         animations.SetTime(0.0)
-
-                        _attackTimer = 999999
                     }
+
+                    _attackTimer = 999999
                 }
 
                 if (_attackTime <= 0 ) {
