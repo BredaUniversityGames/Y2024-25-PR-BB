@@ -62,7 +62,7 @@ class Station {
 
             if(engine.GetInput().GetDigitalAction("Reload").IsPressed()){
 
-                if(playerVariables.GetScore() >= 0){
+                if(playerVariables.GetScore() >= 5000){
 
                     if(_powerUpType == PowerUpType.QUAD_DAMAGE){
                         _stationManagerReference.PlayQuadHumSound(engine) 
