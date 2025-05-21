@@ -24,6 +24,7 @@ class Main {
         engine.GetGame().SetUIMenu(engine.GetGame().GetHUD())
 
         engine.Fog = 0.005
+        engine.AmbientStrength = 0.35
 
         // Set navigational mesh
         engine.GetPathfinding().SetNavigationMesh("assets/models/blockoutv5navmesh_04.glb")
@@ -40,7 +41,7 @@ class Main {
         __directionalLight.AddNameComponent().name = "Directional Light"
 
         var comp = __directionalLight.AddDirectionalLightComponent()
-        comp.color = Vec3.new(4.0, 3.2, 1.2)
+        comp.color = Vec3.new(4.0, 3.2, 1.2).mulScalar(0.15)
         comp.planes = Vec2.new(-50.0, 500.0)
         comp.orthographicSize = 120.0
 
