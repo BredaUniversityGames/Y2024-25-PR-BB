@@ -9,9 +9,9 @@ class MeleeEnemy {
     construct new(engine, spawnPosition) {
         
         // ENEMY CONSTANTS
-        _maxVelocity = 10
+        _maxVelocity = 13
         _attackRange = 7
-        _attackDamage = 30
+        _attackDamage = 20
         _shakeIntensity = 1.6
         _attackCooldown = 2000
         _recoveryMaxTime = 500

@@ -63,8 +63,8 @@ class WaveSystem {
 
         _ongoingWave = false
         _currentWave = 0
-        _waveTimer = 3.5
-        _waveDelay = 7.0
+        _waveTimer = 0.0
+        _waveDelay = 4.0
 
         if(_spawnLocations.count == 0) {
             System.print("Should pass at least one spawn location to the wave system!")

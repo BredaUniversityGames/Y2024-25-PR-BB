@@ -10,7 +10,7 @@ class BerserkerEnemy {
     construct new(engine, spawnPosition) {
         
         // ENEMY CONSTANTS
-        _maxVelocity = 4
+        _maxVelocity = 5
         var enemySize = 0.02
         var modelPath = "assets/models/Berserker.glb"
         var colliderShape = ShapeFactory.MakeCapsuleShape(140.0, 50.0) // TODO: Make this engine units
@@ -19,9 +19,10 @@ class BerserkerEnemy {
         _attackDamage = 35
         _shakeIntensity = 2.2
         _attackMaxTime = 2300
-        _health = 18
+        _health = 26
+        _maxHealth = _health
         _attackTiming = 1200 // TODO: Should be added to small melee enemies
-        _recoveryMaxTime = 1500
+        _recoveryMaxTime = 0
         _deathTimerMax = 3000
 
         _hurtSFX = "event:/SFX/DemonHurt"
