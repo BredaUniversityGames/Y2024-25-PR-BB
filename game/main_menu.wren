@@ -27,6 +27,18 @@ class Main {
         __lightComponent.range = 35
         __lightComponent.intensity = 39
 
+        var ambientLight = engine.GetECS().NewEntity()
+
+
+        ambientLight.AddNameComponent().name = "Helmet point ambientLight"
+        var ambientLightComponent = ambientLight.AddPointLightComponent()
+        ambientLightComponent.color = Vec3.new(220 / 255, 50 / 255, 50 / 255)
+        ambientLightComponent.range = 35
+        ambientLightComponent.intensity = 39
+
+        ambientLight.AddTransformComponent().translation = Vec3.new(4.8, 4.7, -10.6) // range: 91, intensity: 20
+
+
         light.AddTransformComponent().translation = Vec3.new(4.8, 4.7, -10.6) // range: 91, intensity: 20
 
         // __background = engine.LoadModel("assets/models/main_menu.glb")

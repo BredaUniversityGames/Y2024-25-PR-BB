@@ -110,6 +110,10 @@ class PlayerVariables {
 
     SetCurrentPowerUp(powerUp) {
         _currentPowerUp = powerUp
+    }
+
+    GetCurrentPowerUp() {
+        return _currentPowerUp
     }    
 
     UpdateMultiplier() {

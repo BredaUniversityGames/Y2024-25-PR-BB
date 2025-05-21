@@ -58,9 +58,9 @@ class Station {
 
 
             if(engine.GetInput().GetDigitalAction("Reload").IsPressed()){
-                playerVariables.SetCurrentPowerUp(_powerUpType)
 
-                if(playerVariables.GetScore() >= 1000){
+                if(playerVariables.GetScore() >= 0){
+                    playerVariables.SetCurrentPowerUp(_powerUpType)
                     playerVariables.DecreaseScore(1000)
                     _time = 0.0
                     this.SetStatus(false)
@@ -169,7 +169,7 @@ class StationManager {
 
         var currentPowerUpColor =  engine.GetGame().GetHUD().GetPowerUpTextColor()
 
-        System.print("Current color:%(currentPowerUpColor.x),%(currentPowerUpColor.y),%(currentPowerUpColor.z),%(currentPowerUpColor.w)")
+        //System.print("Current color:%(currentPowerUpColor.x),%(currentPowerUpColor.y),%(currentPowerUpColor.z),%(currentPowerUpColor.w)")
         var newOpacity = currentPowerUpColor.w - dt * 0.005
         newOpacity = Math.Clamp(newOpacity, 0.0, 1.0)
 

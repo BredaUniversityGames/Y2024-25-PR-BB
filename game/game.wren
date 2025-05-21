@@ -15,6 +15,7 @@ import "gameplay/soul.wren" for Soul, SoulManager
 import "gameplay/coin.wren" for Coin, CoinManager
 import "gameplay/flash_system.wren" for FlashSystem
 import "gameplay/station.wren" for PowerUpType, Station, StationManager
+import "gameplay/powerup_system.wren" for PowerUpSystem
 
 class Main {
 
@@ -213,6 +214,7 @@ class Main {
 
         // Power ups
         __stationManager = StationManager.new(engine, __player)
+        __powerUpSystem = PowerUpSystem.new()
 
         // Flash System
         __flashSystem = FlashSystem.new(engine)
@@ -458,12 +460,13 @@ class Main {
 
         if(engine.GetInput().DebugGetKey(Keycode.eB())){
 
-            // Spawn between 1 and 5 coins
-                var coinCount = Random.RandomIndex(1, 5)
-                for(i in 0...coinCount) {
-                              __coinManager.SpawnCoin(engine, Vec3.new(10.0,2.0,44.0))
+            // // Spawn between 1 and 5 coins
+            //     var coinCount = Random.RandomIndex(1, 5)
+            //     for(i in 0...coinCount) {
+            //                   __coinManager.SpawnCoin(engine, Vec3.new(10.0,2.0,44.0))
 
-                }
+            //     }
+            __playerVariables.SetCurrentPowerUp(PowerUpType.NONE)
         }
 
         for (enemy in __enemyList) {
@@ -481,6 +484,7 @@ class Main {
         __coinManager.Update(engine, __playerVariables,__flashSystem, dt)
         __stationManager.Update(engine, __playerVariables, dt)
         __flashSystem.Update(engine, dt)
+        __powerUpSystem.Update(engine,__playerVariables,__flashSystem, dt)
 
 
         //__waveSystem.Update(dt)
