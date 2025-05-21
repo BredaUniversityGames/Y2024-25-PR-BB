@@ -134,8 +134,6 @@ class Pistol {
             var direction = engine.GetGame().GetAimAssistDirection(engine.GetECS(), forward)
             var rayHitInfo = engine.GetPhysics().ShootRay(start, direction, _range)
 
-            // TODO: Why search all the enemies here?
-
             if (!rayHitInfo.isEmpty) {
                 var normal = Vec3.new(0, 1, 0)
                 for (rayHit in rayHitInfo) {
@@ -223,7 +221,7 @@ class Pistol {
     // We would just not have a visualization but have the aim assist still there.
 
     rotateToTarget (engine) {
-        var gun = engine.GetECS().GetEntityByName(_entityName)
+        var gun = engine.GetECS().GetEntityByName("GunParentPivot")
         var gunTransform = gun.GetTransformComponent()
 
         var player = engine.GetECS().GetEntityByName("Camera")
@@ -237,24 +235,24 @@ class Pistol {
         var targetRotation = Math.LookAt(-direction, gunUp)
 
         if (direction != forward) {
-            gunTransform.SetWorldRotation(Math.ToQuat(Vec3.new(0.0, -Math.PI()/2, 0.0)) * targetRotation)
+            gunTransform.SetWorldRotation(targetRotation)
         } else {
-            gunTransform.rotation = Math.ToQuat(Vec3.new(0.0, -Math.PI()/2, 0.0))
+            gunTransform.rotation = Math.ToQuat(Vec3.new(0.0, 0.0, 0.0))
         }
     }
 
    equip (engine) {
         engine.GetECS().DestroyEntity(engine.GetECS().GetEntityByName(_entityName))
 
-        var camera = engine.GetECS().GetEntityByName("Camera")
+        var gunPivot = engine.GetECS().GetEntityByName("GunPivot")
 
         var newGun = engine.LoadModel("assets/models/Revolver.glb",false)
         newGun.GetNameComponent().name = _entityName
         var gunTransform = newGun.GetTransformComponent()
         gunTransform.rotation = Math.ToQuat(Vec3.new(0.0, -Math.PI()/2, 0.0))
 
-        camera.AttachChild(newGun)
-        var gunAnimations =newGun .GetAnimationControlComponent()
+        gunPivot.AttachChild(newGun)
+        var gunAnimations = newGun.GetAnimationControlComponent()
         gunAnimations.Play(_equipAnim, 1.2, false, 0.2, false)
 
         newGun.RenderInForeground()

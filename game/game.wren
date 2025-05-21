@@ -110,6 +110,16 @@ class Main {
         __player.AddNameComponent().name = "Player"
 
         // Gun Setup
+        __gunParentPivot = engine.GetECS().NewEntity()
+        __gunParentPivot.AddNameComponent().name = "GunParentPivot"
+        __gunParentPivot.AddTransformComponent().translation = Vec3.new(3.0, 0.0 , 0.0)
+
+        __gunPivot = engine.GetECS().NewEntity()
+        __gunPivot.AddNameComponent().name = "GunPivot"
+
+        var gunPivotTransform = __gunPivot.AddTransformComponent()
+        gunPivotTransform.translation = Vec3.new(-3.0, 0.0 , 0.0)
+
         __gun = engine.LoadModel("assets/models/Revolver.glb",false)
         __gun.RenderInForeground()
 
@@ -118,9 +128,10 @@ class Main {
         var gunTransform = __gun.GetTransformComponent()
         gunTransform.rotation = Math.ToQuat(Vec3.new(0.0, -Math.PI()/2, 0.0))
 
-
         __player.AttachChild(__camera)
-        __camera.AttachChild(__gun)
+        __camera.AttachChild(__gunParentPivot)
+        __gunParentPivot.AttachChild(__gunPivot)
+        __gunPivot.AttachChild(__gun)
 
         __armory = [Pistol.new(engine), Shotgun.new(engine), Knife.new(engine)]
 
@@ -409,7 +420,7 @@ class Main {
             }
 
             __activeWeapon.rotateToTarget(engine)
-			
+
             if (engine.GetInput().DebugGetKey(Keycode.eL())) {
                 __enemyList.add(MeleeEnemy.new(engine, Vec3.new(-10, 10, 78), Vec3.new(0.02, 0.02, 0.02), 10, "assets/models/Skeleton.glb", __enemyShape))
             }
