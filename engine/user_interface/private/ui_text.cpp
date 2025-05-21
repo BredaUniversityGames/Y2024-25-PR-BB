@@ -17,7 +17,7 @@ void UITextElement::UpdateLocalTextSize()
         }
 
         const UIFont::Character& fontChar = _font->characters.at(character);
-        _horizontalTextSize += static_cast<float>(fontChar.advance);
+        _horizontalTextSize += static_cast<float>(fontChar.advance + _font->metrics.charSpacing);
     }
 }
 void UITextElement::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
@@ -60,7 +60,7 @@ void UITextElement::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
         info.uvMax = fontChar.uvMax;
 
         drawList.emplace_back(info);
-        localOffset.x += static_cast<float>(fontChar.advance) * elementScale;
+        localOffset.x += static_cast<float>(fontChar.advance) * elementScale + _font->metrics.charSpacing * elementScale;
     }
 }
 void UITextElement::SetText(std::string text)

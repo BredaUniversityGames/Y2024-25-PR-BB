@@ -108,7 +108,7 @@ void main()
         occlusionSample = texture(bindless_color_textures[nonuniformEXT (material.occlusionMapIndex)], texCoord);
     }
 
-    albedoSample *= pow(material.albedoFactor, vec4(2.2));
+    albedoSample *= material.albedoFactor;
     mrSample *= vec4(1.0, material.roughnessFactor, material.metallicFactor, 1.0);
     occlusionSample *= vec4(material.occlusionStrength);
 

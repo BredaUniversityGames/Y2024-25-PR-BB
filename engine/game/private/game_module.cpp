@@ -64,6 +64,7 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     const glm::uvec2 viewportSize = viewport.GetExtend();
 
     auto font = LoadFromFile("assets/fonts/BLOODROSE.ttf", 100, graphicsContext);
+    font->metrics.charSpacing = 0;
 
     if (auto versionFile = fileIO::OpenReadStream("version.txt"))
     {

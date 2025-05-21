@@ -12,12 +12,12 @@
 #include "input/input_bindings.hpp"
 #include "particle_module.hpp"
 #include "particles/particle_bindings.hpp"
+#include "passes/debug_pass.hpp"
 #include "pathfinding/pathfinding_bindings.hpp"
 #include "pathfinding_module.hpp"
 #include "physics/physics_bindings.hpp"
 #include "physics_module.hpp"
 #include "renderer/animation_bindings.hpp"
-#include "renderer/renderer_bindings.hpp"
 #include "renderer_module.hpp"
 #include "scene/model_loader.hpp"
 #include "scripting_module.hpp"
@@ -73,12 +73,22 @@ void ResetDecals(WrenEngine& engine)
 
 void SetFog(WrenEngine& engine, float density)
 {
-    engine.instance->GetModule<RendererModule>().GetRenderer()->GetGPUScene().FogDensity() = density;
+    engine.instance->GetModule<RendererModule>().GetRenderer()->GetSettings().data.fog.density = density;
 }
 
 float GetFog(WrenEngine& engine)
 {
-    return engine.instance->GetModule<RendererModule>().GetRenderer()->GetGPUScene().FogDensity();
+    return engine.instance->GetModule<RendererModule>().GetRenderer()->GetSettings().data.fog.density;
+}
+
+void SetAmbientStrength(WrenEngine& engine, float strength)
+{
+    engine.instance->GetModule<RendererModule>().GetRenderer()->GetSettings().data.lighting.ambientStrength = strength;
+}
+
+float GetAmbientStrength(WrenEngine& engine)
+{
+    return engine.instance->GetModule<RendererModule>().GetRenderer()->GetSettings().data.lighting.ambientStrength;
 }
 
 bool IsDistribution(MAYBE_UNUSED WrenEngine& self)
@@ -90,6 +100,10 @@ bool IsDistribution(MAYBE_UNUSED WrenEngine& self)
 #endif
 }
 
+void DrawDebugLine(WrenEngine& engine, const glm::vec3& start, const glm::vec3& end)
+{
+    engine.instance->GetModule<RendererModule>().GetRenderer()->GetDebugPipeline().AddLine(start, end);
+}
 }
 
 void BindEngineAPI(wren::ForeignModule& module)
@@ -118,7 +132,9 @@ void BindEngineAPI(wren::ForeignModule& module)
         engineAPI.funcExt<bindings::SpawnDecal>("SpawnDecal");
         engineAPI.funcExt<bindings::ResetDecals>("ResetDecals");
         engineAPI.propExt<bindings::GetFog, bindings::SetFog>("Fog");
+        engineAPI.propExt<bindings::GetAmbientStrength, bindings::SetAmbientStrength>("AmbientStrength");
         engineAPI.funcExt<bindings::IsDistribution>("IsDistribution");
+        engineAPI.funcExt<bindings::DrawDebugLine>("DrawDebugLine");
     }
 
     // Time Module

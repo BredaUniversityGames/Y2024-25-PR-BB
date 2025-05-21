@@ -8,6 +8,7 @@ class Main {
         System.print("Start main menu")
 
         engine.Fog = -0.02
+        engine.AmbientStrength = 1.25
 
         engine.GetInput().SetActiveActionSet("UserInterface")
         engine.GetInput().SetMouseHidden(false)

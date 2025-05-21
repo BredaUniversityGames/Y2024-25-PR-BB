@@ -8,7 +8,7 @@
 
 #include <stack>
 
-inline const std::string DISCORD_URL = "https://discord.gg/8RmgD2sz9M";
+constexpr const char* DISCORD_URL = "https://discord.gg/8RmgD2sz9M";
 
 struct PlayerTag
 {
