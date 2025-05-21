@@ -49,7 +49,7 @@ class Station {
         if(distance < _interactRange  && _isActive){
 
             if(_powerUpType == PowerUpType.QUAD_DAMAGE){
-                engine.GetGame().GetHUD().SetPowerUpText("QUAD DAMAGE RELIC [COST: 5000]")
+                engine.GetGame().GetHUD().SetPowerUpText("QUAD DAMAGE RELIC [COST: 2000]")
             }
 
             _textOpacity = _textOpacity + dt * 0.005
@@ -62,14 +62,14 @@ class Station {
 
             if(engine.GetInput().GetDigitalAction("Reload").IsPressed()){
 
-                if(playerVariables.GetScore() >= 5000){
+                if(playerVariables.GetScore() >= 2000){
 
                     if(_powerUpType == PowerUpType.QUAD_DAMAGE){
                         _stationManagerReference.PlayQuadHumSound(engine) 
                     }
 
                     playerVariables.SetCurrentPowerUp(_powerUpType)
-                    playerVariables.DecreaseScore(5000)
+                    playerVariables.DecreaseScore(2000)
                     _time = 0.0
                     this.SetStatus(false)
                     this.SetPowerUpType(PowerUpType.NONE)
