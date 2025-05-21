@@ -7,8 +7,8 @@ class Main {
 
         __loadingScreen = engine.GetGame().GetLoadingScreen()
         engine.GetGame().SetUIMenu(engine.GetGame().GetLoadingScreen())
-        __loadingScreen.displayText.SetColor(Vec4.new(1.0, 1.0, 1.0, 0.0))
-        __loadingScreen.displayText.SetText("I'm not certain what's happening to me, why shouldn't I join them?")
+        __loadingScreen.SetDisplayTextColor(Vec4.new(1.0, 1.0, 1.0, 0.0))
+        __loadingScreen.SetDisplayText("I'm not certain what's happening to me\nwhy shouldn't I join them?\nWhy must I remain here?")
 
         __timer = 0
     }
@@ -20,8 +20,7 @@ class Main {
     static Update(engine, dt) {
 
         var textColor = Vec4.new(1.0, 1.0, 1.0, __timer / 2000.0)
-        var text = __loadingScreen.displayText
-        var color = text.SetColor(textColor)
+        var text = __loadingScreen.SetDisplayTextColor(textColor)
 
         if(__timer > 2000.0) {
             engine.TransitionToScript("game/game.wren")

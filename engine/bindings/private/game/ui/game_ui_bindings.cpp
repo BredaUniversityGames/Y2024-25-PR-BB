@@ -182,5 +182,7 @@ void BindGameUI(wren::ForeignModule& module)
 
     auto& loadingScreen = module.klass<LoadingScreen, Canvas>("LoadingScreen");
     loadingScreen.propReadonlyExt<bindings::LoadingScreenText>("displayText");
+    loadingScreen.func<&LoadingScreen::SetDisplayText>("SetDisplayText");
+    loadingScreen.func<&LoadingScreen::SetDisplayTextColor>("SetDisplayTextColor");
 
 }
