@@ -131,8 +131,30 @@ class Pistol {
             var right = Math.Cross(forward, up)
             var start = translation + forward * Vec3.new(1, 1, 1) - right * Vec3.new(0.09, 0.09, 0.09) - up * Vec3.new(0.12, 0.12, 0.12)
             var end = translation + forward * _rangeVector
-            var direction = engine.GetGame().GetAimAssistDirection(engine.GetECS(), forward)
+            var direction = (end - start).normalize()
             var rayHitInfo = engine.GetPhysics().ShootRay(start, direction, _range)
+
+            // Check first if aim assist is needed, if the cursor is already on an enemy, just shoot so it is possible to aim for the head
+            var aimAssistNeeded = true
+
+            if (!rayHitInfo.isEmpty) {
+                var normal = Vec3.new(0, 1, 0)
+
+                for (rayHit in rayHitInfo) {
+                    var hitEntity = rayHit.GetEntity(engine.GetECS())
+
+                    if (!hitEntity.HasPlayerTag()) {
+                        aimAssistNeeded = !hitEntity.HasEnemyTag()
+                        break
+                    }
+                }
+            }
+
+            if (aimAssistNeeded) {
+                direction = engine.GetGame().GetAimAssistDirection(engine.GetECS(), forward)
+                end = translation + direction * _rangeVector
+                rayHitInfo = engine.GetPhysics().ShootRay(start, direction, _range)
+            }
 
             if (!rayHitInfo.isEmpty) {
                 var normal = Vec3.new(0, 1, 0)
