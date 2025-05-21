@@ -161,6 +161,8 @@ glm::vec4 GetPowerupTextColor(HUD& self)
         // return;
         return powerupText->GetColor();
     }
+
+    return glm::vec4(0.0);
 }
 
 void SetPowerupTimerText(HUD& self, const std::string& text)
