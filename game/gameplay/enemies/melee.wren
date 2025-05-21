@@ -6,30 +6,51 @@ import "gameplay/flash_system.wren" for FlashSystem
 
 class MeleeEnemy {
 
-    construct new(engine, spawnPosition, size, maxSpeed, enemyModel, colliderShape) {
+    construct new(engine, spawnPosition) {
         
-        _maxVelocity = maxSpeed
+        // ENEMY CONSTANTS
+        _maxVelocity = 10
+        _attackRange = 7
+        _attackDamage = 30
+        _shakeIntensity = 1.6
+        _attackCooldown = 2000
+        _recoveryMaxTime = 500
+        _health = 4
+        _deathTimerMax = 3000
+        _getUpTimer = 3500
+        _getUpAppearMax = 1500
+
+        _bonesSFX = "event:/SFX/Bones"
+        _hitMarker = "event:/SFX/Hitmarker"
+        _bonesStepsSFX = "event:/SFX/BonesSteps"
+        _roar = "event:/SFX/Roar"
+
+        var enemySize = 0.026
+        var modelPath = "assets/models/Skeleton.glb"
+        var colliderShape = ShapeFactory.MakeCapsuleShape(70.0, 35.0) // TODO: Make this engine units
+
+        // PATHFINDING
         _currentPath = null
         _currentPathNodeIdx = null
         _honeInRadius = 30.0
 
-        _velocityDirection = Vec3.new(_maxVelocity, 0, 0)
-        
-        _meshEntity = engine.LoadModel(enemyModel, true)
+        // ENTITY SETUP
 
         _rootEntity = engine.GetECS().NewEntity()
         _rootEntity.AddNameComponent().name = "Enemy"
         _rootEntity.AddEnemyTag()
         _rootEntity.AddAudioEmitterComponent()
+
         var transform = _rootEntity.AddTransformComponent()
         transform.translation = spawnPosition
-        transform.scale = size
+        transform.scale = Vec3.new(enemySize, enemySize, enemySize)
 
         var rotation = Vec3.new(0.0, Random.RandomFloatRange(0.0, 3.14 * 2.0), 0.0)
         transform.rotation = Math.ToQuat(rotation)
 
-        _rootEntity.AttachChild(_meshEntity)
+        _meshEntity = engine.LoadModel(modelPath, false)
         _meshEntity.GetTransformComponent().translation = Vec3.new(0,-60,0)
+        _rootEntity.AttachChild(_meshEntity)
 
         _lightEntity = engine.GetECS().NewEntity()
         _lightEntity.AddNameComponent().name = "EnemyLight"
@@ -37,7 +58,6 @@ class MeleeEnemy {
         lightTransform.translation = Vec3.new(0.0, 26, 0.0)
         _pointLight = _lightEntity.AddPointLightComponent()
         _rootEntity.AttachChild(_lightEntity)
-
 
         _transparencyComponent = _meshEntity.AddTransparencyComponent()
 
@@ -52,47 +72,21 @@ class MeleeEnemy {
         var animations = _meshEntity.GetAnimationControlComponent()
         animations.Play("Stand-up", 1.0, false, 0.0, false)
 
+        // STATE
+        
         _isAlive = true
-
         _reasonTimer = 2000
-
-        _attackRange = 7
-        _attackDamage = 30
-        _shakeIntensity = 1.6
-
         _getUpState = true
         _movingState = false
         _attackingState = false
         _recoveryState = false
         _hitState = false
-
-        _attackMaxCooldown = 2000
-        _attackCooldown = _attackMaxCooldown
-
-        _attackMaxTime = 2500
-        _attackTime = 0
-
-        _recoveryMaxTime = 1500
+        _attackTime = _attackCooldown
         _recoveryTime = 0
-
         _evaluateState = true
-
-        _health = 100
-
         _hitTimer = 0
-
-        _getUpTimer = 3500
-        _getUpAppearMax = 1500
         _getUpAppearTimer = _getUpAppearMax
-
-
-        _deathTimerMax = 3000
         _deathTimer = _deathTimerMax
-
-        _bonesSFX = "event:/SFX/Bones"
-        _hitMarker = "event:/SFX/Hitmarker"
-        _bonesStepsSFX = "event:/SFX/BonesSteps"
-        _roar = "event:/SFX/Roar"
 
         _walkEventInstance = null
 
@@ -263,7 +257,7 @@ class MeleeEnemy {
                     body.SetFriction(12.0)
                     animations.Play("Attack", 1.0, false, 0.3, false)
                     animations.SetTime(0.0)
-                    _attackTime = _attackMaxTime
+                    _attackTime = _attackCooldown
                     _evaluateState = false
                     _rootEntity.GetAudioEmitterComponent().AddEvent(engine.GetAudio().PlayEventOnce(_roar))
 

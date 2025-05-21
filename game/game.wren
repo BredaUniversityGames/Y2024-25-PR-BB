@@ -1,15 +1,11 @@
 import "engine_api.wren" for Engine, TimeModule, ECS, ShapeFactory, PhysicsObjectLayer, Rigidbody, RigidbodyComponent, CollisionShape, Entity, Vec3, Vec2, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, EmitterPresetID, Random
 import "gameplay/movement.wren" for PlayerMovement
-import "gameplay/enemies/spawner.wren" for Spawner
 import "gameplay/weapon.wren" for Pistol, Shotgun, Weapons
 import "gameplay/camera.wren" for CameraVariables
 import "gameplay/player.wren" for PlayerVariables, HitmarkerState
 import "gameplay/music_player.wren" for MusicPlayer, BGMPlayer
 import "gameplay/wave_system.wren" for WaveSystem, WaveConfig, SpawnLocationType
 import "analytics/analytics.wren" for AnalyticsManager
-import "gameplay/enemies/berserker_enemy.wren" for BerserkerEnemy
-
-import "gameplay/enemies/ranged_enemy.wren" for RangedEnemy
 import "gameplay/soul.wren" for Soul, SoulManager
 import "gameplay/coin.wren" for Coin, CoinManager
 import "gameplay/flash_system.wren" for FlashSystem
@@ -129,10 +125,6 @@ class Main {
         __ultimateActive = false
 
         __pauseEnabled = false
-
-        __enemyShape = ShapeFactory.MakeCapsuleShape(70.0, 70.0)
-        __eyeShape = ShapeFactory.MakeSphereShape(0.65)
-        __berserkerEnemyShape = ShapeFactory.MakeCapsuleShape(140.0, 50.0)
 
         // Music
 
@@ -278,7 +270,7 @@ class Main {
         }
 
         // Skip everything if paused
-        if (__pauseEnabled) {
+        if (__pauseEnabled || !__alive) {
             return
         }
 
@@ -411,7 +403,7 @@ class Main {
         __flashSystem.Update(engine, dt)
 
         if (!engine.IsDistribution()) {
-            DebugUtils.Tick(engine, __enemyList, __coinManager, __flashSystem, __enemyShape, __berserkerEnemyShape, __eyeShape, __playerVariables)
+            DebugUtils.Tick(engine, __enemyList, __coinManager, __flashSystem, __playerVariables)
         }
     }
 }

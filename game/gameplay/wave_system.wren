@@ -1,7 +1,7 @@
 import "engine_api.wren" for Engine, ECS, Entity, Vec3, Vec2, Quat, Math, TransformComponent, Input, Random, ShapeFactory
-import "enemies/enemies.wren" for MeleeEnemy
-import "enemies/ranged_enemy.wren" for RangedEnemy
-import "enemies/berserker_enemy.wren" for BerserkerEnemy
+import "enemies/melee.wren" for MeleeEnemy
+import "enemies/ranged.wren" for RangedEnemy
+import "enemies/berserker.wren" for BerserkerEnemy
 
 
 class Spawn {
@@ -65,7 +65,7 @@ class WaveSystem {
         _currentWave = -1
         _status = WaveStatusType.NotStarted
         _waveTimer = 0.0
-        _enemyShape = ShapeFactory.MakeCapsuleShape(100.0, 35.0)
+
 
         if(_spawnLocations.count == 0) {
             System.print("Should pass at least one spawn location to the wave system!")
@@ -149,7 +149,7 @@ class WaveSystem {
             var position = spawnerEntity.GetTransformComponent().translation
 
             for(i in 0...spawn.Count) {
-                var enemy = _enemyList.add(MeleeEnemy.new(_engine, position, Vec3.new(0.02, 0.02, 0.02), 10, enemyModelPath, _enemyShape))
+                var enemy = _enemyList.add(MeleeEnemy.new(_engine, position))
                 enemy.FindNewPath(_engine)
             }
             return
@@ -168,14 +168,12 @@ class WaveSystem {
             position.y = position.y + 14.0
 
             for(i in 0...spawn.Count) {
-                var enemy = _enemyList.add(RangedEnemy.new(_engine, position,  Vec3.new(2.25,2.25,2.25), 5, enemyModelPath, enemyShape))
+                var enemy = _enemyList.add(RangedEnemy.new(_engine, position))
                 enemy.FindNewPath(_engine)
             }
             return
         }
         if(spawn.EnemyType=="Berserker"){
-            var enemyModelPath = "assets/models/Berserker.glb"
-            var enemyShape = ShapeFactory.MakeCapsuleShape(140.0, 50.0)
 
             if(spawn.SpawnLocationId > _spawnLocations.count) {
                 System.error("Invalid spawn location ID %(spawn.SpawnLocationId)")
@@ -185,7 +183,7 @@ class WaveSystem {
             var position = spawnerEntity.GetTransformComponent().translation
 
             for(i in 0...spawn.Count) {
-                var enemy = _enemyList.add(BerserkerEnemy.new(_engine, position, Vec3.new(0.026, 0.026, 0.026), 4, enemyModelPath, enemyShape))
+                var enemy = _enemyList.add(BerserkerEnemy.new(_engine, position))
                 enemy.FindNewPath(_engine)
             }
             return
