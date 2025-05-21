@@ -267,7 +267,6 @@ void GameModule::PushPreviousFocusedElement(std::weak_ptr<UIElement> element)
 glm::vec3 GameModule::GetAimAssistDirection(ECSModule& ecs, const glm::vec3& forward)
 {
     const float minAngle = 0.8f;
-    const float enemyPositionHeightOffset = 0.45f;
 
     glm::vec3 result = forward;
     float closestParallel = minAngle;
@@ -279,7 +278,7 @@ glm::vec3 GameModule::GetAimAssistDirection(ECSModule& ecs, const glm::vec3& for
 
     for (auto enemy : reg.view<TransformComponent, EnemyTag>())
     {
-        glm::vec3 enemyPosition = TransformHelpers::GetWorldPosition(reg, enemy) + glm::vec3{ 0.0f, enemyPositionHeightOffset, 0.0f };
+        glm::vec3 enemyPosition = TransformHelpers::GetWorldPosition(reg, enemy);
         glm::vec3 playerToEnemy = glm::normalize(enemyPosition - playerPosition);
         float parallel = glm::dot(forward, playerToEnemy);
 
