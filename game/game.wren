@@ -26,7 +26,7 @@ class Main {
 
         // Set navigational mesh
         engine.GetPathfinding().SetNavigationMesh("assets/models/blockoutv5navmesh_04.glb")
-       
+
         // engine.GetAudio().LoadSFX("assets/sounds/slide2.wav", true, true)
         // engine.GetAudio().LoadSFX("assets/sounds/crows.wav", true, false)
         // engine.GetAudio().LoadSFX("assets/sounds/hitmarker.wav", false, false)
@@ -218,7 +218,7 @@ class Main {
             engine.GetInput().SetMouseHidden(false)
             engine.GetGame().PushUIMenu(engine.GetGame().GetPauseMenu())
             engine.GetInput().SetActiveActionSet("UserInterface")
-            
+
             engine.GetUI().SetSelectedElement(engine.GetGame().GetPauseMenu().continueButton)
             __musicPlayer.SetVolume(engine.GetAudio(), 0.05)
             System.print("Pause Menu is %(__pauseEnabled)!")
@@ -405,6 +405,8 @@ class Main {
                     __activeWeapon.reload(engine)
                 }
             }
+
+            __activeWeapon.rotateToTarget(engine)
 
             if (engine.GetInput().DebugGetKey(Keycode.eK())) {
                 __enemyList.add(BerserkerEnemy.new(engine, Vec3.new(0, 18, 7), Vec3.new(0.026, 0.026, 0.026), 4, "assets/models/Berserker.glb", __berserkerEnemyShape))

@@ -99,7 +99,6 @@ class Pistol {
         }
     }
 
-
     attack(engine, deltaTime, playerVariables, enemies, coinManager) {
         _manualTimer = Math.Max(_manualTimer-deltaTime,0)
 
@@ -219,6 +218,31 @@ class Pistol {
             _cooldown = _attackSpeed
         }
     }
+
+    // Honestly, if it's going to be difficult to implement this, I could leave it for now and look at it later for another pr.
+    // We would just not have a visualization but have the aim assist still there.
+
+    rotateToTarget (engine) {
+        var gun = engine.GetECS().GetEntityByName(_entityName)
+        var gunTransform = gun.GetTransformComponent()
+
+        var player = engine.GetECS().GetEntityByName("Camera")
+        var playerTransform = player.GetTransformComponent()
+
+        var rotation = playerTransform.GetWorldRotation()
+        var forward = Math.ToVector(rotation)
+        var gunUp = rotation.mulVec3(Vec3.new(0, 1, 0))
+
+        var direction = engine.GetGame().GetAimAssistDirection(engine.GetECS(), forward)
+        var targetRotation = Math.LookAt(-direction, gunUp)
+
+        if (direction != forward) {
+            gunTransform.SetWorldRotation(Math.ToQuat(Vec3.new(0.0, -Math.PI()/2, 0.0)) * targetRotation)
+        } else {
+            gunTransform.rotation = Math.ToQuat(Vec3.new(0.0, -Math.PI()/2, 0.0))
+        }
+    }
+
    equip (engine) {
         engine.GetECS().DestroyEntity(engine.GetECS().GetEntityByName(_entityName))
 

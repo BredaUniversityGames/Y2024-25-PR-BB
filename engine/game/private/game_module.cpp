@@ -266,7 +266,7 @@ void GameModule::PushPreviousFocusedElement(std::weak_ptr<UIElement> element)
 
 glm::vec3 GameModule::GetAimAssistDirection(ECSModule& ecs, const glm::vec3& forward)
 {
-    const float minAngle = 0.5f;
+    const float minAngle = 0.99f;
     const float enemyPositionHeightOffset = 0.45f;
 
     glm::vec3 result = forward;
