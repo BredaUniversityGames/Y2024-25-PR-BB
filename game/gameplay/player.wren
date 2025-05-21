@@ -36,8 +36,14 @@ class PlayerVariables {
         _multiplierMaxTime = 5000
 
         _consecutiveHits = 0
-        _consecutiveMaxHits = 5        
+        _consecutiveMaxHits = 5    
+
+        _godMode = false    
     }
+
+    godMode=(v) { _godMode = v }
+    godMode { _godMode }
+
     hitmarkerState{_hitmarkerState}
     hitmarkTimer{_hitmarkTimer}
     health {_health}
@@ -81,11 +87,13 @@ class PlayerVariables {
     wasUltReadyLastFrame=(value) {_wasUltReadyLastFrame = value}
 
     IsInvincible() {
-        return _invincibilityTime > 0
+        return _invincibilityTime > 0 || _godMode
     }
 
     DecreaseHealth(value) {
-        _health = Math.Max(_health - value, 0)
+        if (!this.IsInvincible()) {
+            _health = Math.Max(_health - value, 0)
+        }
     }
 
     IncreaseHealth(value) {
