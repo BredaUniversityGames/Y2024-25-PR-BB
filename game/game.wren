@@ -486,7 +486,7 @@ class Main {
         __powerUpSystem.Update(engine,__playerVariables,__flashSystem, dt)
 
 
-        //__waveSystem.Update(dt)
+        __waveSystem.Update(dt)
 
     }
 }

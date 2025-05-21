@@ -49,7 +49,7 @@ class Station {
         if(distance < _interactRange  && _isActive){
 
             if(_powerUpType == PowerUpType.QUAD_DAMAGE){
-                engine.GetGame().GetHUD().SetPowerUpText("QUAD DAMAGE RELIC [COST: 1000]")
+                engine.GetGame().GetHUD().SetPowerUpText("QUAD DAMAGE RELIC [COST: 5000]")
             }
 
             _textOpacity = _textOpacity + dt * 0.005
@@ -69,7 +69,7 @@ class Station {
                     }
 
                     playerVariables.SetCurrentPowerUp(_powerUpType)
-                    playerVariables.DecreaseScore(1000)
+                    playerVariables.DecreaseScore(5000)
                     _time = 0.0
                     this.SetStatus(false)
                     this.SetPowerUpType(PowerUpType.NONE)
