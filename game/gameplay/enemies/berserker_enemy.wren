@@ -187,12 +187,11 @@ class BerserkerEnemy {
 
                             flashSystem.Flash(Vec3.new(1.0, 0.0, 0.0),0.85)
                             engine.GetAudio().PlayEventOnce(_hitSFX)
-                        }
-
-                        animations.Play("Idle", 1.0, true, 1.0, false)
-                        animations.SetTime(0.0)
+                        }    
                     }
 
+                    animations.Play("Idle", 1.0, true, 1.0, false)
+                    animations.SetTime(0.0)
                     _attackTimer = 999999
                 }
 
@@ -244,6 +243,10 @@ class BerserkerEnemy {
                     _attackingState = true
                     _movingState = false
                     body.SetFriction(12.0)
+                    _attackTimer = _attackTiming 
+                    if (animations.CurrentAnimationName() == "Walk") {
+                        _attackTimer = _attackTimer - 100
+                    }
                     animations.Play("Swipe", 1.0, false, 0.3, false)
                     animations.SetTime(0.0)
                     _attackTime = _attackMaxTime
