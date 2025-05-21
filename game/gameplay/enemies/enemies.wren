@@ -69,8 +69,11 @@ class MeleeEnemy {
         _attackMaxCooldown = 2000
         _attackCooldown = _attackMaxCooldown
 
-        _attackMaxTime = 2500
-        _attackTime = 0
+        _attackMaxTime = 3000
+        _attackTime = _attackMaxTime
+
+        _attackTiming = 1460
+        _attackTimer = _attackTiming
 
         _recoveryMaxTime = 1500
         _recoveryTime = 0
@@ -204,24 +207,37 @@ class MeleeEnemy {
 
             if (_attackingState) {
                 _attackTime = _attackTime - dt
-                if (_attackTime <= 0 ) {
-                    if (Math.Distance(playerPos, pos) < _attackRange && !playerVariables.IsInvincible()) {
-                        playerVariables.DecreaseHealth(_attackDamage)
-                        playerVariables.cameraVariables.shakeIntensity = _shakeIntensity
-                        playerVariables.invincibilityTime = playerVariables.invincibilityMaxTime
+                _attackTimer = _attackTimer - dt
+
+                if (_attackTimer <= 0 ) {
+                    _attackTimer = 999999
+                    if (!playerVariables.IsInvincible()) {
+                        var forward = Math.ToVector(_rootEntity.GetTransformComponent().rotation)
+                        var toPlayer = pos - playerPos
+
+                        if (Math.Dot(forward, toPlayer) >= 0.8 && Math.Distance(playerPos, pos) < _attackRange) {
+                            playerVariables.DecreaseHealth(_attackDamage)
+                            playerVariables.cameraVariables.shakeIntensity = _shakeIntensity
+                            playerVariables.invincibilityTime = playerVariables.invincibilityMaxTime
 
                         //Flash the screen red
                         flashSystem.Flash(Vec3.new(105 / 255, 13 / 255, 1 / 255),0.75)
 
                         engine.GetAudio().PlayEventOnce(_hitSFX)
-                        animations.Play("Attack", 1.0, false, 0.1, false)
+                        //animations.Play("Attack", 1.0, false, 0.1, false)
+                        }
                     }
+                }
 
+                if (_attackTime <= 0) {
                     _attackingState = false
                     _recoveryState = true
                     _recoveryTime = _recoveryMaxTime
+                    _attackTime = _attackMaxTime
+                    _attackTimer = _attackTiming
                 }
             }
+            
             if (_recoveryState) {
                 if (animations.AnimationFinished()) {
                     animations.Play("Idle", 1.0, true, 1.0, false)
@@ -246,7 +262,7 @@ class MeleeEnemy {
 
                 if(_walkEventInstance == null || engine.GetAudio().IsEventPlaying(_walkEventInstance) == false) {
                     _walkEventInstance = engine.GetAudio().PlayEventLoop(_bonesStepsSFX)
-                    engine.GetAudio().SetEventVolume(_walkEventInstance, 15.0)
+                    engine.GetAudio().SetEventVolume(_walkEventInstance, 8.0)
                     var audioEmitter = _rootEntity.GetAudioEmitterComponent()
                     audioEmitter.AddEvent(_walkEventInstance)
                 }
@@ -262,15 +278,19 @@ class MeleeEnemy {
                     _attackingState = true
                     _movingState = false
                     body.SetFriction(12.0)
+                    _attackTimer = _attackTiming 
+                    if (animations.CurrentAnimationName() == "Run") {
+                        _attackTimer = _attackTimer - 450
+                    }
                     animations.Play("Attack", 1.0, false, 0.3, false)
                     animations.SetTime(0.0)
                     _attackTime = _attackMaxTime
                     _evaluateState = false
                     _rootEntity.GetAudioEmitterComponent().AddEvent(engine.GetAudio().PlayEventOnce(_roar))
 
-                } else if (_movingState == false) { // Enter attack state
+                } else if (_movingState == false) {
                     body.SetFriction(0.0)
-                    animations.Play("Run", 1.25, true, 0.5, true)
+                    animations.Play("Run", 1.25, true, 0.2, true)
                     _movingState = true
                 }
             }
@@ -284,7 +304,7 @@ class MeleeEnemy {
                     _evaluateState = true
                     _hitState = false
                     body.SetDynamic()
-                    animations.Play("Run", 1.25, true, 0.5, true)
+                    animations.Play("Run", 1.25, true, 0.2, true)
                 }
             }
         } else {
