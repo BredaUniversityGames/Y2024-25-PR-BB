@@ -18,7 +18,6 @@
 #include "physics/physics_bindings.hpp"
 #include "physics_module.hpp"
 #include "renderer/animation_bindings.hpp"
-#include "renderer/renderer_bindings.hpp"
 #include "renderer_module.hpp"
 #include "scene/model_loader.hpp"
 #include "scripting_module.hpp"
@@ -74,12 +73,22 @@ void ResetDecals(WrenEngine& engine)
 
 void SetFog(WrenEngine& engine, float density)
 {
-    engine.instance->GetModule<RendererModule>().GetRenderer()->GetGPUScene().FogDensity() = density;
+    engine.instance->GetModule<RendererModule>().GetRenderer()->GetSettings().data.fog.density = density;
 }
 
 float GetFog(WrenEngine& engine)
 {
-    return engine.instance->GetModule<RendererModule>().GetRenderer()->GetGPUScene().FogDensity();
+    return engine.instance->GetModule<RendererModule>().GetRenderer()->GetSettings().data.fog.density;
+}
+
+void SetAmbientStrength(WrenEngine& engine, float strength)
+{
+    engine.instance->GetModule<RendererModule>().GetRenderer()->GetSettings().data.lighting.ambientStrength = strength;
+}
+
+float GetAmbientStrength(WrenEngine& engine)
+{
+    return engine.instance->GetModule<RendererModule>().GetRenderer()->GetSettings().data.lighting.ambientStrength;
 }
 
 bool IsDistribution(MAYBE_UNUSED WrenEngine& self)
@@ -123,6 +132,7 @@ void BindEngineAPI(wren::ForeignModule& module)
         engineAPI.funcExt<bindings::SpawnDecal>("SpawnDecal");
         engineAPI.funcExt<bindings::ResetDecals>("ResetDecals");
         engineAPI.propExt<bindings::GetFog, bindings::SetFog>("Fog");
+        engineAPI.propExt<bindings::GetAmbientStrength, bindings::SetAmbientStrength>("AmbientStrength");
         engineAPI.funcExt<bindings::IsDistribution>("IsDistribution");
         engineAPI.funcExt<bindings::DrawDebugLine>("DrawDebugLine");
     }
