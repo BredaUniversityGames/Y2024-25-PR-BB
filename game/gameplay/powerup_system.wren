@@ -10,12 +10,12 @@ class PowerUpSystem {
         _intensityTarget = 0.0
         _colorTarget = Vec3.new(0.0, 0.0, 0.0)
 
-        _maxPowerUpTime = 5000
+        _maxPowerUpTime = 15000
         _powerUpTimer = _maxPowerUpTime
 
         _timerTextOpacity = 0.0
         _timerTextColor = Vec3.new(1.0, 1.0, 1.0)
-        
+
 
     }
 
@@ -66,6 +66,9 @@ class PowerUpSystem {
 
             //default the rest of the effects to normal
             playerVariables.SetGunSmokeRay(EmitterPresetID.eRay())
+
+            // reset stats
+            playerVariables.SetDamageMultiplier(1.0)
         }
 
 
@@ -73,6 +76,7 @@ class PowerUpSystem {
             _intensityTarget = 0.5
             _colorTarget = _quadDamageColor
 
+            playerVariables.SetDamageMultiplier(4.0)
             playerVariables.SetGunSmokeRay(EmitterPresetID.eRayQuadDamage())
         }
     }

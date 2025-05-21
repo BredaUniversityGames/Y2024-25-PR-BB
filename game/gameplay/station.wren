@@ -59,6 +59,10 @@ class Station {
 
             if(engine.GetInput().GetDigitalAction("Reload").IsPressed()){
 
+                if(_powerUpType == PowerUpType.QUAD_DAMAGE){
+                   _stationManagerReference.PlayQuadHumSound(engine) 
+                }
+
                 if(playerVariables.GetScore() >= 0){
                     playerVariables.SetCurrentPowerUp(_powerUpType)
                     playerVariables.DecreaseScore(1000)
@@ -140,6 +144,7 @@ class StationManager {
         _pointLight.range = 5.5
         _pointLight.color = Vec3.new(0.67, 0.06, 0.89)
         _quadDamageMeshEntity.AttachChild(_quadLightEntity)
+        _quadHumEvent = "event:/SFX/QuadHum"
 
 
         // Load the stations
@@ -161,6 +166,14 @@ class StationManager {
 
     anyActiveStation { _anyActiveStation }
     anyActiveStation=(value) { _anyActiveStation = value }
+
+    PlayQuadHumSound(engine){
+        var player = engine.GetECS().GetEntityByName("Camera")
+        var audioEmitter = player.GetAudioEmitterComponent()
+        var quadEventInstance = engine.GetAudio().PlayEventOnce(_quadHumEvent)
+        engine.GetAudio().SetEventVolume(quadEventInstance, 2.4)
+        audioEmitter.AddEvent(quadEventInstance)
+    }
 
     Update(engine, playerVariables, dt){
         var playerTransform = _playerEntity.GetTransformComponent()

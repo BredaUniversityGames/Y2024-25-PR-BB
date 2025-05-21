@@ -40,6 +40,8 @@ class PlayerVariables {
         _consecutiveHits = 0
         _consecutiveMaxHits = 5    
 
+
+        _damageMultiplier = 1.0
         _currentPowerUp = PowerUpType.NONE  
         // Let's change this based on which PowerUp we have
         _gunSmokeRay = EmitterPresetID.eRay()  
@@ -123,6 +125,13 @@ class PlayerVariables {
     }
     GetGunSmokeRay() {
         return _gunSmokeRay
+    }
+
+    SetDamageMultiplier(damageMultiplier) {
+        _damageMultiplier = damageMultiplier
+    }
+    GetDamageMultiplier() {
+        return _damageMultiplier
     }
 
     UpdateMultiplier() {
