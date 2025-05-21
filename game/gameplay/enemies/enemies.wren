@@ -93,6 +93,7 @@ class MeleeEnemy {
         _hitMarkerSFX = "event:/SFX/Hitmarker"
         _bonesStepsSFX = "event:/SFX/BonesSteps"
         _roar = "event:/SFX/Roar"
+        _hitSFX = "event:/SFX/Hit"
 
         _walkEventInstance = null
 
@@ -212,7 +213,7 @@ class MeleeEnemy {
                         //Flash the screen red
                         flashSystem.Flash(Vec3.new(105 / 255, 13 / 255, 1 / 255),0.75)
 
-                        engine.GetAudio().PlaySFX("assets/sounds/hit1.wav", 1.0)
+                        engine.GetAudio().PlayEventOnce(_hitSFX)
                         animations.Play("Attack", 1.0, false, 0.1, false)
                     }
 

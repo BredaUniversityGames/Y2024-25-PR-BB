@@ -92,6 +92,8 @@ class BerserkerEnemy {
 
         _hitMarkerSFX = "event:/SFX/Hitmarker"
 
+        _hitSFX = "event:/SFX/Hit"
+
         _walkEventInstance = null
 
         if(__perlin == null) {
@@ -184,7 +186,7 @@ class BerserkerEnemy {
                             playerVariables.invincibilityTime = playerVariables.invincibilityMaxTime
 
                             flashSystem.Flash(Vec3.new(1.0, 0.0, 0.0),0.85)
-                            engine.GetAudio().PlaySFX(_hitSFX, 1.0)
+                            engine.GetAudio().PlayEventOnce(_hitSFX)
                         }
 
                         animations.Play("Idle", 1.0, true, 1.0, false)
