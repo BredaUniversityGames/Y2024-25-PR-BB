@@ -12,6 +12,7 @@
 #include "input/input_bindings.hpp"
 #include "particle_module.hpp"
 #include "particles/particle_bindings.hpp"
+#include "passes/debug_pass.hpp"
 #include "pathfinding/pathfinding_bindings.hpp"
 #include "pathfinding_module.hpp"
 #include "physics/physics_bindings.hpp"
@@ -100,6 +101,10 @@ bool IsDistribution(MAYBE_UNUSED WrenEngine& self)
 #endif
 }
 
+void DrawDebugLine(WrenEngine& engine, const glm::vec3& start, const glm::vec3& end)
+{
+    engine.instance->GetModule<RendererModule>().GetRenderer()->GetDebugPipeline().AddLine(start, end);
+}
 }
 
 void BindEngineAPI(wren::ForeignModule& module)
@@ -130,6 +135,7 @@ void BindEngineAPI(wren::ForeignModule& module)
         engineAPI.propExt<bindings::GetFog, bindings::SetFog>("Fog");
         engineAPI.propExt<bindings::GetAmbientStrength, bindings::SetAmbientStrength>("AmbientStrength");
         engineAPI.funcExt<bindings::IsDistribution>("IsDistribution");
+        engineAPI.funcExt<bindings::DrawDebugLine>("DrawDebugLine");
     }
 
     // Time Module
