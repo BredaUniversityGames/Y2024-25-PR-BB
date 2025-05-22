@@ -407,7 +407,6 @@ class Main {
 
         __soulManager.Update(engine, __playerVariables,__flashSystem, dt)
         __coinManager.Update(engine, __playerVariables,__flashSystem, dt)
-        __waveSystem.Update(engine, __player, __enemyList, dt)
         __stationManager.Update(engine, __playerVariables, dt)
         __flashSystem.Update(engine, dt)
         __powerUpSystem.Update(engine,__playerVariables,__flashSystem, dt)
