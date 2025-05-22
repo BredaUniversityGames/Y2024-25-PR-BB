@@ -1,15 +1,9 @@
+import "gameplay/hud.wren" for WrenHUD, HitmarkerState
 import "engine_api.wren" for Math, EmitterPresetID
 import "gameplay/station.wren" for PowerUpType
 
-
-class HitmarkerState {
-    static normal {0}
-    static crit {1}    
-}
-
-
 class PlayerVariables {
-    construct new() {
+    construct new(cppHud) {
         _maxHealth = 100.0
         _health = _maxHealth
         _score = 0
@@ -22,6 +16,7 @@ class PlayerVariables {
         _grenadeMaxCharge = 100
         _grenadeChargeRate = 20
         _grenadeCharge = 0
+        _hud =  WrenHUD.new(cppHud)
 
         _invincibilityMaxTime = 500
         _invincibilityTime = 0
@@ -30,6 +25,10 @@ class PlayerVariables {
 
         _hitmarkerState = HitmarkerState.normal
         _hitmarkTimer = 0
+        
+        _soulsIndicatorTimerCurrent = 0
+        _soulsIndicatorTimerMax = 300
+        _soulsIndicatorFadeIn = true
         
         _multiplier = 1.0
         _multiplierIncrement = 0.2
@@ -50,7 +49,7 @@ class PlayerVariables {
 
     godMode=(v) { _godMode = v }
     godMode { _godMode }
-
+    hud { _hud }
     hitmarkerState{_hitmarkerState}
     hitmarkTimer{_hitmarkTimer}
     health {_health}
@@ -149,7 +148,7 @@ class PlayerVariables {
             _multiplier = _multiplier + _multiplierIncrement
         }
     }
-
+       
     UpdateUltCharge(multiplier) {
         _ultCharge =  Math.Min(_ultCharge + multiplier * Math.Min(2 * _multiplier, _ultMaxChargeMultiplier), _ultMaxCharge)
     }

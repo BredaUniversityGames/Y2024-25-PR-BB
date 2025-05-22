@@ -7,77 +7,76 @@ import "../coin.wren" for Coin, CoinManager
 
 class RangedEnemy {
 
-    construct new(engine, spawnPosition, size, maxSpeed, enemyModel, colliderShape) {
+    construct new(engine, spawnPosition) {
         
-        _maxVelocity = maxSpeed
+        // ENEMY CONSTANTS
 
-        _velocityDirection = Vec3.new(_maxVelocity, 0, 0)
-        
-        _meshEntity = engine.LoadModel(enemyModel,true)
-
-        _rootEntity = engine.GetECS().NewEntity()
-        _rootEntity.AddNameComponent().name = "Enemy"
-        _rootEntity.AddEnemyTag()
-        _rootEntity.AddAudioEmitterComponent()
-        var transform = _rootEntity.AddTransformComponent()
-        transform.translation = spawnPosition
-        transform.scale = size
-
-        _rootEntity.AttachChild(_meshEntity)
-        _meshEntity.GetTransformComponent().translation = Vec3.new(0,0,0)
-
-        var rb = Rigidbody.new(engine.GetPhysics(), colliderShape, PhysicsObjectLayer.eENEMY(), true)
-        var body = _rootEntity.AddRigidbodyComponent(rb)
-        //body.SetStatic()
-        body.SetGravityFactor(0.0)
-
-        _isAlive = true
-
-        _reasonTimer = 2001
-
+        _maxVelocity = 5
         _attackRange = 72
-        _attackDamage = 10
+        _attackDamage = 15
         _shakeIntensity = 1.6
-        
-        _movingState = false
-        _attackingState = false
-        _recoveryState = false
-        _hitState = false
-
-        _attackMaxCooldown = 10000
-        _attackCooldown = _attackMaxCooldown
-
+        _attackMaxCooldown = 6000
         _attackMaxTime = 4500
-        _attackTime = 0
-        _attackPauseTime = 50
-
         _recoveryMaxTime = 2000
-        _recoveryTime = 0
-
-        _evaluateState = true
-
-        _health = 100
-
-        _hitTimer = 0
-
-        _chargeTimer = 0 // Interval between spawning white particle ray
-        _attackPos = null
-
+        _health = 5
         _deathTimerMax = 1500
-        _deathTimer = _deathTimerMax
+        _changeDirectionTimerMax = 2000
+        _maxHeight = 34.0
+        _minHeight = 16.0
 
         _shootSFX = "event:/SFX/EyeLaserBlast" 
         _chargeSFX = "event:/SFX/EyeLaserCharge"
         _hitSFX = "event:/SFX/EyeHit"
 
-        _changeDirectionTimerMax = 2000
+        var enemyModel = "assets/models/eye.glb"
+        var enemySize = 2.25
+        var colliderShape = ShapeFactory.MakeSphereShape(0.65) // TODO: Make this engine units
+        
+        // ENTITY SETUP
+
+        _rootEntity = engine.GetECS().NewEntity()
+        _rootEntity.AddNameComponent().name = "Enemy"
+        _rootEntity.AddEnemyTag()
+        _rootEntity.AddAudioEmitterComponent()
+
+        var transform = _rootEntity.AddTransformComponent()
+        transform.translation = spawnPosition
+        transform.scale = Vec3.new(enemySize, enemySize, enemySize)
+
+        _meshEntity = engine.LoadModel(enemyModel, false)
+        _meshEntity.GetTransformComponent().translation = Vec3.new(0,0,0)
+        _rootEntity.AttachChild(_meshEntity)
+
+        var rb = Rigidbody.new(engine.GetPhysics(), colliderShape, PhysicsObjectLayer.eENEMY(), true)
+        var body = _rootEntity.AddRigidbodyComponent(rb)
+        body.SetGravityFactor(0.0)
+
+        // STATE
+
+        _isAlive = true
+        _reasonTimer = 2001
+
+        _movingState = false
+        _attackingState = false
+        _recoveryState = false
+        _hitState = false
+
+        _attackCooldown = _attackMaxCooldown
+        _attackTime = 0
+        _recoveryTime = 0
+
+        _evaluateState = true
+
+        _hitTimer = 0
+        _chargeTimer = 0 // Interval between spawning white particle ray
+        _attackPos = null
+
+        _deathTimer = _deathTimerMax
+
         _changeDirectionTimer = 0
         _dashTimer = 0
         _hasDashed = false
         _dashWishPosition = Vec3.new(0,0,0)
-
-        _maxHeight = 28.0
-        _minHeight = 16.0
 
         _hasTakenDamage = false
         _hasDashedFromDamage = false
@@ -173,6 +172,8 @@ class RangedEnemy {
                     // Rotate towards the player
                     var endRotation = Math.LookAt((pos - _attackPos), Vec3.new(0, 1, 0))
                     var startRotation = body.GetRotation()
+
+                    // TODO: Not framerate independent
                     body.SetRotation(Math.Slerp(startRotation, endRotation, 0.03 *dt))
 
                     // Spawning white charging particles

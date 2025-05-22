@@ -1,15 +1,13 @@
 import "engine_api.wren" for Engine, TimeModule, ECS, ShapeFactory, PhysicsObjectLayer, Rigidbody, RigidbodyComponent, CollisionShape, Entity, Vec3, Vec2, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, EmitterPresetID, Random
 import "gameplay/movement.wren" for PlayerMovement
-import "gameplay/enemies/spawner.wren" for Spawner
 import "gameplay/weapon.wren" for Pistol, Shotgun, Weapons
 import "gameplay/camera.wren" for CameraVariables
 import "gameplay/player.wren" for PlayerVariables, HitmarkerState
 import "gameplay/music_player.wren" for MusicPlayer, BGMPlayer
-import "gameplay/wave_system.wren" for WaveSystem, WaveConfig, SpawnLocationType
+import "gameplay/wave_system.wren" for WaveSystem, WaveConfig, EnemyType, WaveGenerator
 import "analytics/analytics.wren" for AnalyticsManager
-import "gameplay/enemies/berserker_enemy.wren" for BerserkerEnemy
 
-import "gameplay/enemies/ranged_enemy.wren" for RangedEnemy
+import "gameplay/hud.wren" for WrenHUD
 import "gameplay/soul.wren" for Soul, SoulManager
 import "gameplay/coin.wren" for Coin, CoinManager
 import "gameplay/flash_system.wren" for FlashSystem
@@ -24,6 +22,8 @@ class Main {
         engine.GetTime().SetScale(1.0)
         engine.GetInput().SetActiveActionSet("Shooter")
         engine.GetGame().SetUIMenu(engine.GetGame().GetHUD())
+
+
         engine.Fog = 0.005
         engine.AmbientStrength = 0.35
 
@@ -45,7 +45,7 @@ class Main {
 
         // Player Setup
 
-        __playerVariables = PlayerVariables.new()
+        __playerVariables = PlayerVariables.new(engine.GetGame().GetHUD())
         __counter = 0
         __frameTimer = 0
         __groundedTimer = 0
@@ -82,7 +82,7 @@ class Main {
         __playerController.AddCheatsComponent().noClip = false
 
         var shape = ShapeFactory.MakeCapsuleShape(1.7, 0.5) // height, circle radius
-        var rb = Rigidbody.new(engine.GetPhysics(), shape, PhysicsObjectLayer.ePLAYER(), false) // physics module, __meleeEnemeyShapetation
+        var rb = Rigidbody.new(engine.GetPhysics(), shape, PhysicsObjectLayer.ePLAYER(), false)
         __playerController.AddRigidbodyComponent(rb)
 
         __cameraVariables = CameraVariables.new()
@@ -133,10 +133,6 @@ class Main {
 
         __pauseEnabled = false
 
-        __enemyShape = ShapeFactory.MakeCapsuleShape(70.0, 70.0)
-        __eyeShape = ShapeFactory.MakeSphereShape(0.65)
-        __berserkerEnemyShape = ShapeFactory.MakeCapsuleShape(140.0, 50.0)
-
         // Music
 
         __musicPlayer = BGMPlayer.new(engine.GetAudio(),
@@ -151,51 +147,19 @@ class Main {
         for(i in 0..8) {
             var entity = engine.GetECS().GetEntityByName("Spawner_%(i)")
             if(entity) {
-                spawnLocations.add(entity)
+                spawnLocations.add(entity.GetTransformComponent().translation)
             }
         }
-
+        
         __enemyList = []
+
         var waveConfigs = []
-        waveConfigs.add(WaveConfig.new().SetDuration(10)
-            .AddSpawn("Skeleton", SpawnLocationType.Closest, 1, 1)
-            .AddSpawn("Skeleton", SpawnLocationType.Furthest, 7, 3)
-        )
-        waveConfigs.add(WaveConfig.new().SetDuration(30)
-            .AddSpawn("Skeleton", 0, 1, 1)
-            .AddSpawn("Skeleton", 1, 1, 2)
-            .AddSpawn("Skeleton", 2, 1, 1)
-            .AddSpawn("Skeleton", 3, 1, 2)
-            .AddSpawn("Skeleton", SpawnLocationType.Furthest, 7, 3)
-            .AddSpawn("Eye", SpawnLocationType.Closest, 8, 1)
-            .AddSpawn("Skeleton", 0, 10, 1)
-            .AddSpawn("Skeleton", 1, 15, 1)
-            .AddSpawn("Skeleton", 2, 5, 1)
-            .AddSpawn("Skeleton", 3, 15, 3)
-            .AddSpawn("Berserker", 3, 15, 3)
-            .AddSpawn("Eye", SpawnLocationType.Closest, 25, 1)
-        )
-        waveConfigs.add(WaveConfig.new().SetDuration(60)
-            .AddSpawn("Skeleton", 0, 1, 2)
-            .AddSpawn("Skeleton", 1, 1, 2)
-            .AddSpawn("Skeleton", 2, 1, 1)
-            .AddSpawn("Skeleton", 3, 1, 2)
-            .AddSpawn("Eye", SpawnLocationType.Closest, 1, 1)
-            .AddSpawn("Skeleton", SpawnLocationType.Furthest, 5, 5)
-            .AddSpawn("Skeleton", 0, 15, 2)
-            .AddSpawn("Skeleton", 1, 15, 1)
-            .AddSpawn("Skeleton", 2, 15, 2)
-            .AddSpawn("Skeleton", 3, 15, 3)
-            .AddSpawn("Eye", SpawnLocationType.Closest, 5, 1)
-            .AddSpawn("Eye", SpawnLocationType.Closest, 20, 1)
-            .AddSpawn("Skeleton", SpawnLocationType.Furthest, 15, 5)
-            .AddSpawn("Skeleton", 0, 40, 3)
-            .AddSpawn("Skeleton", 1, 40, 1)
-            .AddSpawn("Skeleton", 2, 40, 2)
-            .AddSpawn("Skeleton", 3, 40, 2)
-            .AddSpawn("Skeleton", SpawnLocationType.Furthest, 7, 5)
-        )
-        __waveSystem = WaveSystem.new(engine, waveConfigs, __enemyList, spawnLocations, __player)
+
+        for (v in 0...30) {
+            waveConfigs.add(WaveGenerator.GenerateWave(v))
+        }
+        
+        __waveSystem = WaveSystem.new(waveConfigs, spawnLocations)
 
         // Souls
         __soulManager = SoulManager.new(engine, __player)
@@ -287,7 +251,7 @@ class Main {
         }
 
         // Skip everything if paused
-        if (__pauseEnabled) {
+        if (__pauseEnabled || !__alive) {
             return
         }
 
@@ -320,7 +284,6 @@ class Main {
         // }
 
         __playerVariables.invincibilityTime = Math.Max(__playerVariables.invincibilityTime - dt, 0)
-
         __playerVariables.multiplierTimer = Math.Max(__playerVariables.multiplierTimer - dt, 0)
         __playerVariables.hitmarkTimer = Math.Max(__playerVariables.hitmarkTimer - dt, 0)
 
@@ -340,7 +303,7 @@ class Main {
 
         if (engine.GetInput().DebugIsInputEnabled()) {
 
-            __playerMovement.Update(engine, dt, __playerController, __camera)
+            __playerMovement.Update(engine, dt, __playerController, __camera,__playerVariables.hud)
 
             for (weapon in __armory) {
                 weapon.cooldown = Math.Max(weapon.cooldown - dt, 0)
@@ -409,7 +372,6 @@ class Main {
         }
 
         // Check if player died
-
         if (__alive && __playerVariables.health <= 0) {
             __alive = false
             engine.GetTime().SetScale(0.0)
@@ -420,19 +382,9 @@ class Main {
 
             engine.GetUI().SetSelectedElement(engine.GetGame().GetGameOverMenu().retryButton)
         }
-
-        engine.GetGame().GetHUD().UpdateHealthBar(__playerVariables.health / __playerVariables.maxHealth)
-        engine.GetGame().GetHUD().UpdateAmmoText(__activeWeapon.ammo, __activeWeapon.maxAmmo)
-        engine.GetGame().GetHUD().UpdateScoreText(__playerVariables.score)
-        engine.GetGame().GetHUD().UpdateGrenadeBar(__playerVariables.grenadeCharge / __playerVariables.grenadeMaxCharge)
-        engine.GetGame().GetHUD().UpdateDashCharges(__playerMovement.currentDashCount)
-        engine.GetGame().GetHUD().UpdateMultiplierText(__playerVariables.multiplier)
-        engine.GetGame().GetHUD().ShowHitmarker(__playerVariables.hitmarkTimer > 0 && __playerVariables.hitmarkerState == HitmarkerState.normal)
-        engine.GetGame().GetHUD().ShowHitmarkerCrit(__playerVariables.hitmarkTimer > 0 && __playerVariables.hitmarkerState == HitmarkerState.crit)
-        //engine.GetGame().GetHUD().UpdateUltBar(__playerVariables.ultCharge / __playerVariables.ultMaxCharge)
-        //engine.GetGame().GetHUD().UpdateUltReadyText(__playerVariables.ultCharge == __playerVariables.ultMaxCharge)
-
-        var mousePosition = engine.GetInput().GetMousePosition()
+        
+        
+       var mousePosition = engine.GetInput().GetMousePosition()
         __playerMovement.lastMousePosition = mousePosition
 
         var playerPos = __playerController.GetRigidbodyComponent().GetPosition()
@@ -449,15 +401,16 @@ class Main {
 
         __soulManager.Update(engine, __playerVariables,__flashSystem, dt)
         __coinManager.Update(engine, __playerVariables,__flashSystem, dt)
+        __waveSystem.Update(engine, __player, __enemyList, dt)
+
         __stationManager.Update(engine, __playerVariables, dt)
         __flashSystem.Update(engine, dt)
         __powerUpSystem.Update(engine,__playerVariables,__flashSystem, dt)
 
-
-        __waveSystem.Update(dt)
+        __playerVariables.hud.Update(engine, dt,__playerMovement,__playerVariables,__activeWeapon.ammo, __activeWeapon.maxAmmo)
 
         if (!engine.IsDistribution()) {
-            DebugUtils.Tick(engine, __enemyList, __coinManager, __flashSystem, __enemyShape, __berserkerEnemyShape, __eyeShape, __playerVariables)
+            DebugUtils.Tick(engine, __enemyList, __coinManager, __flashSystem, __waveSystem, __playerVariables)
         }
     }
 }
