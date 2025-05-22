@@ -43,7 +43,7 @@ public:
     {
     }
 
-    void Load(entt::entity entity, uint32_t currentNodeIndex, entt::entity parent, bool hasPhysics)
+    void Load(entt::entity entity, uint32_t currentNodeIndex, entt::entity parent, bool hasPhysics, bool withRendering = true)
     {
         const Node& currentNode = _hierarchy.nodes[currentNodeIndex];
 
@@ -67,9 +67,12 @@ public:
             {
             case MeshType::eSTATIC:
             {
-                _ecs.GetRegistry().emplace<StaticMeshComponent>(entity).mesh = _gpuModel.staticMeshes.at(index);
-                _ecs.GetRegistry().get<StaticMeshComponent>(entity).rootEntity = _rootEntity;
-                _ecs.GetRegistry().emplace<IsStaticDraw>(entity);
+                if (withRendering)
+                {
+                    _ecs.GetRegistry().emplace<StaticMeshComponent>(entity).mesh = _gpuModel.staticMeshes.at(index);
+                    _ecs.GetRegistry().get<StaticMeshComponent>(entity).rootEntity = _rootEntity;
+                    _ecs.GetRegistry().emplace<IsStaticDraw>(entity);
+                }
 
                 // check if it should have collider
                 if (hasPhysics)
@@ -85,8 +88,11 @@ public:
                 break;
             }
             case MeshType::eSKINNED:
-                _ecs.GetRegistry().emplace<SkinnedMeshComponent>(entity).mesh = _gpuModel.skinnedMeshes.at(index);
-                _ecs.GetRegistry().get<SkinnedMeshComponent>(entity).rootEntity = _rootEntity;
+                if (withRendering)
+                {
+                    _ecs.GetRegistry().emplace<SkinnedMeshComponent>(entity).mesh = _gpuModel.skinnedMeshes.at(index);
+                    _ecs.GetRegistry().get<SkinnedMeshComponent>(entity).rootEntity = _rootEntity;
+                }
                 break;
             default:
                 throw std::runtime_error("Mesh type not supported!");
@@ -136,7 +142,7 @@ public:
         for (const auto& nodeIndex : currentNode.childrenIndices)
         {
             const entt::entity childEntity = _ecs.GetRegistry().create();
-            Load(childEntity, nodeIndex, entity, hasPhysics);
+            Load(childEntity, nodeIndex, entity, hasPhysics, withRendering);
         }
     }
 
@@ -219,7 +225,7 @@ private:
     }
 };
 
-entt::entity LoadModelIntoECSAsHierarchy(ECSModule& ecs, PhysicsModule& physics, const GPUModel& gpuModel, const CPUModel& cpuModel, const bool loadWithCollision)
+entt::entity LoadModelIntoECSAsHierarchy(ECSModule& ecs, PhysicsModule& physics, const GPUModel& gpuModel, const CPUModel& cpuModel, const bool loadWithCollision, const bool withRendering = true)
 {
     ZoneScopedN("Instantiate Scene");
     entt::entity rootEntity = ecs.GetRegistry().create();
@@ -234,7 +240,7 @@ entt::entity LoadModelIntoECSAsHierarchy(ECSModule& ecs, PhysicsModule& physics,
     }
 
     RecursiveNodeLoader recursiveNodeLoader { ecs, physics, cpuModel.hierarchy, cpuModel, gpuModel, animationControlEntity, entityLUT, rootEntity };
-    recursiveNodeLoader.Load(rootEntity, cpuModel.hierarchy.root, entt::null, loadWithCollision);
+    recursiveNodeLoader.Load(rootEntity, cpuModel.hierarchy.root, entt::null, loadWithCollision, withRendering);
 
     entt::entity skeletonEntity = entt::null;
     if (cpuModel.hierarchy.skeletonRoot.has_value())
@@ -304,4 +310,15 @@ entt::entity ModelData::Instantiate(Engine& engine, bool loadWithCollision)
         engine.GetModule<PhysicsModule>(),
         model,
         cpuModel, loadWithCollision);
+}
+entt::entity ModelData::InstantiateCollisions(Engine& engine)
+{
+    auto& modelResourceManager = engine.GetModule<RendererModule>().GetRenderer()->GetContext()->Resources()->ModelResourceManager();
+    const GPUModel& model = *modelResourceManager.Access(gpuModel);
+
+    return LoadModelIntoECSAsHierarchy(
+        engine.GetModule<ECSModule>(),
+        engine.GetModule<PhysicsModule>(),
+        model,
+        cpuModel, true, false);
 }
