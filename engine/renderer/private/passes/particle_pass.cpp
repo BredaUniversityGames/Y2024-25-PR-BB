@@ -120,7 +120,7 @@ void ParticlePass::RecordEmit(vk::CommandBuffer commandBuffer)
     // make sure the copy buffer command is done before dispatching
     vk::BufferMemoryBarrier barrier {};
     barrier.buffer = resources->BufferResourceManager().Access(_emittersBuffer)->buffer;
-    barrier.size = _emitters.size() * sizeof(Emitter);
+    barrier.size = MAX_EMITTERS * sizeof(Emitter);
     barrier.offset = 0;
     barrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
     barrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
