@@ -14,11 +14,13 @@ class MeleeEnemy {
         _attackDamage = 20
         _shakeIntensity = 1.6
         _attackCooldown = 2000
-        _recoveryMaxTime = 500
+        _recoveryMaxTime = 1000
         _health = 4
         _deathTimerMax = 3000
         _getUpTimer = 3500
         _getUpAppearMax = 1500
+        _attackTiming = 1460
+        _attackTimer = _attackTiming
 
         _bonesSFX = "event:/SFX/Bones"
         _hitMarkerSFX = "event:/SFX/Hitmarker"
@@ -270,9 +272,11 @@ class MeleeEnemy {
                     _movingState = false
                     body.SetFriction(12.0)
                     _attackTimer = _attackTiming 
+
                     if (animations.CurrentAnimationName() == "Run") {
                         _attackTimer = _attackTimer - 450
                     }
+
                     animations.Play("Attack", 1.0, false, 0.3, false)
                     animations.SetTime(0.0)
                     _attackTime = _attackCooldown
