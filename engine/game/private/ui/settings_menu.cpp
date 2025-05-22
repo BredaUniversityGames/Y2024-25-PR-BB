@@ -105,7 +105,7 @@ std::shared_ptr<SettingsMenu> SettingsMenu::Create(
         constexpr glm::vec2 toggleSize = glm::vec2(16, 16) * 4.0f;
 
         constexpr glm::vec2 sliderSize = glm::vec2(128, 16) * 4.0f;
-        constexpr glm::vec2 toggleOffset = glm::vec2(400.0f, -toggleSize.y * 0.25f + textSize * 0.25f);
+        constexpr glm::vec2 toggleOffset = glm::vec2(400.0f-sliderSize.x, -toggleSize.y * 0.25f + textSize * 0.25f);
 
         // Sensitivity
         {
@@ -136,7 +136,7 @@ std::shared_ptr<SettingsMenu> SettingsMenu::Create(
             auto text = node->AddChild<UITextElement>(font, "Aim Assist", glm::vec2(), textSize);
             text->anchorPoint = UIElement::AnchorPoint::eTopLeft;
 
-            auto toggle = node->AddChild<UIToggle>(toggleStyle, toggleOffset, toggleSize);
+            auto toggle = node->AddChild<UIToggle>(toggleStyle, toggleOffset+ glm::vec2(sliderSize.x-toggleSize.x,0), toggleSize);
             toggle->anchorPoint = UIElement::AnchorPoint::eTopRight;
             settings->aimAssistToggle = toggle;
 
@@ -176,7 +176,7 @@ std::shared_ptr<SettingsMenu> SettingsMenu::Create(
             auto text = node->AddChild<UITextElement>(font, "Toggle VSync", glm::vec2(), textSize);
             text->anchorPoint = UIElement::AnchorPoint::eTopLeft;
 
-            auto toggle = node->AddChild<UIToggle>(toggleStyle, toggleOffset, toggleSize);
+            auto toggle = node->AddChild<UIToggle>(toggleStyle, toggleOffset+ glm::vec2(sliderSize.x-toggleSize.x,0), toggleSize);
             toggle->anchorPoint = UIElement::AnchorPoint::eTopRight;
             settings->vsyncToggle = toggle;
 
@@ -256,7 +256,7 @@ std::shared_ptr<SettingsMenu> SettingsMenu::Create(
             auto text = node->AddChild<UITextElement>(font, "Toggle Framerate Display", glm::vec2(), textSize);
             text->anchorPoint = UIElement::AnchorPoint::eTopLeft;
 
-            auto toggle = node->AddChild<UIToggle>(toggleStyle, toggleOffset, toggleSize);
+            auto toggle = node->AddChild<UIToggle>(toggleStyle, toggleOffset+ glm::vec2(sliderSize.x-toggleSize.x,0), toggleSize);
             toggle->anchorPoint = UIElement::AnchorPoint::eTopRight;
 
             toggle->state = gameModule.GetSettings().framerateCounter;
@@ -274,7 +274,7 @@ std::shared_ptr<SettingsMenu> SettingsMenu::Create(
             constexpr glm::vec2 backPos = { 0.0f, 500.0f };
             auto back = settings->AddChild<UIButton>(buttonStyle, backPos, buttonBaseSize);
             back->anchorPoint = UIElement::AnchorPoint::eMiddle;
-            back->AddChild<UITextElement>(font, "Back", textSize)->SetColor(glm::vec4(1, 1, 1, 1));
+            back->AddChild<UITextElement>(font, "Back", textSize);
 
             auto callback = [&engine]()
             {
