@@ -14,8 +14,8 @@ std::shared_ptr<GameVersionVisualization> GameVersionVisualization::Create(Graph
     cleanText.erase(std::remove(cleanText.begin(), cleanText.end(), '\r'), cleanText.end()); // Remove any alignment
 
     visualization->text = visualization->AddChild<UITextElement>(font, cleanText, glm::vec2(10.0f, 50.0f), 50);
-    visualization->text.lock()->anchorPoint = UIElement::AnchorPoint::eBottomLeft;
-    visualization->text.lock()->SetColor(glm::vec4(0.75f, 0.75f, 0.75f, 0.75f));
+    visualization->text.lock()->anchorPoint = UIElement::AnchorPoint::eTopLeft;
+    visualization->text.lock()->display_color = glm::vec4(0.75f, 0.75f, 0.75f, 0.75f);
 
     visualization->UpdateAllChildrenAbsoluteTransform();
     graphicsContext.UpdateBindlessSet();

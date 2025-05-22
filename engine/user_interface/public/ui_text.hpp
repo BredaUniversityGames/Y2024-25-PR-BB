@@ -38,9 +38,6 @@ public:
 
     void SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const override;
 
-    void SetColor(glm::vec4 color) { _color = std::move(color); };
-    const glm::vec4& GetColor() const { return _color; }
-
     void SetText(std::string text);
     std::string GetText() const { return _text; }
 
@@ -52,5 +49,4 @@ private:
     float _horizontalTextSize = 0;
     std::shared_ptr<UIFont> _font;
     std::string _text;
-    glm::vec4 _color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 };
