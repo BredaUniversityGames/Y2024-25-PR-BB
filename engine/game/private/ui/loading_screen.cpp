@@ -48,9 +48,9 @@ void LoadingScreen::SetDisplayText(std::string text)
 
     uint32_t i = 0;
     size_t offset = text.find("\n");
-    while(true)
+    while (true)
     {
-        if(offset == std::string::npos)
+        if (offset == std::string::npos)
         {
             lines[i] = text;
             break;
@@ -65,11 +65,11 @@ void LoadingScreen::SetDisplayText(std::string text)
 
     float totalTextHeightOffset = (static_cast<float>(_font.lock()->metrics.resolutionY) * static_cast<float>(i)) / 2.0f;
 
-    for(size_t i = 0; i < lines.size(); i++)
+    for (size_t i = 0; i < lines.size(); i++)
     {
         auto line = lines[i];
         auto textElement = _displayTexts[i].lock();
-        if(!textElement)
+        if (!textElement)
         {
             _displayTexts[i] = this->AddChild<UITextElement>(_font.lock(), "", glm::vec2(), _textSize);
             textElement = _displayTexts[i].lock();
@@ -88,9 +88,9 @@ void LoadingScreen::SetDisplayText(std::string text)
 void LoadingScreen::SetDisplayTextColor(glm::vec4 color)
 {
     _displayTextColor = color;
-    for(const auto& element : _displayTexts)
+    for (const auto& element : _displayTexts)
     {
-        if(element.lock())
+        if (element.lock())
         {
             element.lock()->display_color = _displayTextColor;
         }
@@ -99,10 +99,10 @@ void LoadingScreen::SetDisplayTextColor(glm::vec4 color)
 
 void LoadingScreen::ShowContinuePrompt()
 {
-    _continueText.lock()->display_color = {1.0f, 1.0f, 1.0f,1.0f};
+    _continueText.lock()->display_color = { 1.0f, 1.0f, 1.0f, 1.0f };
 }
 
 void LoadingScreen::HideContinuePrompt()
 {
-    _continueText.lock()->display_color = {1.0f, 1.0f, 1.0f,0.0f};
+    _continueText.lock()->display_color = { 1.0f, 1.0f, 1.0f, 0.0f };
 }

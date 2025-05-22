@@ -237,7 +237,7 @@ std::optional<std::shared_ptr<GameOverMenu>> GameModule::GetGameOver()
 
 std::optional<std::shared_ptr<LoadingScreen>> GameModule::GetLoadingScreen()
 {
-    if(auto lock = _loadingScreen.lock())
+    if (auto lock = _loadingScreen.lock())
     {
         return lock;
     }
