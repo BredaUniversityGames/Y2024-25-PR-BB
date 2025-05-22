@@ -86,18 +86,18 @@ std::shared_ptr<MainMenu> MainMenu::Create(GraphicsContext& graphicsContext, con
 
         auto controlsButton = buttonPanel->AddChild<UIButton>(buttonStyle, buttonPos, buttonBaseSize);
         controlsButton->anchorPoint = UIElement::AnchorPoint::eTopLeft;
-        controlsButton->AddChild<UITextElement>(font, "CONTROLS", textSize);
+        controlsButton->AddChild<UITextElement>(font, "Controls", textSize);
 
         buttonPos += increment;
 
         auto settingsButton = buttonPanel->AddChild<UIButton>(buttonStyle, buttonPos, buttonBaseSize);
         settingsButton->anchorPoint = UIElement::AnchorPoint::eTopLeft;
-        settingsButton->AddChild<UITextElement>(font, "SETTINGS", textSize);
+        settingsButton->AddChild<UITextElement>(font, "Settings", textSize);
         buttonPos += increment;
 
         auto quitButton = buttonPanel->AddChild<UIButton>(buttonStyle, buttonPos, buttonBaseSize);
         quitButton->anchorPoint = UIElement::AnchorPoint::eTopLeft;
-        quitButton->AddChild<UITextElement>(font, "QUIT", textSize);
+        quitButton->AddChild<UITextElement>(font, "Quit", textSize);
 
         main->playButton = playButton;
         main->quitButton = quitButton;
