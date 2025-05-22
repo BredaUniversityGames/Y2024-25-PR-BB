@@ -1,10 +1,12 @@
-import "engine_api.wren" for Math
+import "engine_api.wren" for Math, EmitterPresetID
+import "gameplay/station.wren" for PowerUpType
 
 
 class HitmarkerState {
     static normal {0}
     static crit {1}    
 }
+
 
 class PlayerVariables {
     construct new() {
@@ -39,6 +41,11 @@ class PlayerVariables {
         _consecutiveMaxHits = 5    
 
         _godMode = false    
+
+        _damageMultiplier = 1.0
+        _currentPowerUp = PowerUpType.NONE  
+        // Let's change this based on which PowerUp we have
+        _gunSmokeRay = EmitterPresetID.eRay()  
     }
 
     godMode=(v) { _godMode = v }
@@ -102,7 +109,37 @@ class PlayerVariables {
 
     IncreaseScore(value) {
         _score = _score + value
+    }
+
+    GetScore() {
+        return _score
+    }
+
+    DecreaseScore(value) {
+        _score = Math.Max(_score - value, 0)
+    }
+
+    SetCurrentPowerUp(powerUp) {
+        _currentPowerUp = powerUp
+    }
+
+    GetCurrentPowerUp() {
+        return _currentPowerUp
     }    
+
+    SetGunSmokeRay(gunSmokeRay) {
+        _gunSmokeRay = gunSmokeRay
+    }
+    GetGunSmokeRay() {
+        return _gunSmokeRay
+    }
+
+    SetDamageMultiplier(damageMultiplier) {
+        _damageMultiplier = damageMultiplier
+    }
+    GetDamageMultiplier() {
+        return _damageMultiplier
+    }
 
     UpdateMultiplier() {
         _consecutiveHits = _consecutiveHits + 1

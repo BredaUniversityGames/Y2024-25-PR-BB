@@ -9,6 +9,8 @@ import "analytics/analytics.wren" for AnalyticsManager
 import "gameplay/soul.wren" for Soul, SoulManager
 import "gameplay/coin.wren" for Coin, CoinManager
 import "gameplay/flash_system.wren" for FlashSystem
+import "gameplay/station.wren" for PowerUpType, Station, StationManager
+import "gameplay/powerup_system.wren" for PowerUpSystem
 import "debug_utils.wren" for DebugUtils
 
 class Main {
@@ -155,7 +157,13 @@ class Main {
 
         // Souls
         __soulManager = SoulManager.new(engine, __player)
+
+        // Coins
         __coinManager = CoinManager.new(engine, __player)
+
+        // Power ups
+        __stationManager = StationManager.new(engine, __player)
+        __powerUpSystem = PowerUpSystem.new()
 
         // Flash System
         __flashSystem = FlashSystem.new(engine)
@@ -401,7 +409,9 @@ class Main {
         __coinManager.Update(engine, __playerVariables,__flashSystem, dt)
         __waveSystem.Update(engine, __player, __enemyList, dt)
 
+        __stationManager.Update(engine, __playerVariables, dt)
         __flashSystem.Update(engine, dt)
+        __powerUpSystem.Update(engine,__playerVariables,__flashSystem, dt)
 
         if (!engine.IsDistribution()) {
             DebugUtils.Tick(engine, __enemyList, __coinManager, __flashSystem, __waveSystem, __playerVariables)
