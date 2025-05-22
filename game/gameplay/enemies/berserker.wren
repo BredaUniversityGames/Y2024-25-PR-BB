@@ -7,24 +7,40 @@ import "gameplay/flash_system.wren" for FlashSystem
 
 class BerserkerEnemy {
 
-    construct new(engine, spawnPosition, size, maxSpeed, enemyModel, colliderShape) {
+    construct new(engine, spawnPosition) {
         
-        _maxVelocity = maxSpeed
-        _currentPath = null
-        _currentPathNodeIdx = null
-        _honeInRadius = 30.0
-
-        _velocityDirection = Vec3.new(_maxVelocity, 0, 0)
+        // ENEMY CONSTANTS
+        _maxVelocity = 5
+        var enemySize = 0.03
+        var modelPath = "assets/models/Berserker.glb"
+        var colliderShape = ShapeFactory.MakeCapsuleShape(145.0, 40.0) // TODO: Make this engine units
         
-        _meshEntity = engine.LoadModel(enemyModel, false)
+        _attackRange = 9
+        _attackDamage = 35
+        _shakeIntensity = 2.2
+        _attackMaxTime = 2300
+        _health = 26
+        _attackTiming = 1200 // TODO: Should be added to small melee enemies
+        _recoveryMaxTime = 0
+        _deathTimerMax = 3000
 
+        _growlSFX = "event:/SFX/DemonGrowl"
+        _hurtSFX = "event:/SFX/DemonHurt"
+        _stepSFX = "event:/SFX/DemonStep"
+        _attackSFX = "event:/SFX/DemonAttack"
+        _attackHitSFX = "event:/SFX/DemonAttackHit"
+        _hitSFX = "event:/SFX/Hit"
+
+        // ENTITY SETUP
+
+        _meshEntity = engine.LoadModel(modelPath, false)
         _rootEntity = engine.GetECS().NewEntity()
         _rootEntity.AddNameComponent().name = "BerserkerEnemy"
         _rootEntity.AddEnemyTag()
         _rootEntity.AddAudioEmitterComponent()
         var transform = _rootEntity.AddTransformComponent()
         transform.translation = spawnPosition
-        transform.scale = size
+        transform.scale = Vec3.new(enemySize, enemySize, enemySize)
 
         _rootEntity.AttachChild(_meshEntity)
         _meshEntity.GetTransformComponent().translation = Vec3.new(0,-121,0)
@@ -48,51 +64,27 @@ class BerserkerEnemy {
         var animations = _meshEntity.GetAnimationControlComponent()
         animations.Play("Walk", 0.4, true, 1.0, true)
 
+        // STATE
+
+        _currentPath = null
+        _currentPathNodeIdx = null
+        _honeInRadius = 30.0
+
         _isAlive = true
 
         _reasonTimer = 2000
-
-        _attackRange = 9
-        _attackDamage = 30
-        _shakeIntensity = 2.0
         
         _movingState = false
         _attackingState = false
         _recoveryState = false
         _hitState = false
-
-        _attackMaxCooldown = 2500
-        _attackCooldown = _attackMaxCooldown
-
-        _attackMaxTime = 2300
         _attackTime = _attackMaxTime
-
-        _attackTiming = 1200
         _attackTimer = _attackTiming
-
-        _recoveryMaxTime = 1500
         _recoveryTime = 0
 
         _evaluateState = true
-
-        _health = 1200
-
         _hitTimer = 0
-
-        _deathTimerMax = 3000
         _deathTimer = _deathTimerMax
-
-        _hurtSFX = "event:/SFX/DemonHurt"
-        _growlSFX = "event:/SFX/DemonGrowl"
-
-        _stepSFX = "event:/SFX/DemonStep"
-
-        _attackSFX = "event:/SFX/DemonAttack"
-        _attackHitSFX = "event:/SFX/DemonAttackHit"
-
-        _hitMarkerSFX = "event:/SFX/Hitmarker"
-
-        _hitSFX = "event:/SFX/Hit"
 
         _walkEventInstance = null
 
@@ -106,7 +98,7 @@ class BerserkerEnemy {
     }
 
     IsHeadshot(y) { // Will probably need to be changed when we have a different model
-        if (y >= _rootEntity.GetRigidbodyComponent().GetPosition().y + 1) {
+        if (y >= _rootEntity.GetRigidbodyComponent().GetPosition().y + 1.5) {
             return true
         }
         return false
@@ -139,8 +131,8 @@ class BerserkerEnemy {
         } else {
             //animations.Play("Hit", 1.0, false, 0.1, false)
             //_rootEntity.GetRigidbodyComponent().SetVelocity(Vec3.new(0.0, 0.0, 0.0))
-            var hitmarkerSFX = engine.GetAudio().PlayEventOnce(_hurtSFX)
-            var eventInstance = engine.GetAudio().PlayEventOnce(_hitMarkerSFX)
+            var hitmarkerSFX = engine.GetAudio().PlayEventOnce(_hitSFX)
+            var eventInstance = engine.GetAudio().PlayEventOnce(_hurtSFX)
             var audioEmitter = _rootEntity.GetAudioEmitterComponent()
             audioEmitter.AddEvent(eventInstance)
             audioEmitter.AddEvent(hitmarkerSFX)
