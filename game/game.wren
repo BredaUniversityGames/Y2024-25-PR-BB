@@ -1,15 +1,11 @@
 import "engine_api.wren" for Engine, TimeModule, ECS, ShapeFactory, PhysicsObjectLayer, Rigidbody, RigidbodyComponent, CollisionShape, Entity, Vec3, Vec2, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, EmitterPresetID, Random
 import "gameplay/movement.wren" for PlayerMovement
-import "gameplay/enemies/spawner.wren" for Spawner
 import "gameplay/weapon.wren" for Pistol, Shotgun, Weapons
 import "gameplay/camera.wren" for CameraVariables
 import "gameplay/player.wren" for PlayerVariables, HitmarkerState
 import "gameplay/music_player.wren" for MusicPlayer, BGMPlayer
-import "gameplay/wave_system.wren" for WaveSystem, WaveConfig, SpawnLocationType
+import "gameplay/wave_system.wren" for WaveSystem, WaveConfig, EnemyType, WaveGenerator
 import "analytics/analytics.wren" for AnalyticsManager
-import "gameplay/enemies/berserker_enemy.wren" for BerserkerEnemy
-
-import "gameplay/enemies/ranged_enemy.wren" for RangedEnemy
 import "gameplay/soul.wren" for Soul, SoulManager
 import "gameplay/coin.wren" for Coin, CoinManager
 import "gameplay/flash_system.wren" for FlashSystem
@@ -28,7 +24,7 @@ class Main {
         engine.AmbientStrength = 0.35
 
         // Set navigational mesh
-        engine.GetPathfinding().SetNavigationMesh("assets/models/blockoutv5navmesh_04.glb")
+        engine.GetPathfinding().SetNavigationMesh("assets/models/graveyard_navmesh.glb")
 
         // Directional Light
         __directionalLight = engine.GetECS().NewEntity()
@@ -81,7 +77,7 @@ class Main {
         __playerController.AddCheatsComponent().noClip = false
 
         var shape = ShapeFactory.MakeCapsuleShape(1.7, 0.5) // height, circle radius
-        var rb = Rigidbody.new(engine.GetPhysics(), shape, PhysicsObjectLayer.ePLAYER(), false) // physics module, __meleeEnemeyShapetation
+        var rb = Rigidbody.new(engine.GetPhysics(), shape, PhysicsObjectLayer.ePLAYER(), false)
         __playerController.AddRigidbodyComponent(rb)
 
         __cameraVariables = CameraVariables.new()
@@ -132,10 +128,6 @@ class Main {
 
         __pauseEnabled = false
 
-        __enemyShape = ShapeFactory.MakeCapsuleShape(70.0, 70.0)
-        __eyeShape = ShapeFactory.MakeSphereShape(0.65)
-        __berserkerEnemyShape = ShapeFactory.MakeCapsuleShape(140.0, 50.0)
-
         // Music
 
         __musicPlayer = BGMPlayer.new(engine.GetAudio(),
@@ -150,51 +142,18 @@ class Main {
         for(i in 0..8) {
             var entity = engine.GetECS().GetEntityByName("Spawner_%(i)")
             if(entity) {
-                spawnLocations.add(entity)
+                spawnLocations.add(entity.GetTransformComponent().translation)
             }
         }
 
         __enemyList = []
+
         var waveConfigs = []
-        waveConfigs.add(WaveConfig.new().SetDuration(10)
-            .AddSpawn("Skeleton", SpawnLocationType.Closest, 1, 1)
-            .AddSpawn("Skeleton", SpawnLocationType.Furthest, 7, 3)
-        )
-        waveConfigs.add(WaveConfig.new().SetDuration(30)
-            .AddSpawn("Skeleton", 0, 1, 1)
-            .AddSpawn("Skeleton", 1, 1, 2)
-            .AddSpawn("Skeleton", 2, 1, 1)
-            .AddSpawn("Skeleton", 3, 1, 2)
-            .AddSpawn("Skeleton", SpawnLocationType.Furthest, 7, 3)
-            .AddSpawn("Eye", SpawnLocationType.Closest, 8, 1)
-            .AddSpawn("Skeleton", 0, 10, 1)
-            .AddSpawn("Skeleton", 1, 15, 1)
-            .AddSpawn("Skeleton", 2, 5, 1)
-            .AddSpawn("Skeleton", 3, 15, 3)
-            .AddSpawn("Berserker", 3, 15, 3)
-            .AddSpawn("Eye", SpawnLocationType.Closest, 25, 1)
-        )
-        waveConfigs.add(WaveConfig.new().SetDuration(60)
-            .AddSpawn("Skeleton", 0, 1, 2)
-            .AddSpawn("Skeleton", 1, 1, 2)
-            .AddSpawn("Skeleton", 2, 1, 1)
-            .AddSpawn("Skeleton", 3, 1, 2)
-            .AddSpawn("Eye", SpawnLocationType.Closest, 1, 1)
-            .AddSpawn("Skeleton", SpawnLocationType.Furthest, 5, 5)
-            .AddSpawn("Skeleton", 0, 15, 2)
-            .AddSpawn("Skeleton", 1, 15, 1)
-            .AddSpawn("Skeleton", 2, 15, 2)
-            .AddSpawn("Skeleton", 3, 15, 3)
-            .AddSpawn("Eye", SpawnLocationType.Closest, 5, 1)
-            .AddSpawn("Eye", SpawnLocationType.Closest, 20, 1)
-            .AddSpawn("Skeleton", SpawnLocationType.Furthest, 15, 5)
-            .AddSpawn("Skeleton", 0, 40, 3)
-            .AddSpawn("Skeleton", 1, 40, 1)
-            .AddSpawn("Skeleton", 2, 40, 2)
-            .AddSpawn("Skeleton", 3, 40, 2)
-            .AddSpawn("Skeleton", SpawnLocationType.Furthest, 7, 5)
-        )
-        __waveSystem = WaveSystem.new(engine, waveConfigs, __enemyList, spawnLocations, __player)
+        for (v in 0...30) {
+            waveConfigs.add(WaveGenerator.GenerateWave(v))
+        }
+        
+        __waveSystem = WaveSystem.new(waveConfigs, spawnLocations)
 
         // Souls
         __soulManager = SoulManager.new(engine, __player)
@@ -286,7 +245,7 @@ class Main {
         }
 
         // Skip everything if paused
-        if (__pauseEnabled) {
+        if (__pauseEnabled || !__alive) {
             return
         }
 
@@ -448,15 +407,13 @@ class Main {
 
         __soulManager.Update(engine, __playerVariables,__flashSystem, dt)
         __coinManager.Update(engine, __playerVariables,__flashSystem, dt)
+        __waveSystem.Update(engine, __player, __enemyList, dt)
         __stationManager.Update(engine, __playerVariables, dt)
         __flashSystem.Update(engine, dt)
         __powerUpSystem.Update(engine,__playerVariables,__flashSystem, dt)
 
-
-        __waveSystem.Update(dt)
-
         if (!engine.IsDistribution()) {
-            DebugUtils.Tick(engine, __enemyList, __coinManager, __flashSystem, __enemyShape, __berserkerEnemyShape, __eyeShape, __playerVariables)
+            DebugUtils.Tick(engine, __enemyList, __coinManager, __flashSystem, __waveSystem, __playerVariables)
         }
     }
 }
