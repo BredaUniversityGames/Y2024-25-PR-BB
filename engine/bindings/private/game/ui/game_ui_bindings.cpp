@@ -25,8 +25,6 @@ std::shared_ptr<UIButton> GameOverMenuButton(GameOverMenu& self) { return self.b
 
 std::shared_ptr<UIButton> ControlsMenuBackButton(ControlsMenu& self) { return self.backButton.lock(); }
 
-std::shared_ptr<UITextElement> LoadingScreenText(LoadingScreen& self) { return self.displayText.lock(); }
-
 void UpdateHealthBar(HUD& self, const float health)
 {
     if (auto locked = self.healthBar.lock(); locked != nullptr)
@@ -239,8 +237,9 @@ void BindGameUI(wren::ForeignModule& module)
     gameOver.propReadonlyExt<bindings::RetryButton>("retryButton");
 
     auto& loadingScreen = module.klass<LoadingScreen, Canvas>("LoadingScreen");
-    loadingScreen.propReadonlyExt<bindings::LoadingScreenText>("displayText");
     loadingScreen.func<&LoadingScreen::SetDisplayText>("SetDisplayText");
     loadingScreen.func<&LoadingScreen::SetDisplayTextColor>("SetDisplayTextColor");
+    loadingScreen.func<&LoadingScreen::HideContinuePrompt>("HideContinuePrompt");
+    loadingScreen.func<&LoadingScreen::ShowContinuePrompt>("ShowContinuePrompt");
 
 }

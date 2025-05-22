@@ -32,13 +32,7 @@ std::shared_ptr<LoadingScreen> LoadingScreen::Create(GraphicsContext& graphicsCo
         image->anchorPoint = UIElement::AnchorPoint::eFill;
     }
 
-#if 0
-    {
-        loading->displayText = loading->AddChild<UITextElement>(loading->_font.lock(), "Loading", glm::vec2(), _textSize);
-        auto text = loading->displayText.lock();
-        text->anchorPoint = UIElement::AnchorPoint::eMiddle;
-    }
-#endif
+    loading->_continueText = loading->AddChild<UITextElement>(loading->_font.lock(), "Press E to continue", glm::vec2(), _textSize / 2.0f);
 
     loading->UpdateAllChildrenAbsoluteTransform();
     graphicsContext.UpdateBindlessSet();
@@ -82,9 +76,13 @@ void LoadingScreen::SetDisplayText(std::string text)
         }
 
         textElement->SetText(line);
-        textElement->SetLocation(textElement->GetRelativeLocation() + glm::vec2(0.0f, i * _font.lock()->metrics.resolutionY - totalTextHeightOffset));
+        textElement->SetLocation(glm::vec2(0.0f, i * _font.lock()->metrics.resolutionY - totalTextHeightOffset));
         textElement->SetColor(_displayTextColor);
     }
+
+    _continueText.lock()->SetLocation(glm::vec2(0.0f, totalTextHeightOffset + static_cast<float>(_font.lock()->metrics.resolutionY)));
+
+    UpdateAllChildrenAbsoluteTransform();
 }
 
 void LoadingScreen::SetDisplayTextColor(glm::vec4 color)
@@ -97,4 +95,14 @@ void LoadingScreen::SetDisplayTextColor(glm::vec4 color)
             element.lock()->SetColor(_displayTextColor);
         }
     }
+}
+
+void LoadingScreen::ShowContinuePrompt()
+{
+    _continueText.lock()->SetColor({1.0f, 1.0f, 1.0f,1.0f});
+}
+
+void LoadingScreen::HideContinuePrompt()
+{
+    _continueText.lock()->SetColor({1.0f, 1.0f, 1.0f,0.0f});
 }

@@ -102,13 +102,14 @@ public:
 
     void SetDisplayText(std::string text);
     void SetDisplayTextColor(glm::vec4 color);
-
-    std::weak_ptr<UITextElement> displayText;
+    void ShowContinuePrompt();
+    void HideContinuePrompt();
 
 private:
     constexpr static float _textSize = 100.0f;
 
     std::array<std::weak_ptr<UITextElement>, MAX_LINE_BREAKS> _displayTexts;
+    std::weak_ptr<UITextElement> _continueText;
     std::weak_ptr<UIFont> _font;
     glm::vec4 _displayTextColor = glm::vec4(1.0, 1.0f, 1.0f, 1.0f);
 };

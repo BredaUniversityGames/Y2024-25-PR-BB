@@ -1,15 +1,25 @@
-import "engine_api.wren" for Engine, Vec4
+import "engine_api.wren" for Engine, Vec4, Random, Input
 
 class Main {
 
     static Start(engine) {
         System.print("Start loading screen")
 
+        engine.GetInput().SetActiveActionSet("UserInterface")
+
+        var textOptions = [
+            "\"I'm not certain what's happening to me\nWhy shouldn't I join them?\nWhy must I remain here?\"",
+            "\"I wish I could go back\nMake different choices\"",
+            "Poverty drives a man to discoveries he wished he hadn't made"
+        ]
+
+        var index = Random.RandomIndex(0, textOptions.count)
+
         __loadingScreen = engine.GetGame().GetLoadingScreen()
         engine.GetGame().SetUIMenu(engine.GetGame().GetLoadingScreen())
         __loadingScreen.SetDisplayTextColor(Vec4.new(1.0, 1.0, 1.0, 0.0))
-        __loadingScreen.SetDisplayText("I'm not certain what's happening to me\nwhy shouldn't I join them?\nWhy must I remain here?")
-
+        __loadingScreen.SetDisplayText(textOptions[index])
+        __loadingScreen.HideContinuePrompt()
         __timer = 0
     }
 
@@ -23,7 +33,10 @@ class Main {
         var text = __loadingScreen.SetDisplayTextColor(textColor)
 
         if(__timer > 2000.0) {
-            engine.TransitionToScript("game/game.wren")
+            engine.GetGame().GetLoadingScreen().ShowContinuePrompt()
+            if(engine.GetInput().GetDigitalAction("Interact").IsPressed()) {
+                engine.TransitionToScript("game/game.wren")
+            }
         }
 
         __timer = __timer + dt
