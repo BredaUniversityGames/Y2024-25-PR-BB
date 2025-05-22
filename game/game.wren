@@ -222,12 +222,8 @@ class Main {
     }
 
     static Shutdown(engine) {
-        engine.ResetDecals()
-
         __musicPlayer.Destroy(engine.GetAudio())
         __ambientPlayer.Destroy(engine.GetAudio())
-
-        engine.GetECS().DestroyAllEntities()
     }
 
     static Update(engine, dt) {

@@ -46,6 +46,8 @@ TonemappingPass::~TonemappingPass()
 void TonemappingPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, MAYBE_UNUSED const RenderSceneDescription& scene)
 {
     TracyVkZone(scene.tracyContext, commandBuffer, "Tonemapping Pass");
+    bblog::info("{}, {}, {}, {}", _pushConstants.flashColor.r, _pushConstants.flashColor.g, _pushConstants.flashColor.b, _pushConstants.flashColor.a);
+
     timePassed += scene.deltaTime / 1000.0f;
     _pushConstants.exposure = _settings.exposure;
     _pushConstants.tonemappingFunction = static_cast<uint32_t>(_settings.tonemappingFunction);
