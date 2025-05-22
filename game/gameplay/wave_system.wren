@@ -72,7 +72,7 @@ class WaveSystem {
 
 
 
-    Update(engine, player, enemyList, dt) {
+    Update(engine, player, enemyList, dt, playerVariables) {
 
         _waveTimer = _waveTimer + dt / 1000.0
 
@@ -98,12 +98,13 @@ class WaveSystem {
             
                 _ongoingWave = false
                 _waveTimer = 0.0
-                player.hud.IncrementWaveCounter(_currentWave)
                 System.print("Completed wave %(_currentWave)")
             }
 
         } else {
+          
             this.NextWave(engine, enemyList)
+            playerVariables.hud.IncrementWaveCounter(_currentWave)
         }
     }
 
