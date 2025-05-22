@@ -123,7 +123,7 @@ class Pistol {
             // Play shooting audio
             var eventInstance = engine.GetAudio().PlayEventOnce(_shotSFX)
             var audioEmitter = player.GetAudioEmitterComponent()
-            
+
             // Play quad damage audio if needed
             if(playerVariables.GetCurrentPowerUp() == PowerUpType.QUAD_DAMAGE){
                 var quadEventInstance = engine.GetAudio().PlayEventOnce(_quadHit)
@@ -162,7 +162,7 @@ class Pistol {
             }
 
             if (aimAssistNeeded) {
-                direction = engine.GetGame().GetAimAssistDirection(engine.GetECS(), forward)
+                direction = engine.GetGame().GetAimAssistDirection(engine.GetECS(), engine.GetPhysics(), forward)
                 end = translation + direction * _rangeVector
                 rayHitInfo = engine.GetPhysics().ShootRay(start, direction, _range)
             }
@@ -261,7 +261,7 @@ class Pistol {
         var forward = Math.ToVector(rotation)
         var gunUp = rotation.mulVec3(Vec3.new(0, 1, 0))
 
-        var direction = engine.GetGame().GetAimAssistDirection(engine.GetECS(), forward)
+        var direction = engine.GetGame().GetAimAssistDirection(engine.GetECS(), engine.GetPhysics(), forward)
         var targetRotation = Math.LookAt(-direction, gunUp)
 
         if (direction != forward) {

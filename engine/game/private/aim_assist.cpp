@@ -1,12 +1,32 @@
 #include "aim_assist.hpp"
 
 #include "game_module.hpp"
+#include "physics_module.hpp"
 #include "components/transform_helpers.hpp"
 #include "components/transform_component.hpp"
 
-glm::vec3 AimAssist::GetAimAssistDirection(ECSModule& ecs, const glm::vec3& forward)
+bool IsVisible(ECSModule& ecs, PhysicsModule& physics, const glm::vec3& origin, const glm::vec3& direction, entt::entity target)
 {
-    const float minAngle = 0.96f;
+    auto hits = physics.ShootRay(origin, direction, 1000.0f); // TODO: Get distance from gun settings
+
+    for (auto& hit : hits)
+    {
+        bool isPlayer = ecs.GetRegistry().all_of<PlayerTag>(hit.entity);
+
+        if (isPlayer)
+        {
+            continue;
+        }
+
+        return hit.entity == target;
+    }
+
+    return false;
+}
+
+glm::vec3 AimAssist::GetAimAssistDirection(ECSModule& ecs, PhysicsModule& physics, const glm::vec3& forward)
+{
+    const float minAngle = 0.98f;
 
     glm::vec3 result = forward;
     float closestParallel = minAngle;
@@ -22,12 +42,22 @@ glm::vec3 AimAssist::GetAimAssistDirection(ECSModule& ecs, const glm::vec3& forw
         glm::vec3 playerToEnemy = glm::normalize(enemyPosition - playerPosition);
         float parallel = glm::dot(forward, playerToEnemy);
 
-        if (parallel >= closestParallel)
+        if (parallel < closestParallel)
         {
-            result = playerToEnemy;
-            closestParallel = parallel;
+            continue;
         }
+
+        // Make sure the enemy is not behind something
+        if (!IsVisible(ecs, physics, playerPosition, playerToEnemy, enemy))
+        {
+            continue;
+        }
+
+        result = playerToEnemy;
+        closestParallel = parallel;
     }
 
     return result;
 }
+
+
