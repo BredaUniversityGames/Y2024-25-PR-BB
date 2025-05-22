@@ -31,6 +31,9 @@ public:
     std::weak_ptr<UIProgressBar> grenadeBar;
     std::weak_ptr<UITextElement> ammoCounter;
     std::weak_ptr<UITextElement> scoreText;
+    std::weak_ptr<UITextElement> powerupText;
+    std::weak_ptr<UITextElement> powerUpTimer;
+
     std::weak_ptr<UITextElement> multiplierText;
     std::weak_ptr<UIImage> hitmarker;
     std::weak_ptr<UIImage> hitmarkerCrit;
