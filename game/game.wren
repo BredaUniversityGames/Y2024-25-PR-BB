@@ -150,46 +150,7 @@ class Main {
         for (v in 0...30) {
             waveConfigs.add(WaveGenerator.GenerateWave(v))
         }
-
-        // waveConfigs.add(WaveConfig.new()
-        //     .SetEnemySpawnCount("Skeleton", 1)
-        //     .SetEnemySpawnCount("Skeleton", 3)
-        // )
-        // waveConfigs.add(WaveConfig.new()
-        //     .SetEnemySpawnCount("Skeleton", 1)
-        //     .SetEnemySpawnCount("Skeleton", 2)
-        //     .SetEnemySpawnCount("Skeleton", 1)
-        //     .SetEnemySpawnCount("Skeleton", 2)
-        //     .SetEnemySpawnCount("Skeleton", 3)
-        //     .SetEnemySpawnCount("Eye", 1)
-        //     .SetEnemySpawnCount("Skeleton", 1)
-        //     .SetEnemySpawnCount("Skeleton", 1)
-        //     .SetEnemySpawnCount("Skeleton", 1)
-        //     .SetEnemySpawnCount("Skeleton", 3)
-        //     .SetEnemySpawnCount("Berserker", 3)
-        //     .SetEnemySpawnCount("Eye", 1)
-        // )
-        // waveConfigs.add(WaveConfig.new().SetDuration(60)
-        //     .AddSpawn("Skeleton", 0, 1, 2)
-        //     .AddSpawn("Skeleton", 1, 1, 2)
-        //     .AddSpawn("Skeleton", 2, 1, 1)
-        //     .AddSpawn("Skeleton", 3, 1, 2)
-        //     .AddSpawn("Eye", SpawnLocationType.Closest, 1, 1)
-        //     .AddSpawn("Skeleton", SpawnLocationType.Furthest, 5, 5)
-        //     .AddSpawn("Skeleton", 0, 15, 2)
-        //     .AddSpawn("Skeleton", 1, 15, 1)
-        //     .AddSpawn("Skeleton", 2, 15, 2)
-        //     .AddSpawn("Skeleton", 3, 15, 3)
-        //     .AddSpawn("Eye", SpawnLocationType.Closest, 5, 1)
-        //     .AddSpawn("Eye", SpawnLocationType.Closest, 20, 1)
-        //     .AddSpawn("Skeleton", SpawnLocationType.Furthest, 15, 5)
-        //     .AddSpawn("Skeleton", 0, 40, 3)
-        //     .AddSpawn("Skeleton", 1, 40, 1)
-        //     .AddSpawn("Skeleton", 2, 40, 2)
-        //     .AddSpawn("Skeleton", 3, 40, 2)
-        //     .AddSpawn("Skeleton", SpawnLocationType.Furthest, 7, 5)
-        // )
-
+        
         __waveSystem = WaveSystem.new(waveConfigs, spawnLocations)
 
         // Souls
@@ -443,7 +404,7 @@ class Main {
         __flashSystem.Update(engine, dt)
 
         if (!engine.IsDistribution()) {
-            DebugUtils.Tick(engine, __enemyList, __coinManager, __flashSystem, __playerVariables)
+            DebugUtils.Tick(engine, __enemyList, __coinManager, __flashSystem, __waveSystem, __playerVariables)
         }
     }
 }

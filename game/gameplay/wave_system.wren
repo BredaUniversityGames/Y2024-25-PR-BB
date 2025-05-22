@@ -62,7 +62,7 @@ class WaveSystem {
         _spawnLocations = spawnLocations
 
         _ongoingWave = false
-        _currentWave = 0
+        _currentWave = -1
         _waveTimer = 0.0
         _waveDelay = 4.0
 
@@ -96,27 +96,15 @@ class WaveSystem {
         if (_ongoingWave) {
 
             if (enemyList.count == 0) {
-                
-                _currentWave = _currentWave + 1
+            
                 _ongoingWave = false
                 _waveTimer = 0.0
 
-                System.print("Completed wave")
+                System.print("Completed wave %(_currentWave)")
             }
 
         } else {
-
-            // Start the next wave
-
-            if (_currentWave < _waveConfigs.count) {
-
-                var activeWave = _waveConfigs[_currentWave]
-                this.SpawnWave(engine, enemyList, activeWave)
-
-                System.print("Starting wave %(_currentWave)")
-            }
-
-            _ongoingWave = true
+            this.NextWave(engine, enemyList)
         }
     }
 
@@ -139,6 +127,22 @@ class WaveSystem {
             var enemy = enemyList.add(BerserkerEnemy.new(engine, this.GetSpawnLocation() + Vec3.new(0, 3, 0)))
             enemy.FindNewPath(engine)
         }
+    }
+
+    NextWave(engine, enemyList) {
+
+        // Start the next wave
+        _currentWave = _currentWave + 1
+
+        if (_currentWave < _waveConfigs.count) {
+
+            var activeWave = _waveConfigs[_currentWave]
+            this.SpawnWave(engine, enemyList, activeWave)
+
+            System.print("Starting wave %(_currentWave + 1)")
+        }
+
+        _ongoingWave = true
     }
 
     GetSpawnLocation() {

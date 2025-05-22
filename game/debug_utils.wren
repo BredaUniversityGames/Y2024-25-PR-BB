@@ -8,7 +8,7 @@ import "gameplay/enemies/berserker.wren" for BerserkerEnemy
 import "gameplay/enemies/ranged.wren" for RangedEnemy
 
 class DebugUtils {
-    static Tick(engine, enemyList, coinManager, flashSystem, player) {
+    static Tick(engine, enemyList, coinManager, flashSystem, waveSystem, player) {
 
         var playerEntity = engine.GetECS().GetEntityByName("Player")
         var playerRot = playerEntity.GetTransformComponent().rotation
@@ -42,6 +42,16 @@ class DebugUtils {
         }
         if(engine.GetInput().DebugGetKey(Keycode.eO())){
            flashSystem.Flash(Vec3.new(0.0, 1.0, 0.0),0.25)
+        }
+
+        if(engine.GetInput().DebugGetKey(Keycode.eP())){
+
+            for (enemy in enemyList) {
+                engine.GetECS().DestroyEntity(enemy.entity)
+            }
+
+            enemyList.clear()
+            waveSystem.NextWave(engine, enemyList)
         }
 
         // if (engine.GetInput().DebugGetKey(Keycode.eU())) {
