@@ -192,7 +192,7 @@ void SetPowerupTextColor(HUD& self, glm::vec4 color)
     {
         return;
     }
-    powerupText->SetColor(color);
+    powerupText->display_color =color;
 }
 
 void SetPowerupText(HUD& self, const std::string& text)
@@ -211,7 +211,7 @@ glm::vec4 GetPowerupTextColor(HUD& self)
     if (powerupText)
     {
         // return;
-        return powerupText->GetColor();
+        return powerupText->display_color;
     }
 
     return glm::vec4(0.0);
@@ -234,7 +234,7 @@ void SetPowerupTimerTextColor(HUD& self, glm::vec4 color)
     {
         return;
     }
-    powerupTimer->SetColor(color);
+    powerupTimer->display_color = color;
 }
 
 }
