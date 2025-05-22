@@ -28,9 +28,9 @@ class MeleeEnemy {
         _roar = "event:/SFX/Roar"
         _hitSFX = "event:/SFX/Hit"
 
-        var enemySize = 0.026
+        var enemySize = 0.0165
         var modelPath = "assets/models/Skeleton.glb"
-        var colliderShape = ShapeFactory.MakeCapsuleShape(70.0, 35.0) // TODO: Make this engine units
+        var colliderShape = ShapeFactory.MakeCapsuleShape(90.0, 40.0) // TODO: Make this engine units
 
         // PATHFINDING
         _currentPath = null

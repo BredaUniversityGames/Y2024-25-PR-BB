@@ -11,9 +11,9 @@ class BerserkerEnemy {
         
         // ENEMY CONSTANTS
         _maxVelocity = 5
-        var enemySize = 0.02
+        var enemySize = 0.03
         var modelPath = "assets/models/Berserker.glb"
-        var colliderShape = ShapeFactory.MakeCapsuleShape(140.0, 50.0) // TODO: Make this engine units
+        var colliderShape = ShapeFactory.MakeCapsuleShape(145.0, 40.0) // TODO: Make this engine units
         
         _attackRange = 9
         _attackDamage = 35
@@ -98,7 +98,7 @@ class BerserkerEnemy {
     }
 
     IsHeadshot(y) { // Will probably need to be changed when we have a different model
-        if (y >= _rootEntity.GetRigidbodyComponent().GetPosition().y + 1) {
+        if (y >= _rootEntity.GetRigidbodyComponent().GetPosition().y + 1.5) {
             return true
         }
         return false
