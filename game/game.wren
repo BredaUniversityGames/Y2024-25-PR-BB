@@ -22,7 +22,7 @@ class Main {
         engine.AmbientStrength = 0.35
 
         // Set navigational mesh
-        engine.GetPathfinding().SetNavigationMesh("assets/models/blockoutv5navmesh_04.glb")
+        engine.GetPathfinding().SetNavigationMesh("assets/models/graveyard_navmesh.glb")
 
         // Directional Light
         __directionalLight = engine.GetECS().NewEntity()

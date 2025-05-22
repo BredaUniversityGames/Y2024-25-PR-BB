@@ -21,9 +21,10 @@ class MeleeEnemy {
         _getUpAppearMax = 1500
 
         _bonesSFX = "event:/SFX/Bones"
-        _hitMarker = "event:/SFX/Hitmarker"
+        _hitMarkerSFX = "event:/SFX/Hitmarker"
         _bonesStepsSFX = "event:/SFX/BonesSteps"
         _roar = "event:/SFX/Roar"
+        _hitSFX = "event:/SFX/Hit"
 
         var enemySize = 0.026
         var modelPath = "assets/models/Skeleton.glb"

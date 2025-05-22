@@ -20,11 +20,11 @@ class BerserkerEnemy {
         _shakeIntensity = 2.2
         _attackMaxTime = 2300
         _health = 26
-        _maxHealth = _health
         _attackTiming = 1200 // TODO: Should be added to small melee enemies
         _recoveryMaxTime = 0
         _deathTimerMax = 3000
 
+        _growlSFX = "event:/SFX/DemonGrowl"
         _hurtSFX = "event:/SFX/DemonHurt"
         _stepSFX = "event:/SFX/DemonStep"
         _attackSFX = "event:/SFX/DemonAttack"
