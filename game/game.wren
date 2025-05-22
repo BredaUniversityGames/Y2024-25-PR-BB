@@ -6,6 +6,8 @@ import "gameplay/player.wren" for PlayerVariables, HitmarkerState
 import "gameplay/music_player.wren" for MusicPlayer, BGMPlayer
 import "gameplay/wave_system.wren" for WaveSystem, WaveConfig, EnemyType, WaveGenerator
 import "analytics/analytics.wren" for AnalyticsManager
+
+import "gameplay/hud.wren" for WrenHUD
 import "gameplay/soul.wren" for Soul, SoulManager
 import "gameplay/coin.wren" for Coin, CoinManager
 import "gameplay/flash_system.wren" for FlashSystem
@@ -20,6 +22,8 @@ class Main {
         engine.GetTime().SetScale(1.0)
         engine.GetInput().SetActiveActionSet("Shooter")
         engine.GetGame().SetUIMenu(engine.GetGame().GetHUD())
+
+
         engine.Fog = 0.005
         engine.AmbientStrength = 0.35
 
@@ -41,7 +45,7 @@ class Main {
 
         // Player Setup
 
-        __playerVariables = PlayerVariables.new()
+        __playerVariables = PlayerVariables.new(engine.GetGame().GetHUD())
         __counter = 0
         __frameTimer = 0
         __groundedTimer = 0
@@ -145,10 +149,11 @@ class Main {
                 spawnLocations.add(entity.GetTransformComponent().translation)
             }
         }
-
+        
         __enemyList = []
 
         var waveConfigs = []
+
         for (v in 0...30) {
             waveConfigs.add(WaveGenerator.GenerateWave(v))
         }
@@ -278,7 +283,6 @@ class Main {
         // }
 
         __playerVariables.invincibilityTime = Math.Max(__playerVariables.invincibilityTime - dt, 0)
-
         __playerVariables.multiplierTimer = Math.Max(__playerVariables.multiplierTimer - dt, 0)
         __playerVariables.hitmarkTimer = Math.Max(__playerVariables.hitmarkTimer - dt, 0)
 
@@ -298,7 +302,7 @@ class Main {
 
         if (engine.GetInput().DebugIsInputEnabled()) {
 
-            __playerMovement.Update(engine, dt, __playerController, __camera)
+            __playerMovement.Update(engine, dt, __playerController, __camera,__playerVariables.hud)
 
             for (weapon in __armory) {
                 weapon.cooldown = Math.Max(weapon.cooldown - dt, 0)
@@ -367,7 +371,6 @@ class Main {
         }
 
         // Check if player died
-
         if (__alive && __playerVariables.health <= 0) {
             __alive = false
             engine.GetTime().SetScale(0.0)
@@ -378,19 +381,9 @@ class Main {
 
             engine.GetUI().SetSelectedElement(engine.GetGame().GetGameOverMenu().retryButton)
         }
-
-        engine.GetGame().GetHUD().UpdateHealthBar(__playerVariables.health / __playerVariables.maxHealth)
-        engine.GetGame().GetHUD().UpdateAmmoText(__activeWeapon.ammo, __activeWeapon.maxAmmo)
-        engine.GetGame().GetHUD().UpdateScoreText(__playerVariables.score)
-        engine.GetGame().GetHUD().UpdateGrenadeBar(__playerVariables.grenadeCharge / __playerVariables.grenadeMaxCharge)
-        engine.GetGame().GetHUD().UpdateDashCharges(__playerMovement.currentDashCount)
-        engine.GetGame().GetHUD().UpdateMultiplierText(__playerVariables.multiplier)
-        engine.GetGame().GetHUD().ShowHitmarker(__playerVariables.hitmarkTimer > 0 && __playerVariables.hitmarkerState == HitmarkerState.normal)
-        engine.GetGame().GetHUD().ShowHitmarkerCrit(__playerVariables.hitmarkTimer > 0 && __playerVariables.hitmarkerState == HitmarkerState.crit)
-        //engine.GetGame().GetHUD().UpdateUltBar(__playerVariables.ultCharge / __playerVariables.ultMaxCharge)
-        //engine.GetGame().GetHUD().UpdateUltReadyText(__playerVariables.ultCharge == __playerVariables.ultMaxCharge)
-
-        var mousePosition = engine.GetInput().GetMousePosition()
+        
+        
+       var mousePosition = engine.GetInput().GetMousePosition()
         __playerMovement.lastMousePosition = mousePosition
 
         var playerPos = __playerController.GetRigidbodyComponent().GetPosition()
@@ -408,9 +401,12 @@ class Main {
         __soulManager.Update(engine, __playerVariables,__flashSystem, dt)
         __coinManager.Update(engine, __playerVariables,__flashSystem, dt)
         __waveSystem.Update(engine, __player, __enemyList, dt)
+
         __stationManager.Update(engine, __playerVariables, dt)
         __flashSystem.Update(engine, dt)
         __powerUpSystem.Update(engine,__playerVariables,__flashSystem, dt)
+
+        __playerVariables.hud.Update(engine, dt,__playerMovement,__playerVariables,__activeWeapon.ammo, __activeWeapon.maxAmmo)
 
         if (!engine.IsDistribution()) {
             DebugUtils.Tick(engine, __enemyList, __coinManager, __flashSystem, __waveSystem, __playerVariables)

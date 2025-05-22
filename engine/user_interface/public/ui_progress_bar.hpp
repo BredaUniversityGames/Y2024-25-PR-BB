@@ -22,6 +22,7 @@ public:
         {
             eFromCenterHorizontal,
             eFromBottom,
+            eLeftToRight
         } fillDirection
             = FillDirection::eFromCenterHorizontal;
 

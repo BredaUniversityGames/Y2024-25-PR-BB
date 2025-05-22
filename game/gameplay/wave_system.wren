@@ -60,7 +60,6 @@ class WaveSystem {
     
         _waveConfigs = waveConfigs
         _spawnLocations = spawnLocations
-
         _ongoingWave = false
         _currentWave = -1
         _waveTimer = 0.0
@@ -99,7 +98,7 @@ class WaveSystem {
             
                 _ongoingWave = false
                 _waveTimer = 0.0
-
+                player.hud.IncrementWaveCounter(_currentWave)
                 System.print("Completed wave %(_currentWave)")
             }
 
