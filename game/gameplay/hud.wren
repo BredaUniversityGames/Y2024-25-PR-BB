@@ -1,4 +1,10 @@
 import "engine_api.wren" for Engine, Entity, Vec3, Vec2,  Math
+import "gameplay/player.wren" for PlayerVariables
+
+class HitmarkerState {
+    static normal {0}
+    static crit {1}    
+}
 
 class PingPongTween {
     construct new(maxTime, minVal, maxVal){
@@ -75,7 +81,7 @@ class WrenHUD {
 
         // Dash charges
         _hud.UpdateDashCharges(playerMovement.currentDashCount)
-        var timeTillNextCharge = 1-(__playerMovement.currentDashRefillTime / 3000))
+        var timeTillNextCharge = 1-(playerMovement.currentDashRefillTime / 3000)
         var colorintenity = _dashColorRefillTween.GetValue()
         var color = Vec3.new(colorintenity,colorintenity,colorintenity)
         var opacity = Math.Clamp(timeTillNextCharge,0,1)
@@ -85,7 +91,6 @@ class WrenHUD {
         _hud.UpdateHealthBar(playerVariables.health / playerVariables.maxHealth)
         _hud.UpdateAmmoText(currentAmmo,maxAmmo)
         _hud.UpdateScoreText(playerVariables.score)
-        _hud.UpdateMultiplierText(__playerVariables.multiplier)
         _hud.ShowHitmarker(playerVariables.hitmarkTimer > 0 && playerVariables.hitmarkerState == HitmarkerState.normal)
         _hud.ShowHitmarkerCrit(playerVariables.hitmarkTimer > 0 && playerVariables.hitmarkerState == HitmarkerState.crit)
     

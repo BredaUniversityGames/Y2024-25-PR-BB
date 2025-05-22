@@ -73,7 +73,7 @@ std::shared_ptr<MainMenu> MainMenu::Create(GraphicsContext& graphicsContext, con
         constexpr glm::vec2 buttonBaseSize = glm::vec2(87, 22) * 6.0f;
         constexpr float textSize = 60;
 
-        auto openLinkButton = main->AddChild<UIButton>(buttonStyle, buttonBaseSize, buttonBaseSize);
+        auto openLinkButton = main->AddChild<UIButton>(buttonStyle, glm::vec2(0), buttonBaseSize);
         openLinkButton->anchorPoint = UIElement::AnchorPoint::eBottomRight;
         openLinkButton->AddChild<UITextElement>(font, "Check out our Discord!", 50);
         main->openLinkButton = openLinkButton;
@@ -86,7 +86,7 @@ std::shared_ptr<MainMenu> MainMenu::Create(GraphicsContext& graphicsContext, con
 
         auto controlsButton = buttonPanel->AddChild<UIButton>(buttonStyle, buttonPos, buttonBaseSize);
         controlsButton->anchorPoint = UIElement::AnchorPoint::eTopLeft;
-        controlsButton->AddChild<UITextElement>(font, "Controls", textSize)->SetColor(glm::vec4(1, 1, 1, 1));
+        controlsButton->AddChild<UITextElement>(font, "CONTROLS", textSize);
 
         buttonPos += increment;
 

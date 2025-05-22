@@ -1,10 +1,5 @@
 import "engine_api.wren" for Math
-
-
-class HitmarkerState {
-    static normal {0}
-    static crit {1}    
-}
+import "gameplay/hud.wren" for WrenHUD, HitmarkerState
 
 class PlayerVariables {
     construct new(cppHud) {

@@ -333,7 +333,7 @@ class Main {
 
         if (engine.GetInput().DebugIsInputEnabled()) {
 
-            __playerMovement.Update(engine, dt, __playerController, __camera,__hud)
+            __playerMovement.Update(engine, dt, __playerController, __camera,__playerVariables.hud)
 
             for (weapon in __armory) {
                 weapon.cooldown = Math.Max(weapon.cooldown - dt, 0)
@@ -431,11 +431,11 @@ class Main {
 
         __soulManager.Update(engine, __playerVariables,__flashSystem, dt)
         __coinManager.Update(engine, __playerVariables,__flashSystem, dt)
-        __waveSystem.Update(dt,__hud)
+        __waveSystem.Update(dt,__playerVariables.hud)
 
         __flashSystem.Update(engine, dt)
 
-        playerVariables.hud.Update(engine, dt,__playerMovement,__playerVariables,__activeWeapon.ammo, __activeWeapon.maxAmmo)
+        __playerVariables.hud.Update(engine, dt,__playerMovement,__playerVariables,__activeWeapon.ammo, __activeWeapon.maxAmmo)
 
         if (!engine.IsDistribution()) {
             DebugUtils.Tick(engine, __enemyList, __coinManager, __flashSystem, __enemyShape, __berserkerEnemyShape, __eyeShape, __playerVariables)
