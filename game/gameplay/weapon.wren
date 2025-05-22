@@ -1,6 +1,8 @@
 import "engine_api.wren" for Engine, ECS, Entity, Vec3, Vec2, Math, AnimationControlComponent, TransformComponent, Input, SpawnEmitterFlagBits, EmitterPresetID, PhysicsObjectLayer
 import "camera.wren" for CameraVariables
 import "player.wren" for PlayerVariables, HitmarkerState
+import "station.wren" for PowerUpType, Station, StationManager
+
 
 class Weapons {
     static pistol {0}
@@ -28,6 +30,7 @@ class Pistol {
         _attackSFX = "event:/SFX/Revolver"
         _reloadSFX = "event:/SFX/ReloadPistol"
         _shotSFX = "event:/SFX/Shoot"
+        _quadHit = "event:/SFX/QuadDamageHit"
         _equipSFX = ""
         __hitmarkTimer = 0
         _walkAnim = "walk"
@@ -121,6 +124,14 @@ class Pistol {
             // Play shooting audio
             var eventInstance = engine.GetAudio().PlayEventOnce(_shotSFX)
             var audioEmitter = player.GetAudioEmitterComponent()
+            
+            // Play quad damage audio if needed
+            if(playerVariables.GetCurrentPowerUp() == PowerUpType.QUAD_DAMAGE){
+                var quadEventInstance = engine.GetAudio().PlayEventOnce(_quadHit)
+                engine.GetAudio().SetEventVolume(quadEventInstance, 3.0)
+
+                audioEmitter.AddEvent(quadEventInstance)
+            }
             audioEmitter.AddEvent(eventInstance)
 
             // Spawn particles
@@ -159,7 +170,7 @@ class Pistol {
                                         playerVariables.hitmarkerState = HitmarkerState.normal
                                     }
                                     playerVariables.UpdateMultiplier()
-                                    enemy.DecreaseHealth(_damage * multiplier,engine,coinManager)
+                                    enemy.DecreaseHealth(_damage * multiplier * playerVariables.GetDamageMultiplier(),engine,coinManager)
                                     if (enemy.health <= 0) {
                                         playerVariables.IncreaseScore(5 * multiplier * playerVariables.multiplier)
                                         //playerVariables.UpdateUltCharge(1.0)
@@ -206,7 +217,7 @@ class Pistol {
                 var lifetime = entity.AddLifetimeComponent()
                 lifetime.lifetime = 200.0
                 var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
-                engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eRay(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), direction * Vec3.new(10, 10, 10))
+                engine.GetParticles().SpawnEmitter(entity, playerVariables.GetGunSmokeRay(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), direction * Vec3.new(10, 10, 10))
                 i = i + 2.0
             }
 

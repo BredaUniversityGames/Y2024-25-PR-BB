@@ -135,6 +135,58 @@ void ShowHitmarkerCrit(HUD& self, bool val)
     hitmarkerCrit->visibility = val ? UIElement::VisibilityState::eUpdatedAndVisible : UIElement::VisibilityState::eNotUpdatedAndInvisible;
 }
 
+void SetPowerupTextColor(HUD& self, glm::vec4 color)
+{
+    std::shared_ptr<UITextElement> powerupText = self.powerupText.lock();
+    if (!powerupText)
+    {
+        return;
+    }
+    powerupText->SetColor(color);
+}
+
+void SetPowerupText(HUD& self, const std::string& text)
+{
+    std::shared_ptr<UITextElement> powerupText = self.powerupText.lock();
+    if (!powerupText)
+    {
+        return;
+    }
+    powerupText->SetText(text);
+}
+
+glm::vec4 GetPowerupTextColor(HUD& self)
+{
+    std::shared_ptr<UITextElement> powerupText = self.powerupText.lock();
+    if (powerupText)
+    {
+        // return;
+        return powerupText->GetColor();
+    }
+
+    return glm::vec4(0.0);
+}
+
+void SetPowerupTimerText(HUD& self, const std::string& text)
+{
+    std::shared_ptr<UITextElement> powerupTimer = self.powerUpTimer.lock();
+    if (!powerupTimer)
+    {
+        return;
+    }
+    powerupTimer->SetText(text);
+}
+
+void SetPowerupTimerTextColor(HUD& self, glm::vec4 color)
+{
+    std::shared_ptr<UITextElement> powerupTimer = self.powerUpTimer.lock();
+    if (!powerupTimer)
+    {
+        return;
+    }
+    powerupTimer->SetColor(color);
+}
+
 }
 
 void BindGameUI(wren::ForeignModule& module)
@@ -174,8 +226,14 @@ void BindGameUI(wren::ForeignModule& module)
     hud.funcExt<bindings::UpdateUltReadyText>("UpdateUltReadyText", "Use bool to set if ultimate is ready");
     hud.funcExt<bindings::ShowHitmarker>("ShowHitmarker", "should show the hitmarker");
     hud.funcExt<bindings::ShowHitmarkerCrit>("ShowHitmarkerCrit", "should show the critical hitmarker");
+    hud.funcExt<bindings::SetPowerupText>("SetPowerUpText", "Set powerup text");
+    hud.funcExt<bindings::SetPowerupTextColor>("SetPowerUpTextColor", "Set powerup text color");
+    hud.funcExt<bindings::GetPowerupTextColor>("GetPowerUpTextColor", "Get powerup text color");
+    hud.funcExt<bindings::SetPowerupTimerText>("SetPowerUpTimerText", "Set powerup timer text");
+    hud.funcExt<bindings::SetPowerupTimerTextColor>("SetPowerUpTimerTextColor", "Set powerup timer text color");
 
-    auto& gameOver = module.klass<GameOverMenu, Canvas>("GameOverMenu");
+    auto& gameOver
+        = module.klass<GameOverMenu, Canvas>("GameOverMenu");
 
     gameOver.propReadonlyExt<bindings::GameOverMenuButton>("backButton");
     gameOver.propReadonlyExt<bindings::RetryButton>("retryButton");
