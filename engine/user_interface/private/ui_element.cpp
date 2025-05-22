@@ -59,13 +59,13 @@ void UIElement::UpdateAllChildrenAbsoluteTransform()
             newChildLocation = { GetAbsoluteLocation() + childRelativeLocation };
             break;
         case AnchorPoint::eTopRight:
-            newChildLocation = { GetAbsoluteLocation().x + GetAbsoluteScale().x - childRelativeLocation.x, GetAbsoluteLocation().y + childRelativeLocation.y };
+            newChildLocation = { GetAbsoluteLocation().x + GetAbsoluteScale().x - childRelativeLocation.x - child->GetRelativeScale().x, GetAbsoluteLocation().y + childRelativeLocation.y };
             break;
         case AnchorPoint::eBottomLeft:
-            newChildLocation = { GetAbsoluteLocation().x + childRelativeLocation.x, GetAbsoluteLocation().y + GetAbsoluteScale().y - childRelativeLocation.y };
+            newChildLocation = { GetAbsoluteLocation().x + childRelativeLocation.x, GetAbsoluteLocation().y + GetAbsoluteScale().y - childRelativeLocation.y - child->GetRelativeScale().y };
             break;
         case AnchorPoint::eBottomRight:
-            newChildLocation = { GetAbsoluteLocation().x + GetAbsoluteScale().x - childRelativeLocation.x, GetAbsoluteLocation().y + GetAbsoluteScale().y - childRelativeLocation.y };
+            newChildLocation = { GetAbsoluteLocation().x + GetAbsoluteScale().x - childRelativeLocation.x - child->GetRelativeScale().x, GetAbsoluteLocation().y + GetAbsoluteScale().y - childRelativeLocation.y - child->GetRelativeScale().y };
             break;
         case AnchorPoint::eBottomCenter:
         {

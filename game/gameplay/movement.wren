@@ -312,13 +312,14 @@ class PlayerMovement{
         engine.GetECS().GetEntityByName("Player").GetTransformComponent().translation = pos
     }
 
-    Dash(engine, dt, playerController, camera){
+    Dash(engine, dt, playerController, camera, hud){
         //refill dashes
         if(currentDashCount < 3){
             currentDashRefillTime = currentDashRefillTime - dt
             if(currentDashRefillTime <= 0.0){
                 currentDashCount = currentDashCount + 1
                 currentDashRefillTime = 3000.0
+                hud.TriggerDashChargeRefillAnimation()
             }
         }
 
@@ -506,9 +507,9 @@ class PlayerMovement{
         }
     }
     
-    Update(engine, dt, playerController, camera){
+    Update(engine, dt, playerController, camera,hud){
         this.Movement(engine, playerController, camera)
-        this.Dash(engine, dt, playerController, camera)
+        this.Dash(engine, dt, playerController, camera,hud)
         this.Slide(engine, dt, playerController, camera)
         this.CheckBounds(engine, playerController, camera)
     }

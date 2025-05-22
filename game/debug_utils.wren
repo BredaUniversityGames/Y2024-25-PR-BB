@@ -3,12 +3,12 @@ import "gameplay/coin.wren" for CoinManager
 import "engine_api.wren" for Vec3, Keycode, Random, ECS, Quat, TransformComponent
 import "gameplay/flash_system.wren" for FlashSystem
 
-import "gameplay/enemies/enemies.wren" for MeleeEnemy
-import "gameplay/enemies/berserker_enemy.wren" for BerserkerEnemy
-import "gameplay/enemies/ranged_enemy.wren" for RangedEnemy
+import "gameplay/enemies/melee.wren" for MeleeEnemy
+import "gameplay/enemies/berserker.wren" for BerserkerEnemy
+import "gameplay/enemies/ranged.wren" for RangedEnemy
 
 class DebugUtils {
-    static Tick(engine, enemyList, coinManager, flashSystem, meleeShape, berserkerShape, eyeShape, player) {
+    static Tick(engine, enemyList, coinManager, flashSystem, waveSystem, player) {
 
         var playerEntity = engine.GetECS().GetEntityByName("Player")
         var playerRot = playerEntity.GetTransformComponent().rotation
@@ -16,11 +16,11 @@ class DebugUtils {
         var spawnPos = playerPos + playerRot.mulVec3(Vec3.new(0, 0, -15.0))
 
         if (engine.GetInput().DebugGetKey(Keycode.eL())) {
-            enemyList.add(MeleeEnemy.new(engine, spawnPos, Vec3.new(0.02, 0.02, 0.02), 10, "assets/models/Skeleton.glb", meleeShape))
+            enemyList.add(MeleeEnemy.new(engine, spawnPos))
         }
 
         if (engine.GetInput().DebugGetKey(Keycode.eK())) {
-            enemyList.add(BerserkerEnemy.new(engine, spawnPos, Vec3.new(0.026, 0.026, 0.026), 4, "assets/models/Berserker.glb", berserkerShape))
+            enemyList.add(BerserkerEnemy.new(engine, spawnPos))
         }
 
         if (engine.GetInput().DebugGetKey(Keycode.eI())) {
@@ -29,12 +29,12 @@ class DebugUtils {
         }
 
         if (engine.GetInput().DebugGetKey(Keycode.eJ())) {
-            enemyList.add(RangedEnemy.new(engine, spawnPos, Vec3.new(2.25,2.25,2.25), 5, "assets/models/eye.glb", eyeShape))
+            enemyList.add(RangedEnemy.new(engine, spawnPos))
         }
 
-        // Spawn between 1 and 5 coins
+        // Spawn between 7 and 12 coins
         if (engine.GetInput().DebugGetKey(Keycode.eB())) {
-            var coinCount = Random.RandomIndex(1, 5)
+            var coinCount = Random.RandomIndex(7, 12)
             
             for(i in 0...coinCount) {
                 coinManager.SpawnCoin(engine, spawnPos)
@@ -42,6 +42,16 @@ class DebugUtils {
         }
         if(engine.GetInput().DebugGetKey(Keycode.eO())){
            flashSystem.Flash(Vec3.new(0.0, 1.0, 0.0),0.25)
+        }
+
+        if(engine.GetInput().DebugGetKey(Keycode.eP())){
+
+            for (enemy in enemyList) {
+                engine.GetECS().DestroyEntity(enemy.entity)
+            }
+
+            enemyList.clear()
+            waveSystem.NextWave(engine, enemyList)
         }
 
         // if (engine.GetInput().DebugGetKey(Keycode.eU())) {

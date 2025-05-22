@@ -58,7 +58,7 @@ std::shared_ptr<ControlsMenu> ControlsMenu::Create(const glm::uvec2& screenResol
 
     auto backButton = menu->AddChild<UIButton>(buttonStyle, buttonPos, buttonBaseSize);
     backButton->anchorPoint = UIElement::AnchorPoint::eBottomLeft;
-    backButton->AddChild<UITextElement>(font, "Back", buttonTextSize)->SetColor(glm::vec4(1, 1, 1, 1));
+    backButton->AddChild<UITextElement>(font, "Back", buttonTextSize);
     menu->backButton = backButton;
 
     auto popupPanel = menu->AddChild<Canvas>(popupResolution);
@@ -103,7 +103,6 @@ void ControlsMenu::UpdateBindings()
         set.canvas->SetLocation(glm::vec2(100.0f, actionSetHeightLocation));
 
         set.nameText = set.canvas->AddChild<UITextElement>(_font, actionSet.name, actionSetTextSize);
-        set.nameText->SetColor(glm::vec4(1, 1, 1, 1));
         set.nameText->anchorPoint = UIElement::AnchorPoint::eTopLeft;
         set.nameText->SetLocation({ 0.0f, 0.0f });
 
@@ -145,7 +144,7 @@ ControlsMenu::ActionControls ControlsMenu::AddActionVisualization(const std::str
     action.canvas->SetLocation(glm::vec2(0.0f, positionY));
 
     action.nameText = action.canvas->AddChild<UITextElement>(_font, actionName, actionTextSize);
-    action.nameText->SetColor(glm::vec4(0.8f, 0.8f, 0.8f, 1.0f));
+    action.nameText->display_color = glm::vec4(0.8f, 0.8f, 0.8f, 1.0f);
     action.nameText->anchorPoint = UIElement::AnchorPoint::eTopLeft;
     action.nameText->SetLocation({ 0.0f, 0.0f });
 
@@ -158,7 +157,7 @@ ControlsMenu::ActionControls ControlsMenu::AddActionVisualization(const std::str
 
         // Create binding text
         binding.originName = action.canvas->AddChild<UITextElement>(_font, origin.bindingInputName, actionOriginBindingTextSize);
-        binding.originName->SetColor(glm::vec4(0.8f, 0.8f, 0.8f, 1.0f));
+        binding.originName->display_color = glm::vec4(0.8f, 0.8f, 0.8f, 1.0f);
         binding.originName->anchorPoint = UIElement::AnchorPoint::eTopLeft;
         binding.originName->SetLocation({ horizontalOffset, 0.0f });
 
