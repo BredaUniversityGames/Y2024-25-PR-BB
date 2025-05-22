@@ -75,7 +75,7 @@ void UpdateGrenadeBar(HUD& self, const float charge)
 void SetDashChargeColor(HUD& self, int chargeIndex, const glm::vec3& color, float opacity)
 {
 
-    if (chargeIndex >= 0 && chargeIndex < self.dashCharges.size())
+    if (chargeIndex >= 0 && static_cast<size_t>(chargeIndex) < self.dashCharges.size())
     {
         auto charge = self.dashCharges[chargeIndex].lock();
         if (!charge)

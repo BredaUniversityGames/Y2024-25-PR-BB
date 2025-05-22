@@ -2,11 +2,6 @@ import "gameplay/hud.wren" for WrenHUD, HitmarkerState
 import "engine_api.wren" for Math, EmitterPresetID
 import "gameplay/station.wren" for PowerUpType
 
-class HitmarkerState {
-    static normal {0}
-    static crit {1}    
-}
-
 class PlayerVariables {
     construct new(cppHud) {
         _maxHealth = 100.0
