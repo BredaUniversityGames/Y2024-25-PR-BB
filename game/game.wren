@@ -98,7 +98,7 @@ class Main {
         __player.AddNameComponent().name = "Player"
 
         // Gun Setup
-        __gun = engine.LoadModel("assets/models/Revolver.glb",false)
+        __gun = engine.LoadModel("assets/models/revolver_left.glb",false)
         __gun.RenderInForeground()
 
         __gun.GetNameComponent().name = "Gun"
@@ -107,7 +107,7 @@ class Main {
         gunTransform.rotation = Math.ToQuat(Vec3.new(0.0, -Math.PI()/2, 0.0))
 
         // second gun
-        __gun2 = engine.LoadModel("assets/models/revolver_left.glb",false)
+        __gun2 = engine.LoadModel("assets/models/Revolver.glb",false)
         __gun2.RenderInForeground()
 
         __gun2.GetNameComponent().name = "Gun2"
@@ -122,6 +122,8 @@ class Main {
         __camera.AttachChild(__gun2)
 
         __armory = [Pistol.new(engine, "Gun"), Shotgun.new(engine), Pistol.new(engine, "Gun2")]
+
+        __armory[2].playWalkAnim(engine)
 
         __activeWeapon = __armory[Weapons.pistol]
         __activeWeapon.equip(engine)

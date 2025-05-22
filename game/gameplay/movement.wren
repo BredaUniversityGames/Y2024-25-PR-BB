@@ -125,7 +125,7 @@ class PlayerMovement{
         var gunTransform = gun.GetTransformComponent()
 
         var gun2 = engine.GetECS().GetEntityByName("Gun2")
-        var gunTransform2 = gun.GetTransformComponent()
+        var gunTransform2 = gun2.GetTransformComponent()
 
         var lerpFactor = 0.97
         var divisionFactor = 1.1

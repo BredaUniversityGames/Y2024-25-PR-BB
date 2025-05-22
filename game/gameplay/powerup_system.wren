@@ -83,7 +83,7 @@ class PowerUpSystem {
         var gun = engine.GetECS().GetEntityByName("Gun2")
         var gunTransform = gun.GetTransformComponent()
         if (playerPowerUp == PowerUpType.DOUBLE_GUNS) {
-            gunTransform.scale = Vec3.new(1,1,1)
+            gunTransform.scale = Vec3.new(1,1,-1)
         } else {
             gunTransform.scale = Vec3.new(0,0,0)
         }
