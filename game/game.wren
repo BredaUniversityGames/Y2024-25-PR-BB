@@ -6,10 +6,8 @@ import "gameplay/player.wren" for PlayerVariables, HitmarkerState
 import "gameplay/music_player.wren" for MusicPlayer, BGMPlayer
 import "gameplay/wave_system.wren" for WaveSystem, WaveConfig, EnemyType, WaveGenerator
 import "analytics/analytics.wren" for AnalyticsManager
-import "gameplay/enemies/berserker_enemy.wren" for BerserkerEnemy
 
 import "gameplay/hud.wren" for WrenHUD
-import "gameplay/enemies/ranged_enemy.wren" for RangedEnemy
 import "gameplay/soul.wren" for Soul, SoulManager
 import "gameplay/coin.wren" for Coin, CoinManager
 import "gameplay/flash_system.wren" for FlashSystem
@@ -151,6 +149,8 @@ class Main {
                 spawnLocations.add(entity.GetTransformComponent().translation)
             }
         }
+        
+        __enemyList = []
 
         var waveConfigs = []
 
