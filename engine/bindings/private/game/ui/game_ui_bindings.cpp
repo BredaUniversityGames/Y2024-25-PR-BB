@@ -245,8 +245,6 @@ void BindGameUI(wren::ForeignModule& module)
     button.funcExt<bindings::ButtonOnPress>("OnPress", "void callback() -> void");
 
     auto& text = module.klass<UITextElement, UIElement>("UITextElement");
-    text.func<&UITextElement::GetColor>("GetColor");
-    text.func<&UITextElement::SetColor>("SetColor");
     text.func<&UITextElement::GetText>("GetText");
     text.func<&UITextElement::SetText>("SetText");
 

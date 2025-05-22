@@ -77,7 +77,7 @@ void LoadingScreen::SetDisplayText(std::string text)
 
         textElement->SetText(line);
         textElement->SetLocation(glm::vec2(0.0f, i * _font.lock()->metrics.resolutionY - totalTextHeightOffset));
-        textElement->SetColor(_displayTextColor);
+        textElement->display_color = _displayTextColor;
     }
 
     _continueText.lock()->SetLocation(glm::vec2(0.0f, totalTextHeightOffset + static_cast<float>(_font.lock()->metrics.resolutionY)));
@@ -92,17 +92,17 @@ void LoadingScreen::SetDisplayTextColor(glm::vec4 color)
     {
         if(element.lock())
         {
-            element.lock()->SetColor(_displayTextColor);
+            element.lock()->display_color = _displayTextColor;
         }
     }
 }
 
 void LoadingScreen::ShowContinuePrompt()
 {
-    _continueText.lock()->SetColor({1.0f, 1.0f, 1.0f,1.0f});
+    _continueText.lock()->display_color = {1.0f, 1.0f, 1.0f,1.0f};
 }
 
 void LoadingScreen::HideContinuePrompt()
 {
-    _continueText.lock()->SetColor({1.0f, 1.0f, 1.0f,0.0f});
+    _continueText.lock()->display_color = {1.0f, 1.0f, 1.0f,0.0f};
 }
