@@ -46,6 +46,7 @@ enum class EmitterPresetID : uint8_t
     eWorms,
     eSoulSheet,
     eQuadStation,
+    eDualGunStation,
     eNone
 };
 

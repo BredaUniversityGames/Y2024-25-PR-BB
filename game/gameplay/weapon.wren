@@ -7,12 +7,12 @@ import "station.wren" for PowerUpType, Station, StationManager
 class Weapons {
     static pistol {0}
     static shotgun {1}
-    static knife {2}
+    static pistol2 {2}
 }
 
 
 class Pistol {
-    construct new(engine) {
+    construct new(engine, name) {
         _damage = 1
         _headShotMultiplier = 2.0
         _range = 64
@@ -39,7 +39,7 @@ class Pistol {
         _reloadAnim = "reload"
         _equipAnim = "equip"
         _unequipAnim = "unequip" 
-        _entityName = "Gun" 
+        _entityName = name 
 
         _mesh = ""
     }

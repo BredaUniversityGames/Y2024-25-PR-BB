@@ -36,6 +36,10 @@ const GameActions GAME_ACTIONS {
                 .inputs = { GamepadButton::eRIGHT_TRIGGER, MouseButton::eBUTTON_LEFT },
             },
             {
+                .name = "Shoot2",
+                .inputs = { GamepadButton::eLEFT_TRIGGER, MouseButton::eBUTTON_RIGHT },
+            },
+            {
                 .name = "Ultimate",
                 .inputs = {
                     GamepadButton::eNORTH,

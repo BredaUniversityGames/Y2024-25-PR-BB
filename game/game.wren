@@ -106,15 +106,29 @@ class Main {
         var gunTransform = __gun.GetTransformComponent()
         gunTransform.rotation = Math.ToQuat(Vec3.new(0.0, -Math.PI()/2, 0.0))
 
+        // second gun
+        __gun2 = engine.LoadModel("assets/models/revolver_left.glb",false)
+        __gun2.RenderInForeground()
+
+        __gun2.GetNameComponent().name = "Gun2"
+
+        var gunTransform2 = __gun2.GetTransformComponent()
+        gunTransform2.rotation = Math.ToQuat(Vec3.new(0.0, -Math.PI()/2, 0.0))
+        //gunTransform2.translation = gunTransform2.translation * Vec3.new(1, 1, 1)
+        gunTransform2.scale = Vec3.new(0,0,0) // scale to 0 to hide
 
         __player.AttachChild(__camera)
         __camera.AttachChild(__gun)
+        __camera.AttachChild(__gun2)
 
-        __armory = [Pistol.new(engine), Shotgun.new(engine)]
+        __armory = [Pistol.new(engine, "Gun"), Shotgun.new(engine), Pistol.new(engine, "Gun2")]
 
         __activeWeapon = __armory[Weapons.pistol]
         __activeWeapon.equip(engine)
         __nextWeapon = null
+
+        __secondaryWeapon = __armory[Weapons.pistol2]
+
         // create the player movement
         __playerMovement = PlayerMovement.new(false,0.0,__activeWeapon)
         var mousePosition = engine.GetInput().GetMousePosition()
@@ -354,8 +368,12 @@ class Main {
                 __activeWeapon.equip(engine)
 
             }
+
             if (engine.GetInput().GetDigitalAction("Reload").IsHeld() && __activeWeapon.isUnequiping(engine) == false) {
                 __activeWeapon.reload(engine)
+                if (__playerVariables.GetCurrentPowerUp() == PowerUpType.DOUBLE_GUNS){
+                    __secondaryWeapon.reload(engine)
+                }
             }
 
             if (engine.GetInput().GetDigitalAction("Shoot").IsHeld()  && __activeWeapon.isUnequiping(engine) == false ) {
@@ -364,6 +382,17 @@ class Main {
                     __activeWeapon.reload(engine)
                 }
             }            
+
+            if (engine.GetInput().GetDigitalAction("Shoot2").IsHeld()  && __activeWeapon.isUnequiping(engine) == false ) {
+                
+                if (__playerVariables.GetCurrentPowerUp() == PowerUpType.DOUBLE_GUNS){
+                    __secondaryWeapon.attack(engine, dt, __playerVariables, __enemyList, __coinManager)
+                    if (__secondaryWeapon.ammo <= 0) {
+                        __secondaryWeapon.reload(engine)
+                    }
+                }
+            }
+
         }
 
         // Check if player died

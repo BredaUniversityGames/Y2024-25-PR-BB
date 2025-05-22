@@ -980,6 +980,53 @@
                 "bursts": [],
                 "name": "QuadStation",
                 "imageName": "soul-Sheet.png"
+            },
+            {
+                "size": {
+                    "x": 2.0,
+                    "y": 24.0,
+                    "z": 0.0
+                },
+                "mass": 0.0,
+                "rotationVelocity": {
+                    "x": 0.0,
+                    "y": 0.0
+                },
+                "maxLife": 2.0,
+                "emitDelay": 2.0,
+                "count": 1,
+                "materialIndex": 67,
+                "spawnRandomness": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "flags": 15,
+                "velocityRandomness": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "startingVelocity": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "spriteDimensions": {
+                    "x": 60,
+                    "y": 1
+                },
+                "frameCount": 60,
+                "frameRate": 0.0,
+                "color": {
+                    "x": 0.86,
+                    "y": 0.67,
+                    "z": 0.0,
+                    "w": 8.5
+                },
+                "bursts": [],
+                "name": "DualGunStation",
+                "imageName": "soul-Sheet.png"
             }
         ]
     }
