@@ -115,7 +115,13 @@ std::shared_ptr<HUD> HUD::Create(GraphicsContext& graphicsContext, const glm::uv
     hud->scoreText
         = hud->AddChild<UITextElement>(font, "220", glm::vec2(445 + 300, 142), 10 * 8.0);
     hud->scoreText.lock()->anchorPoint = UIElement::AnchorPoint::eBottomLeft;
-    // hud->scoreText.lock()->display_color = glm::vec4(0.9, 0.8, 0.2, 1);
+  
+    hud->powerupText = hud->AddChild<UITextElement>(font, "220", glm::vec2(0, -320), 10 * 12.0);
+    hud->powerupText.lock()->anchorPoint = UIElement::AnchorPoint::eMiddle;
+
+    hud->powerUpTimer = hud->AddChild<UITextElement>(font, "Timer", glm::vec2(0, -520), 10 * 16.0);
+    hud->powerUpTimer.lock()->anchorPoint = UIElement::AnchorPoint::eMiddle;
+
 
     hud->UpdateAllChildrenAbsoluteTransform();
     graphicsContext.UpdateBindlessSet();

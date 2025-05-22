@@ -62,8 +62,9 @@ class Soul {
                 audioEmitter.AddEvent(eventInstance)
 
                 // Play flash effect
-                flashSystem.Flash(Vec3.new(0.23, 0.71, 0.36),0.75)
+
                 playerVariables.hud.TriggerSoulIndicatorAnimation()
+                flashSystem.Flash(Vec3.new(0.23, 0.71, 0.36),0.55)
 
                 this.Destroy() // Destroy the soul after it is collected
                
