@@ -106,6 +106,10 @@ public:
     {
         return glm::min(a, b);
     }
+    static float Round(const float a)
+    {
+        return glm::round(a);
+    }
     static float Sin(const float a)
     {
         return glm::sin(a);
@@ -213,6 +217,16 @@ inline void BindMath(wren::ForeignModule& module)
     }
 
     {
+        auto& vector4 = module.klass<glm::vec4>("Vec4");
+        vector4.ctor<float, float, float, float>();
+        vector4.var<&glm::vec4::x>("x");
+        vector4.var<&glm::vec4::y>("y");
+        vector4.var<&glm::vec4::z>("z");
+        vector4.var<&glm::vec4::w>("w");
+        BindVectorTypeOperations(vector4);
+    }
+
+    {
         auto& quat = module.klass<glm::quat>("Quat");
         quat.ctor<float, float, float, float>();
         quat.var<&glm::quat::w>("w");
@@ -239,6 +253,7 @@ inline void BindMath(wren::ForeignModule& module)
         mathUtilClass.funcStatic<&MathUtil::Clamp>("Clamp");
         mathUtilClass.funcStatic<&MathUtil::Max>("Max");
         mathUtilClass.funcStatic<&MathUtil::Min>("Min");
+        mathUtilClass.funcStatic<&MathUtil::Round>("Round");
         mathUtilClass.funcStatic<&MathUtil::Sin>("Sin");
         mathUtilClass.funcStatic<&MathUtil::Cos>("Cos");
         mathUtilClass.funcStatic<&MathUtil::Radians>("Radians");
