@@ -46,6 +46,7 @@ public:
     std::optional<std::shared_ptr<PauseMenu>> GetPauseMenu();
     std::optional<std::shared_ptr<HUD>> GetHUD();
     std::optional<std::shared_ptr<GameOverMenu>> GetGameOver();
+    std::optional<std::shared_ptr<LoadingScreen>> GetLoadingScreen();
 
     NON_COPYABLE(GameModule);
     NON_MOVABLE(GameModule);

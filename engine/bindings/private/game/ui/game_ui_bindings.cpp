@@ -156,7 +156,7 @@ void SetSoulsIndicatorOpacity(HUD& self, float opacity)
     }
     soulsIndicator->display_color.a = opacity;
 }
-  
+
 void PlayWaveCounterIncrementAnim(HUD& self, float val)
 {
     auto waveCounterText = self.waveCounterText.lock();
@@ -192,7 +192,7 @@ void SetPowerupTextColor(HUD& self, glm::vec4 color)
     {
         return;
     }
-    powerupText->display_color =color;
+    powerupText->display_color = color;
 }
 
 void SetPowerupText(HUD& self, const std::string& text)
@@ -244,6 +244,10 @@ void BindGameUI(wren::ForeignModule& module)
     auto& button = module.klass<UIButton, UIElement>("UIButton");
     button.funcExt<bindings::ButtonOnPress>("OnPress", "void callback() -> void");
 
+    auto& text = module.klass<UITextElement, UIElement>("UITextElement");
+    text.func<&UITextElement::GetText>("GetText");
+    text.func<&UITextElement::SetText>("SetText");
+
     module.klass<Canvas, UIElement>("Canvas");
 
     auto& mainMenu = module.klass<MainMenu, Canvas>("MainMenu");
@@ -282,7 +286,13 @@ void BindGameUI(wren::ForeignModule& module)
 
     auto& gameOver
         = module.klass<GameOverMenu, Canvas>("GameOverMenu");
-  
+
     gameOver.propReadonlyExt<bindings::GameOverMenuButton>("backButton");
     gameOver.propReadonlyExt<bindings::RetryButton>("retryButton");
+
+    auto& loadingScreen = module.klass<LoadingScreen, Canvas>("LoadingScreen");
+    loadingScreen.func<&LoadingScreen::SetDisplayText>("SetDisplayText");
+    loadingScreen.func<&LoadingScreen::SetDisplayTextColor>("SetDisplayTextColor");
+    loadingScreen.func<&LoadingScreen::HideContinuePrompt>("HideContinuePrompt");
+    loadingScreen.func<&LoadingScreen::ShowContinuePrompt>("ShowContinuePrompt");
 }
