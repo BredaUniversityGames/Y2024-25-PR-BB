@@ -53,12 +53,6 @@ class Pistol {
 
         var finalName = _barrelEndEntity.GetNameComponent().name
 
-
-        System.print("Pistol created with name: %(finalName) at position: %(barrelEndPosition)")
-
-
-       
-
         _mesh = ""
     }
 
@@ -242,16 +236,6 @@ class Pistol {
                 engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eImpact(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), normal.mulScalar(0.005) + Vec3.new(0.0, 0.4, 0.0))
             }
 
-
-
-
-            var gunTransform = gun.GetTransformComponent()
-            var gunTranslation = gunTransform.GetWorldTranslation()
-            var gunRotation = gunTransform.GetWorldRotation()
-            var gunForward = Math.ToVector(gunRotation)
-            var gunUp = gunRotation.mulVec3(Vec3.new(0, 1, 0))
-            var gunRight = Math.Cross(gunForward, gunUp)
-            //var gunStart = gunTranslation + gunForward * Vec3.new(1, 1, 1) - gunRight * Vec3.new(4.0,4.0,4.0) - gunUp * Vec3.new(0.0, 0.5, 0.0)
             var gunStart = _barrelEndEntity.GetTransformComponent().GetWorldTranslation()
 
             var length = (end - gunStart).length()
@@ -276,8 +260,6 @@ class Pistol {
     }
 
     equip (engine) {
-
-        System.print("Equipping pistol: %(_entityName)")
         engine.GetECS().DestroyEntity(engine.GetECS().GetEntityByName(_entityName))
         if(_barrelEndEntity.IsValid()){
             engine.GetECS().DestroyEntity(_barrelEndEntity)
@@ -297,9 +279,6 @@ class Pistol {
         newGun.RenderInForeground()
 
         // Create barrel end entity
-
-        System.print("Equipping pistol 22: %(_entityName)")
-
         var gun = engine.GetECS().GetEntityByName(_entityName)
         _barrelEndEntity = engine.GetECS().NewEntity()
         _barrelEndEntity.AddNameComponent().name = "BarrelEnd %(_entityName)"
