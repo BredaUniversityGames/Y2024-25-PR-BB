@@ -21,7 +21,7 @@ class BerserkerEnemy {
         _attackMaxTime = 2300
         _health = 26
         _attackTiming = 1200 // TODO: Should be added to small melee enemies
-        _recoveryMaxTime = 0
+        _recoveryMaxTime = 500
         _deathTimerMax = 3000
 
         _growlSFX = "event:/SFX/DemonGrowl"
@@ -150,13 +150,14 @@ class BerserkerEnemy {
     }
 
     position=(newPos) {
-        _rootEntity.GetTransformComponent().translation = newPos
+        //_rootEntity.GetTransformComponent().translation = newPos
+        System.print("wadafak")
     }
 
     Update(playerPos, playerVariables, engine, dt, soulManager, coinManager, flashSystem) {
         var body = _rootEntity.GetRigidbodyComponent()
         var pos = body.GetPosition()
-        _rootEntity.GetTransformComponent().translation = pos
+        //_rootEntity.GetTransformComponent().translation = pos
         var animations = _meshEntity.GetAnimationControlComponent()
 
 
