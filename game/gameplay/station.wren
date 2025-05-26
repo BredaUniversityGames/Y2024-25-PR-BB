@@ -73,7 +73,7 @@ class Station {
                     }
 
                     if(_powerUpType == PowerUpType.DOUBLE_GUNS){
-                        //Add sound for dual gun
+                        _stationManagerReference.PlayDualGunHumSound(engine) 
                     }
 
                     playerVariables.SetCurrentPowerUp(_powerUpType)
@@ -198,7 +198,7 @@ class StationManager {
         _pointLightDualGun.range = 5.5
         _pointLightDualGun.color = Vec3.new(0.86, 0.67, 0.0)
         _dualGunMeshEntity.AttachChild(_dualGunLightEntity)
-        _dualGunHumEvent = "event:/SFX/QuadHum"
+        _dualGunHumEvent = "event:/SFX/DualGunHum"
 
         // dual gun emitter
         _dualGunEmitter = engine.GetECS().NewEntity()
@@ -237,6 +237,14 @@ class StationManager {
         var quadEventInstance = engine.GetAudio().PlayEventOnce(_quadHumEvent)
         engine.GetAudio().SetEventVolume(quadEventInstance, 2.4)
         audioEmitter.AddEvent(quadEventInstance)
+    }
+
+    PlayDualGunHumSound(engine){
+        var player = engine.GetECS().GetEntityByName("Camera")
+        var audioEmitter = player.GetAudioEmitterComponent()
+        var dualGunEventInstance = engine.GetAudio().PlayEventOnce(_dualGunHumEvent)
+        engine.GetAudio().SetEventVolume(dualGunEventInstance, 2.4)
+        audioEmitter.AddEvent(dualGunEventInstance)
     }
 
     Update(engine, playerVariables, dt){
