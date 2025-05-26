@@ -107,9 +107,9 @@ GameSettings* GetSettings(GameModule& self)
     return &self.GetSettings();
 }
 
-glm::vec3 GetAimAssistDirection(GameModule&, ECSModule& ecs, PhysicsModule& physics, const glm::vec3& forward, float minAngle)
+glm::vec3 GetAimAssistDirection(GameModule&, ECSModule& ecs, PhysicsModule& physics, const glm::vec3& forward, float range, float minAngle)
 {
-    return AimAssist::GetAimAssistDirection(ecs, physics, forward, minAngle);
+    return AimAssist::GetAimAssistDirection(ecs, physics, forward, range, minAngle);
 }
 }
 

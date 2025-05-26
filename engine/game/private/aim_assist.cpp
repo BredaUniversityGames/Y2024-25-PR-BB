@@ -5,9 +5,9 @@
 #include "game_module.hpp"
 #include "physics_module.hpp"
 
-bool IsVisible(ECSModule& ecs, PhysicsModule& physics, const glm::vec3& origin, const glm::vec3& direction, entt::entity target)
+bool IsVisible(ECSModule& ecs, PhysicsModule& physics, const glm::vec3& origin, const glm::vec3& direction, float range, entt::entity target)
 {
-    auto hits = physics.ShootRay(origin, direction, 1000.0f);
+    auto hits = physics.ShootRay(origin, direction, range);
 
     for (auto& hit : hits)
     {
@@ -24,7 +24,7 @@ bool IsVisible(ECSModule& ecs, PhysicsModule& physics, const glm::vec3& origin, 
     return false;
 }
 
-glm::vec3 AimAssist::GetAimAssistDirection(ECSModule& ecs, PhysicsModule& physics, const glm::vec3& forward, float minAngle)
+glm::vec3 AimAssist::GetAimAssistDirection(ECSModule& ecs, PhysicsModule& physics, const glm::vec3& forward, float range, float minAngle)
 {
     glm::vec3 result = forward;
     float closestParallel = minAngle;
@@ -46,7 +46,7 @@ glm::vec3 AimAssist::GetAimAssistDirection(ECSModule& ecs, PhysicsModule& physic
         }
 
         // Make sure the enemy is not behind something
-        if (!IsVisible(ecs, physics, playerPosition, playerToEnemy, enemy))
+        if (!IsVisible(ecs, physics, playerPosition, playerToEnemy, range, enemy))
         {
             continue;
         }

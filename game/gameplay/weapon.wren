@@ -163,7 +163,7 @@ class Pistol {
             }
 
             if (aimAssistNeeded) {
-                direction = engine.GetGame().GetAimAssistDirection(engine.GetECS(), engine.GetPhysics(), forward, _aimAssistMinAngle)
+                direction = engine.GetGame().GetAimAssistDirection(engine.GetECS(), engine.GetPhysics(), forward, _range, _aimAssistMinAngle)
                 end = translation + direction * _rangeVector
                 rayHitInfo = engine.GetPhysics().ShootRay(start, direction, _range)
             }
@@ -262,7 +262,7 @@ class Pistol {
         var forward = Math.ToVector(rotation)
         var gunUp = rotation.mulVec3(Vec3.new(0, 1, 0))
 
-        var direction = engine.GetGame().GetAimAssistDirection(engine.GetECS(), engine.GetPhysics(), forward, _aimAssistMinAngle)
+        var direction = engine.GetGame().GetAimAssistDirection(engine.GetECS(), engine.GetPhysics(), forward, _range, _aimAssistMinAngle)
 
         var rotationStepSpeed = 0.00025 * engine.GetTime().GetDeltatime()
 
@@ -406,7 +406,7 @@ class Shotgun {
             }
 
             if (aimAssistNeeded) {
-                direction = engine.GetGame().GetAimAssistDirection(engine.GetECS(), engine.GetPhysics(), forward, _aimAssistMinAngle)
+                direction = engine.GetGame().GetAimAssistDirection(engine.GetECS(), engine.GetPhysics(), forward, _range, _aimAssistMinAngle)
                 end = translation + direction * _rangeVector
                 rayHitInfo = engine.GetPhysics().ShootRay(start, direction, _range)
             }
@@ -485,7 +485,7 @@ class Shotgun {
         var forward = Math.ToVector(rotation)
         var gunUp = rotation.mulVec3(Vec3.new(0, 1, 0))
 
-        var direction = engine.GetGame().GetAimAssistDirection(engine.GetECS(), engine.GetPhysics(), forward, _aimAssistMinAngle)
+        var direction = engine.GetGame().GetAimAssistDirection(engine.GetECS(), engine.GetPhysics(), forward, _range, _aimAssistMinAngle)
 
         var rotationStepSpeed = 0.00025 * engine.GetTime().GetDeltatime()
 
