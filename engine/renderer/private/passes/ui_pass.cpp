@@ -96,12 +96,8 @@ void UIPass::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED uint32
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _pipeline);
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, { _context->BindlessSet() }, {});
 
-    uint32_t counter = 0;
     for (const auto& quad : _drawList)
     {
-        if (counter > 40)
-            break;
-        counter++;
         _pushConstants.quad = quad;
         _pushConstants.quad.matrix = _projectionMatrix * _pushConstants.quad.matrix;
 
