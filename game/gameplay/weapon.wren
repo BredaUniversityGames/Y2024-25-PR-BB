@@ -262,12 +262,17 @@ class Pistol {
         var gunUp = rotation.mulVec3(Vec3.new(0, 1, 0))
 
         var direction = engine.GetGame().GetAimAssistDirection(engine.GetECS(), engine.GetPhysics(), forward)
-        var targetRotation = Math.LookAt(-direction, gunUp)
+
+        var rotationStepSpeed = 0.00025 * engine.GetTime().GetDeltatime()
 
         if (direction != forward) {
-            gunTransform.SetWorldRotation(targetRotation)
+            var targetRotation = Math.LookAt(-direction, gunUp)
+            var stepRotation = Math.RotateTowards(gunTransform.GetWorldRotation(), targetRotation, rotationStepSpeed)
+            gunTransform.SetWorldRotation(stepRotation)
         } else {
-            gunTransform.rotation = Math.ToQuat(Vec3.new(0.0, 0.0, 0.0))
+            var targetRotation = Math.ToQuat(Vec3.new(0.0, 0.0, 0.0))
+            var stepRotation = Math.RotateTowards(gunTransform.rotation, targetRotation, rotationStepSpeed)
+            gunTransform.rotation = stepRotation
         }
     }
 
