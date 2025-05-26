@@ -386,6 +386,29 @@ class Shotgun {
             var end = translation + forward * _rangeVector
             var direction = (end - start).normalize()
 
+            // Check first if aim assist is needed, if the cursor is already on an enemy, just shoot so it is possible to aim for the head
+            var rayHitInfo = engine.GetPhysics().ShootRay(start, direction, _range)
+            var aimAssistNeeded = true
+
+            if (!rayHitInfo.isEmpty) {
+                var normal = Vec3.new(0, 1, 0)
+
+                for (rayHit in rayHitInfo) {
+                    var hitEntity = rayHit.GetEntity(engine.GetECS())
+
+                    if (!hitEntity.HasPlayerTag()) {
+                        aimAssistNeeded = !hitEntity.HasEnemyTag()
+                        break
+                    }
+                }
+            }
+
+            if (aimAssistNeeded) {
+                direction = engine.GetGame().GetAimAssistDirection(engine.GetECS(), engine.GetPhysics(), forward)
+                end = translation + direction * _rangeVector
+                rayHitInfo = engine.GetPhysics().ShootRay(start, direction, _range)
+            }
+
             var hitAnEnemy = false
 
             var i = 0
@@ -446,6 +469,32 @@ class Shotgun {
             var gunAnimations = gun.GetAnimationControlComponent()
             gunAnimations.Play(_attackAnim, 1.1, false, 0.0, false)
             _cooldown = _attackSpeed
+        }
+    }
+
+    rotateToTarget (engine) {
+        var gun = engine.GetECS().GetEntityByName("GunParentPivot")
+        var gunTransform = gun.GetTransformComponent()
+
+        var player = engine.GetECS().GetEntityByName("Camera")
+        var playerTransform = player.GetTransformComponent()
+
+        var rotation = playerTransform.GetWorldRotation()
+        var forward = Math.ToVector(rotation)
+        var gunUp = rotation.mulVec3(Vec3.new(0, 1, 0))
+
+        var direction = engine.GetGame().GetAimAssistDirection(engine.GetECS(), engine.GetPhysics(), forward)
+
+        var rotationStepSpeed = 0.00025 * engine.GetTime().GetDeltatime()
+
+        if (direction != forward) {
+            var targetRotation = Math.LookAt(-direction, gunUp)
+            var stepRotation = Math.RotateTowards(gunTransform.GetWorldRotation(), targetRotation, rotationStepSpeed)
+            gunTransform.SetWorldRotation(stepRotation)
+        } else {
+            var targetRotation = Math.ToQuat(Vec3.new(0.0, 0.0, 0.0))
+            var stepRotation = Math.RotateTowards(gunTransform.rotation, targetRotation, rotationStepSpeed)
+            gunTransform.rotation = stepRotation
         }
     }
 
