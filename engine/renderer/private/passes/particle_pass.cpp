@@ -356,9 +356,6 @@ void ParticlePass::ResetParticles()
     auto cmdBuffer = SingleTimeCommands(_context->VulkanContext());
 
     std::vector<ParticleCounters> counters(1);
-
-    vk::DeviceSize BufferSize = sizeof(ParticleCounters);
-
     cmdBuffer.CopyIntoLocalBuffer(counters, 0, resources->BufferResourceManager().Access(_particlesBuffers[static_cast<uint32_t>(ParticleBufferUsage::eCounter)])->buffer);
 
     _emitters.clear();
