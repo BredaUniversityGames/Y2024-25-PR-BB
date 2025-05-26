@@ -7,7 +7,7 @@ class PlayerMovement{
         hasDoubleJumped = false
         dashTimer = newDashTimer
         _gun = gun
-        maxSpeed = 9.0
+        maxSpeed = 13.0
         sv_accelerate = 10.0
         jumpForce = 9.75
         gravityFactor = 2.4
@@ -41,6 +41,10 @@ class PlayerMovement{
 
         _slideSFX = "event:/SFX/Slide"
         _outofBounds = "event:/SFX/Crows"
+
+        _maxStepDelay = 400
+        _stepTimer = 0
+        _walkSFX = "event:/SFX/Walk"
     }
 
 //getters
@@ -304,12 +308,30 @@ class PlayerMovement{
             }
         }
 
+
         playerBody.SetVelocity(velocity)
 
         var pos = playerBody.GetPosition()
 
         pos.y = pos.y + currentPlayerHeight/2.0
         engine.GetECS().GetEntityByName("Player").GetTransformComponent().translation = pos
+        // Play walk sound
+
+        if(isGrounded){
+            if(_stepTimer < _maxStepDelay){
+                _stepTimer = _stepTimer + engine.GetTime().GetDeltatime()
+            }else{
+                var player = engine.GetECS().GetEntityByName("Camera")
+                var eventInstance = engine.GetAudio().PlayEventOnce(_walkSFX)
+                var volume = Math.Clamp( 0.25 * velocity.length(), 0.0, 3.0)
+                engine.GetAudio().SetEventVolume(eventInstance, volume)
+                var audioEmitter = player.GetAudioEmitterComponent()
+                audioEmitter.AddEvent(eventInstance)
+                _stepTimer = 0.0
+            }
+
+        }
+
     }
 
     Dash(engine, dt, playerController, camera, hud){
