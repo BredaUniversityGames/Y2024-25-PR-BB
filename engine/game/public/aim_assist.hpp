@@ -8,5 +8,5 @@ class PhysicsModule;
 class AimAssist
 {
 public:
-    static glm::vec3 GetAimAssistDirection(ECSModule& ecs, PhysicsModule& physics, const glm::vec3& forward);
+    static glm::vec3 GetAimAssistDirection(ECSModule& ecs, PhysicsModule& physics, const glm::vec3& forward, float minAngle);
 };

@@ -24,6 +24,7 @@ class Pistol {
         _cooldown = 0
         _reloadTimer = 0
         _reloadSpeed = 0.8 * 1000
+        _aimAssistMinAngle = 0.98
 
         _cameraShakeIntensity = 0.3
 
@@ -162,7 +163,7 @@ class Pistol {
             }
 
             if (aimAssistNeeded) {
-                direction = engine.GetGame().GetAimAssistDirection(engine.GetECS(), engine.GetPhysics(), forward)
+                direction = engine.GetGame().GetAimAssistDirection(engine.GetECS(), engine.GetPhysics(), forward, _aimAssistMinAngle)
                 end = translation + direction * _rangeVector
                 rayHitInfo = engine.GetPhysics().ShootRay(start, direction, _range)
             }
@@ -261,7 +262,7 @@ class Pistol {
         var forward = Math.ToVector(rotation)
         var gunUp = rotation.mulVec3(Vec3.new(0, 1, 0))
 
-        var direction = engine.GetGame().GetAimAssistDirection(engine.GetECS(), engine.GetPhysics(), forward)
+        var direction = engine.GetGame().GetAimAssistDirection(engine.GetECS(), engine.GetPhysics(), forward, _aimAssistMinAngle)
 
         var rotationStepSpeed = 0.00025 * engine.GetTime().GetDeltatime()
 
@@ -331,6 +332,7 @@ class Shotgun {
         _reloadSpeed = 600
         _spread = [Vec2.new(0, 0), Vec2.new(-1, 1), Vec2.new(0, 1), Vec2.new(1, 1), Vec2.new(0, 2), Vec2.new(-1, -1), Vec2.new(0, -1), Vec2.new(1, -1), Vec2.new(0, -2)]
         _cameraShakeIntensity = 0.5
+        _aimAssistMinAngle = 0.98
 
         _attackSFX = "event:/SFX/Shotgun"
         _reloadSFX = "event:/SFX/ShotgunReload"
@@ -404,7 +406,7 @@ class Shotgun {
             }
 
             if (aimAssistNeeded) {
-                direction = engine.GetGame().GetAimAssistDirection(engine.GetECS(), engine.GetPhysics(), forward)
+                direction = engine.GetGame().GetAimAssistDirection(engine.GetECS(), engine.GetPhysics(), forward, _aimAssistMinAngle)
                 end = translation + direction * _rangeVector
                 rayHitInfo = engine.GetPhysics().ShootRay(start, direction, _range)
             }
@@ -483,7 +485,7 @@ class Shotgun {
         var forward = Math.ToVector(rotation)
         var gunUp = rotation.mulVec3(Vec3.new(0, 1, 0))
 
-        var direction = engine.GetGame().GetAimAssistDirection(engine.GetECS(), engine.GetPhysics(), forward)
+        var direction = engine.GetGame().GetAimAssistDirection(engine.GetECS(), engine.GetPhysics(), forward, _aimAssistMinAngle)
 
         var rotationStepSpeed = 0.00025 * engine.GetTime().GetDeltatime()
 

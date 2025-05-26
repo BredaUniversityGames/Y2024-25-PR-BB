@@ -7,7 +7,7 @@
 
 bool IsVisible(ECSModule& ecs, PhysicsModule& physics, const glm::vec3& origin, const glm::vec3& direction, entt::entity target)
 {
-    auto hits = physics.ShootRay(origin, direction, 1000.0f); // TODO: Get distance from gun settings
+    auto hits = physics.ShootRay(origin, direction, 1000.0f);
 
     for (auto& hit : hits)
     {
@@ -24,10 +24,8 @@ bool IsVisible(ECSModule& ecs, PhysicsModule& physics, const glm::vec3& origin, 
     return false;
 }
 
-glm::vec3 AimAssist::GetAimAssistDirection(ECSModule& ecs, PhysicsModule& physics, const glm::vec3& forward)
+glm::vec3 AimAssist::GetAimAssistDirection(ECSModule& ecs, PhysicsModule& physics, const glm::vec3& forward, float minAngle)
 {
-    const float minAngle = 0.98f;
-
     glm::vec3 result = forward;
     float closestParallel = minAngle;
 
