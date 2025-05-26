@@ -12,7 +12,7 @@ class Weapons {
 
 
 class Pistol {
-    construct new(engine, name) {
+    construct new(engine, name, barrelEndPosition) {
         _damage = 1
         _headShotMultiplier = 2.0
         _range = 64
@@ -41,6 +41,23 @@ class Pistol {
         _unequipAnim = "unequip" 
         _entityName = name 
 
+        _barrelEndPosition = barrelEndPosition
+
+        var gun = engine.GetECS().GetEntityByName(_entityName)
+        _barrelEndEntity = engine.GetECS().NewEntity()
+        _barrelEndEntity.AddNameComponent().name = "BarrelEnd %(_entityName)"
+        var transform = _barrelEndEntity.AddTransformComponent()
+        gun.AttachChild(_barrelEndEntity)
+        transform.translation = _barrelEndPosition
+
+        var finalName = _barrelEndEntity.GetNameComponent().name
+
+
+        System.print("Pistol created with name: %(finalName) at position: %(barrelEndPosition)")
+
+
+       
+
         _mesh = ""
     }
 
@@ -48,7 +65,18 @@ class Pistol {
         var gun = engine.GetECS().GetEntityByName(_entityName)
 
         var gunAnimations = gun.GetAnimationControlComponent()
-        if((engine.GetInput().GetDigitalAction("Reload").IsPressed() || engine.GetInput().GetDigitalAction("Shoot").IsHeld()) && _reloadTimer == 0) {
+        
+        var shootBool = false
+
+        if (_entityName == "Gun" && engine.GetInput().GetDigitalAction("Shoot").IsHeld()) {
+            shootBool = true
+        }
+
+        if (_entityName == "Gun2" && engine.GetInput().GetDigitalAction("Shoot2").IsHeld()) {
+            shootBool = true
+        }
+
+        if(engine.GetInput().GetDigitalAction("Reload").IsPressed() || shootBool  && _reloadTimer == 0) {
             gunAnimations.Play(_reloadAnim, 1.0, false, 0.2, false)
 
             // Play reload audio
@@ -68,7 +96,7 @@ class Pistol {
             var gunUp = gunRotation.mulVec3(Vec3.new(0, 1, 0))
             var gunRight = Math.Cross(gunForward, gunUp)
             var gunStart = gunTranslation + gunForward * Vec3.new(1, 1, 1) - gunRight * Vec3.new(4.0,4.0,4.0) - gunUp * Vec3.new(0.0, 0.5, 0.0)
-
+    
             //play a particle effect
             var entity = engine.GetECS().NewEntity()
             var transform = entity.AddTransformComponent()
@@ -106,9 +134,17 @@ class Pistol {
         
         _manualTimer = Math.Max(_manualTimer-deltaTime,0)
         
-        if(engine.GetInput().GetDigitalAction("Shoot").IsPressed() && _manualTimer ==0){
-            _manualTimer = 50 //ms
+        if (_entityName == "Gun") {
+                if(engine.GetInput().GetDigitalAction("Shoot").IsPressed() && _manualTimer ==0){
+                _manualTimer = 50 //ms
+            }
         }
+        if (_entityName == "Gun2") {
+                if(engine.GetInput().GetDigitalAction("Shoot2").IsPressed() && _manualTimer ==0){
+                _manualTimer = 50 //ms
+            }
+        }
+
 
         if ((_cooldown <= 0 ||_manualTimer >=50) && _ammo > 0 && _reloadTimer <= 0) {
             _ammo = _ammo - 1
@@ -143,6 +179,7 @@ class Pistol {
             var right = Math.Cross(forward, up)
             var start = translation + forward * Vec3.new(1, 1, 1) - right * Vec3.new(0.09, 0.09, 0.09) - up * Vec3.new(0.12, 0.12, 0.12)
             var end = translation + forward * _rangeVector
+
             var direction = (end - start).normalize()
             var rayHitInfo = engine.GetPhysics().ShootRay(start, direction, _range)
      
@@ -205,8 +242,8 @@ class Pistol {
             var gunForward = Math.ToVector(gunRotation)
             var gunUp = gunRotation.mulVec3(Vec3.new(0, 1, 0))
             var gunRight = Math.Cross(gunForward, gunUp)
-            var gunStart = gunTranslation + gunForward * Vec3.new(1, 1, 1) - gunRight * Vec3.new(4.0,4.0,4.0) - gunUp * Vec3.new(0.0, 0.5, 0.0)
-
+            //var gunStart = gunTranslation + gunForward * Vec3.new(1, 1, 1) - gunRight * Vec3.new(4.0,4.0,4.0) - gunUp * Vec3.new(0.0, 0.5, 0.0)
+            var gunStart = _barrelEndEntity.GetTransformComponent().GetWorldTranslation()
 
             var length = (end - gunStart).length()
             var i = 1.0
@@ -230,7 +267,12 @@ class Pistol {
     }
 
     equip (engine) {
+
+        System.print("Equipping pistol: %(_entityName)")
         engine.GetECS().DestroyEntity(engine.GetECS().GetEntityByName(_entityName))
+        if(_barrelEndEntity.IsValid()){
+            engine.GetECS().DestroyEntity(_barrelEndEntity)
+        }
 
         var camera = engine.GetECS().GetEntityByName("Camera")
 
@@ -244,6 +286,18 @@ class Pistol {
         gunAnimations.Play(_equipAnim, 1.2, false, 0.2, false)
 
         newGun.RenderInForeground()
+
+        // Create barrel end entity
+
+        System.print("Equipping pistol 22: %(_entityName)")
+
+        var gun = engine.GetECS().GetEntityByName(_entityName)
+        _barrelEndEntity = engine.GetECS().NewEntity()
+        _barrelEndEntity.AddNameComponent().name = "BarrelEnd %(_entityName)"
+        var transform = _barrelEndEntity.AddTransformComponent()
+        gun.AttachChild(_barrelEndEntity)
+        transform.translation = _barrelEndPosition
+
     }
 
     unequip(engine){

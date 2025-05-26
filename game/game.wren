@@ -121,7 +121,7 @@ class Main {
         __camera.AttachChild(__gun)
         __camera.AttachChild(__gun2)
 
-        __armory = [Pistol.new(engine, "Gun"), Shotgun.new(engine), Pistol.new(engine, "Gun2")]
+        __armory = [Pistol.new(engine, "Gun",Vec3.new(-2.5,-0.35,-0.85)), Shotgun.new(engine), Pistol.new(engine, "Gun2",Vec3.new(-2.5,-0.35,-0.85))]
 
         __armory[2].playWalkAnim(engine)
 
@@ -438,7 +438,7 @@ class Main {
 
         __soulManager.Update(engine, __playerVariables,__flashSystem, dt)
         __coinManager.Update(engine, __playerVariables,__flashSystem, dt)
-        __waveSystem.Update(engine, __player, __enemyList, dt)
+        //__waveSystem.Update(engine, __player, __enemyList, dt)
         __stationManager.Update(engine, __playerVariables, dt)
         __flashSystem.Update(engine, dt)
         __powerUpSystem.Update(engine,__playerVariables,__flashSystem, dt)
