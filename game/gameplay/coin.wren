@@ -132,8 +132,10 @@ class Coin {
     }
 
     Destroy(){
-        var rb = _rootEntity.GetRigidbodyComponent()
-        rb.SetTranslation(Vec3.new(0.0, -100.0, 0.0)) // Move the coin out of the way
+        //var rb = _rootEntity.GetRigidbodyComponent()
+        var transform = _rootEntity.GetTransformComponent()
+        //rb.SetTranslation(Vec3.new(0.0, -1000.0, 0.0)) // Move the coin out of the way
+        transform.translation = Vec3.new(0.0, -1000.0, 0.0) // Move the coin out of the way
         // Add a lifetime component to the coin entity so it will get destroyed eventually
         var lifetime = _rootEntity.AddLifetimeComponent()
         lifetime.lifetime = 50.0

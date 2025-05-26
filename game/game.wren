@@ -53,7 +53,8 @@ class Main {
         __timer = 0
 
         // Load Map
-        engine.LoadModel("assets/models/graveyard_level.glb", true)
+        engine.LoadModel("assets/models/graveyard_level.glb", false)
+        engine.LoadCollisions("assets/models/graveyard_collisions.glb")
 
         engine.PreloadModel("assets/models/Skeleton.glb")
         engine.PreloadModel("assets/models/eye.glb")

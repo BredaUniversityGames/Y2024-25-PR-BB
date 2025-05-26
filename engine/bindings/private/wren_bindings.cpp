@@ -50,6 +50,15 @@ WrenEntity LoadModelScripting(WrenEngine& engine, const std::string& path, bool 
     return { entity, &engine.instance->GetModule<ECSModule>().GetRegistry() };
 }
 
+WrenEntity LoadModelCollisions(WrenEngine& engine, const std::string& path)
+{
+    auto& sceneCache = engine.instance->GetModule<GameModule>()._modelsLoaded;
+    auto model = sceneCache.LoadModel(*engine.instance, path);
+
+    auto entity = model->InstantiateCollisions(*engine.instance);
+    return { entity, &engine.instance->GetModule<ECSModule>().GetRegistry() };
+}
+
 void PreloadModel(WrenEngine& engine, const std::string& path)
 {
     auto& sceneCache = engine.instance->GetModule<GameModule>()._modelsLoaded;
@@ -126,6 +135,7 @@ void BindEngineAPI(wren::ForeignModule& module)
         engineAPI.func<&WrenEngine::GetModule<UIModule>>("GetUI");
 
         engineAPI.funcExt<bindings::LoadModelScripting>("LoadModel");
+        engineAPI.funcExt<bindings::LoadModelCollisions>("LoadCollisions");
         engineAPI.funcExt<bindings::PreloadModel>("PreloadModel");
         engineAPI.funcExt<bindings::TransitionToScript>("TransitionToScript");
         engineAPI.funcExt<bindings::SetExit>("SetExit");
