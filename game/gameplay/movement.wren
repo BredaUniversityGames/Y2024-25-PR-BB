@@ -45,6 +45,8 @@ class PlayerMovement{
         _maxStepDelay = 400
         _stepTimer = 0
         _walkSFX = "event:/SFX/Walk"
+        _jumpSFX = "event:/SFX/Jump"
+        _dashSFX = "event:/SFX/Dash"
     }
 
 //getters
@@ -235,16 +237,30 @@ class PlayerMovement{
         var isJumpHeld = engine.GetInput().GetDigitalAction("Jump").IsHeld()
         var doubleJump = engine.GetInput().GetDigitalAction("Jump").IsPressed()
 
+                
+
         if(isGrounded && isJumpHeld) {
             velocity.y = 0.0
             velocity = velocity + Vec3.new(0.0, jumpForce, 0.0)
             hasDoubleJumped = false
+
+            //Jump sound
+            var eventInstance = engine.GetAudio().PlayEventOnce(_jumpSFX)
+            engine.GetAudio().SetEventVolume(eventInstance, 1.8)
+            var audioEmitter = camera.GetAudioEmitterComponent()
+            audioEmitter.AddEvent(eventInstance)
         }else {
             if(doubleJump && hasDoubleJumped == false){
                 velocity.y = 0.0
                 velocity = velocity + Vec3.new(0.0, jumpForce*1.5, 0.0)
+                //Jump sound
+                var eventInstance = engine.GetAudio().PlayEventOnce(_jumpSFX)
+                engine.GetAudio().SetEventVolume(eventInstance, 1.8)
+                var audioEmitter = camera.GetAudioEmitterComponent()
+                audioEmitter.AddEvent(eventInstance)
                 if(moveInputDir.length() > 0.01){
                     velocity = velocity + moveInputDir.mulScalar(maxSpeed/1.5)
+                    
                 }
                 hasDoubleJumped = true
             }
@@ -323,7 +339,7 @@ class PlayerMovement{
             }else{
                 var player = engine.GetECS().GetEntityByName("Camera")
                 var eventInstance = engine.GetAudio().PlayEventOnce(_walkSFX)
-                var volume = Math.Clamp( 0.25 * velocity.length(), 0.0, 3.0)
+                var volume = Math.Clamp( 0.25 * velocity.length(), 0.0, 2.0)
                 engine.GetAudio().SetEventVolume(eventInstance, volume)
                 var audioEmitter = player.GetAudioEmitterComponent()
                 audioEmitter.AddEvent(eventInstance)
@@ -349,6 +365,12 @@ class PlayerMovement{
         if(engine.GetInput().GetDigitalAction("Dash").IsPressed() &&  currentDashCount > 0 ){
 
             hasDashed = true
+
+            //play dash sound
+            var eventInstance = engine.GetAudio().PlayEventOnce(_dashSFX)
+            engine.GetAudio().SetEventVolume(eventInstance, 2.8)
+            var audioEmitter = camera.GetAudioEmitterComponent()
+            audioEmitter.AddEvent(eventInstance)
 
             var player = engine.GetECS().GetEntityByName("Camera")
             var translation = playerBody.GetPosition()
