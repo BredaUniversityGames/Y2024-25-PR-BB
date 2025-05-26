@@ -73,10 +73,9 @@ std::shared_ptr<MainMenu> MainMenu::Create(GraphicsContext& graphicsContext, con
         constexpr glm::vec2 buttonBaseSize = glm::vec2(87, 22) * 6.0f;
         constexpr float textSize = 60;
 
-        auto openLinkButton = main->AddChild<UIButton>(buttonStyle, buttonBaseSize, buttonBaseSize);
+        auto openLinkButton = main->AddChild<UIButton>(buttonStyle, glm::vec2(0), buttonBaseSize);
         openLinkButton->anchorPoint = UIElement::AnchorPoint::eBottomRight;
-        openLinkButton->AddChild<UITextElement>(font, "Check out our Discord!", 50)->SetColor(glm::vec4(1, 1, 1, 1));
-
+        openLinkButton->AddChild<UITextElement>(font, "Check out our Discord!", 50);
         main->openLinkButton = openLinkButton;
 
         auto playButton = buttonPanel->AddChild<UIButton>(buttonStyle, buttonPos, buttonBaseSize);
@@ -87,19 +86,18 @@ std::shared_ptr<MainMenu> MainMenu::Create(GraphicsContext& graphicsContext, con
 
         auto controlsButton = buttonPanel->AddChild<UIButton>(buttonStyle, buttonPos, buttonBaseSize);
         controlsButton->anchorPoint = UIElement::AnchorPoint::eTopLeft;
-        controlsButton->AddChild<UITextElement>(font, "Controls", textSize)->SetColor(glm::vec4(1, 1, 1, 1));
+        controlsButton->AddChild<UITextElement>(font, "Controls", textSize);
 
         buttonPos += increment;
 
         auto settingsButton = buttonPanel->AddChild<UIButton>(buttonStyle, buttonPos, buttonBaseSize);
         settingsButton->anchorPoint = UIElement::AnchorPoint::eTopLeft;
-        settingsButton->AddChild<UITextElement>(font, "Settings", textSize)->SetColor(glm::vec4(1, 1, 1, 1));
-
+        settingsButton->AddChild<UITextElement>(font, "Settings", textSize);
         buttonPos += increment;
 
         auto quitButton = buttonPanel->AddChild<UIButton>(buttonStyle, buttonPos, buttonBaseSize);
         quitButton->anchorPoint = UIElement::AnchorPoint::eTopLeft;
-        quitButton->AddChild<UITextElement>(font, "Quit", textSize)->SetColor(glm::vec4(1, 1, 1, 1));
+        quitButton->AddChild<UITextElement>(font, "Quit", textSize);
 
         main->playButton = playButton;
         main->quitButton = quitButton;

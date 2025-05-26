@@ -7,7 +7,6 @@
 
 namespace bindings
 {
-
 void ButtonOnPress(UIButton& self, wren::Variable fn) { self.OnPress(fn); }
 
 std::shared_ptr<UIButton> PlayButton(MainMenu& self) { return self.playButton.lock(); }
@@ -53,7 +52,7 @@ void UpdateScoreText(HUD& self, const int score)
 {
     if (auto locked = self.scoreText.lock(); locked != nullptr)
     {
-        locked->SetText(std::string("Score: ") + std::to_string(score));
+        locked->SetText(std::to_string(score));
     }
 }
 
@@ -73,6 +72,21 @@ void UpdateGrenadeBar(HUD& self, const float charge)
     }
 }
 
+void SetDashChargeColor(HUD& self, int chargeIndex, const glm::vec3& color, float opacity)
+{
+
+    if (chargeIndex >= 0 && static_cast<size_t>(chargeIndex) < self.dashCharges.size())
+    {
+        auto charge = self.dashCharges[chargeIndex].lock();
+        if (!charge)
+        {
+            return;
+        }
+
+        charge->display_color = glm::vec4(color, opacity);
+    }
+}
+
 void UpdateDashCharges(HUD& self, int charges)
 {
     for (int32_t i = 0; i < static_cast<int32_t>(self.dashCharges.size()); i++)
@@ -85,7 +99,7 @@ void UpdateDashCharges(HUD& self, int charges)
             }
             else // Charge empty
             {
-                locked->display_color = glm::vec4(1, 1, 1, 0.2);
+                locked->display_color = glm::vec4(1, 1, 1, 0.0);
             }
         }
     }
@@ -133,6 +147,44 @@ void ShowHitmarkerCrit(HUD& self, bool val)
     hitmarkerCrit->visibility = val ? UIElement::VisibilityState::eUpdatedAndVisible : UIElement::VisibilityState::eNotUpdatedAndInvisible;
 }
 
+void SetSoulsIndicatorOpacity(HUD& self, float opacity)
+{
+    auto soulsIndicator = self.soulIndicator.lock();
+    if (!soulsIndicator)
+    {
+        return;
+    }
+    soulsIndicator->display_color.a = opacity;
+}
+  
+void PlayWaveCounterIncrementAnim(HUD& self, float val)
+{
+    auto waveCounterText = self.waveCounterText.lock();
+
+    if (!waveCounterText)
+    {
+        return;
+    }
+    if (val != 0)
+    {
+        waveCounterText->SetScale(glm::vec2(0, 160 + (val * 32)));
+        waveCounterText->SetLocation(glm::vec2(100, 26) + glm::vec2(val * 8));
+        glm::vec3 color = glm::mix(glm::vec3(0.459 * 2.0, 0.31 * 2.0, 0.28 * 2.0), glm::vec3(1), val);
+        waveCounterText->display_color = glm::vec4(color, 1);
+
+        self.UpdateAllChildrenAbsoluteTransform();
+    }
+}
+void SetWaveCounterText(HUD& self, int wave)
+{
+    auto waveCounterText = self.waveCounterText.lock();
+
+    if (!waveCounterText)
+    {
+        return;
+    }
+    waveCounterText->SetText(std::to_string(wave));
+}
 void SetPowerupTextColor(HUD& self, glm::vec4 color)
 {
     std::shared_ptr<UITextElement> powerupText = self.powerupText.lock();
@@ -140,7 +192,7 @@ void SetPowerupTextColor(HUD& self, glm::vec4 color)
     {
         return;
     }
-    powerupText->SetColor(color);
+    powerupText->display_color =color;
 }
 
 void SetPowerupText(HUD& self, const std::string& text)
@@ -159,7 +211,7 @@ glm::vec4 GetPowerupTextColor(HUD& self)
     if (powerupText)
     {
         // return;
-        return powerupText->GetColor();
+        return powerupText->display_color;
     }
 
     return glm::vec4(0.0);
@@ -182,7 +234,7 @@ void SetPowerupTimerTextColor(HUD& self, glm::vec4 color)
     {
         return;
     }
-    powerupTimer->SetColor(color);
+    powerupTimer->display_color = color;
 }
 
 }
@@ -218,6 +270,10 @@ void BindGameUI(wren::ForeignModule& module)
     hud.funcExt<bindings::UpdateUltReadyText>("UpdateUltReadyText", "Use bool to set if ultimate is ready");
     hud.funcExt<bindings::ShowHitmarker>("ShowHitmarker", "should show the hitmarker");
     hud.funcExt<bindings::ShowHitmarkerCrit>("ShowHitmarkerCrit", "should show the critical hitmarker");
+    hud.funcExt<bindings::SetSoulsIndicatorOpacity>("SetSoulsIndicatorOpacity", "Set souls indicator opacity");
+    hud.funcExt<bindings::PlayWaveCounterIncrementAnim>("PlayWaveCounterIncrementAnim", "Plays the increment animation for the wave counter text");
+    hud.funcExt<bindings::SetWaveCounterText>("SetWaveCounterText", "set the text for the wave counter in the hud");
+    hud.funcExt<bindings::SetDashChargeColor>("SetDashChargeColor", "Set the color and opacity for the specifed dash charge");
     hud.funcExt<bindings::SetPowerupText>("SetPowerUpText", "Set powerup text");
     hud.funcExt<bindings::SetPowerupTextColor>("SetPowerUpTextColor", "Set powerup text color");
     hud.funcExt<bindings::GetPowerupTextColor>("GetPowerUpTextColor", "Get powerup text color");
@@ -226,7 +282,7 @@ void BindGameUI(wren::ForeignModule& module)
 
     auto& gameOver
         = module.klass<GameOverMenu, Canvas>("GameOverMenu");
-
+  
     gameOver.propReadonlyExt<bindings::GameOverMenuButton>("backButton");
     gameOver.propReadonlyExt<bindings::RetryButton>("retryButton");
 }
