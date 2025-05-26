@@ -150,7 +150,7 @@ class Main {
                 spawnLocations.add(entity.GetTransformComponent().translation)
             }
         }
-        
+
         __enemyList = []
 
         var waveConfigs = []
@@ -158,7 +158,7 @@ class Main {
         for (v in 0...30) {
             waveConfigs.add(WaveGenerator.GenerateWave(v))
         }
-        
+
         __waveSystem = WaveSystem.new(waveConfigs, spawnLocations)
 
         // Souls
@@ -183,7 +183,7 @@ class Main {
             engine.GetInput().SetMouseHidden(false)
             engine.GetGame().PushUIMenu(engine.GetGame().GetPauseMenu())
             engine.GetInput().SetActiveActionSet("UserInterface")
-            
+
             engine.GetUI().SetSelectedElement(engine.GetGame().GetPauseMenu().continueButton)
             __musicPlayer.SetVolume(engine.GetAudio(), 0.05)
             System.print("Pause Menu is %(__pauseEnabled)!")
@@ -239,14 +239,23 @@ class Main {
     static Update(engine, dt) {
 
         // Check if pause key was pressed
-        if(__alive && engine.GetInput().GetDigitalAction("Menu").IsPressed()) {
 
-            __pauseEnabled = !__pauseEnabled
-
-            if (__pauseEnabled) {
-                __pauseHandler.call()
+        if(__alive) {
+            var pausePressed = false
+            if (!__pauseEnabled) {
+                pausePressed = engine.GetInput().GetDigitalAction("Pause").IsReleased()
             } else {
-                __unpauseHandler.call()
+                pausePressed = engine.GetInput().GetDigitalAction("Unpause").IsReleased()
+            }
+
+            if (pausePressed) {
+                __pauseEnabled = !__pauseEnabled
+
+                if(__pauseEnabled) {
+                    __pauseHandler.call()
+                } else {
+                    __unpauseHandler.call()
+                }
             }
         }
 
@@ -368,7 +377,7 @@ class Main {
                 if (__activeWeapon.ammo <= 0) {
                     __activeWeapon.reload(engine)
                 }
-            }            
+            }
         }
 
         // Check if player died
@@ -382,8 +391,8 @@ class Main {
 
             engine.GetUI().SetSelectedElement(engine.GetGame().GetGameOverMenu().retryButton)
         }
-        
-        
+
+
        var mousePosition = engine.GetInput().GetMousePosition()
         __playerMovement.lastMousePosition = mousePosition
 
