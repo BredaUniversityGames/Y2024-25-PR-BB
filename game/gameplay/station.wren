@@ -200,7 +200,7 @@ class StationManager {
         _dualGunMeshEntity.AttachChild(_dualGunLightEntity)
         _dualGunHumEvent = "event:/SFX/QuadHum"
 
-        // quad damage emitter
+        // dual gun emitter
         _dualGunEmitter = engine.GetECS().NewEntity()
         _dualGunEmitter.AddNameComponent().name = "Dual Gun Emitter"
         var transformDualGunEmitter = _dualGunEmitter.AddTransformComponent()

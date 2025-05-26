@@ -179,7 +179,7 @@ class Main {
 
         // Power ups
         __stationManager = StationManager.new(engine, __player)
-        __powerUpSystem = PowerUpSystem.new()
+        __powerUpSystem = PowerUpSystem.new(engine)
 
         // Flash System
         __flashSystem = FlashSystem.new(engine)
