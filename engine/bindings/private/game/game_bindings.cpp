@@ -1,5 +1,6 @@
 #include "game_bindings.hpp"
 
+#include "aim_assist.hpp"
 #include "cheats_component.hpp"
 #include "components/rigidbody_component.hpp"
 #include "ecs_module.hpp"
@@ -11,7 +12,6 @@
 #include "ui/game_ui_bindings.hpp"
 #include "ui_module.hpp"
 #include "wren_entity.hpp"
-#include "aim_assist.hpp"
 
 #include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
 

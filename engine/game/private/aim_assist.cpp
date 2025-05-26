@@ -1,9 +1,9 @@
 #include "aim_assist.hpp"
 
+#include "components/transform_component.hpp"
+#include "components/transform_helpers.hpp"
 #include "game_module.hpp"
 #include "physics_module.hpp"
-#include "components/transform_helpers.hpp"
-#include "components/transform_component.hpp"
 
 bool IsVisible(ECSModule& ecs, PhysicsModule& physics, const glm::vec3& origin, const glm::vec3& direction, entt::entity target)
 {
@@ -59,5 +59,3 @@ glm::vec3 AimAssist::GetAimAssistDirection(ECSModule& ecs, PhysicsModule& physic
 
     return result;
 }
-
-
