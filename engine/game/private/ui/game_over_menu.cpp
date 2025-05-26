@@ -67,13 +67,13 @@ std::shared_ptr<GameOverMenu> GameOverMenu::Create(GraphicsContext& graphicsCont
 
         auto continueButton = buttonPanel->AddChild<UIButton>(buttonStyle, buttonPos, buttonBaseSize);
         continueButton->anchorPoint = UIElement::AnchorPoint::eMiddle;
-        continueButton->AddChild<UITextElement>(font, "Retry", textSize)->SetColor(glm::vec4(1, 1, 1, 1));
+        continueButton->AddChild<UITextElement>(font, "Retry", textSize);
 
         buttonPos += increment;
 
         auto backToMainButton = buttonPanel->AddChild<UIButton>(buttonStyle, buttonPos, buttonBaseSize);
         backToMainButton->anchorPoint = UIElement::AnchorPoint::eMiddle;
-        backToMainButton->AddChild<UITextElement>(font, "Main Menu", textSize)->SetColor(glm::vec4(1, 1, 1, 1));
+        backToMainButton->AddChild<UITextElement>(font, "Main Menu", textSize);
 
         over->continueButton = continueButton;
         over->backToMainButton = backToMainButton;

@@ -1,5 +1,5 @@
 import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, EmitterPresetID, Perlin, Random
-import "../player.wren" for PlayerVariables, HitmarkerState
+import "../player.wren" for PlayerVariables
 import "../soul.wren" for Soul, SoulManager
 import "../coin.wren" for Coin, CoinManager
 import "gameplay/flash_system.wren" for FlashSystem

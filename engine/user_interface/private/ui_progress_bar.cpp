@@ -41,6 +41,18 @@ void UIProgressBar::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
 
             break;
         }
+        case BarStyle::FillDirection::eLeftToRight:
+        {
+            matrixFull = glm::translate(glm::mat4(1), glm::vec3(GetAbsoluteLocation(), 0));
+            matrixFull = glm::scale(matrixFull, glm::vec3(GetAbsoluteScale().x * _fractionFilled, GetAbsoluteScale().y, 0));
+
+            if (style.fillStyle == BarStyle::FillStyle::eMask)
+            {
+                uv1 = glm::vec2(_fractionFilled, 1.0f);
+            }
+
+            break;
+        }
 
         default:
             assert(false && "Direction not implemented yet");
