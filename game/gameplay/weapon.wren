@@ -95,17 +95,17 @@ class Pistol {
             var gunForward = Math.ToVector(gunRotation)
             var gunUp = gunRotation.mulVec3(Vec3.new(0, 1, 0))
             var gunRight = Math.Cross(gunForward, gunUp)
-            var gunStart = gunTranslation + gunForward * Vec3.new(1, 1, 1) - gunRight * Vec3.new(4.0,4.0,4.0) - gunUp * Vec3.new(0.0, 0.5, 0.0)
-    
+            //var gunStart = gunTranslation + gunForward * Vec3.new(1, 1, 1) - gunRight * Vec3.new(4.0,4.0,4.0) - gunUp * Vec3.new(0.0, 0.5, 0.0)
+            var gunStart = _barrelEndEntity.GetTransformComponent().GetWorldTranslation()
+
             //play a particle effect
             var entity = engine.GetECS().NewEntity()
             var transform = entity.AddTransformComponent()
-            transform.translation = gunStart
-            transform.translation.y = gunStart.y - 0.5
+            transform.translation = Vec3.new(gunStart.x, gunStart.y-0.5, gunStart.z)
             var lifetime = entity.AddLifetimeComponent()
             lifetime.lifetime = 175.0
             var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
-            engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eBullets(),emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.0, 5.0, 0.0) + velocity.mulScalar(1.2))
+            engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eBullets(),emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.1, 4.5, 0.1) + velocity.mulScalar(1.01))
 
 
             _reloadTimer = _reloadSpeed
