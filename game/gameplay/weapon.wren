@@ -31,6 +31,7 @@ class Pistol {
         _reloadSFX = "event:/SFX/ReloadPistol"
         _shotSFX = "event:/SFX/Shoot"
         _quadHit = "event:/SFX/QuadDamageHit"
+        _dualGunHit = "event:/SFX/DualGunHit"
         _equipSFX = ""
         __hitmarkTimer = 0
         _walkAnim = "walk"
@@ -168,6 +169,14 @@ class Pistol {
 
                 audioEmitter.AddEvent(quadEventInstance)
             }
+
+            if(playerVariables.GetCurrentPowerUp() == PowerUpType.DOUBLE_GUNS){
+                var dualEventInstance = engine.GetAudio().PlayEventOnce(_dualGunHit)
+                engine.GetAudio().SetEventVolume(dualEventInstance, 2.0)
+
+                audioEmitter.AddEvent(dualEventInstance)
+            }   
+
             audioEmitter.AddEvent(eventInstance)
 
             // Spawn particles
