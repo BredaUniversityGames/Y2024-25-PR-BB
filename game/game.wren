@@ -98,7 +98,7 @@ class Main {
         __player.AddNameComponent().name = "Player"
 
         // Gun Setup
-        __gun = engine.LoadModel("assets/models/revolver_left.glb",false)
+        __gun = engine.LoadModel("assets/models/Revolver.glb",false)
         __gun.RenderInForeground()
 
         __gun.GetNameComponent().name = "Gun"
@@ -107,7 +107,7 @@ class Main {
         gunTransform.rotation = Math.ToQuat(Vec3.new(0.0, -Math.PI()/2, 0.0))
 
         // second gun
-        __gun2 = engine.LoadModel("assets/models/Revolver.glb",false)
+        __gun2 = engine.LoadModel("assets/models/revolver_left.glb",false)
         __gun2.RenderInForeground()
 
         __gun2.GetNameComponent().name = "Gun2"
@@ -320,11 +320,11 @@ class Main {
                 weapon.cooldown = Math.Max(weapon.cooldown - dt, 0)
 
                 weapon.reloadTimer = Math.Max(weapon.reloadTimer - dt, 0)
-                if (weapon != __activeWeapon) {
-                    if (weapon.reloadTimer <= 0) {
-                        weapon.ammo = weapon.maxAmmo
-                    }
-                }
+                // if (weapon != __activeWeapon) {
+                //     if (weapon.reloadTimer <= 0) {
+                //         weapon.ammo = weapon.maxAmmo
+                //     }
+                // }  
             }
 
             // // engine.GetInput().GetDigitalAction("Ultimate").IsPressed()
