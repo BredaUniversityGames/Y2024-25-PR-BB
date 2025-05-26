@@ -6,7 +6,7 @@ import "gameplay/flash_system.wren" for FlashSystem
 class PowerUpSystem {
     construct new(engine) {
         _quadDamageColor = Vec3.new(0.67, 0.06, 0.89)
-        _dualGunColor = Vec3.new(0.86, 0.67, 0.0)
+        _dualGunColor = Vec3.new(0.66, 0.47, 0.0)
 
         _intensityTarget = 0.0
         _colorTarget = Vec3.new(0.0, 0.0, 0.0)
@@ -90,6 +90,7 @@ class PowerUpSystem {
             _secondGunTransformComponent.scale = Vec3.new(1,1,-1)
             _intensityTarget = 0.3
             _colorTarget = _dualGunColor
+            playerVariables.SetGunSmokeRay(EmitterPresetID.eRayDualGun())
         }
     }
 }
