@@ -78,7 +78,7 @@ class PowerUpSystem {
 
 
         if(playerPowerUp == PowerUpType.QUAD_DAMAGE){
-            _intensityTarget = 0.3
+            _intensityTarget = 0.2
             _colorTarget = _quadDamageColor
 
             playerVariables.SetDamageMultiplier(4.0)
@@ -88,7 +88,7 @@ class PowerUpSystem {
         
         if (playerPowerUp == PowerUpType.DOUBLE_GUNS) {
             _secondGunTransformComponent.scale = Vec3.new(1,1,-1)
-            _intensityTarget = 0.3
+            _intensityTarget = 0.2
             _colorTarget = _dualGunColor
             playerVariables.SetGunSmokeRay(EmitterPresetID.eRayDualGun())
         }
