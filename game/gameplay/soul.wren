@@ -6,7 +6,6 @@ class Soul {
     construct new(engine, spawnPosition) {
 
         _minRange = 1.0 // Range for the soul to be picked up by the player
-        _mediumRange = 7.0
         _maxRange = 10.0 // Range for the soul to start following the player
 
         _rootEntity = engine.GetECS().NewEntity()
@@ -20,24 +19,39 @@ class Soul {
         var emitterFlags = SpawnEmitterFlagBits.eIsActive()
         engine.GetParticles().SpawnEmitter(_rootEntity, EmitterPresetID.eSoulSheet(),emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.0, 0.0, 0.0))
 
+        var pl = _rootEntity.AddPointLightComponent() // Light color for the soul
+        pl.intensity = 0
+        pl.color = Vec3.new(0.0, 1.0, 0.0) // Light color for the soul
+        pl.range = 2
+
         _time = 0.0 // Time since the soul was spawned
         
         // New velocity-based arc system variables
         _hasStartedFollowing = false
         _velocity = Vec3.new(0.0,0.0,0.0)
         _gravity = Vec3.new(0, -0.098, 0) // gravity for arc
-        _soulSpeed = 0.005
+        _soulSpeed = 0.01
 
         _collectSoundEvent = "event:/SFX/Soul"
+        _healthRegen = 7
     }
 
-    CheckRange(engine, playerPos, playerVariables,flashSystem, dt){
+    CheckRange(engine, playerPos, playerVariables,flashSystem, dt) {
+
+        // Also simulates the light intensity
+
+        _rootEntity.GetPointLightComponent().intensity = 50 + (Math.Sin(_time * 0.003) * 0.5 + 0.5) * 50 // Light intensity for the soul
+
+
         var soulTransform = _rootEntity.GetTransformComponent()
         var soulPos = soulTransform.translation
         var distance = Math.Distance(soulPos, playerPos)
 
+        var bounce = Math.Sin(_time * 0.003) * 0.01
+        soulTransform.translation = Vec3.new(soulTransform.translation.x,soulTransform.translation.y + bounce,soulTransform.translation.z)  // Make the soul bounce up and down
+ 
 
-        if(distance < _maxRange){
+        if(distance < _maxRange) {
             _velocity = (playerPos - soulPos).normalize()
 
             var arcHeight = distance * 0.25
@@ -47,14 +61,15 @@ class Soul {
             var progress = 1.0 - (distance / _maxRange)
             var easing = progress * progress // ease-out
 
-            soulTransform.translation = soulTransform.translation + _velocity.mulScalar(dt * _soulSpeed* easing)// Move the soul towards the player
+            soulTransform.translation = soulTransform.translation + _velocity.mulScalar(dt * _soulSpeed * easing)// Move the soul towards the player
 
-            if(distance < _minRange){
+            if(distance < _minRange) {
+            
                 if(playerVariables.health < playerVariables.maxHealth){
-                    playerVariables.IncreaseHealth(1) // Increase player health
+                    playerVariables.IncreaseHealth(_healthRegen) // Increase player health
                 }
 
-                 // Play audio
+                // Play audio
                 var player = engine.GetECS().GetEntityByName("Camera")
                 var eventInstance = engine.GetAudio().PlayEventOnce(_collectSoundEvent)
                 engine.GetAudio().SetEventVolume(eventInstance, 5.0)
@@ -64,23 +79,20 @@ class Soul {
                 // Play flash effect
 
                 playerVariables.hud.TriggerSoulIndicatorAnimation()
-                flashSystem.Flash(Vec3.new(0.23, 0.71, 0.36),0.55)
+                flashSystem.Flash(Vec3.new(0.23, 0.71, 0.36), 0.35)
 
-                this.Destroy() // Destroy the soul after it is collected
-               
+                this.Destroy() // Destroy the soul after it is collected 
             }
-        }else {
-            var bounce = Math.Sin(_time * 0.003) * 0.0008 *dt
-            soulTransform.translation = Vec3.new(soulTransform.translation.x,soulTransform.translation.y + bounce,soulTransform.translation.z)  // Make the soul bounce up and down
         }
     }
 
-    Destroy(){
+    Destroy() {
+        
+        // TODO: Not sure why we do this but it works 
         var soulTransform = _rootEntity.GetTransformComponent()
         soulTransform.translation = Vec3.new(0.0, -100.0, 0.0) // Move the soul out of the way
-        // Add a lifetime component to the soul entity so it will get destroyed eventually
         var lifetime = _rootEntity.AddLifetimeComponent()
-        lifetime.lifetime = 50.0
+        lifetime.lifetime = 0.0
     }
 
     entity {

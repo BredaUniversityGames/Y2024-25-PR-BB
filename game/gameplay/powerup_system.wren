@@ -10,13 +10,11 @@ class PowerUpSystem {
         _intensityTarget = 0.0
         _colorTarget = Vec3.new(0.0, 0.0, 0.0)
 
-        _maxPowerUpTime = 15000
+        _maxPowerUpTime = 35000
         _powerUpTimer = _maxPowerUpTime
 
         _timerTextOpacity = 0.0
         _timerTextColor = Vec3.new(1.0, 1.0, 1.0)
-
-
     }
 
     Update(engine, playerVariables, flashSystem, dt){

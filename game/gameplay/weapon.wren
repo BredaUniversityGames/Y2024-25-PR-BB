@@ -90,7 +90,7 @@ class Pistol {
         var gun = engine.GetECS().GetEntityByName(_entityName)
         var gunAnimations = gun.GetAnimationControlComponent()
         if(gunAnimations.AnimationFinished() || gunAnimations.CurrentAnimationName() == _idleAnim){
-            gunAnimations.Play(_walkAnim, 1.0, false, 0.2, false)
+            gunAnimations.Play(_walkAnim, 1.2, false, 0.2, false)
         }
     }
 
