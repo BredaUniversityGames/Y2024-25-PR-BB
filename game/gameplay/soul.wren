@@ -17,6 +17,15 @@ class Soul {
         var transform = _rootEntity.AddTransformComponent()
         transform.translation = spawnPosition
 
+        _lightEntity = engine.GetECS().NewEntity()
+        _lightEntity.AddNameComponent().name = "Soul Light"
+        var lightTransform = _lightEntity.AddTransformComponent()
+        _pointLight = _lightEntity.AddPointLightComponent()
+        _pointLight.intensity = 10
+        _pointLight.range = 3.0
+        _pointLight.color = Vec3.new(0.23, 0.71, 0.36)
+        _rootEntity.AttachChild(_lightEntity)
+
         var emitterFlags = SpawnEmitterFlagBits.eIsActive()
         engine.GetParticles().SpawnEmitter(_rootEntity, EmitterPresetID.eSoulSheet(),emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.0, 0.0, 0.0))
 
