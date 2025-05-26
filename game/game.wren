@@ -150,7 +150,7 @@ class Main {
                 spawnLocations.add(entity.GetTransformComponent().translation)
             }
         }
-        
+
         __enemyList = []
 
         var waveConfigs = []
@@ -158,7 +158,7 @@ class Main {
         for (v in 0...30) {
             waveConfigs.add(WaveGenerator.GenerateWave(v))
         }
-        
+
         __waveSystem = WaveSystem.new(waveConfigs, spawnLocations)
 
         // Souls
@@ -183,7 +183,7 @@ class Main {
             engine.GetInput().SetMouseHidden(false)
             engine.GetGame().PushUIMenu(engine.GetGame().GetPauseMenu())
             engine.GetInput().SetActiveActionSet("UserInterface")
-            
+
             engine.GetUI().SetSelectedElement(engine.GetGame().GetPauseMenu().continueButton)
             __musicPlayer.SetVolume(engine.GetAudio(), 0.05)
             System.print("Pause Menu is %(__pauseEnabled)!")
@@ -368,7 +368,7 @@ class Main {
                 if (__activeWeapon.ammo <= 0) {
                     __activeWeapon.reload(engine)
                 }
-            }            
+            }
         }
 
         // Check if player died
@@ -382,8 +382,8 @@ class Main {
 
             engine.GetUI().SetSelectedElement(engine.GetGame().GetGameOverMenu().retryButton)
         }
-        
-        
+
+
        var mousePosition = engine.GetInput().GetMousePosition()
         __playerMovement.lastMousePosition = mousePosition
 
@@ -401,9 +401,9 @@ class Main {
 
         __soulManager.Update(engine, __playerVariables,__flashSystem, dt)
         __coinManager.Update(engine, __playerVariables,__flashSystem, dt)
-        __waveSystem.Update(engine, __player, __enemyList, dt,__playerVariables)
+        //__waveSystem.Update(engine, __player, __enemyList, dt,__playerVariables)
 
-        __stationManager.Update(engine, __playerVariables, dt)
+        //__stationManager.Update(engine, __playerVariables, dt)
         __flashSystem.Update(engine, dt)
         __powerUpSystem.Update(engine,__playerVariables,__flashSystem, dt)
 
