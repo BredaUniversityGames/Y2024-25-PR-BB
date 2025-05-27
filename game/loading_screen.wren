@@ -20,7 +20,9 @@ class Main {
         __loadingScreen.SetDisplayTextColor(Vec4.new(1.0, 1.0, 1.0, 0.0))
         __loadingScreen.SetDisplayText(textOptions[index])
         __loadingScreen.HideContinuePrompt()
+
         __timer = 0
+        __loadLevel = false
     }
 
     static Shutdown(engine) {
@@ -32,10 +34,16 @@ class Main {
         var textColor = Vec4.new(1.0, 1.0, 1.0, __timer / 2000.0)
         var text = __loadingScreen.SetDisplayTextColor(textColor)
 
+        if(__loadLevel) {
+            engine.TransitionToScript("game/game.wren")
+        }
+
         if(__timer > 2000.0) {
             engine.GetGame().GetLoadingScreen().ShowContinuePrompt()
             if(engine.GetInput().GetDigitalAction("Interact").IsPressed()) {
-                engine.TransitionToScript("game/game.wren")
+                __loadLevel = true
+                __loadingScreen.SetDisplayText("Loading")
+                __loadingScreen.HideContinuePrompt()
             }
         }
 
