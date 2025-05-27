@@ -96,10 +96,16 @@ void UIPass::RecordCommands(vk::CommandBuffer commandBuffer, MAYBE_UNUSED uint32
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _pipeline);
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, { _context->BindlessSet() }, {});
 
+    auto fallbackImage = _context->FallbackImage();
     for (const auto& quad : _drawList)
     {
         _pushConstants.quad = quad;
         _pushConstants.quad.matrix = _projectionMatrix * _pushConstants.quad.matrix;
+
+        if (_pushConstants.quad.textureIndex == ResourceHandle<GPUImage>::Null().Index())
+        {
+            _pushConstants.quad.textureIndex = fallbackImage.Index();
+        }
 
         commandBuffer.pushConstants<UIPushConstants>(_pipelineLayout, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0, _pushConstants);
 
