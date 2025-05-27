@@ -99,7 +99,7 @@ class WrenHUD {
     }
     
     IncrementWaveCounter(CurrentWave){
-        _hud.SetWaveCounterText(CurrentWave)
+        _hud.SetWaveCounterText(CurrentWave+1)
         _waveFlashTween.TriggerFromStart()
     }
     
