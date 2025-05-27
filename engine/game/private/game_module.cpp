@@ -224,6 +224,15 @@ std::optional<std::shared_ptr<GameOverMenu>> GameModule::GetGameOver()
     return std::nullopt;
 }
 
+std::optional<std::shared_ptr<LoadingScreen>> GameModule::GetLoadingScreen()
+{
+    if (auto lock = _loadingScreen.lock())
+    {
+        return lock;
+    }
+    return std::nullopt;
+}
+
 void GameModule::SetUIMenu(std::weak_ptr<Canvas> menu)
 {
     _menuStack = {};
