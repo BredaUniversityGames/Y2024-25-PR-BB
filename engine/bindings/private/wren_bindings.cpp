@@ -38,7 +38,7 @@ float TimeModuleGetDeltatime(TimeModule& self)
 
 void TransitionToScript(WrenEngine& engine, const std::string& path)
 {
-    engine.instance->GetModule<GameModule>().TransitionScene(path);
+    engine.instance->GetModule<GameModule>().SetNextScene(path);
 }
 
 WrenEntity LoadModelScripting(WrenEngine& engine, const std::string& path, bool loadWithCollision)

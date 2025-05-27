@@ -79,8 +79,7 @@ class Main {
 
         var play = engine.GetGame().GetMainMenu().playButton
         play.OnPress(Fn.new {
-            // engine.GetGame().SetMainMenuEnabled(false) TODO: ADD LOADING SCREEN HERE
-            engine.TransitionToScript("game/game.wren")
+            engine.TransitionToScript("game/loading_screen.wren")
         })
 
         var exit = engine.GetGame().GetMainMenu().quitButton
@@ -104,7 +103,6 @@ class Main {
 
     static Shutdown(engine) {
         System.print("Exited main menu")
-        engine.GetECS().DestroyAllEntities()
         __musicPlayer.Destroy(engine.GetAudio())
         __ambientPlayer.Destroy(engine.GetAudio())
     }

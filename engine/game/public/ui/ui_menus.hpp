@@ -95,6 +95,8 @@ public:
 
 class LoadingScreen : public Canvas
 {
+    static constexpr uint32_t MAX_LINE_BREAKS = 5;
+
 public:
     static std::shared_ptr<LoadingScreen> Create(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution, std::shared_ptr<UIFont> font);
 
@@ -102,6 +104,19 @@ public:
         : Canvas(screenResolution)
     {
     }
+
+    void SetDisplayText(std::string text);
+    void SetDisplayTextColor(glm::vec4 color);
+    void ShowContinuePrompt();
+    void HideContinuePrompt();
+
+private:
+    constexpr static float _textSize = 100.0f;
+
+    std::array<std::weak_ptr<UITextElement>, MAX_LINE_BREAKS> _displayTexts;
+    std::weak_ptr<UITextElement> _continueText;
+    std::weak_ptr<UIFont> _font;
+    glm::vec4 _displayTextColor = glm::vec4(1.0, 1.0f, 1.0f, 1.0f);
 };
 
 class PauseMenu : public Canvas

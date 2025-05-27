@@ -59,7 +59,7 @@ class Station {
 
 
 
-            if(engine.GetInput().GetDigitalAction("Reload").IsPressed()){
+            if(engine.GetInput().GetDigitalAction("Interact").IsPressed()){
 
                 if(playerVariables.GetScore() >= 2000){
 

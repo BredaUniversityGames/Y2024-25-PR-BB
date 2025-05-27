@@ -348,6 +348,22 @@ void ParticlePass::UpdateAliveLists()
     UpdateParticleBuffersDescriptorSets();
 }
 
+void ParticlePass::ResetParticles()
+{
+    auto vkContext { _context->VulkanContext() };
+    auto resources { _context->Resources() };
+
+    auto cmdBuffer = SingleTimeCommands(_context->VulkanContext());
+
+    std::vector<ParticleCounters> counters(1);
+    cmdBuffer.CopyIntoLocalBuffer(counters, 0, resources->BufferResourceManager().Access(_particlesBuffers[static_cast<uint32_t>(ParticleBufferUsage::eCounter)])->buffer);
+
+    _emitters.clear();
+    _localEmitters.clear();
+
+    cmdBuffer.Submit();
+}
+
 void ParticlePass::CreatePipelines()
 {
     auto vkContext { _context->VulkanContext() };

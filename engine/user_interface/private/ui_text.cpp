@@ -33,6 +33,11 @@ void UITextElement::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
         elementTranslation.x -= (_horizontalTextSize / 2.0f) * elementScale;
     }
 
+    if(anchorPoint == AnchorPoint::eBottomRight || anchorPoint == AnchorPoint::eTopRight)
+    {
+        elementTranslation.x -= _horizontalTextSize * elementScale;
+    }
+
     for (const auto& character : _text)
     {
         // Check if the character exists in the font's character map
