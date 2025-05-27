@@ -26,7 +26,6 @@ class Station {
         // var emitterFlags = SpawnEmitterFlagBits.eIsActive()
         // engine.GetParticles().SpawnEmitter(_rootEntity, EmitterPresetID.eSoulSheet(),emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.0, 0.0, 0.0))
 
-
         _time = 0.0 // Time since the station was spawned
         _ambientStationSound = "event:/SFX/StationAmbient"
         _ambientSoundEventInstance = null
