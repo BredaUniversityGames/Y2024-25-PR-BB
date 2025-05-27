@@ -1,34 +1,25 @@
 #include "game_module.hpp"
 #include "application_module.hpp"
-#include "audio_emitter_component.hpp"
-#include "audio_listener_component.hpp"
 #include "audio_module.hpp"
 #include "canvas.hpp"
-#include "cheats_component.hpp"
 #include "components/camera_component.hpp"
-#include "components/directional_light_component.hpp"
-#include "components/name_component.hpp"
-#include "components/relationship_component.hpp"
-#include "components/relationship_helpers.hpp"
-#include "components/rigidbody_component.hpp"
-#include "components/static_mesh_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
 #include "ecs_module.hpp"
 #include "file_io.hpp"
 #include "fonts.hpp"
 #include "game_actions.hpp"
+#include "gpu_scene.hpp"
 #include "graphics_context.hpp"
 #include "input/action_manager.hpp"
 #include "input/input_device_manager.hpp"
-#include "input_glyphs.hpp"
-#include "model_loading.hpp"
 #include "particle_module.hpp"
 #include "passes/debug_pass.hpp"
+#include "passes/particle_pass.hpp"
 #include "passes/shadow_pass.hpp"
+#include "passes/tonemapping_pass.hpp"
 #include "pathfinding_module.hpp"
 #include "physics_module.hpp"
-#include "profile_macros.hpp"
 #include "renderer.hpp"
 #include "renderer_module.hpp"
 #include "scene/model_loader.hpp"
@@ -38,8 +29,6 @@
 #include "time_module.hpp"
 #include "ui/ui_menus.hpp"
 #include "ui_module.hpp"
-
-#include <passes/tonemapping_pass.hpp>
 
 ModuleTickOrder GameModule::Init(Engine& engine)
 {
@@ -274,9 +263,23 @@ void GameModule::PushPreviousFocusedElement(std::weak_ptr<UIElement> element)
     _focusedElementStack.push(element);
 }
 
-void GameModule::TransitionScene(const std::string& scriptFile)
+void GameModule::SetNextScene(const std::string& scriptFile)
 {
     _nextSceneToExecute = scriptFile;
+}
+
+void GameModule::TransitionScene(Engine& engine)
+{
+    // Cleanup for some modules
+    engine.GetModule<ECSModule>().GetRegistry().clear();
+    engine.GetModule<AudioModule>().Reset();
+    engine.GetModule<RendererModule>().GetRenderer()->GetGPUScene().ResetDecals();
+    engine.GetModule<RendererModule>().GetRenderer()->GetParticlePipeline().ResetParticles();
+    flashColor = {};
+
+    engine.GetModule<ScriptingModule>().SetMainScript(engine, _nextSceneToExecute);
+
+    engine.GetModule<TimeModule>().ResetTimer();
 }
 
 void GameModule::Tick(MAYBE_UNUSED Engine& engine)
@@ -285,8 +288,7 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
 
     if (!_nextSceneToExecute.empty())
     {
-        engine.GetModule<ScriptingModule>().SetMainScript(engine, _nextSceneToExecute);
-        engine.GetModule<TimeModule>().ResetTimer();
+        TransitionScene(engine);
     }
 
     _nextSceneToExecute.clear();
