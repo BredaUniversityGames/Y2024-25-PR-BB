@@ -33,7 +33,7 @@ ModuleTickOrder AudioModule::Init(MAYBE_UNUSED Engine& engine)
 
     try
     {
-        // StartFMODDebugLogger();
+        StartFMODDebugLogger();
 
         FMOD_CHECKRESULT(FMOD_Studio_System_Create(&_studioSystem, FMOD_VERSION));
         FMOD_CHECKRESULT(FMOD_Studio_System_Initialize(_studioSystem, MAX_CHANNELS, FMOD_STUDIO_INIT_NORMAL, FMOD_INIT_NORMAL, nullptr));

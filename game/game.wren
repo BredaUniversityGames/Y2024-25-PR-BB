@@ -383,7 +383,6 @@ class Main {
             engine.GetUI().SetSelectedElement(engine.GetGame().GetGameOverMenu().retryButton)
         }
 
-
        var mousePosition = engine.GetInput().GetMousePosition()
         __playerMovement.lastMousePosition = mousePosition
 
@@ -401,9 +400,9 @@ class Main {
 
         __soulManager.Update(engine, __playerVariables,__flashSystem, dt)
         __coinManager.Update(engine, __playerVariables,__flashSystem, dt)
-        //__waveSystem.Update(engine, __player, __enemyList, dt,__playerVariables)
+        __waveSystem.Update(engine, __player, __enemyList, dt,__playerVariables)
 
-        //__stationManager.Update(engine, __playerVariables, dt)
+        __stationManager.Update(engine, __playerVariables, dt)
         __flashSystem.Update(engine, dt)
         __powerUpSystem.Update(engine,__playerVariables,__flashSystem, dt)
 
