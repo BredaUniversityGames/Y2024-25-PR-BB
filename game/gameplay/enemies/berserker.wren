@@ -152,7 +152,6 @@ class BerserkerEnemy {
     Update(playerPos, playerVariables, engine, dt, soulManager, coinManager, flashSystem) {
         var body = _rootEntity.GetRigidbodyComponent()
         var pos = body.GetPosition()
-        //_rootEntity.GetTransformComponent().translation = pos
         var animations = _meshEntity.GetAnimationControlComponent()
 
 
