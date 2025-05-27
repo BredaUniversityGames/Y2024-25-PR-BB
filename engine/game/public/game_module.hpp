@@ -52,12 +52,14 @@ public:
     NON_MOVABLE(GameModule);
 
     void ApplySettings(Engine& engine);
-    void TransitionScene(const std::string& scriptFile);
+    void SetNextScene(const std::string& scriptFile);
 
     ModelLoader _modelsLoaded {};
     std::weak_ptr<MainMenu> _mainMenu;
 
 private:
+    void TransitionScene(Engine& engine);
+
     // UI
 
     std::stack<std::weak_ptr<Canvas>> _menuStack {};

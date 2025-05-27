@@ -103,7 +103,6 @@ class Main {
 
     static Shutdown(engine) {
         System.print("Exited main menu")
-        engine.GetECS().DestroyAllEntities()
         __musicPlayer.Destroy(engine.GetAudio())
         __ambientPlayer.Destroy(engine.GetAudio())
     }
