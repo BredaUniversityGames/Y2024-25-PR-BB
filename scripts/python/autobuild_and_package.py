@@ -11,8 +11,8 @@ def build_wsl(project_path, build_name):
     print("WSL Path:", wsl_path)
 
     # TODO: this does not reconfigure for the first time, so it will fail if the build directory does not exist
-    command = ["wsl", "cd", wsl_path, "&&", "cmake", "--preset", build_name, "&&", "cmake", "--build", "build/" + build_name]
-    # command = ["wsl", "cd", wsl_path, "&&", "cmake", "--build", "build/" + build_name]
+    # command = ["wsl", "cd", wsl_path, "&&", "cmake", "--preset", build_name, "&&", "cmake", "--build", "build/" + build_name]
+    command = ["wsl", "cd", wsl_path, "&&", "cmake", "--build", "build/" + build_name]
     return subprocess.run(command).returncode
 
 def package_project(project_path, build_name):
