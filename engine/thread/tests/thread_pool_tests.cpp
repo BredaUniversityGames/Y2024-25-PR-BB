@@ -29,14 +29,14 @@ TEST(ThreadPoolTests, QueueAndExecute)
     ThreadPool pool { 1 };
     pool.Start();
 
-    auto future = pool.QueueWork(FibTask(10));
+    auto future = pool.QueueWork(FibTask { 10 });
     EXPECT_EQ(future.get(), 3'628'800);
 }
 
 TEST(ThreadPoolTests, WaitForAllTasks)
 {
     ThreadPool pool { 1 };
-    auto future = pool.QueueWork(FibTask(100));
+    auto future = pool.QueueWork(FibTask { 100 });
 
     pool.Start();
     pool.FinishPendingWork();
@@ -48,7 +48,7 @@ TEST(ThreadPoolTests, WaitForAllTasks)
 TEST(ThreadPoolTests, TaskCancelled)
 {
     ThreadPool pool { 1 };
-    auto future = pool.QueueWork(FibTask(100));
+    auto future = pool.QueueWork(FibTask { 100 });
     pool.CancelAll();
 
     EXPECT_THROW(future.get(), std::future_error);
@@ -63,7 +63,7 @@ TEST(ThreadPoolTests, TaskParallelism)
 
     for (uint32_t i = 0; i < THREAD_COUNT; i++)
     {
-        pool.QueueWork(WaitTask(WAIT_TIME));
+        pool.QueueWork(WaitTask { WAIT_TIME });
     }
 
     Stopwatch t {};
