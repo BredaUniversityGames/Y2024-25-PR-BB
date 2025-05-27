@@ -147,25 +147,27 @@ class Pistol {
             var rayHitInfo = engine.GetPhysics().ShootRay(start, direction, _range)
 
             // Check first if aim assist is needed, if the cursor is already on an enemy, just shoot so it is possible to aim for the head
-            var aimAssistNeeded = true
+            if (engine.GetGame().GetSettings().aimAssist) {
+                var aimAssistNeeded = true
 
-            if (!rayHitInfo.isEmpty) {
-                var normal = Vec3.new(0, 1, 0)
+                if (!rayHitInfo.isEmpty) {
+                    var normal = Vec3.new(0, 1, 0)
 
-                for (rayHit in rayHitInfo) {
-                    var hitEntity = rayHit.GetEntity(engine.GetECS())
+                    for (rayHit in rayHitInfo) {
+                        var hitEntity = rayHit.GetEntity(engine.GetECS())
 
-                    if (!hitEntity.HasPlayerTag()) {
-                        aimAssistNeeded = !hitEntity.HasEnemyTag()
-                        break
+                        if (!hitEntity.HasPlayerTag()) {
+                            aimAssistNeeded = !hitEntity.HasEnemyTag()
+                            break
+                        }
                     }
                 }
-            }
 
-            if (aimAssistNeeded) {
-                direction = engine.GetGame().GetAimAssistDirection(engine.GetECS(), engine.GetPhysics(), translation, forward, _range, _aimAssistMinAngle)
-                end = translation + direction * _rangeVector
-                rayHitInfo = engine.GetPhysics().ShootRay(start, direction, _range)
+                if (aimAssistNeeded) {
+                    direction = engine.GetGame().GetAimAssistDirection(engine.GetECS(), engine.GetPhysics(), translation, forward, _range, _aimAssistMinAngle)
+                    end = translation + direction * _rangeVector
+                    rayHitInfo = engine.GetPhysics().ShootRay(start, direction, _range)
+                }
             }
 
             if (!rayHitInfo.isEmpty) {
@@ -391,25 +393,28 @@ class Shotgun {
 
             // Check first if aim assist is needed, if the cursor is already on an enemy, just shoot so it is possible to aim for the head
             var rayHitInfo = engine.GetPhysics().ShootRay(start, direction, _range)
-            var aimAssistNeeded = true
 
-            if (!rayHitInfo.isEmpty) {
-                var normal = Vec3.new(0, 1, 0)
+            if (engine.GetGame().GetSettings().aimAssist) {
+                var aimAssistNeeded = true
 
-                for (rayHit in rayHitInfo) {
-                    var hitEntity = rayHit.GetEntity(engine.GetECS())
+                if (!rayHitInfo.isEmpty) {
+                    var normal = Vec3.new(0, 1, 0)
 
-                    if (!hitEntity.HasPlayerTag()) {
-                        aimAssistNeeded = !hitEntity.HasEnemyTag()
-                        break
+                    for (rayHit in rayHitInfo) {
+                        var hitEntity = rayHit.GetEntity(engine.GetECS())
+
+                        if (!hitEntity.HasPlayerTag()) {
+                            aimAssistNeeded = !hitEntity.HasEnemyTag()
+                            break
+                        }
                     }
                 }
-            }
 
-            if (aimAssistNeeded) {
-                direction = engine.GetGame().GetAimAssistDirection(engine.GetECS(), engine.GetPhysics(), translation, forward, _range, _aimAssistMinAngle)
-                end = translation + direction * _rangeVector
-                rayHitInfo = engine.GetPhysics().ShootRay(start, direction, _range)
+                if (aimAssistNeeded) {
+                    direction = engine.GetGame().GetAimAssistDirection(engine.GetECS(), engine.GetPhysics(), translation, forward, _range, _aimAssistMinAngle)
+                    end = translation + direction * _rangeVector
+                    rayHitInfo = engine.GetPhysics().ShootRay(start, direction, _range)
+                }
             }
 
             var hitAnEnemy = false

@@ -380,7 +380,9 @@ class Main {
             }
         }
 
-        __activeWeapon.rotateToTarget(engine)
+        if (engine.GetGame().GetSettings().aimAssist) {
+            __activeWeapon.rotateToTarget(engine)
+        }
 
         // Check if player died
         if (__alive && __playerVariables.health <= 0) {
