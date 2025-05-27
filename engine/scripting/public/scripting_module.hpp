@@ -36,6 +36,11 @@ public:
     // Sets the main entry point script
     void SetMainScript(Engine& e, const std::string& path);
 
+    std::string GetMainScriptPath() const
+    {
+        return _mainEngineScript;
+    }
+
     wren::ForeignModule& GetForeignAPI() const
     {
         return _context->GetVM().module(_engineBindingsPath);

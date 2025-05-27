@@ -130,6 +130,7 @@ void BindGameAPI(wren::ForeignModule& module)
     game.func<&GameModule::GetPauseMenu>("GetPauseMenu");
     game.func<&GameModule::GetHUD>("GetHUD");
     game.func<&GameModule::GetGameOver>("GetGameOverMenu");
+    game.func<&GameModule::GetLoadingScreen>("GetLoadingScreen");
 
     game.funcExt<&bindings::GetSettings>("GetSettings");
     game.funcExt<&bindings::MenuStackSet>("SetUIMenu");

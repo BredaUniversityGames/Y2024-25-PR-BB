@@ -73,7 +73,7 @@ const GameActions GAME_ACTIONS {
             {
                 .name = "Interact",
                 .inputs = {
-                    GamepadButton::eSOUTH,
+                    { GamepadButton::eSOUTH, KeyboardCode::eE },
                 },
             },
             {

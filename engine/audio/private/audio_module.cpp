@@ -68,6 +68,25 @@ void AudioModule::Shutdown(MAYBE_UNUSED Engine& engine)
 
     bblog::info("FMOD shutdown");
 }
+
+void AudioModule::Reset()
+{
+    for (auto& [_, event] : _events)
+    {
+        FMOD_CHECKRESULT(FMOD_Studio_EventInstance_Stop(event, FMOD_STUDIO_STOP_IMMEDIATE));
+        FMOD_CHECKRESULT(FMOD_Studio_EventInstance_Release(event));
+    }
+
+    for (auto& [_, channel] : _channelsActive)
+    {
+        FMOD_CHECKRESULT(FMOD_Channel_Stop(channel));
+    }
+
+    soundsToPlay = {};
+    _channelsActive.clear();
+    _events.clear();
+}
+
 void AudioModule::Tick(MAYBE_UNUSED Engine& engine)
 {
     FMOD_CHECKRESULT(FMOD_Studio_System_Update(_studioSystem));
