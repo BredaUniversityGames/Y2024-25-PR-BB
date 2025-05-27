@@ -235,14 +235,23 @@ class Main {
     static Update(engine, dt) {
 
         // Check if pause key was pressed
-        if(__alive && engine.GetInput().GetDigitalAction("Menu").IsPressed()) {
 
-            __pauseEnabled = !__pauseEnabled
-
-            if (__pauseEnabled) {
-                __pauseHandler.call()
+        if(__alive) {
+            var pausePressed = false
+            if (!__pauseEnabled) {
+                pausePressed = engine.GetInput().GetDigitalAction("Pause").IsReleased()
             } else {
-                __unpauseHandler.call()
+                pausePressed = engine.GetInput().GetDigitalAction("Unpause").IsReleased()
+            }
+
+            if (pausePressed) {
+                __pauseEnabled = !__pauseEnabled
+
+                if(__pauseEnabled) {
+                    __pauseHandler.call()
+                } else {
+                    __unpauseHandler.call()
+                }
             }
         }
 

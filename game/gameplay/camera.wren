@@ -5,7 +5,7 @@ class CameraVariables {
     construct new() {
         _shakeIntensity = 0.3
         _shakeOffset = Vec2.new(0.0, 0.0)
-        _tiltFactor = 0   
+        _tiltFactor = 0
         _slideFactorX = 0
         _recoilOffsetDesired = 0
         _recoilOffsetActual = 0
@@ -21,8 +21,8 @@ class CameraVariables {
     shakeIntensity=(value) {_shakeIntensity = value}
     shakeOffset=(value) {_shakeOffset = value}
     tiltFactor=(value) {_tiltFactor = value}
-    
-    AddRecoil(value){   
+
+    AddRecoil(value){
         _recoilOffsetDesired = _recoilOffsetDesired + value
     }
 
@@ -38,30 +38,30 @@ class CameraVariables {
 
         cameraEntity.GetTransformComponent().translation = Vec3.new(_shakeOffset.x, _shakeOffset.y, 0.0)
     }
-    
+
     ProcessRecoil(engine,cameraEntity,dt){
-       
-       // Calculate recoil offset 
-       _recoilOffsetActual = Math.MixFloat(_recoilOffsetActual,_recoilOffsetDesired,_recoilMixFactor*dt)  
+
+       // Calculate recoil offset
+       _recoilOffsetActual = Math.MixFloat(_recoilOffsetActual,_recoilOffsetDesired,_recoilMixFactor*dt)
        _recoilOffsetActual = Math.Clamp(_recoilOffsetActual,0,_recoilMaxAngleVal)
-       
-       // Apply recoil to camera entity rotation  
+
+       // Apply recoil to camera entity rotation
        cameraEntity.GetTransformComponent().rotation = Math.ToQuat(Vec3.new(Math.Radians(_recoilOffsetActual),0,0))
-     
+
        // Decay recoil back to 0
       _recoilOffsetDesired = Math.Clamp(_recoilOffsetDesired  -(_recoilDecayFactor*dt),0,_recoilMaxAngleVal)
     }
 
     Tilt(engine, cameraEntity, dt) {
         var movement = engine.GetInput().GetAnalogAction("Move")
-        var isSliding = engine.GetInput().GetDigitalAction("Slide").IsHeld()
+        var isSliding = false // engine.GetInput().GetDigitalAction("Slide").IsHeld()
         var tiltSpeed= 0.3
-        
-            
+
+
         if (Math.Abs(movement.x) < 0.0001) {
             _tiltFactor = Math.Clamp(_tiltFactor * 0.2,0.001,20.0)
         } else {
-            _tiltFactor = Math.Clamp(_tiltFactor + (dt * 0.01) * -movement.x, -1, 1)   
+            _tiltFactor = Math.Clamp(_tiltFactor + (dt * 0.01) * -movement.x, -1, 1)
         }
 
         if(isSliding) {
@@ -69,15 +69,15 @@ class CameraVariables {
             if (Math.Abs(movement.x) < 0.0001) {
                 _slideFactorX = Math.Clamp(_slideFactorX * 0.2, 2.5, 5)
             } else {
-                _slideFactorX = Math.Clamp(_slideFactorX + (dt * 0.01) * -movement.x, -3, 3)   
+                _slideFactorX = Math.Clamp(_slideFactorX + (dt * 0.01) * -movement.x, -3, 3)
             }
 
-           
+
         }else{
             _slideFactorX = _slideFactorX * 0.2
-           
+
         }
-        
+
         var transform = cameraEntity.GetTransformComponent()
         var newRotation = Math.ToQuat(Vec3.new(0.0, 0.0, Math.Radians(_tiltFactor + _slideFactorX)))
         transform.rotation = Math.Slerp(transform.rotation, newRotation, Math.Clamp(dt * tiltSpeed, 0.0, 1.0))
