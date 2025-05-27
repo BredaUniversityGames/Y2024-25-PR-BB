@@ -67,7 +67,7 @@ class Pistol {
             shootBool = true
         }
 
-        if (_entityName == "Gun2" && engine.GetInput().GetDigitalAction("Shoot2").IsHeld()) {
+        if (_entityName == "Gun2" && engine.GetInput().GetDigitalAction("ShootSecondary").IsHeld()) {
             shootBool = true
         }
 
@@ -135,7 +135,7 @@ class Pistol {
             }
         }
         if (_entityName == "Gun2") {
-                if(engine.GetInput().GetDigitalAction("Shoot2").IsPressed() && _manualTimer ==0){
+                if(engine.GetInput().GetDigitalAction("ShootSecondary").IsPressed() && _manualTimer ==0){
                 _manualTimer = 50 //ms
             }
         }

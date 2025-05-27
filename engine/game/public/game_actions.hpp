@@ -7,43 +7,34 @@ const GameActions GAME_ACTIONS {
         .name = "Shooter",
         .digitalActions = {
             {
-                .name = "Menu",
+                .name = "Pause",
                 .inputs = {
                     GamepadButton::eSTART,
                     GamepadButton::eBACK,
                     KeyboardCode::eESCAPE },
             },
             {
-                .name = "Slide",
+                .name = "Interact",
                 .inputs = {
-                    GamepadButton::eLEFT_SHOULDER,
-                    KeyboardCode::eLCTRL,
+                    GamepadButton::eNORTH,
+                    KeyboardCode::eE,
                 },
             },
             {
                 .name = "Dash",
                 .inputs = {
-                    GamepadButton::eLEFT_TRIGGER,
+                    GamepadButton::eEAST,
+                    GamepadButton::eLEFT_SHOULDER,
                     KeyboardCode::eLSHIFT,
                 },
-            },
-            {
-                .name = "Grenade",
-                .inputs = { GamepadButton::eRIGHT_SHOULDER },
             },
             {
                 .name = "Shoot",
                 .inputs = { GamepadButton::eRIGHT_TRIGGER, MouseButton::eBUTTON_LEFT },
             },
             {
-                .name = "Shoot2",
+                .name = "ShootSecondary",
                 .inputs = { GamepadButton::eLEFT_TRIGGER, MouseButton::eBUTTON_RIGHT },
-            },
-            {
-                .name = "Ultimate",
-                .inputs = {
-                    GamepadButton::eNORTH,
-                },
             },
             {
                 .name = "Reload",
@@ -52,12 +43,6 @@ const GameActions GAME_ACTIONS {
             {
                 .name = "Jump",
                 .inputs = { GamepadButton::eSOUTH, KeyboardCode::eSPACE },
-            },
-            {
-                .name = "Melee",
-                .inputs = {
-                    GamepadButton::eRIGHT_STICK,
-                },
             },
         },
         .analogActions = {
@@ -88,11 +73,11 @@ const GameActions GAME_ACTIONS {
             {
                 .name = "Interact",
                 .inputs = {
-                    GamepadButton::eSOUTH,
+                    { GamepadButton::eSOUTH, KeyboardCode::eE },
                 },
             },
             {
-                .name = "Menu",
+                .name = "Unpause",
                 .inputs = { GamepadButton::eSTART, GamepadButton::eBACK, KeyboardCode::eESCAPE },
             },
             {

@@ -24,6 +24,9 @@ public:
     AudioModule() = default;
     ~AudioModule() override = default;
 
+    // Resets all playing audio
+    void Reset();
+
     // Load sound, mp3 or .wav etc
     SoundID LoadSFX(SoundInfo& soundInfo);
 
@@ -80,8 +83,7 @@ public:
     void RegisterChannelBus(const std::string& busName);
     void SetBusChannelVolume(const std::string& busName, float scale);
 
-    std::vector<glm::vec3>&
-    GetDebugLines()
+    std::vector<glm::vec3>& GetDebugLines()
     {
         return _debugLines;
     }

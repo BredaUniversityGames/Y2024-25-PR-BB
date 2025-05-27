@@ -5,7 +5,7 @@ import "gameplay/player.wren" for PlayerVariables
 class PowerUpType {
     static NONE{0}
     static QUAD_DAMAGE {1}
-    static DOUBLE_GUNS {2}    
+    static DOUBLE_GUNS {2}
 }
 
 
@@ -59,17 +59,17 @@ class Station {
             _textOpacity = _textOpacity + dt * 0.005
             _textOpacity = Math.Clamp(_textOpacity, 0.0, 1.0)
             _textColor = Math.MixVec3(_textColor, Vec3.new(1.0, 1.0, 1.0), 0.01)
-            
+
             engine.GetGame().GetHUD().SetPowerUpTextColor(Vec4.new(_textColor.x,_textColor.y,_textColor.z,_textOpacity) )
 
 
 
-            if(engine.GetInput().GetDigitalAction("Reload").IsPressed()){
+            if(engine.GetInput().GetDigitalAction("Interact").IsPressed()){
 
                 if(playerVariables.GetScore() >= 2000){
 
                     if(_powerUpType == PowerUpType.QUAD_DAMAGE){
-                        _stationManagerReference.PlayQuadHumSound(engine) 
+                        _stationManagerReference.PlayQuadHumSound(engine)
                     }
 
                     if(_powerUpType == PowerUpType.DOUBLE_GUNS){
@@ -82,7 +82,7 @@ class Station {
                     this.SetStatus(false)
                     this.SetPowerUpType(PowerUpType.NONE)
 
-                    _stationManagerReference.anyActiveStation = false 
+                    _stationManagerReference.anyActiveStation = false
 
                     System.print("Picked up power up ")
 
@@ -91,9 +91,9 @@ class Station {
                 }
 
 
-                
+
             }
-            
+
         }else{
             _textOpacity = _textOpacity - dt * 0.005
             _textOpacity = Math.Clamp(_textOpacity, 0.0, 1.0)
@@ -181,7 +181,7 @@ class StationManager {
         transform.translation = Vec3.new(0.0, -200.0, 0.0)
         var emitterFlags = SpawnEmitterFlagBits.eIsActive()
         engine.GetParticles().SpawnEmitter(_quadDamageEmitter, EmitterPresetID.eQuadStation(),emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.0, 0.0, 0.0))
-        
+
         //
 
         // Load here the power up meshes and effects
@@ -216,7 +216,7 @@ class StationManager {
             var entity = engine.GetECS().GetEntityByName("Station_%(i)")
             if(entity) {
                 var position = entity.GetTransformComponent().translation
-              
+
                 this.AddStation(engine, position)
             }
         }
@@ -272,7 +272,7 @@ class StationManager {
 
             // Reset this flag
             _anyActiveStation = false
-            
+
 
             // Enable a random one
             var randomIndex = Random.RandomIndex(0, 3)
@@ -315,7 +315,7 @@ class StationManager {
 
                 }
 
-                // Deactivate the station if it has been around for too long 
+                // Deactivate the station if it has been around for too long
                 // This balance gameplay by not allowing the player to spam pickup powerups
                 if(station.time > _maxLifeOfActiveStation ){
                     station.time = 0.0
@@ -325,15 +325,15 @@ class StationManager {
                     System.print("Station has been around for too long, deactivating it")
 
                 }
-                
+
                 // Show visuals based on the power up type
                 var powerUpType = station.GetPowerUpType()
                 if(station.GetStatus()){
 
                     if(powerUpType == PowerUpType.QUAD_DAMAGE){
                         _quadDamageTransparency.transparency = Math.MixFloat(_quadDamageTransparency.transparency, 1.1, 0.005 )
-                        _anyActiveStation = true 
-                        // Set the other meshes transparency to 0.0 
+                        _anyActiveStation = true
+                        // Set the other meshes transparency to 0.0
                         // TO BE ADDED when the other power ups are added
                         _dualGunTransparency.transparency = 0.0
 

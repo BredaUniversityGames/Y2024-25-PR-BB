@@ -28,6 +28,8 @@ public:
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
 
+    void ResetParticles();
+
     NON_COPYABLE(ParticlePass);
     NON_MOVABLE(ParticlePass);
 

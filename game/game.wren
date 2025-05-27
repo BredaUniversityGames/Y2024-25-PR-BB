@@ -153,7 +153,7 @@ class Main {
 
         __musicPlayer = BGMPlayer.new(engine.GetAudio(),
             "event:/BGM/Gameplay",
-            0.12)
+            0.10)
 
         __ambientPlayer = BGMPlayer.new(engine.GetAudio(),
             "event:/BGM/DarkSwampAmbience",
@@ -166,7 +166,7 @@ class Main {
                 spawnLocations.add(entity.GetTransformComponent().translation)
             }
         }
-        
+
         __enemyList = []
 
         var waveConfigs = []
@@ -174,7 +174,7 @@ class Main {
         for (v in 0...30) {
             waveConfigs.add(WaveGenerator.GenerateWave(v))
         }
-        
+
         __waveSystem = WaveSystem.new(waveConfigs, spawnLocations)
 
         // Souls
@@ -199,7 +199,7 @@ class Main {
             engine.GetInput().SetMouseHidden(false)
             engine.GetGame().PushUIMenu(engine.GetGame().GetPauseMenu())
             engine.GetInput().SetActiveActionSet("UserInterface")
-            
+
             engine.GetUI().SetSelectedElement(engine.GetGame().GetPauseMenu().continueButton)
             __musicPlayer.SetVolume(engine.GetAudio(), 0.05)
             System.print("Pause Menu is %(__pauseEnabled)!")
@@ -212,7 +212,7 @@ class Main {
             engine.GetGame().SetUIMenu(engine.GetGame().GetHUD())
             engine.GetInput().SetActiveActionSet("Shooter")
             engine.GetInput().SetMouseHidden(true)
-            __musicPlayer.SetVolume(engine.GetAudio(), 0.05)
+            __musicPlayer.SetVolume(engine.GetAudio(), 0.10)
             System.print("Pause Menu is %(__pauseEnabled)!")
         }
 
@@ -244,25 +244,30 @@ class Main {
     }
 
     static Shutdown(engine) {
-        engine.ResetDecals()
-
         __musicPlayer.Destroy(engine.GetAudio())
         __ambientPlayer.Destroy(engine.GetAudio())
-
-        engine.GetECS().DestroyAllEntities()
     }
 
     static Update(engine, dt) {
 
         // Check if pause key was pressed
-        if(__alive && engine.GetInput().GetDigitalAction("Menu").IsPressed()) {
 
-            __pauseEnabled = !__pauseEnabled
-
-            if (__pauseEnabled) {
-                __pauseHandler.call()
+        if(__alive) {
+            var pausePressed = false
+            if (!__pauseEnabled) {
+                pausePressed = engine.GetInput().GetDigitalAction("Pause").IsReleased()
             } else {
-                __unpauseHandler.call()
+                pausePressed = engine.GetInput().GetDigitalAction("Unpause").IsReleased()
+            }
+
+            if (pausePressed) {
+                __pauseEnabled = !__pauseEnabled
+
+                if(__pauseEnabled) {
+                    __pauseHandler.call()
+                } else {
+                    __unpauseHandler.call()
+                }
             }
         }
 
@@ -329,7 +334,7 @@ class Main {
                 //     if (weapon.reloadTimer <= 0) {
                 //         weapon.ammo = weapon.maxAmmo
                 //     }
-                // }  
+                // }
             }
 
             // // engine.GetInput().GetDigitalAction("Ultimate").IsPressed()
@@ -388,10 +393,10 @@ class Main {
                 if (__activeWeapon.ammo <= 0) {
                     __activeWeapon.reload(engine)
                 }
-            }            
+            }
 
-            if (engine.GetInput().GetDigitalAction("Shoot2").IsHeld()  && __activeWeapon.isUnequiping(engine) == false ) {
-                
+            if (engine.GetInput().GetDigitalAction("ShootSecondary").IsHeld()  && __activeWeapon.isUnequiping(engine) == false ) {
+
                 if (__playerVariables.GetCurrentPowerUp() == PowerUpType.DOUBLE_GUNS){
                     __secondaryWeapon.attack(engine, dt, __playerVariables, __enemyList, __coinManager)
                     if (__secondaryWeapon.ammo <= 0) {
@@ -413,8 +418,7 @@ class Main {
 
             engine.GetUI().SetSelectedElement(engine.GetGame().GetGameOverMenu().retryButton)
         }
-        
-        
+
        var mousePosition = engine.GetInput().GetMousePosition()
         __playerMovement.lastMousePosition = mousePosition
 

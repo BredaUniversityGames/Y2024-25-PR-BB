@@ -16,13 +16,13 @@ class PlayerMovement{
         _cameraFovSlide = 65
         _cameraFovCurrent = _cameraFovNormal
         // Used for interpolation between crouching and standing
-        currentPlayerHeight = playerHeight 
+        currentPlayerHeight = playerHeight
         isGrounded = false
         _groundNormal = Vec3.new(0.0, 0.0, 0.0)
         isSliding = false
         slideForce = 3.0
         slideWishDirection = Vec3.new(0.0,0.0,0.0)
-        
+
         _cameraPitch = 0.0
         _cameraYaw = 0.0
 
@@ -79,7 +79,7 @@ class PlayerMovement{
     hasDoubleJumped=(value) { _hasDoubleJumped = value}
     dashTimer=(value) { _dashTimer = value}
     isSliding=(value) { _isSliding = value}
-    slideWishDirection=(value) { _slideWishDirection = value}   
+    slideWishDirection=(value) { _slideWishDirection = value}
     slideForce=(value) { _slideForce = value}
     dashForce=(value) { _dashForce = value}
     dashWishPosition=(value) { _dashWishPosition = value}
@@ -112,7 +112,7 @@ class PlayerMovement{
         var mouseDelta = _lastMousePosition - mousePosition
         var rotationDelta = Vec2.new(-mouseDelta.x * MOUSE_SENSITIVITY, mouseDelta.y * MOUSE_SENSITIVITY)
 
-        
+
         var lookAnalogAction = engine.GetInput().GetAnalogAction("Look")
         rotationDelta.x = rotationDelta.x + lookAnalogAction.x * GAMEPAD_LOOK_SENSITIVITY * dt
         rotationDelta.y = rotationDelta.y + lookAnalogAction.y * GAMEPAD_LOOK_SENSITIVITY * dt
@@ -137,7 +137,7 @@ class PlayerMovement{
         var clampedY  = Math.Clamp(_smoothedCameraDelta.y*5,-max,max)
 
         gunTransform.translation = Vec3.new(clampedX,clampedY,0)
-        gunTransform.rotation = Math.ToQuat(Vec3.new(0,-Math.PI()/2+clampedX,clampedY*0.2)) 
+        gunTransform.rotation = Math.ToQuat(Vec3.new(0,-Math.PI()/2+clampedX,clampedY*0.2))
 
         gunTransform2.translation = Vec3.new(clampedX,clampedY,0)
         gunTransform2.rotation = Math.ToQuat(Vec3.new(0,-Math.PI()/2+clampedX,clampedY*0.2)) 
@@ -232,7 +232,7 @@ class PlayerMovement{
             playerBody.SetFriction(12.0)
             _gun.playIdleAnim(engine)
         }
-        
+
         playerBody.SetGravityFactor(gravityFactor)
 
         var isJumpHeld = engine.GetInput().GetDigitalAction("Jump").IsHeld()
@@ -291,9 +291,9 @@ class PlayerMovement{
                 var newVel  =  Vec3.new(velocity.x * factor, velocity.y, velocity.z * factor)
                 velocity = Math.MixVec3(velocity, newVel, 0.2)
             }
-            
+
         }else{
-            
+
             var wishSpeed = wishVel.length()
             wishVel = wishVel.normalize()
             if(wishSpeed > 0.3){
@@ -363,13 +363,13 @@ class PlayerMovement{
             var dashLength = dashVector.length()
 
             var direction = Vec3.new(0.0, 0.0, 0.0)
-            
+
             // Check if the dash vector has a non-zero length before normalizing
-            if (dashLength > 0.001) { 
+            if (dashLength > 0.001) {
                 direction = dashVector.mulScalar(1.0 / dashLength) // Manual normalization to avoid normalize() on zero
                 currentDashCount = currentDashCount - 1 // only decrement if dash is valid
             }
-            
+
             // Offset a bit by the ground normal
             if(groundNormal.length() > 0.001 && isGrounded){
                 direction = direction + groundNormal.mulScalar(0.1)
@@ -377,9 +377,9 @@ class PlayerMovement{
             }
 
             playerBody.SetVelocity(playerBody.GetVelocity() + direction.mulScalar(dashForce*15.0))
-           
 
-   
+
+
             // Keep using the raycast to determine end positions, it helps with cutting the dash and making it snappy
             var rayHitInfo = engine.GetPhysics().ShootRay(start, direction, dashForce)
             dashWishPosition = end
@@ -465,7 +465,7 @@ class PlayerMovement{
                 slideWishDirection = Math.MixVec3(slideWishDirection, moveInputDir, 0.05)
             }
 
-           
+
 
             playerBody.SetVelocity(velocity)
 
@@ -474,13 +474,13 @@ class PlayerMovement{
                 _slideSoundInstance = engine.GetAudio().PlayEventOnce(_slideSFX)
                 camera.GetAudioEmitterComponent().AddEvent(_slideSoundInstance)
             }
-            
+
         }else{
             if(_slideSoundInstance){
                 engine.GetAudio().StopEvent(_slideSoundInstance)
                 _slideSoundInstance = null
             }
-            
+
             _cameraFovCurrent = Math.MixFloat(_cameraFovCurrent,_cameraFovNormal,0.2)
             camera.GetCameraComponent().fov = Math.Radians(_cameraFovCurrent)
             isSliding = false
@@ -510,14 +510,14 @@ class PlayerMovement{
             lifetime.lifetime = 2000.0
             var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
             engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eFeathers(),emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.0, 0.0, 0.0))
-            
+
         }
     }
-    
+
     Update(engine, dt, playerController, camera,hud){
         this.Movement(engine, playerController, camera)
         this.Dash(engine, dt, playerController, camera,hud)
-        this.Slide(engine, dt, playerController, camera)
+        // this.Slide(engine, dt, playerController, camera)
         this.CheckBounds(engine, playerController, camera)
     }
 }

@@ -54,7 +54,6 @@ class PowerUpSystem {
             _timerTextOpacity = _timerTextOpacity + dt * 0.005
             _timerTextOpacity = Math.Clamp(_timerTextOpacity, 0.0, 1.0)
 
-
         }else{
             _colorTarget = Vec3.new(0.0, 0.0, 0.0)
             _intensityTarget = 0.0
@@ -75,7 +74,6 @@ class PowerUpSystem {
 
             _secondGunTransformComponent.scale = Vec3.new(0,0,0)
         }
-
 
         if(playerPowerUp == PowerUpType.QUAD_DAMAGE){
             _intensityTarget = 0.2

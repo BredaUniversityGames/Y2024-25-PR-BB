@@ -46,17 +46,20 @@ public:
     std::optional<std::shared_ptr<PauseMenu>> GetPauseMenu();
     std::optional<std::shared_ptr<HUD>> GetHUD();
     std::optional<std::shared_ptr<GameOverMenu>> GetGameOver();
+    std::optional<std::shared_ptr<LoadingScreen>> GetLoadingScreen();
 
     NON_COPYABLE(GameModule);
     NON_MOVABLE(GameModule);
 
     void ApplySettings(Engine& engine);
-    void TransitionScene(const std::string& scriptFile);
+    void SetNextScene(const std::string& scriptFile);
 
     ModelLoader _modelsLoaded {};
     std::weak_ptr<MainMenu> _mainMenu;
 
 private:
+    void TransitionScene(Engine& engine);
+
     // UI
 
     std::stack<std::weak_ptr<Canvas>> _menuStack {};
