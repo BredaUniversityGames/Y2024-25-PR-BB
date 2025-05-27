@@ -99,7 +99,7 @@ template <typename T, typename... Args>
     requires(std::derived_from<T, UIElement> && std::is_constructible_v<T, Args...>)
 std::shared_ptr<T> UIElement::AddChild(Args&&... args)
 {
-    std::shared_ptr<UIElement>& addedChild = _children.emplace_back(std::make_unique<T>(std::forward<Args>(args)...));
+    std::shared_ptr<UIElement> addedChild = _children.emplace_back(std::make_unique<T>(std::forward<Args>(args)...));
     std::sort(_children.begin(), _children.end(), [&](const std::shared_ptr<UIElement>& v1, const std::shared_ptr<UIElement>& v2)
         { return v1->zLevel < v2->zLevel; });
 

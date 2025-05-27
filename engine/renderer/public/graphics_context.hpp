@@ -32,6 +32,7 @@ public:
     vk::DescriptorSet BindlessSet() const { return _bindlessSet; }
 
     DrawStats& GetDrawStats() { return _drawStats; }
+    const ResourceHandle<GPUImage>& FallbackImage() const { return _fallbackImage; }
 
     void UpdateBindlessSet();
 
