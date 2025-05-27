@@ -1,6 +1,7 @@
 #include "inspector_module.hpp"
 
 #include "editor.hpp"
+#include "game_module.hpp"
 #include "gpu_scene.hpp"
 #include "graphics_context.hpp"
 #include "imgui_backend.hpp"
@@ -96,7 +97,8 @@ void InspectorModule::Tick(MAYBE_UNUSED Engine& engine)
         if (ImGui::Button("Reload Game"))
         {
             bblog::info("Hot reloaded environment!");
-            engine.GetModule<ScriptingModule>().HotReload(engine);
+            auto& game = engine.GetModule<GameModule>();
+            game.SetNextScene(engine.GetModule<ScriptingModule>().GetMainScriptPath());
         }
 
         if (ImGui::BeginMenu("Renderer"))

@@ -137,6 +137,7 @@ void BindGameAPI(wren::ForeignModule& module)
     game.func<&GameModule::GetPauseMenu>("GetPauseMenu");
     game.func<&GameModule::GetHUD>("GetHUD");
     game.func<&GameModule::GetGameOver>("GetGameOverMenu");
+    game.func<&GameModule::GetLoadingScreen>("GetLoadingScreen");
 
     game.funcExt<&bindings::GetAimAssistDirection>("GetAimAssistDirection", "Returns the direction vector where to shoot to according to the aim assist");
 

@@ -171,15 +171,12 @@ class MeleeEnemy {
         return _rootEntity.GetTransformComponent().translation
     }
 
-    position=(newPos) {
-        _rootEntity.GetTransformComponent().translation = newPos
-    }
 
     Update(playerPos, playerVariables, engine, dt, soulManager, coinManager, flashSystem) {
+        
         var body = _rootEntity.GetRigidbodyComponent()
         var pos = body.GetPosition()
-        _rootEntity.GetTransformComponent().translation = pos
-
+        
         var animations = _meshEntity.GetAnimationControlComponent()
 
 
