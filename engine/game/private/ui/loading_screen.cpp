@@ -33,6 +33,8 @@ std::shared_ptr<LoadingScreen> LoadingScreen::Create(GraphicsContext& graphicsCo
     }
 
     loading->_continueText = loading->AddChild<UITextElement>(loading->_font.lock(), "Press E to continue", glm::vec2(), _textSize / 2.0f);
+    std::shared_ptr<UITextElement> contText = loading->_continueText.lock();
+    contText->anchorPoint = UIElement::AnchorPoint::eBottomRight;
 
     loading->UpdateAllChildrenAbsoluteTransform();
     graphicsContext.UpdateBindlessSet();
@@ -80,7 +82,8 @@ void LoadingScreen::SetDisplayText(std::string text)
         textElement->display_color = _displayTextColor;
     }
 
-    _continueText.lock()->SetLocation(glm::vec2(0.0f, totalTextHeightOffset + static_cast<float>(_font.lock()->metrics.resolutionY)));
+    //_continueText.lock()->SetLocation(glm::vec2(0.0f, totalTextHeightOffset + static_cast<float>(_font.lock()->metrics.resolutionY)));
+    _continueText.lock()->SetLocation(glm::vec2(30.0f, 30.0f));
 
     UpdateAllChildrenAbsoluteTransform();
 }

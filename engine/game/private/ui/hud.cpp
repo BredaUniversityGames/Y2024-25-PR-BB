@@ -65,7 +65,7 @@ std::shared_ptr<HUD> HUD::Create(GraphicsContext& graphicsContext, const glm::uv
     auto gun = hud->AddChild<UIImage>(gunImage, glm::vec2(16, 12) * 8.0f, glm::vec2(19, 8) * 8.0f);
     gun->anchorPoint = UIElement::AnchorPoint::eBottomRight;
 
-    hud->ammoCounter = hud->AddChild<UITextElement>(font, "17", glm::vec2(52, 10) * 8.0f, 12 * 8.0);
+    hud->ammoCounter = hud->AddChild<UITextElement>(font, "17", glm::vec2(43, 10) * 8.0f, 12 * 8.0);
     hud->ammoCounter.lock()->anchorPoint = UIElement::AnchorPoint::eBottomRight;
 
     // hitmarker
