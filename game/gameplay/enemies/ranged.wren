@@ -51,6 +51,16 @@ class RangedEnemy {
         var body = _rootEntity.AddRigidbodyComponent(rb)
         body.SetGravityFactor(0.0)
 
+        _lightEntity = engine.GetECS().NewEntity()
+        _lightEntity.AddNameComponent().name = "Eye Light"
+        var lightTransform = _lightEntity.AddTransformComponent()
+        lightTransform.translation = Vec3.new(0.0, 0.0, -0.9)
+        _pointLight = _lightEntity.AddPointLightComponent()
+        _pointLight.intensity = 20
+        _pointLight.range = 6.0
+        _pointLight.color = Vec3.new(0.8, 0.13, 0.08)
+        _rootEntity.AttachChild(_lightEntity)
+
         // STATE
 
         _isAlive = true
