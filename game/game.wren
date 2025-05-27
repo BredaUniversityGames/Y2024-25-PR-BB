@@ -161,7 +161,7 @@ class Main {
                 spawnLocations.add(entity.GetTransformComponent().translation)
             }
         }
-        
+
         __enemyList = []
 
         var waveConfigs = []
@@ -169,7 +169,7 @@ class Main {
         for (v in 0...30) {
             waveConfigs.add(WaveGenerator.GenerateWave(v))
         }
-        
+
         __waveSystem = WaveSystem.new(waveConfigs, spawnLocations)
 
         // Souls
@@ -307,24 +307,23 @@ class Main {
             __playerVariables.consecutiveHits = 0
         }
 
+        __playerMovement.Update(engine, dt, __playerController, __camera,__playerVariables.hud)
 
-        if(engine.GetInput().DebugGetKey(Keycode.eN())){
-           cheats.noClip = !cheats.noClip
+        for (weapon in __armory) {
+            weapon.cooldown = Math.Max(weapon.cooldown - dt, 0)
+
+            weapon.reloadTimer = Math.Max(weapon.reloadTimer - dt, 0)
+            if (weapon != __activeWeapon) {
+                if (weapon.reloadTimer <= 0) {
+                    weapon.ammo = weapon.maxAmmo
+                }
+            }
         }
 
         if (engine.GetInput().DebugIsInputEnabled()) {
 
-            __playerMovement.Update(engine, dt, __playerController, __camera,__playerVariables.hud)
-
-            for (weapon in __armory) {
-                weapon.cooldown = Math.Max(weapon.cooldown - dt, 0)
-
-                weapon.reloadTimer = Math.Max(weapon.reloadTimer - dt, 0)
-                if (weapon != __activeWeapon) {
-                    if (weapon.reloadTimer <= 0) {
-                        weapon.ammo = weapon.maxAmmo
-                    }
-                }
+            if(engine.GetInput().DebugGetKey(Keycode.eN())){
+               cheats.noClip = !cheats.noClip
             }
 
             // // engine.GetInput().GetDigitalAction("Ultimate").IsPressed()
@@ -362,27 +361,26 @@ class Main {
                 __activeWeapon.unequip(engine)
                 __nextWeapon = __armory[Weapons.shotgun]
             }
+        }
 
-            if(__activeWeapon.isUnequiping(engine) == false && __nextWeapon != null){
+        if(__activeWeapon.isUnequiping(engine) == false && __nextWeapon != null){
+            __activeWeapon = __nextWeapon
+            __nextWeapon = null
+            __activeWeapon.equip(engine)
+        }
 
-                __activeWeapon = __nextWeapon
-                __nextWeapon = null
-                __activeWeapon.equip(engine)
+        if (engine.GetInput().GetDigitalAction("Reload").IsHeld() && __activeWeapon.isUnequiping(engine) == false) {
+            __activeWeapon.reload(engine)
+        }
 
-            }
-            if (engine.GetInput().GetDigitalAction("Reload").IsHeld() && __activeWeapon.isUnequiping(engine) == false) {
+        if (engine.GetInput().GetDigitalAction("Shoot").IsHeld()  && __activeWeapon.isUnequiping(engine) == false ) {
+            __activeWeapon.attack(engine, dt, __playerVariables, __enemyList, __coinManager)
+            if (__activeWeapon.ammo <= 0) {
                 __activeWeapon.reload(engine)
             }
-
-            if (engine.GetInput().GetDigitalAction("Shoot").IsHeld()  && __activeWeapon.isUnequiping(engine) == false ) {
-                __activeWeapon.attack(engine, dt, __playerVariables, __enemyList, __coinManager)
-                if (__activeWeapon.ammo <= 0) {
-                    __activeWeapon.reload(engine)
-                }
-            }
-
-            __activeWeapon.rotateToTarget(engine)
         }
+
+        __activeWeapon.rotateToTarget(engine)
 
         // Check if player died
         if (__alive && __playerVariables.health <= 0) {
@@ -395,8 +393,8 @@ class Main {
 
             engine.GetUI().SetSelectedElement(engine.GetGame().GetGameOverMenu().retryButton)
         }
-        
-        
+
+
        var mousePosition = engine.GetInput().GetMousePosition()
         __playerMovement.lastMousePosition = mousePosition
 
