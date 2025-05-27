@@ -41,7 +41,7 @@ class Main {
 
         var transform = __directionalLight.AddTransformComponent()
         transform.translation = Vec3.new(-94.000, 174.800, 156.900)
-        transform.rotation = Quat.new(0.544, -0.136, -0.800,-0.214)
+        transform.rotation = Quat.new(1.0, 0.0, 0.0, 0.0)
 
         // Player Setup
 
@@ -233,8 +233,6 @@ class Main {
     }
 
     static Update(engine, dt) {
-
-        hello
 
         // Check if pause key was pressed
 

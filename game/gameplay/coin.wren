@@ -7,33 +7,30 @@ class Coin {
     construct new(engine, spawnPosition) {
 
         _minRange = 2.0 // Range for the coin to be picked up by the player
-        _mediumRange = 3.0
         _maxRange = 4.0 // Range for the coin to start following the player
+        _lightOffset = Vec3.new(0.0, 0.22, 0.0) // Offset for the light position
 
-        _rootEntity = engine.GetECS().NewEntity()
+        _rootEntity = engine.LoadModel("assets/models/nug.glb", false)
         _rootEntity.AddNameComponent().name = "Coin"
         _rootEntity.AddAudioEmitterComponent()
 
-        var transform = _rootEntity.AddTransformComponent()
+        var transform = _rootEntity.GetTransformComponent()
         transform.translation = spawnPosition
         transform.scale = Vec3.new(0.95, 0.95, 0.95)
 
-        // Coin mesh
-        _meshEntity = engine.LoadModel("assets/models/nug.glb", false)
-        _rootEntity.AttachChild(_meshEntity)
-
+        // Coin light
         _lightEntity = engine.GetECS().NewEntity()
-        _lightEntity.AddNameComponent().name = "Coin Light"
+        _lightEntity.AddNameComponent().name = "CoinLight"
+
         var lightTransform = _lightEntity.AddTransformComponent()
-        lightTransform.translation = Vec3.new(0.001, 0.22, 0.001)
+
         _pointLight = _lightEntity.AddPointLightComponent()
-        _pointLight.intensity = 10
+        _pointLight.intensity = 10.0
         _pointLight.range = 0.5
         _pointLight.color = Vec3.new(0.9, 0.9, 0.08)
-        _rootEntity.AttachChild(_lightEntity)
         
         // Coin collision
-              // Physics callback with the two wren entities as parameters
+        // Physics callback with the two wren entities as parameters
         var onEnterCoinSound = Fn.new { |self, other|
 
             if (other.GetRigidbodyComponent().GetLayer() == PhysicsObjectLayer.eSTATIC()) {
@@ -47,8 +44,9 @@ class Coin {
 
         var colliderShape = ShapeFactory.MakeBoxShape(Vec3.new(0.45,0.45,0.45))
         var rb = Rigidbody.new(engine.GetPhysics(), colliderShape, PhysicsObjectLayer.eCOINS(), true)
-        var body = _rootEntity.AddRigidbodyComponent(rb).OnCollisionEnter(onEnterCoinSound)
+        var body = _rootEntity.AddRigidbodyComponent(rb)
 
+        body.OnCollisionEnter(onEnterCoinSound)
         body.SetGravityFactor(2.5)
         body.SetFriction(9.0)
 
@@ -85,7 +83,9 @@ class Coin {
         var coinTransform = _rootEntity.GetTransformComponent()
         var coinRigidbody = _rootEntity.GetRigidbodyComponent()
 
-        var coinPos = coinTransform.translation
+        var coinPos = coinRigidbody.GetPosition()
+        _lightEntity.GetTransformComponent().translation = coinPos + _lightOffset // Update light position
+
         var distance = Math.Distance(coinPos, playerPos)
 
         if(distance < _maxRange){
@@ -137,9 +137,9 @@ class Coin {
         
         var lifetime = _rootEntity.AddLifetimeComponent()
         lifetime.lifetime = 0.0
+
         var lifeTimeLight = _lightEntity.AddLifetimeComponent()
         lifeTimeLight.lifetime = 0.0
-
     }
 
     entity {

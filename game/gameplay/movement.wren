@@ -487,9 +487,10 @@ class PlayerMovement{
     CheckBounds(engine, playerController, camera){
         var currentPos = playerController.GetRigidbodyComponent().GetPosition()
         if(currentPos.y < -10.0){
+            
             var playerBody = playerController.GetRigidbodyComponent()
             playerBody.SetVelocity(Vec3.new(0.0, 0.0, 0.0))
-            playerBody.SetTranslation(Vec3.new(-27.0, 30.5, 7.0))
+            playerBody.SetTranslation(Vec3.new(-94.000, 174.800, 156.900))
 
             //play a sound effect
             _crowsSoundInstance = engine.GetAudio().PlayEventOnce(_outofBounds)
