@@ -8,7 +8,7 @@ import "gameplay/wave_system.wren" for WaveSystem, WaveConfig, EnemyType, WaveGe
 import "analytics/analytics.wren" for AnalyticsManager
 
 import "gameplay/hud.wren" for WrenHUD
-import "gameplay/soul.wren" for Soul, SoulManager
+import "gameplay/soul.wren" for Soul, SoulManager, SoulType
 import "gameplay/coin.wren" for Coin, CoinManager
 import "gameplay/flash_system.wren" for FlashSystem
 import "gameplay/station.wren" for PowerUpType, Station, StationManager
@@ -409,7 +409,7 @@ class Main {
         __playerVariables.hud.Update(engine, dt,__playerMovement,__playerVariables,__activeWeapon.ammo, __activeWeapon.maxAmmo)
 
         if (!engine.IsDistribution()) {
-            DebugUtils.Tick(engine, __enemyList, __coinManager, __flashSystem, __waveSystem, __playerVariables)
+            DebugUtils.Tick(engine, __enemyList,__soulManager, __coinManager, __flashSystem, __waveSystem, __playerVariables)
         }
     }
 }

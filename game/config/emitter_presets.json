@@ -936,6 +936,53 @@
             },
             {
                 "size": {
+                    "x": 0.699999988079071,
+                    "y": 1.2000000476837159,
+                    "z": 0.0
+                },
+                "mass": 0.0,
+                "rotationVelocity": {
+                    "x": 0.0,
+                    "y": 0.0
+                },
+                "maxLife": 2.0,
+                "emitDelay": 2.0,
+                "count": 1,
+                "materialIndex": 66,
+                "spawnRandomness": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "flags": 31,
+                "velocityRandomness": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "startingVelocity": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "spriteDimensions": {
+                    "x": 60,
+                    "y": 1
+                },
+                "frameCount": 60,
+                "frameRate": 0.0,
+                "color": {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0,
+                    "w": 6.5
+                },
+                "bursts": [],
+                "name": "SoulSheetBig",
+                "imageName": "Soul2.png"
+            },
+            {
+                "size": {
                     "x": 2.0,
                     "y": 24.0,
                     "z": 0.0

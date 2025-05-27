@@ -2,7 +2,7 @@ import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, PhysicsObjec
 import "../player.wren" for PlayerVariables
 import "gameplay/flash_system.wren" for FlashSystem
 
-import "../soul.wren" for Soul, SoulManager
+import "../soul.wren" for Soul, SoulManager, SoulType
 import "../coin.wren" for Coin, CoinManager
 
 class RangedEnemy {
@@ -322,7 +322,7 @@ class RangedEnemy {
 
             if (_deathTimer <= 0) {
                 //spawn a soul
-                soulManager.SpawnSoul(engine, body.GetPosition())
+                soulManager.SpawnSoul(engine, body.GetPosition(),SoulType.BIG)
 
                 engine.GetECS().DestroyEntity(_rootEntity) // Destroys the entity, and in turn this object
             } else {

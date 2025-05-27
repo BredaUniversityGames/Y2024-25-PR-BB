@@ -1,6 +1,6 @@
 import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, EmitterPresetID, Perlin, Random
 import "../player.wren" for PlayerVariables
-import "../soul.wren" for Soul, SoulManager
+import "../soul.wren" for Soul, SoulManager, SoulType
 import "../coin.wren" for Coin, CoinManager
 import "gameplay/flash_system.wren" for FlashSystem
 
@@ -307,7 +307,7 @@ class MeleeEnemy {
             
             if (_deathTimer <= 0) {
                 //spawn a soul
-                soulManager.SpawnSoul(engine, body.GetPosition())
+                soulManager.SpawnSoul(engine, body.GetPosition(),SoulType.SMALL)
 
                 engine.GetECS().DestroyEntity(_rootEntity) // Destroys the entity, and in turn this object
                 

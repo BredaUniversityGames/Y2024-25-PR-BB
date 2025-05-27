@@ -1,7 +1,7 @@
 import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, EmitterPresetID, Perlin, Random
 import "../player.wren" for PlayerVariables
 
-import "../soul.wren" for Soul, SoulManager
+import "../soul.wren" for Soul, SoulManager, SoulType
 import "../coin.wren" for Coin, CoinManager
 import "gameplay/flash_system.wren" for FlashSystem
 
@@ -274,7 +274,7 @@ class BerserkerEnemy {
             }
 
             if (_deathTimer <= 0) {
-                soulManager.SpawnSoul(engine, body.GetPosition())
+                soulManager.SpawnSoul(engine, body.GetPosition(),SoulType.BIG)
                 engine.GetECS().DestroyEntity(_rootEntity) // Destroys the entity, and in turn this object
             } else {
                 // Wait for death animation before starting descent
