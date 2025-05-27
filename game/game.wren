@@ -137,7 +137,7 @@ class Main {
 
         __musicPlayer = BGMPlayer.new(engine.GetAudio(),
             "event:/BGM/Gameplay",
-            0.12)
+            0.10)
 
         __ambientPlayer = BGMPlayer.new(engine.GetAudio(),
             "event:/BGM/DarkSwampAmbience",
@@ -196,7 +196,7 @@ class Main {
             engine.GetGame().SetUIMenu(engine.GetGame().GetHUD())
             engine.GetInput().SetActiveActionSet("Shooter")
             engine.GetInput().SetMouseHidden(true)
-            __musicPlayer.SetVolume(engine.GetAudio(), 0.05)
+            __musicPlayer.SetVolume(engine.GetAudio(), 0.10)
             System.print("Pause Menu is %(__pauseEnabled)!")
         }
 
@@ -228,12 +228,8 @@ class Main {
     }
 
     static Shutdown(engine) {
-        engine.ResetDecals()
-
         __musicPlayer.Destroy(engine.GetAudio())
         __ambientPlayer.Destroy(engine.GetAudio())
-
-        engine.GetECS().DestroyAllEntities()
     }
 
     static Update(engine, dt) {
