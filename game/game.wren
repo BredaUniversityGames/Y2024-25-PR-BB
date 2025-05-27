@@ -103,6 +103,16 @@ class Main {
         __player.AddNameComponent().name = "Player"
 
         // Gun Setup
+        __gunParentPivot = engine.GetECS().NewEntity()
+        __gunParentPivot.AddNameComponent().name = "GunParentPivot"
+        __gunParentPivot.AddTransformComponent().translation = Vec3.new(3.0, 0.0 , 0.0)
+
+        __gunPivot = engine.GetECS().NewEntity()
+        __gunPivot.AddNameComponent().name = "GunPivot"
+
+        var gunPivotTransform = __gunPivot.AddTransformComponent()
+        gunPivotTransform.translation = Vec3.new(-3.0, 0.0 , 0.0)
+
         __gun = engine.LoadModel("assets/models/Revolver.glb",false)
         __gun.RenderInForeground()
 
@@ -111,9 +121,10 @@ class Main {
         var gunTransform = __gun.GetTransformComponent()
         gunTransform.rotation = Math.ToQuat(Vec3.new(0.0, -Math.PI()/2, 0.0))
 
-
         __player.AttachChild(__camera)
-        __camera.AttachChild(__gun)
+        __camera.AttachChild(__gunParentPivot)
+        __gunParentPivot.AttachChild(__gunPivot)
+        __gunPivot.AttachChild(__gun)
 
         __armory = [Pistol.new(engine), Shotgun.new(engine)]
 
@@ -301,24 +312,23 @@ class Main {
             __playerVariables.consecutiveHits = 0
         }
 
+        __playerMovement.Update(engine, dt, __playerController, __camera,__playerVariables.hud)
 
-        if(engine.GetInput().DebugGetKey(Keycode.eN())){
-           cheats.noClip = !cheats.noClip
+        for (weapon in __armory) {
+            weapon.cooldown = Math.Max(weapon.cooldown - dt, 0)
+
+            weapon.reloadTimer = Math.Max(weapon.reloadTimer - dt, 0)
+            if (weapon != __activeWeapon) {
+                if (weapon.reloadTimer <= 0) {
+                    weapon.ammo = weapon.maxAmmo
+                }
+            }
         }
 
         if (engine.GetInput().DebugIsInputEnabled()) {
 
-            __playerMovement.Update(engine, dt, __playerController, __camera,__playerVariables.hud)
-
-            for (weapon in __armory) {
-                weapon.cooldown = Math.Max(weapon.cooldown - dt, 0)
-
-                weapon.reloadTimer = Math.Max(weapon.reloadTimer - dt, 0)
-                if (weapon != __activeWeapon) {
-                    if (weapon.reloadTimer <= 0) {
-                        weapon.ammo = weapon.maxAmmo
-                    }
-                }
+            if(engine.GetInput().DebugGetKey(Keycode.eN())){
+               cheats.noClip = !cheats.noClip
             }
 
             // // engine.GetInput().GetDigitalAction("Ultimate").IsPressed()
@@ -356,24 +366,27 @@ class Main {
                 __activeWeapon.unequip(engine)
                 __nextWeapon = __armory[Weapons.shotgun]
             }
+        }
 
-            if(__activeWeapon.isUnequiping(engine) == false && __nextWeapon != null){
+        if(__activeWeapon.isUnequiping(engine) == false && __nextWeapon != null){
+            __activeWeapon = __nextWeapon
+            __nextWeapon = null
+            __activeWeapon.equip(engine)
+        }
 
-                __activeWeapon = __nextWeapon
-                __nextWeapon = null
-                __activeWeapon.equip(engine)
+        if (engine.GetInput().GetDigitalAction("Reload").IsHeld() && __activeWeapon.isUnequiping(engine) == false) {
+            __activeWeapon.reload(engine)
+        }
 
-            }
-            if (engine.GetInput().GetDigitalAction("Reload").IsHeld() && __activeWeapon.isUnequiping(engine) == false) {
+        if (engine.GetInput().GetDigitalAction("Shoot").IsHeld()  && __activeWeapon.isUnequiping(engine) == false ) {
+            __activeWeapon.attack(engine, dt, __playerVariables, __enemyList, __coinManager)
+            if (__activeWeapon.ammo <= 0) {
                 __activeWeapon.reload(engine)
             }
+        }
 
-            if (engine.GetInput().GetDigitalAction("Shoot").IsHeld()  && __activeWeapon.isUnequiping(engine) == false ) {
-                __activeWeapon.attack(engine, dt, __playerVariables, __enemyList, __coinManager)
-                if (__activeWeapon.ammo <= 0) {
-                    __activeWeapon.reload(engine)
-                }
-            }
+        if (engine.GetGame().GetSettings().aimAssist) {
+            __activeWeapon.rotateToTarget(engine)
         }
 
         // Check if player died
