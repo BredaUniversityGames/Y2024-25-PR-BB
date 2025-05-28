@@ -15,7 +15,7 @@ class Pistol {
     construct new(engine, name, barrelEndPosition) {
         _damage = 1
         _headShotMultiplier = 2.0
-        _range = 64
+        _range = 100
         _rangeVector = Vec3.new(_range, _range, _range)
         _attackSpeed = 0.4 * 1000
         _manualTimer = 0

@@ -387,15 +387,15 @@ class Main {
                 }
             }
 
-            if (engine.GetInput().DebugGetKey(Keycode.e1()) && __activeWeapon.isUnequiping(engine) == false) {
-                __activeWeapon.unequip(engine)
-                __nextWeapon = __armory[Weapons.pistol]
-            }
+            // if (engine.GetInput().DebugGetKey(Keycode.e1()) && __activeWeapon.isUnequiping(engine) == false) {
+            //     __activeWeapon.unequip(engine)
+            //     __nextWeapon = __armory[Weapons.pistol]
+            // }
 
-            if (engine.GetInput().DebugGetKey(Keycode.e2()) && __activeWeapon.isUnequiping(engine) == false) {
-                __activeWeapon.unequip(engine)
-                __nextWeapon = __armory[Weapons.shotgun]
-            }
+            // if (engine.GetInput().DebugGetKey(Keycode.e2()) && __activeWeapon.isUnequiping(engine) == false) {
+            //     __activeWeapon.unequip(engine)
+            //     __nextWeapon = __armory[Weapons.shotgun]
+            // }
         }
 
         if(__activeWeapon.isUnequiping(engine) == false && __nextWeapon != null){
