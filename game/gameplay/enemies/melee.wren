@@ -222,7 +222,6 @@ class MeleeEnemy {
                             }
 
                             if (!isOccluded) {
-                                System.print("Playerpos.y = %(playerPos.y - pos.y)")
                                 playerVariables.DecreaseHealth(_attackDamage)
                                 playerVariables.cameraVariables.shakeIntensity = _shakeIntensity
                                 playerVariables.invincibilityTime = playerVariables.invincibilityMaxTime
