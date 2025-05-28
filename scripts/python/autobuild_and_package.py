@@ -5,8 +5,8 @@ import http.client
 import json
 import argparse
 
-def build_wsl(project_path, build_name):
 
+def build_wsl(project_path, build_name):
     wsl_path = project_path.replace("C:\\", "/mnt/c/").replace("\\", "/")
     print("WSL Path:", wsl_path)
 
@@ -15,8 +15,8 @@ def build_wsl(project_path, build_name):
     command = ["wsl", "cd", wsl_path, "&&", "cmake", "--build", "build/" + build_name]
     return subprocess.run(command).returncode
 
-def package_project(project_path, build_name):
 
+def package_project(project_path, build_name):
     if build_name == "WSL-RelWithDebInfo":
         package_dir("scripts/build_system/package_config/linux_dev_rel_deb.json")
     elif build_name == "WSL-Release":
@@ -25,15 +25,17 @@ def package_project(project_path, build_name):
         print("Unsupported build name for packaging:", build_name)
     return 0
 
-HEADER = { "Content-Type": "application/json" }
-SUCCESS_DATA = {"type":"build", "status":"success", "name":"Blightspire"}
+
+HEADER = {"Content-Type": "application/json"}
+SUCCESS_DATA = {"type": "build", "status": "success", "name": "Blightspire"}
 API_BASE_URL = "localhost"
 API_PATH_NOTIFICATION = "/post_event"
 API_PORT = 32010
 
+
 def autobuild_notify():
     json_body = json.dumps(SUCCESS_DATA)
-    
+
     # Open connection
     conn = http.client.HTTPConnection(API_BASE_URL, API_PORT)
 
@@ -53,8 +55,8 @@ def autobuild_notify():
 
     return
 
-def main():
 
+def main():
     parser = argparse.ArgumentParser(description='Packages the project to /package/')
     parser.add_argument('-b', '--build', help="Build type", type=str, required=True)
     args = parser.parse_args()
@@ -65,12 +67,12 @@ def main():
     if err != 0:
         print("Error building project in WSL")
         return err
-    
+
     package_project(os.getcwd(), args.build)
     autobuild_notify()
 
-
     return 0
+
 
 if __name__ == "__main__":
     main()

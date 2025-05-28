@@ -5,6 +5,7 @@ import argparse
 import json
 import stat
 
+
 def copy_dir(src_dir, dst_dir):
     for root, dirs, files in os.walk(src_dir):
         # Compute destination path
@@ -22,8 +23,10 @@ def copy_dir(src_dir, dst_dir):
             shutil.copy(src_file, dst_file)
             os.chmod(dst_file, stat.S_IWRITE)
 
+
 def copy_file(file, dest_folder):
     shutil.copy(file, dest_folder)
+
 
 def package_dir(config_path):
     config_file = open(config_path)
@@ -36,7 +39,7 @@ def package_dir(config_path):
         copy_file(executable, output_dir)
 
     for dir in config_data['assets']:
-       copy_dir(dir, output_dir + "/" + dir)
+        copy_dir(dir, output_dir + "/" + dir)
 
     for file in config_data['files']:
         copy_file(file, output_dir)
