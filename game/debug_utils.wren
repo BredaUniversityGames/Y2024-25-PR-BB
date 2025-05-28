@@ -2,6 +2,7 @@ import "game.wren" for Main
 import "gameplay/coin.wren" for CoinManager
 import "engine_api.wren" for Vec3, Keycode, Random, ECS, Quat, TransformComponent
 import "gameplay/flash_system.wren" for FlashSystem
+import "gameplay/station.wren" for PowerUpType
 
 import "gameplay/enemies/melee.wren" for MeleeEnemy
 import "gameplay/enemies/berserker.wren" for BerserkerEnemy
@@ -30,6 +31,10 @@ class DebugUtils {
 
         if (engine.GetInput().DebugGetKey(Keycode.eJ())) {
             enemyList.add(RangedEnemy.new(engine, spawnPos))
+        }
+
+        if (engine.GetInput().DebugGetKey(Keycode.eY())) {
+            player.SetCurrentPowerUp(PowerUpType.DOUBLE_GUNS)
         }
 
         // Spawn between 7 and 12 coins
