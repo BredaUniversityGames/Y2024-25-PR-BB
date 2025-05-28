@@ -162,7 +162,7 @@ jobs:
       - name: Decompress Linux Package
         shell: bash
         run: |
-          7z x package-linux.zip -o./package
+          7z x package-linux.zip
 
       # Create steam config to avoid 2FA
 
