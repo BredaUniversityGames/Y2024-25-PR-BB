@@ -254,7 +254,7 @@
                 },
                 "bursts": [
                     {
-                        "startTime": 0.0,
+                        "startTime": 0.20000000298023225,
                         "count": 2,
                         "cycles": 0,
                         "maxInterval": 0.20000000298023225,
@@ -262,7 +262,7 @@
                         "loop": true
                     },
                     {
-                        "startTime": 0.0,
+                        "startTime": 0.10000000149011612,
                         "count": 2,
                         "cycles": 0,
                         "maxInterval": 0.05000000074505806,
@@ -527,6 +527,70 @@
                     }
                 ],
                 "name": "RayQuadDamage",
+                "imageName": "swoosh.png"
+            },
+            {
+                "size": {
+                    "x": 0.10000000149011612,
+                    "y": 0.10000000149011612,
+                    "z": 0.0
+                },
+                "mass": 0.0020000000949949028,
+                "rotationVelocity": {
+                    "x": 0.0,
+                    "y": 10.0
+                },
+                "maxLife": 1.0,
+                "emitDelay": 0.10000000149011612,
+                "count": 3,
+                "materialIndex": 62,
+                "spawnRandomness": {
+                    "x": 0.10000000149011612,
+                    "y": 0.10000000149011612,
+                    "z": 0.10000000149011612
+                },
+                "flags": 3,
+                "velocityRandomness": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "startingVelocity": {
+                    "x": 1.0,
+                    "y": 5.0,
+                    "z": 1.0
+                },
+                "spriteDimensions": {
+                    "x": 1,
+                    "y": 1
+                },
+                "frameCount": 1,
+                "frameRate": 0.0,
+                "color": {
+                    "x": 0.8600000143051148,
+                    "y": 0.6700000166893005,
+                    "z": 0.0,
+                    "w": 1.0
+                },
+                "bursts": [
+                    {
+                        "startTime": 0.0,
+                        "count": 3,
+                        "cycles": 0,
+                        "maxInterval": 0.05000000074505806,
+                        "currentInterval": 0.0,
+                        "loop": true
+                    },
+                    {
+                        "startTime": 0.0,
+                        "count": 3,
+                        "cycles": 0,
+                        "maxInterval": 0.07999999821186066,
+                        "currentInterval": 0.0,
+                        "loop": true
+                    }
+                ],
+                "name": "RayDualGun",
                 "imageName": "swoosh.png"
             },
             {
@@ -1073,6 +1137,53 @@
                 },
                 "bursts": [],
                 "name": "QuadStation",
+                "imageName": "soul-Sheet.png"
+            },
+            {
+                "size": {
+                    "x": 2.0,
+                    "y": 24.0,
+                    "z": 0.0
+                },
+                "mass": 0.0,
+                "rotationVelocity": {
+                    "x": 0.0,
+                    "y": 0.0
+                },
+                "maxLife": 2.0,
+                "emitDelay": 2.0,
+                "count": 1,
+                "materialIndex": 67,
+                "spawnRandomness": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "flags": 15,
+                "velocityRandomness": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "startingVelocity": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "spriteDimensions": {
+                    "x": 60,
+                    "y": 1
+                },
+                "frameCount": 60,
+                "frameRate": 0.0,
+                "color": {
+                    "x": 0.8600000143051148,
+                    "y": 0.6700000166893005,
+                    "z": 0.0,
+                    "w": 8.5
+                },
+                "bursts": [],
+                "name": "DualGunStation",
                 "imageName": "soul-Sheet.png"
             }
         ]
