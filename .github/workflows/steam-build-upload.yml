@@ -14,7 +14,7 @@ jobs:
       matrix:
         platform: [ ubuntu-latest, windows-latest ]
         configuration: [ Distribution ]
-    
+
     runs-on: ${{ matrix.platform }}
 
     env:
@@ -109,19 +109,17 @@ jobs:
 
       - name: Upload Windows Build Artifacts
         if: matrix.platform == 'windows-latest'
-        uses: pyTooling/upload-artifact@v4
+        uses: actions/upload-artifact@v4
         with:
           name: windows-dist
           path: package/
-          mode: legacy
 
       - name: Upload Linux Build Artifacts
         if: matrix.platform == 'ubuntu-latest'
-        uses: pyTooling/upload-artifact@v4
+        uses: actions/upload-artifact@v4
         with:
           name: linux-dist
           path: package/
-          mode: legacy
 
   upload-project:
     name: Upload Project
