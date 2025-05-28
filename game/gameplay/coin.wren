@@ -27,13 +27,13 @@ class Coin {
         _lightEntity.AddNameComponent().name = "Coin Light"
         var lightTransform = _lightEntity.AddTransformComponent()
         lightTransform.translation = Vec3.new(0.001, 0.22, 0.001)
-        _pointLight = _lightEntity.AddPointLightComponent()
-        _pointLight.intensity = 10
-        _pointLight.range = 0.5
-        _pointLight.color = Vec3.new(0.9, 0.9, 0.08)
+        var pointLight = _lightEntity.AddPointLightComponent()
+        pointLight.intensity = 10
+        pointLight.range = 0.5
+        pointLight.color = Vec3.new(0.9, 0.9, 0.08)
         _rootEntity.AttachChild(_lightEntity)
-        _transparencyComponent = _meshEntity.AddTransparencyComponent()
-        _transparencyComponent.transparency = 1.0
+        var transparencyComponent = _meshEntity.AddTransparencyComponent()
+        transparencyComponent.transparency = 1.0
         
         // Coin collision
               // Physics callback with the two wren entities as parameters
@@ -139,19 +139,20 @@ class Coin {
     }
 
     SetTransparency(value){
-        _transparencyComponent.transparency = value // Set the transparency of the coin mesh
+        _meshEntity.GetTransparencyComponent().transparency = value // Set the transparency of the coin mesh
+        //_transparencyComponent.transparency = value // Set the transparency of the coin mesh
     }
 
     GetTransparency(){
-        return _transparencyComponent.transparency // Get the transparency of the coin mesh
+        return _meshEntity.GetTransparencyComponent().transparency // Get the transparency of the coin mesh
     }
 
     SetLightIntensity(value){
-        _pointLight.intensity = value // Set the intensity of the coin light
+        _lightEntity.GetPointLightComponent().intensity = value // Set the intensity of the coin light
     }
 
     GetLightIntensity(){
-        return _pointLight.intensity // Get the intensity of the coin light
+        return _lightEntity.GetPointLightComponent().intensity // Get the intensity of the coin light
     }
 
 
@@ -260,7 +261,7 @@ class CoinManager {
 
                     coin.SetTransparency(transparency) // Set the transparency of the coin mesh
                     coin.SetLightIntensity(lightIntensity) // Set the intensity of the coin light
-                    System.print(coin.GetLightIntensity())
+                    System.print(coin.GetTransparency())
                 }
 
                 if(coin.time > _maxLifeTimeOfCoin && !coin.entity.GetLifetimeComponent()){

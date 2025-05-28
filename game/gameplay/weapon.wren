@@ -147,8 +147,8 @@ class Pistol {
             var rayHitInfo = engine.GetPhysics().ShootRay(start, direction, _range)
 
             // Check first if aim assist is needed, if the cursor is already on an enemy, just shoot so it is possible to aim for the head
+            var aimAssistNeeded = true
             if (engine.GetGame().GetSettings().aimAssist) {
-                var aimAssistNeeded = true
 
                 if (!rayHitInfo.isEmpty) {
                     var normal = Vec3.new(0, 1, 0)
@@ -394,8 +394,8 @@ class Shotgun {
             // Check first if aim assist is needed, if the cursor is already on an enemy, just shoot so it is possible to aim for the head
             var rayHitInfo = engine.GetPhysics().ShootRay(start, direction, _range)
 
+            var aimAssistNeeded = true
             if (engine.GetGame().GetSettings().aimAssist) {
-                var aimAssistNeeded = true
 
                 if (!rayHitInfo.isEmpty) {
                     var normal = Vec3.new(0, 1, 0)
