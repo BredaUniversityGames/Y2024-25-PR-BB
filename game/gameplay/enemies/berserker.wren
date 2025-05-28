@@ -173,7 +173,7 @@ class BerserkerEnemy {
                             if (!rayHitInfo.isEmpty) {
                                 for (rayHit in rayHitInfo) {
                                     var hitEntity = rayHit.GetEntity(engine.GetECS())
-                                    if (hitEntity == _rootEntity) {
+                                    if (hitEntity == _rootEntity || hitEntity.HasEnemyTag()) {
                                         continue
                                     }
                                     if (!hitEntity.HasPlayerTag()) {
