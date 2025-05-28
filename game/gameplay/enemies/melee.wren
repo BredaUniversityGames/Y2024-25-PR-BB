@@ -104,7 +104,7 @@ class MeleeEnemy {
     }
 
     IsHeadshot(y) { // Will probably need to be changed when we have a different model
-        if (y >= _rootEntity.GetRigidbodyComponent().GetPosition().y + 0.5) {
+        if (y >= _rootEntity.GetRigidbodyComponent().GetPosition().y + 0.5 && !_getUpState) {
             return true
         }
         return false
