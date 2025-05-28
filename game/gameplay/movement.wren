@@ -2,7 +2,7 @@ import "engine_api.wren" for Engine, Game, ECS, Entity, Vec3, Vec2, Quat, Math, 
 
 class PlayerMovement{
 
-    construct new(newHasDashed, newDashTimer, gun){
+    construct new(newHasDashed, newDashTimer, gun, playerController){
         hasDashed = newHasDashed
         hasDoubleJumped = false
         dashTimer = newDashTimer
@@ -23,8 +23,9 @@ class PlayerMovement{
         slideForce = 3.0
         slideWishDirection = Vec3.new(0.0,0.0,0.0)
 
-        _cameraPitch = 0.0
-        _cameraYaw = 0.0
+        var playerRotation = Math.ToEuler(playerController.GetTransformComponent().rotation)
+        _cameraPitch = -playerRotation.y
+        _cameraYaw = 0
 
         dashWishPosition = Vec3.new(0.0,0.0,0.0)
         dashForce = 6.0

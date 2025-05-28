@@ -261,7 +261,6 @@ class CoinManager {
 
                     coin.SetTransparency(transparency) // Set the transparency of the coin mesh
                     coin.SetLightIntensity(lightIntensity) // Set the intensity of the coin light
-                    System.print(coin.GetTransparency())
                 }
 
                 if(coin.time > _maxLifeTimeOfCoin && !coin.entity.GetLifetimeComponent()){
