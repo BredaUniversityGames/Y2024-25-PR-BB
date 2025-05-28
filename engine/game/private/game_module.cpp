@@ -296,7 +296,6 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
     auto& ECS = engine.GetModule<ECSModule>();
 
     auto& applicationModule = engine.GetModule<ApplicationModule>();
-    auto& inputDeviceManager = applicationModule.GetInputDeviceManager();
     auto& physicsModule = engine.GetModule<PhysicsModule>();
     auto& pathfindingModule = engine.GetModule<PathfindingModule>();
 
@@ -327,9 +326,12 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
         _menuStack.top().lock()->visibility = UIElement::VisibilityState::eUpdatedAndVisible;
     }
 
-#if !DISTRBUTION
+#if !DISTRIBUTION
+    auto& inputDeviceManager = applicationModule.GetInputDeviceManager();
     if (inputDeviceManager.IsKeyPressed(KeyboardCode::eH))
+    {
         applicationModule.SetMouseHidden(!applicationModule.GetMouseHidden());
+    }
 #endif
 
     {
