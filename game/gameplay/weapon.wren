@@ -174,15 +174,16 @@ class Pistol {
             muzzleLight.intensity = 128.0
 
             var barrelEndPosition = _barrelEndEntity.GetTransformComponent().GetWorldTranslation()
-            muzzleTransform.translation = Vec3.new(-0.5 , 0.05, 0.35)
+            muzzleTransform.translation = Vec3.new(-0.55 , 0.195, 0.35)
             _barrelEndEntity.AttachChild(muzzleEntity)
             _barrelEndEntity.AttachChild(muzzleLightEntity)
-            //_barrelEndEntity.DetachChild(muzzleEntity)
+            _barrelEndEntity.DetachChild(muzzleEntity)
+            _barrelEndEntity.DetachChild(muzzleLightEntity)
+            engine.GetParticles().SpawnEmitter(muzzleEntity, playerVariables.GetMuzzleFlashRay(),_emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.0, 0.0, 0.0))
             var muzzleLife = muzzleEntity.AddLifetimeComponent()
             muzzleLife.lifetime = 50.0
             var muzzleLightLife = muzzleLightEntity.AddLifetimeComponent()
             muzzleLightLife.lifetime = 50.0
-            engine.GetParticles().SpawnEmitter(muzzleEntity, playerVariables.GetMuzzleFlashRay(),_emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.0, 0.0, 0.0))
 
 
             // Play quad damage audio if needed
