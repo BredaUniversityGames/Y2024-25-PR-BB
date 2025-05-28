@@ -15,6 +15,9 @@ jobs:
         platform: [ ubuntu-latest, windows-latest ]
         configuration: [ Distribution ]
 
+    container:
+      options: --user root # Give permissions to zip files in linux
+    
     runs-on: ${{ matrix.platform }}
 
     env:
