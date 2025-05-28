@@ -136,7 +136,7 @@ class SoulManager {
     construct new(engine, player){
         _soulList = [] // List of souls
         _playerEntity = player // Reference to the player entity
-        _maxLifeTimeOfSoul = 10000.0 // Maximum lifetime of a soul
+        _maxLifeTimeOfSoul = 20000.0 // Maximum lifetime of a soul
     }
 
     SpawnSoul(engine, spawnPosition,type){

@@ -32,6 +32,8 @@ class Coin {
         _pointLight.range = 0.5
         _pointLight.color = Vec3.new(0.9, 0.9, 0.08)
         _rootEntity.AttachChild(_lightEntity)
+        _transparencyComponent = _meshEntity.AddTransparencyComponent()
+        _transparencyComponent.transparency = 1.0
         
         // Coin collision
               // Physics callback with the two wren entities as parameters
@@ -136,6 +138,23 @@ class Coin {
         audioEmitter.AddEvent(eventInstance)
     }
 
+    SetTransparency(value){
+        _transparencyComponent.transparency = value // Set the transparency of the coin mesh
+    }
+
+    GetTransparency(){
+        return _transparencyComponent.transparency // Get the transparency of the coin mesh
+    }
+
+    SetLightIntensity(value){
+        _pointLight.intensity = value // Set the intensity of the coin light
+    }
+
+    GetLightIntensity(){
+        return _pointLight.intensity // Get the intensity of the coin light
+    }
+
+
     Destroy(){
         //var rb = _rootEntity.GetRigidbodyComponent()
         var transform = _rootEntity.GetTransformComponent()
@@ -166,7 +185,7 @@ class CoinManager {
     construct new(engine, player){
         _coinList = [] // List of coins
         _playerEntity = player // Reference to the player entity
-        _maxLifeTimeOfCoin = 10000.0 // Maximum lifetime of a coin
+        _maxLifeTimeOfCoin = 15000.0 // Maximum lifetime of a coin
 
 
 
@@ -228,6 +247,21 @@ class CoinManager {
                 coin.time = coin.time + dt
                 coin.collisionSoundTimer = coin.collisionSoundTimer + dt
                 var body  = coin.entity.GetRigidbodyComponent()
+
+                // fade out the coins
+                var fadeStart = _maxLifeTimeOfCoin * (2.0 / 3.0)
+                var fadeDuration = _maxLifeTimeOfCoin * (1.0 / 3.0)
+                if(coin.time > fadeStart){
+                    var t = (coin.time - fadeStart) / fadeDuration
+                    t = Math.Min(Math.Max(t, 0), 1) // Clamp between 0 and 1
+
+                    var transparency = 1.0 - t
+                    var lightIntensity = (1.0 - t) * 10.0
+
+                    coin.SetTransparency(transparency) // Set the transparency of the coin mesh
+                    coin.SetLightIntensity(lightIntensity) // Set the intensity of the coin light
+                    System.print(coin.GetLightIntensity())
+                }
 
                 if(coin.time > _maxLifeTimeOfCoin && !coin.entity.GetLifetimeComponent()){
                     coin.Destroy() // Destroy the coin if it has been around for too long
