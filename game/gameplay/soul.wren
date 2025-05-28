@@ -16,7 +16,6 @@ class Soul {
 
         _rootEntity = engine.GetECS().NewEntity()
         _rootEntity.AddNameComponent().name = "Soul"
-        _rootEntity.AddEnemyTag()
         _rootEntity.AddAudioEmitterComponent()
 
         var transform = _rootEntity.AddTransformComponent()
@@ -47,7 +46,7 @@ class Soul {
 
 
         _time = 0.0 // Time since the soul was spawned
-        
+
         // New velocity-based arc system variables
         _hasStartedFollowing = false
         _velocity = Vec3.new(0.0,0.0,0.0)
@@ -108,7 +107,7 @@ class Soul {
                
 
                 this.Destroy() // Destroy the soul after it is collected
-               
+
             }
         }else {
             var bounce = Math.Sin(_time * 0.003) * 0.0008 *dt
