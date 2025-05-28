@@ -49,6 +49,7 @@ enum class EmitterPresetID : uint8_t
     eSoulSheet,
     eSoulSheetBig,
     eMuzzle,
+    eMuzzleQuad,
     eQuadStation,
     eDualGunStation,
     eNone

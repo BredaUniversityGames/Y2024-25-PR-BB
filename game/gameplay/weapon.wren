@@ -178,7 +178,7 @@ class Pistol {
             muzzleLife.lifetime = 50.0
             var muzzleLightLife = muzzleLightEntity.AddLifetimeComponent()
             muzzleLightLife.lifetime = 50.0
-            engine.GetParticles().SpawnEmitter(muzzleEntity, EmitterPresetID.eMuzzle(),_emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.0, 0.0, 0.0))
+            engine.GetParticles().SpawnEmitter(muzzleEntity, playerVariables.GetMuzzleFlashRay(),_emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.0, 0.0, 0.0))
 
 
             // Play quad damage audio if needed

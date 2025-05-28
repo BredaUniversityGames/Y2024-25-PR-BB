@@ -1141,6 +1141,53 @@
             },
             {
                 "size": {
+                    "x": 0.30000001192092898,
+                    "y": 0.30000001192092898,
+                    "z": 0.0
+                },
+                "mass": 0.0,
+                "rotationVelocity": {
+                    "x": 0.0,
+                    "y": 0.0
+                },
+                "maxLife": 0.15000000596046449,
+                "emitDelay": 0.0,
+                "count": 1,
+                "materialIndex": 67,
+                "spawnRandomness": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "flags": 23,
+                "velocityRandomness": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "startingVelocity": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "spriteDimensions": {
+                    "x": 4,
+                    "y": 1
+                },
+                "frameCount": 4,
+                "frameRate": 0.0,
+                "color": {
+                    "x": 0.2740798890590668,
+                    "y": 0.015227834694087506,
+                    "z": 0.3081395626068115,
+                    "w": 12.0
+                },
+                "bursts": [],
+                "name": "MuzzleQuad ",
+                "imageName": "muzzle.png"
+            },
+            {
+                "size": {
                     "x": 2.0,
                     "y": 24.0,
                     "z": 0.0
