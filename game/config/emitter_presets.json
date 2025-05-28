@@ -1103,7 +1103,7 @@
                     "x": 0.0,
                     "y": 0.0
                 },
-                "maxLife": 0.15000000596046449,
+                "maxLife": 0.11999999731779099,
                 "emitDelay": 0.0,
                 "count": 1,
                 "materialIndex": 67,
@@ -1150,7 +1150,7 @@
                     "x": 0.0,
                     "y": 0.0
                 },
-                "maxLife": 0.15000000596046449,
+                "maxLife": 0.11999999731779099,
                 "emitDelay": 0.0,
                 "count": 1,
                 "materialIndex": 67,

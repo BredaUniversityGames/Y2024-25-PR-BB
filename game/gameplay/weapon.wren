@@ -30,6 +30,7 @@ class Pistol {
 
         _attackSFX = "event:/SFX/Revolver"
         _reloadSFX = "event:/SFX/ReloadPistol"
+        _inspectSFX = "event:/SFX/Inspect"
         _shotSFX = "event:/SFX/Shoot"
         _quadHit = "event:/SFX/QuadDamageHit"
         _dualGunHit = "event:/SFX/DualGunHit"
@@ -85,10 +86,10 @@ class Pistol {
             var playerController = engine.GetECS().GetEntityByName("PlayerController")
             var rb =  playerController.GetRigidbodyComponent()
             var velocity = rb.GetVelocity()
+            var audioEmitter = player.GetAudioEmitterComponent()
 
             if(_ammo < _maxAmmo) {
                 var eventInstance = engine.GetAudio().PlayEventOnce(_reloadSFX)
-                var audioEmitter = player.GetAudioEmitterComponent()
                 audioEmitter.AddEvent(eventInstance)
 
                 var gunStart = _barrelEndEntity.GetTransformComponent().GetWorldTranslation()
@@ -100,6 +101,9 @@ class Pistol {
                 lifetime.lifetime = 175.0
                 var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
                 engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eBullets(),emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.1, 7.5, 0.1) + velocity.mulScalar(1.01))
+            }else{
+                var eventInstance = engine.GetAudio().PlayEventOnce(_inspectSFX)
+                audioEmitter.AddEvent(eventInstance)
             }
 
             _reloadTimer = _reloadSpeed
