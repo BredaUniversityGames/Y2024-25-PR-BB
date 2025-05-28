@@ -93,15 +93,6 @@ class Main {
         __flickerRange = 46.0
         __flickerSpeed = 1.0
         __noiseOffset = 0.0
-
-        // Player stuff
-        __playerController = engine.GetECS().NewEntity()
-        __playerController.AddNameComponent().name = "PlayerController"
-  
-        var shape = ShapeFactory.MakeCapsuleShape(1.7, 0.5) // height, circle radius
-        var rb = Rigidbody.new(engine.GetPhysics(), shape, PhysicsObjectLayer.ePLAYER(), true)
-        __playerController.AddRigidbodyComponent(rb)
-
     }
 
     static Shutdown(engine) {
