@@ -327,9 +327,11 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
         _menuStack.top().lock()->visibility = UIElement::VisibilityState::eUpdatedAndVisible;
     }
 
-#if !DISTRBUTION
+#if !DISTRIBUTION
     if (inputDeviceManager.IsKeyPressed(KeyboardCode::eH))
+    {
         applicationModule.SetMouseHidden(!applicationModule.GetMouseHidden());
+    }
 #endif
 
     {

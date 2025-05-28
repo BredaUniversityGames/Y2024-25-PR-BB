@@ -73,12 +73,17 @@ void AudioModule::Reset()
 {
     for (auto& [_, event] : _events)
     {
+        if (event == nullptr)
+            continue;
+
         FMOD_CHECKRESULT(FMOD_Studio_EventInstance_Stop(event, FMOD_STUDIO_STOP_IMMEDIATE));
         FMOD_CHECKRESULT(FMOD_Studio_EventInstance_Release(event));
     }
 
     for (auto& [_, channel] : _channelsActive)
     {
+        if (channel == nullptr)
+            continue;
         FMOD_CHECKRESULT(FMOD_Channel_Stop(channel));
     }
 
