@@ -7,34 +7,30 @@ class Coin {
     construct new(engine, spawnPosition) {
 
         _minRange = 2.0 // Range for the coin to be picked up by the player
-        _mediumRange = 3.0
         _maxRange = 4.0 // Range for the coin to start following the player
+        _lightOffset = Vec3.new(0.0, 0.22, 0.0) // Offset for the light position
 
-        _rootEntity = engine.GetECS().NewEntity()
+        _rootEntity = engine.LoadModel("assets/models/nug.glb", false)
         _rootEntity.AddNameComponent().name = "Coin"
         _rootEntity.AddAudioEmitterComponent()
 
-        var transform = _rootEntity.AddTransformComponent()
+        var transform = _rootEntity.GetTransformComponent()
         transform.translation = spawnPosition
         transform.scale = Vec3.new(0.95, 0.95, 0.95)
 
-
-        // Coin mesh
-        _meshEntity = engine.LoadModel("assets/models/nug.glb", false)
-        _rootEntity.AttachChild(_meshEntity)
-
+        // Coin light
         _lightEntity = engine.GetECS().NewEntity()
-        _lightEntity.AddNameComponent().name = "Coin Light"
+        _lightEntity.AddNameComponent().name = "CoinLight"
+
         var lightTransform = _lightEntity.AddTransformComponent()
-        lightTransform.translation = Vec3.new(0.001, 0.22, 0.001)
+
         _pointLight = _lightEntity.AddPointLightComponent()
-        _pointLight.intensity = 10
+        _pointLight.intensity = 10.0
         _pointLight.range = 0.5
         _pointLight.color = Vec3.new(0.9, 0.9, 0.08)
-        _rootEntity.AttachChild(_lightEntity)
         
         // Coin collision
-              // Physics callback with the two wren entities as parameters
+        // Physics callback with the two wren entities as parameters
         var onEnterCoinSound = Fn.new { |self, other|
 
             if (other.GetRigidbodyComponent().GetLayer() == PhysicsObjectLayer.eSTATIC()) {
@@ -48,8 +44,9 @@ class Coin {
 
         var colliderShape = ShapeFactory.MakeBoxShape(Vec3.new(0.45,0.45,0.45))
         var rb = Rigidbody.new(engine.GetPhysics(), colliderShape, PhysicsObjectLayer.eCOINS(), true)
-        var body = _rootEntity.AddRigidbodyComponent(rb).OnCollisionEnter(onEnterCoinSound)
+        var body = _rootEntity.AddRigidbodyComponent(rb)
 
+        body.OnCollisionEnter(onEnterCoinSound)
         body.SetGravityFactor(2.5)
         body.SetFriction(9.0)
 
@@ -67,10 +64,6 @@ class Coin {
 
         body.SetAngularVelocity(Random.RandomVec3Range(-50.0, 50.0))
 
-
-
-
-
         _time = 0.0 // Time since the coin was spawned
         _collisionSoundTimer = 0.0 // Timer for the collision sound
         
@@ -86,10 +79,14 @@ class Coin {
     }
 
     CheckRange(engine, playerPos, playerVariables, flashSystem, dt){
-        var coinTransform = _rootEntity.GetTransformComponent()
-        var coinPos = coinTransform.translation
-        var distance = Math.Distance(coinPos, playerPos)
 
+        var coinTransform = _rootEntity.GetTransformComponent()
+        var coinRigidbody = _rootEntity.GetRigidbodyComponent()
+
+        var coinPos = coinRigidbody.GetPosition()
+        _lightEntity.GetTransformComponent().translation = coinPos + _lightOffset // Update light position
+
+        var distance = Math.Distance(coinPos, playerPos)
 
         if(distance < _maxRange){
             _velocity = (playerPos - coinPos).normalize()
@@ -101,13 +98,13 @@ class Coin {
             var progress = 1.0 - (distance / _maxRange)
             var easing = progress * progress // ease-out
 
-            coinTransform.translation = coinTransform.translation + _velocity.mulScalar(dt * _coinSpeed* easing)// Move the coin towards the player
+            coinRigidbody.SetVelocity(_velocity.mulScalar(dt * _coinSpeed* easing)) // Move the coin towards the player
 
             if(distance <= _minRange){
+
                 playerVariables.IncreaseScore(100) // Increase player health
 
-
-                 // Play audio
+                // Play audio
                 var player = engine.GetECS().GetEntityByName("Camera")
                 var eventInstance = engine.GetAudio().PlayEventOnce(_collectSoundEvent)
                 engine.GetAudio().SetEventVolume(eventInstance, 1.0)
@@ -115,7 +112,7 @@ class Coin {
                 audioEmitter.AddEvent(eventInstance)
 
                 // Play flash effect
-                flashSystem.Flash(Vec3.new(0.89, 0.77, 0.06),0.1)
+                flashSystem.Flash(Vec3.new(0.89, 0.77, 0.06), 0.1)
 
                 this.Destroy() // Destroy the coin after it is collected
                
@@ -132,16 +129,17 @@ class Coin {
     }
 
     Destroy(){
-        //var rb = _rootEntity.GetRigidbodyComponent()
-        var transform = _rootEntity.GetTransformComponent()
-        //rb.SetTranslation(Vec3.new(0.0, -1000.0, 0.0)) // Move the coin out of the way
-        transform.translation = Vec3.new(0.0, -1000.0, 0.0) // Move the coin out of the way
+        
+        var rb = _rootEntity.GetRigidbodyComponent()
+        rb.SetTranslation(Vec3.new(0.0, -1000.0, 0.0)) // Move the coin out of the way
+        
         // Add a lifetime component to the coin entity so it will get destroyed eventually
+        
         var lifetime = _rootEntity.AddLifetimeComponent()
-        lifetime.lifetime = 50.0
-        var lifeTimeLight = _lightEntity.AddLifetimeComponent()
-        lifeTimeLight.lifetime = 50.0
+        lifetime.lifetime = 0.0
 
+        var lifeTimeLight = _lightEntity.AddLifetimeComponent()
+        lifeTimeLight.lifetime = 0.0
     }
 
     entity {
