@@ -17,7 +17,6 @@ class Station {
 
         _rootEntity = engine.GetECS().NewEntity()
         _rootEntity.AddNameComponent().name = "Station"
-        _rootEntity.AddEnemyTag()
         _rootEntity.AddAudioEmitterComponent()
 
         var transform = _rootEntity.AddTransformComponent()

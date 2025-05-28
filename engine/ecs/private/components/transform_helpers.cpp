@@ -149,6 +149,38 @@ void TransformHelpers::SetWorldTransform(entt::registry& reg, entt::entity entit
     // Update the world matrix of the entity
     UpdateWorldMatrix(reg, entity);
 }
+
+void TransformHelpers::SetWorldRotation(entt::registry& reg, entt::entity entity, const glm::quat& rotation)
+{
+    assert(reg.valid(entity));
+    TransformComponent* transform = reg.try_get<TransformComponent>(entity);
+    RelationshipComponent* relationship = reg.try_get<RelationshipComponent>(entity);
+
+    if (!transform)
+    {
+        return;
+    }
+
+    if (relationship && relationship->parent != entt::null)
+    {
+        WorldMatrixComponent* parentWorldMatrix = reg.try_get<WorldMatrixComponent>(relationship->parent);
+
+        glm::vec3 parentScale {}, skew {}, parentTranslation {};
+        glm::quat parentOrientation {};
+        glm::vec4 perspective {};
+
+        glm::decompose(parentWorldMatrix->_worldMatrix, parentScale, parentOrientation, parentTranslation, skew, perspective);
+
+        transform->_localRotation = glm::inverse(parentOrientation) * rotation;
+    }
+    else
+    {
+        transform->_localRotation = rotation;
+    }
+
+    UpdateWorldMatrix(reg, entity);
+}
+
 glm::vec3 TransformHelpers::GetLocalPosition(const entt::registry& reg, entt::entity entity)
 {
     assert(reg.valid(entity));

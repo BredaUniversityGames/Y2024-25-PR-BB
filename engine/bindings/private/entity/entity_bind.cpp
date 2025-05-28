@@ -58,6 +58,11 @@ void TransformHelpersSetWorldTransform(WrenComponent<TransformComponent>& compon
     TransformHelpers::SetWorldTransform(*component.entity.registry, component.entity.entity, translation, rotation, scale);
 }
 
+void TransformHelpersSetWorldRotation(WrenComponent<TransformComponent>& component, glm::quat rotation)
+{
+    TransformHelpers::SetWorldRotation(*component.entity.registry, component.entity.entity, rotation);
+}
+
 void TransformComponentSetTranslation(WrenComponent<TransformComponent>& component, const glm::vec3& translation)
 {
     TransformHelpers::SetLocalPosition(*component.entity.registry, component.entity.entity, translation);
@@ -425,6 +430,7 @@ void BindEntityAPI(wren::ForeignModule& module)
         transformClass.funcExt<bindings::TransformHelpersGetWorldScale>("GetWorldScale");
 
         transformClass.funcExt<bindings::TransformHelpersSetWorldTransform>("SetWorldTransform");
+        transformClass.funcExt<bindings::TransformHelpersSetWorldRotation>("SetWorldRotation");
 
         auto& cameraClass = module.klass<WrenComponent<CameraComponent>>("CameraComponent");
         cameraClass.propExt<bindings::CameraGetFOV, bindings::CameraSetFOV>("fov");

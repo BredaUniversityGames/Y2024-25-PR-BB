@@ -103,6 +103,26 @@ class Main {
         __player.AddNameComponent().name = "Player"
 
         // Gun Setup
+        __gunParentPivot = engine.GetECS().NewEntity()
+        __gunParentPivot.AddNameComponent().name = "GunParentPivot"
+        __gunParentPivot.AddTransformComponent().translation = Vec3.new(3.0, 0.0 , 0.0)
+
+        __gunParentPivot2 = engine.GetECS().NewEntity()
+        __gunParentPivot2.AddNameComponent().name = "GunParentPivot2"
+        __gunParentPivot2.AddTransformComponent().translation = Vec3.new(3.0, 0.0 , 0.0)
+
+        __gunPivot = engine.GetECS().NewEntity()
+        __gunPivot.AddNameComponent().name = "GunPivot"
+
+        __gunPivot2 = engine.GetECS().NewEntity()
+        __gunPivot2.AddNameComponent().name = "GunPivot2"
+
+        var gunPivotTransform = __gunPivot.AddTransformComponent()
+        gunPivotTransform.translation = Vec3.new(-3.0, 0.0 , 0.0)
+
+        var gunPivotTransform2 = __gunPivot2.AddTransformComponent()
+        gunPivotTransform2.translation = Vec3.new(-3.0, 0.0 , 0.0)
+
         __gun = engine.LoadModel("assets/models/Revolver.glb",false)
         __gun.RenderInForeground()
 
@@ -123,8 +143,13 @@ class Main {
         gunTransform2.scale = Vec3.new(0,0,0) // scale to 0 to hide
 
         __player.AttachChild(__camera)
-        __camera.AttachChild(__gun)
-        __camera.AttachChild(__gun2)
+        __camera.AttachChild(__gunParentPivot)
+        __gunParentPivot.AttachChild(__gunPivot)
+        __gunPivot.AttachChild(__gun)
+
+        __camera.AttachChild(__gunParentPivot2)
+        __gunParentPivot2.AttachChild(__gunPivot2)
+        __gunPivot2.AttachChild(__gun2)
 
         __armory = [Pistol.new(engine, "Gun",Vec3.new(-2.5,-0.35,-0.85)), Shotgun.new(engine), Pistol.new(engine, "Gun2",Vec3.new(-2.5,-0.35,-0.85))]
 
@@ -317,24 +342,23 @@ class Main {
             __playerVariables.consecutiveHits = 0
         }
 
+        __playerMovement.Update(engine, dt, __playerController, __camera,__playerVariables.hud)
 
-        if(engine.GetInput().DebugGetKey(Keycode.eN())){
-           cheats.noClip = !cheats.noClip
+        for (weapon in __armory) {
+            weapon.cooldown = Math.Max(weapon.cooldown - dt, 0)
+
+            weapon.reloadTimer = Math.Max(weapon.reloadTimer - dt, 0)
+            if (weapon != __activeWeapon && __playerVariables.GetCurrentPowerUp() != PowerUpType.DOUBLE_GUNS) {
+                if (weapon.reloadTimer <= 0) {
+                    weapon.ammo = weapon.maxAmmo
+                }
+            }
         }
 
         if (engine.GetInput().DebugIsInputEnabled()) {
 
-            __playerMovement.Update(engine, dt, __playerController, __camera,__playerVariables.hud)
-
-            for (weapon in __armory) {
-                weapon.cooldown = Math.Max(weapon.cooldown - dt, 0)
-
-                weapon.reloadTimer = Math.Max(weapon.reloadTimer - dt, 0)
-                // if (weapon != __activeWeapon) {
-                //     if (weapon.reloadTimer <= 0) {
-                //         weapon.ammo = weapon.maxAmmo
-                //     }
-                // }
+            if(engine.GetInput().DebugGetKey(Keycode.eN())){
+               cheats.noClip = !cheats.noClip
             }
 
             // // engine.GetInput().GetDigitalAction("Ultimate").IsPressed()
@@ -372,37 +396,47 @@ class Main {
                 __activeWeapon.unequip(engine)
                 __nextWeapon = __armory[Weapons.shotgun]
             }
+        }
 
-            if(__activeWeapon.isUnequiping(engine) == false && __nextWeapon != null){
+        if(__activeWeapon.isUnequiping(engine) == false && __nextWeapon != null){
+            __activeWeapon = __nextWeapon
+            __nextWeapon = null
+            __activeWeapon.equip(engine)
+        }
 
-                __activeWeapon = __nextWeapon
-                __nextWeapon = null
-                __activeWeapon.equip(engine)
+        if (engine.GetInput().GetDigitalAction("Reload").IsHeld() && __activeWeapon.isUnequiping(engine) == false) {
+            __activeWeapon.reload(engine)
 
+            if (__playerVariables.GetCurrentPowerUp() == PowerUpType.DOUBLE_GUNS){
+                __secondaryWeapon.reload(engine)
+            }
+        }
+
+        if (engine.GetInput().GetDigitalAction("Shoot").IsHeld()  && __activeWeapon.isUnequiping(engine) == false ) {
+            __activeWeapon.attack(engine, dt, __playerVariables, __enemyList, __coinManager)
+            if (__activeWeapon.ammo <= 0) {
+                __activeWeapon.reload(engine)
             }
 
-            if (engine.GetInput().GetDigitalAction("Reload").IsHeld() && __activeWeapon.isUnequiping(engine) == false) {
-                __activeWeapon.reload(engine)
-                if (__playerVariables.GetCurrentPowerUp() == PowerUpType.DOUBLE_GUNS){
+            if(__secondaryWeapon.ammo <= 0 && __playerVariables.GetCurrentPowerUp() == PowerUpType.DOUBLE_GUNS){
+                __secondaryWeapon.reload(engine)
+            }
+        }
+
+        if (engine.GetInput().GetDigitalAction("ShootSecondary").IsHeld()  && __activeWeapon.isUnequiping(engine) == false ) {
+
+            if (__playerVariables.GetCurrentPowerUp() == PowerUpType.DOUBLE_GUNS){
+                __secondaryWeapon.attack(engine, dt, __playerVariables, __enemyList, __coinManager)
+                if (__secondaryWeapon.ammo <= 0) {
                     __secondaryWeapon.reload(engine)
                 }
             }
+        }
 
-            if (engine.GetInput().GetDigitalAction("Shoot").IsHeld()  && __activeWeapon.isUnequiping(engine) == false ) {
-                __activeWeapon.attack(engine, dt, __playerVariables, __enemyList, __coinManager)
-                if (__activeWeapon.ammo <= 0) {
-                    __activeWeapon.reload(engine)
-                }
-            }
-
-            if (engine.GetInput().GetDigitalAction("ShootSecondary").IsHeld()  && __activeWeapon.isUnequiping(engine) == false ) {
-
-                if (__playerVariables.GetCurrentPowerUp() == PowerUpType.DOUBLE_GUNS){
-                    __secondaryWeapon.attack(engine, dt, __playerVariables, __enemyList, __coinManager)
-                    if (__secondaryWeapon.ammo <= 0) {
-                        __secondaryWeapon.reload(engine)
-                    }
-                }
+        if (engine.GetGame().GetSettings().aimAssist) {
+            __activeWeapon.rotateToTarget(engine)
+            if (__playerVariables.GetCurrentPowerUp() == PowerUpType.DOUBLE_GUNS){
+                __secondaryWeapon.rotateToTarget(engine)
             }
 
         }
@@ -436,7 +470,7 @@ class Main {
 
         __soulManager.Update(engine, __playerVariables,__flashSystem, dt)
         __coinManager.Update(engine, __playerVariables,__flashSystem, dt)
-        __waveSystem.Update(engine, __player, __enemyList, dt,__playerVariables)
+        //__waveSystem.Update(engine, __player, __enemyList, dt,__playerVariables)
 
         __stationManager.Update(engine, __playerVariables, dt)
         __flashSystem.Update(engine, dt)

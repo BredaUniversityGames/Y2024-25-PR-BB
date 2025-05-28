@@ -1,4 +1,4 @@
-import "engine_api.wren" for Engine, ECS, Entity, Vec3, Vec2, Math, AnimationControlComponent, TransformComponent, Input, SpawnEmitterFlagBits, EmitterPresetID, PhysicsObjectLayer
+import "engine_api.wren" for Engine, Game, ECS, Entity, Vec3, Vec2, Math, AnimationControlComponent, TransformComponent, Input, SpawnEmitterFlagBits, EmitterPresetID, PhysicsObjectLayer
 import "camera.wren" for CameraVariables
 import "player.wren" for PlayerVariables, HitmarkerState
 import "station.wren" for PowerUpType, Station, StationManager
@@ -17,13 +17,14 @@ class Pistol {
         _headShotMultiplier = 2.0
         _range = 64
         _rangeVector = Vec3.new(_range, _range, _range)
-        _attackSpeed = 0.4 * 1000    
+        _attackSpeed = 0.4 * 1000
         _manualTimer = 0
         _maxAmmo = 6
         _ammo = _maxAmmo
         _cooldown = 0
         _reloadTimer = 0
         _reloadSpeed = 0.8 * 1000
+        _aimAssistMinAngle = 0.98
 
         _cameraShakeIntensity = 0.3
 
@@ -105,6 +106,8 @@ class Pistol {
 
             _reloadTimer = _reloadSpeed
             _ammo = _maxAmmo
+
+            System.print("Reloaded %(_entityName) ")
         }
     }
 
@@ -122,11 +125,10 @@ class Pistol {
         var gunAnimations = gun.GetAnimationControlComponent()
         if(gunAnimations.AnimationFinished() || gunAnimations.CurrentAnimationName() == _walkAnim){
             gunAnimations.Play(_idleAnim, 1.0, false, 0.2, false)
-        } 
+        }
     }
 
     attack(engine, deltaTime, playerVariables, enemies, coinManager) {
-        
         _manualTimer = Math.Max(_manualTimer-deltaTime,0)
         
         if (_entityName == "Gun") {
@@ -141,21 +143,23 @@ class Pistol {
         }
 
 
+
+        System.print("%(_entityName) Ammo : %(_ammo)")
         if ((_cooldown <= 0 ||_manualTimer >=50) && _ammo > 0 && _reloadTimer <= 0) {
             _ammo = _ammo - 1
 
             // Shake the camera
-            playerVariables.cameraVariables.shakeIntensity = _cameraShakeIntensity            
+            playerVariables.cameraVariables.shakeIntensity = _cameraShakeIntensity
             playerVariables.cameraVariables.AddRecoil(3)
-    
+
             var player = engine.GetECS().GetEntityByName("Camera")
             var gun = engine.GetECS().GetEntityByName(_entityName)
-            
-            
+
+
             // Play shooting audio
             var eventInstance = engine.GetAudio().PlayEventOnce(_shotSFX)
             var audioEmitter = player.GetAudioEmitterComponent()
-            
+
             // Play quad damage audio if needed
             if(playerVariables.GetCurrentPowerUp() == PowerUpType.QUAD_DAMAGE){
                 var quadEventInstance = engine.GetAudio().PlayEventOnce(_quadHit)
@@ -185,7 +189,31 @@ class Pistol {
 
             var direction = (end - start).normalize()
             var rayHitInfo = engine.GetPhysics().ShootRay(start, direction, _range)
-     
+
+            // Check first if aim assist is needed, if the cursor is already on an enemy, just shoot so it is possible to aim for the head
+            var aimAssistNeeded = true
+            if (engine.GetGame().GetSettings().aimAssist) {
+
+                if (!rayHitInfo.isEmpty) {
+                    var normal = Vec3.new(0, 1, 0)
+
+                    for (rayHit in rayHitInfo) {
+                        var hitEntity = rayHit.GetEntity(engine.GetECS())
+
+                        if (!hitEntity.HasPlayerTag()) {
+                            aimAssistNeeded = !hitEntity.HasEnemyTag()
+                            break
+                        }
+                    }
+                }
+
+                if (aimAssistNeeded) {
+                    direction = engine.GetGame().GetAimAssistDirection(engine.GetECS(), engine.GetPhysics(), translation, forward, _range, _aimAssistMinAngle)
+                    end = translation + direction * _rangeVector
+                    rayHitInfo = engine.GetPhysics().ShootRay(start, direction, _range)
+                }
+            }
+
             if (!rayHitInfo.isEmpty) {
                 var normal = Vec3.new(0, 1, 0)
                 for (rayHit in rayHitInfo) {
@@ -196,10 +224,10 @@ class Pistol {
                         if (hitEntity.HasEnemyTag()) {
                             for (enemy in enemies) {
                                 if (enemy.entity == hitEntity) {
-                                    
+
                                     var multiplier = 1.0
 
-                                    if (enemy.IsHeadshot(rayHit.position.y)) {
+                                    if (enemy.IsHeadshot(rayHit.position.y) && !aimAssistNeeded) {
                                         multiplier = _headShotMultiplier
                                         // Critical hitmarker
                                         playerVariables.hitmarkTimer = 200 //ms
@@ -259,21 +287,57 @@ class Pistol {
         }
     }
 
+    rotateToTarget (engine) {
+        var gun = engine.GetECS().GetEntityByName("GunParentPivot")
+
+        if (_entityName == "Gun2") {
+            gun = engine.GetECS().GetEntityByName("GunParentPivot2")
+        }
+
+        var gunTransform = gun.GetTransformComponent()
+
+        var player = engine.GetECS().GetEntityByName("Camera")
+        var playerTransform = player.GetTransformComponent()
+
+        var position = playerTransform.GetWorldTranslation()
+        var rotation = playerTransform.GetWorldRotation()
+        var forward = Math.ToVector(rotation)
+        var gunUp = rotation.mulVec3(Vec3.new(0, 1, 0))
+
+        var direction = engine.GetGame().GetAimAssistDirection(engine.GetECS(), engine.GetPhysics(), position, forward, _range, _aimAssistMinAngle)
+
+        var rotationStepSpeed = 0.00025 * engine.GetTime().GetDeltatime()
+
+        if (direction != forward) {
+            var targetRotation = Math.LookAt(-direction, gunUp)
+            var stepRotation = Math.RotateTowards(gunTransform.GetWorldRotation(), targetRotation, rotationStepSpeed)
+            gunTransform.SetWorldRotation(stepRotation)
+        } else {
+            var targetRotation = Math.ToQuat(Vec3.new(0.0, 0.0, 0.0))
+            var stepRotation = Math.RotateTowards(gunTransform.rotation, targetRotation, rotationStepSpeed)
+            gunTransform.rotation = stepRotation
+        }
+    }
+
     equip (engine) {
         engine.GetECS().DestroyEntity(engine.GetECS().GetEntityByName(_entityName))
         if(_barrelEndEntity.IsValid()){
             engine.GetECS().DestroyEntity(_barrelEndEntity)
         }
 
-        var camera = engine.GetECS().GetEntityByName("Camera")
+        var gunPivot = engine.GetECS().GetEntityByName("GunPivot")
+
+        if (_entityName == "Gun2") {
+            gunPivot = engine.GetECS().GetEntityByName("GunPivot2")
+        }
 
         var newGun = engine.LoadModel("assets/models/Revolver.glb",false)
         newGun.GetNameComponent().name = _entityName
         var gunTransform = newGun.GetTransformComponent()
         gunTransform.rotation = Math.ToQuat(Vec3.new(0.0, -Math.PI()/2, 0.0))
 
-        camera.AttachChild(newGun)
-        var gunAnimations =newGun .GetAnimationControlComponent()
+        gunPivot.AttachChild(newGun)
+        var gunAnimations = newGun.GetAnimationControlComponent()
         gunAnimations.Play(_equipAnim, 1.2, false, 0.2, false)
 
         newGun.RenderInForeground()
@@ -326,6 +390,7 @@ class Shotgun {
         _reloadSpeed = 600
         _spread = [Vec2.new(0, 0), Vec2.new(-1, 1), Vec2.new(0, 1), Vec2.new(1, 1), Vec2.new(0, 2), Vec2.new(-1, -1), Vec2.new(0, -1), Vec2.new(1, -1), Vec2.new(0, -2)]
         _cameraShakeIntensity = 0.5
+        _aimAssistMinAngle = 0.98
 
         _attackSFX = "event:/SFX/Shotgun"
         _reloadSFX = "event:/SFX/ShotgunReload"
@@ -335,9 +400,9 @@ class Shotgun {
         _idleAnim = "idle"
         _attackAnim = "shoot"
         _reloadAnim = "reload"
-        _equipAnim = "equip" 
+        _equipAnim = "equip"
         _unequipAnim = "unequip"
-        _entityName = "Gun" 
+        _entityName = "Gun"
         _mesh = ""
     }
 
@@ -360,8 +425,8 @@ class Shotgun {
     attack(engine, deltaTime, playerVariables, enemies, coinManager) {
         if (_cooldown <= 0 && _ammo > 0 && _reloadTimer <= 0) {
             _ammo = _ammo - 1
- 
-            playerVariables.cameraVariables.shakeIntensity = _cameraShakeIntensity            
+
+            playerVariables.cameraVariables.shakeIntensity = _cameraShakeIntensity
             var player = engine.GetECS().GetEntityByName("Camera")
             var gun = engine.GetECS().GetEntityByName(_entityName)
 
@@ -381,8 +446,34 @@ class Shotgun {
             var end = translation + forward * _rangeVector
             var direction = (end - start).normalize()
 
+            // Check first if aim assist is needed, if the cursor is already on an enemy, just shoot so it is possible to aim for the head
+            var rayHitInfo = engine.GetPhysics().ShootRay(start, direction, _range)
+
+            var aimAssistNeeded = true
+            if (engine.GetGame().GetSettings().aimAssist) {
+
+                if (!rayHitInfo.isEmpty) {
+                    var normal = Vec3.new(0, 1, 0)
+
+                    for (rayHit in rayHitInfo) {
+                        var hitEntity = rayHit.GetEntity(engine.GetECS())
+
+                        if (!hitEntity.HasPlayerTag()) {
+                            aimAssistNeeded = !hitEntity.HasEnemyTag()
+                            break
+                        }
+                    }
+                }
+
+                if (aimAssistNeeded) {
+                    direction = engine.GetGame().GetAimAssistDirection(engine.GetECS(), engine.GetPhysics(), translation, forward, _range, _aimAssistMinAngle)
+                    end = translation + direction * _rangeVector
+                    rayHitInfo = engine.GetPhysics().ShootRay(start, direction, _range)
+                }
+            }
+
             var hitAnEnemy = false
-          
+
             var i = 0
             while (i < _raysPerShot) {
                 var newDirection = Math.RotateForwardVector(direction, Vec2.new(_spread[i].x * 1, _spread[i].y * 1), up)
@@ -398,10 +489,10 @@ class Shotgun {
                                 for (enemy in enemies) {
                                     if (enemy.entity == hitEntity) {
                                         hitAnEnemy = true
-                                        
-                                        playerVariables.hitmarkTimer = 200 //ms      
+
+                                        playerVariables.hitmarkTimer = 200 //ms
                                         enemy.DecreaseHealth(_damage,engine,coinManager)
-                                        
+
                                         playerVariables.multiplierTimer = playerVariables.multiplierMaxTime
                                         playerVariables.IncreaseHealth(0.1 * _damage)
                                         if (enemy.health <= 0) {
@@ -441,6 +532,33 @@ class Shotgun {
             var gunAnimations = gun.GetAnimationControlComponent()
             gunAnimations.Play(_attackAnim, 1.1, false, 0.0, false)
             _cooldown = _attackSpeed
+        }
+    }
+
+    rotateToTarget (engine) {
+        var gun = engine.GetECS().GetEntityByName("GunParentPivot")
+        var gunTransform = gun.GetTransformComponent()
+
+        var player = engine.GetECS().GetEntityByName("Camera")
+        var playerTransform = player.GetTransformComponent()
+
+        var position = playerTransform.GetWorldTranslation()
+        var rotation = playerTransform.GetWorldRotation()
+        var forward = Math.ToVector(rotation)
+        var gunUp = rotation.mulVec3(Vec3.new(0, 1, 0))
+
+        var direction = engine.GetGame().GetAimAssistDirection(engine.GetECS(), engine.GetPhysics(), position, forward, _range, _aimAssistMinAngle)
+
+        var rotationStepSpeed = 0.00025 * engine.GetTime().GetDeltatime()
+
+        if (direction != forward) {
+            var targetRotation = Math.LookAt(-direction, gunUp)
+            var stepRotation = Math.RotateTowards(gunTransform.GetWorldRotation(), targetRotation, rotationStepSpeed)
+            gunTransform.SetWorldRotation(stepRotation)
+        } else {
+            var targetRotation = Math.ToQuat(Vec3.new(0.0, 0.0, 0.0))
+            var stepRotation = Math.RotateTowards(gunTransform.rotation, targetRotation, rotationStepSpeed)
+            gunTransform.rotation = stepRotation
         }
     }
 
