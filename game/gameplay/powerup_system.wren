@@ -4,8 +4,9 @@ import "gameplay/station.wren" for PowerUpType, Station, StationManager
 import "gameplay/flash_system.wren" for FlashSystem
 
 class PowerUpSystem {
-    construct new() {
+    construct new(engine) {
         _quadDamageColor = Vec3.new(0.67, 0.06, 0.89)
+        _dualGunColor = Vec3.new(0.66, 0.47, 0.0)
 
         _intensityTarget = 0.0
         _colorTarget = Vec3.new(0.0, 0.0, 0.0)
@@ -15,6 +16,8 @@ class PowerUpSystem {
 
         _timerTextOpacity = 0.0
         _timerTextColor = Vec3.new(1.0, 1.0, 1.0)
+
+        _secondGunTransformComponent = engine.GetECS().GetEntityByName("Gun2").GetTransformComponent()
 
 
     }
@@ -68,14 +71,24 @@ class PowerUpSystem {
 
             // reset stats
             playerVariables.SetDamageMultiplier(1.0)
+
+            _secondGunTransformComponent.scale = Vec3.new(0,0,0)
         }
 
         if(playerPowerUp == PowerUpType.QUAD_DAMAGE){
-            _intensityTarget = 0.3
+            _intensityTarget = 0.2
             _colorTarget = _quadDamageColor
 
             playerVariables.SetDamageMultiplier(4.0)
             playerVariables.SetGunSmokeRay(EmitterPresetID.eRayQuadDamage())
+        }
+        
+        
+        if (playerPowerUp == PowerUpType.DOUBLE_GUNS) {
+            _secondGunTransformComponent.scale = Vec3.new(1,1,-1)
+            _intensityTarget = 0.2
+            _colorTarget = _dualGunColor
+            playerVariables.SetGunSmokeRay(EmitterPresetID.eRayDualGun())
         }
     }
 }

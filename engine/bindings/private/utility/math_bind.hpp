@@ -181,6 +181,27 @@ public:
 
         return std::atan2(sin, cos);
     }
+
+    static glm::quat RotateTowards(const glm::quat& from, const glm::quat& to, float maxAngle)
+    {
+        float cosTheta = glm::dot(from, to);
+
+        if (cosTheta > 0.99999f)
+        {
+            return to;
+        }
+
+        cosTheta = glm::clamp(cosTheta, -1.0f, 1.0f);
+        float angle = glm::acos(cosTheta);
+
+        if (angle < maxAngle)
+        {
+            return to;
+        }
+
+        float t = maxAngle / angle;
+        return glm::slerp(from, to, t);
+    }
 };
 
 template <typename T>
@@ -273,6 +294,7 @@ inline void BindMath(wren::ForeignModule& module)
         mathUtilClass.funcStatic<&MathUtil::Distance>("Distance");
         mathUtilClass.funcStatic<&MathUtil::AngleAxis2D>("AngleAxis2D");
         mathUtilClass.funcStatic<&MathUtil::Floor>("Floor");
+        mathUtilClass.funcStatic<&MathUtil::RotateTowards>("RotateTowards");
     }
 }
 

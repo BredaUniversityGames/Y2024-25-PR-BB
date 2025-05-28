@@ -17,7 +17,6 @@ class Station {
 
         _rootEntity = engine.GetECS().NewEntity()
         _rootEntity.AddNameComponent().name = "Station"
-        _rootEntity.AddEnemyTag()
         _rootEntity.AddAudioEmitterComponent()
 
         var transform = _rootEntity.AddTransformComponent()
@@ -51,6 +50,10 @@ class Station {
                 engine.GetGame().GetHUD().SetPowerUpText("QUAD DAMAGE RELIC [COST: 2000]")
             }
 
+            if(_powerUpType == PowerUpType.DOUBLE_GUNS){
+                engine.GetGame().GetHUD().SetPowerUpText("DUAL GUN RELIC [COST: 2000]")
+            }
+
             _textOpacity = _textOpacity + dt * 0.005
             _textOpacity = Math.Clamp(_textOpacity, 0.0, 1.0)
             _textColor = Math.MixVec3(_textColor, Vec3.new(1.0, 1.0, 1.0), 0.01)
@@ -65,6 +68,10 @@ class Station {
 
                     if(_powerUpType == PowerUpType.QUAD_DAMAGE){
                         _stationManagerReference.PlayQuadHumSound(engine)
+                    }
+
+                    if(_powerUpType == PowerUpType.DOUBLE_GUNS){
+                        _stationManagerReference.PlayDualGunHumSound(engine) 
                     }
 
                     playerVariables.SetCurrentPowerUp(_powerUpType)
@@ -175,6 +182,31 @@ class StationManager {
 
         //
 
+        // Load here the power up meshes and effects
+        // Dual Gun damage
+        _dualGunMeshEntity = engine.LoadModel("assets/models/dual_gun.glb", false)
+        _dualGunTransparency = _dualGunMeshEntity.AddTransparencyComponent()
+        _dualGunTransparency.transparency = 0.0 // Set the default transparency to 0.0
+        _dualGunLightEntity = engine.GetECS().NewEntity()
+        _dualGunLightEntity.AddNameComponent().name = "Dual Gun Light"
+        var lightTransformDualGun = _dualGunLightEntity.AddTransformComponent()
+        lightTransformDualGun.translation = Vec3.new(0.0, -0.32, 0.0)
+        _pointLightDualGun = _dualGunLightEntity.AddPointLightComponent()
+        _pointLightDualGun.intensity = 40
+        _pointLightDualGun.range = 5.5
+        _pointLightDualGun.color = Vec3.new(0.86, 0.67, 0.0)
+        _dualGunMeshEntity.AttachChild(_dualGunLightEntity)
+        _dualGunHumEvent = "event:/SFX/DualGunHum"
+
+        // dual gun emitter
+        _dualGunEmitter = engine.GetECS().NewEntity()
+        _dualGunEmitter.AddNameComponent().name = "Dual Gun Emitter"
+        var transformDualGunEmitter = _dualGunEmitter.AddTransformComponent()
+        transformDualGunEmitter.translation = Vec3.new(0.0, -200.0, 0.0)
+        engine.GetParticles().SpawnEmitter(_dualGunEmitter, EmitterPresetID.eDualGunStation(),emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.0, 0.0, 0.0))
+        
+        //
+
 
 
         // Load the stations
@@ -205,14 +237,21 @@ class StationManager {
         audioEmitter.AddEvent(quadEventInstance)
     }
 
+    PlayDualGunHumSound(engine){
+        var player = engine.GetECS().GetEntityByName("Camera")
+        var audioEmitter = player.GetAudioEmitterComponent()
+        var dualGunEventInstance = engine.GetAudio().PlayEventOnce(_dualGunHumEvent)
+        engine.GetAudio().SetEventVolume(dualGunEventInstance, 2.4)
+        audioEmitter.AddEvent(dualGunEventInstance)
+    }
+
     Update(engine, playerVariables, dt){
         var playerTransform = _playerEntity.GetTransformComponent()
         var playerPos = playerTransform.translation
         playerPos.y = playerPos.y - 1.0
 
         var currentPowerUpColor =  engine.GetGame().GetHUD().GetPowerUpTextColor()
-
-        //System.print("Current color:%(currentPowerUpColor.x),%(currentPowerUpColor.y),%(currentPowerUpColor.z),%(currentPowerUpColor.w)")
+   
         var newOpacity = currentPowerUpColor.w - dt * 0.005
         newOpacity = Math.Clamp(newOpacity, 0.0, 1.0)
 
@@ -238,13 +277,26 @@ class StationManager {
             _stationList[randomIndex].SetStatus(true)
 
             // to be randomized when we add more power ups
-            _stationList[randomIndex].SetPowerUpType(PowerUpType.QUAD_DAMAGE) // Set the power up type to quad damage
+
+            var randomPowerUp = Random.RandomIndex(1, 3)
+            
+            _stationList[randomIndex].SetPowerUpType(randomPowerUp) // Set the power up type to quad damage
             _stationList[randomIndex].time = 0.0 // Reset the time for the station
             _quadDamageTransparency.transparency = 0.0 // Reset the transparency to 0.0
+            _dualGunTransparency.transparency = 0.0 // Reset the transparency to 0.0
 
             var meshOffset = Vec3.new(0.0, 2.1, 0.0)
-            _quadDamageMeshEntity.GetTransformComponent().translation =  _stationList[randomIndex].entity.GetTransformComponent().translation + meshOffset
-            _quadDamageEmitter.GetTransformComponent().translation =  _stationList[randomIndex].entity.GetTransformComponent().translation + meshOffset + Vec3.new(0.0, 4.5, 0.0)
+
+            if(randomPowerUp == PowerUpType.QUAD_DAMAGE){
+                _quadDamageMeshEntity.GetTransformComponent().translation =  _stationList[randomIndex].entity.GetTransformComponent().translation + meshOffset
+                _quadDamageEmitter.GetTransformComponent().translation =  _stationList[randomIndex].entity.GetTransformComponent().translation + meshOffset + Vec3.new(0.0, 4.5, 0.0)
+            }
+
+            if(randomPowerUp == PowerUpType.DOUBLE_GUNS){
+                _dualGunMeshEntity.GetTransformComponent().translation =  _stationList[randomIndex].entity.GetTransformComponent().translation + meshOffset
+                _dualGunEmitter.GetTransformComponent().translation =  _stationList[randomIndex].entity.GetTransformComponent().translation + meshOffset + Vec3.new(0.0, 4.5, 0.0)
+            }
+
             System.print("Too much time has passed between stations, setting a new one active")
             //System.printAll(["New station is now available",randomIndex, _quadDamageMeshEntity.GetTransformComponent().translation.x, _quadDamageMeshEntity.GetTransformComponent().translation.y, _quadDamageMeshEntity.GetTransformComponent().translation.z]) //> 1[2, 3]4
         }
@@ -281,6 +333,16 @@ class StationManager {
                         _anyActiveStation = true
                         // Set the other meshes transparency to 0.0
                         // TO BE ADDED when the other power ups are added
+                        _dualGunTransparency.transparency = 0.0
+
+                    }
+
+                    if(powerUpType == PowerUpType.DOUBLE_GUNS){
+                        _dualGunTransparency.transparency = Math.MixFloat(_dualGunTransparency.transparency, 1.1, 0.005 )
+                        _anyActiveStation = true 
+                        // Set the other meshes transparency to 0.0 
+                        // TO BE ADDED when the other power ups are added
+                        _quadDamageTransparency.transparency = 0.0
                     }
 
                     break // No need to check other stations since we want at most one active
@@ -294,6 +356,8 @@ class StationManager {
             _quadDamageMeshEntity.GetTransformComponent().translation = Vec3.new(0.0, -100.0, 0.0) // Move the mesh out of bounds
             _quadDamageEmitter.GetTransformComponent().translation = Vec3.new(0.0, -200.0, 0.0) // Move the emitter out of bounds
 
+            _dualGunMeshEntity.GetTransformComponent().translation = Vec3.new(0.0, -100.0, 0.0) // Move the mesh out of bounds
+            _dualGunEmitter.GetTransformComponent().translation = Vec3.new(0.0, -200.0, 0.0) // Move the emitter out of bounds
         }
 
         // Update quad damage mesh
@@ -302,5 +366,9 @@ class StationManager {
         quadDamageTransform.translation = Vec3.new(quadDamageTransform.translation.x,quadDamageTransform.translation.y + bounce,quadDamageTransform.translation.z)  // Make the soul bounce up and down
         quadDamageTransform.rotation = Math.ToQuat(Vec3.new(0.0, Math.Radians(_timer * 0.1),0.0 )) // Rotate the mesh
 
+        // Update dual gun mesh
+        var dualGunTransform = _dualGunMeshEntity.GetTransformComponent()
+        dualGunTransform.translation = Vec3.new(dualGunTransform.translation.x,dualGunTransform.translation.y + bounce,dualGunTransform.translation.z)  // Make the soul bounce up and down
+        dualGunTransform.rotation = Math.ToQuat(Vec3.new(0.0, Math.Radians(_timer * 0.1),0.0 )) // Rotate the mesh
     }
 }

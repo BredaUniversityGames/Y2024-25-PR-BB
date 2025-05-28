@@ -1,5 +1,6 @@
 #include "game_bindings.hpp"
 
+#include "aim_assist.hpp"
 #include "cheats_component.hpp"
 #include "components/rigidbody_component.hpp"
 #include "ecs_module.hpp"
@@ -87,6 +88,11 @@ GameSettings* GetSettings(GameModule& self)
 {
     return &self.GetSettings();
 }
+
+glm::vec3 GetAimAssistDirection(GameModule&, ECSModule& ecs, PhysicsModule& physics, const glm::vec3& position, const glm::vec3& forward, float range, float minAngle)
+{
+    return AimAssist::GetAimAssistDirection(ecs, physics, position, forward, range, minAngle);
+}
 }
 
 void BindGameAPI(wren::ForeignModule& module)
@@ -106,12 +112,15 @@ void BindGameAPI(wren::ForeignModule& module)
     auto& settings = module.klass<GameSettings>("GameSettings");
     settings.var<&GameSettings::aimSensitivity>("Sensitivity");
     settings.var<&GameSettings::aimSensitivity>("aimSensitivity");
+    settings.var<&GameSettings::aimAssist>("aimAssist");
 
     game.func<&GameModule::GetMainMenu>("GetMainMenu");
     game.func<&GameModule::GetPauseMenu>("GetPauseMenu");
     game.func<&GameModule::GetHUD>("GetHUD");
     game.func<&GameModule::GetGameOver>("GetGameOverMenu");
     game.func<&GameModule::GetLoadingScreen>("GetLoadingScreen");
+
+    game.funcExt<&bindings::GetAimAssistDirection>("GetAimAssistDirection", "Returns the direction vector where to shoot to according to the aim assist");
 
     game.funcExt<&bindings::GetSettings>("GetSettings");
     game.funcExt<&bindings::MenuStackSet>("SetUIMenu");
