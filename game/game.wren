@@ -342,7 +342,9 @@ class Main {
             __playerVariables.consecutiveHits = 0
         }
 
-        __playerMovement.Update(engine, dt, __playerController, __camera,__playerVariables.hud)
+        if (engine.GetInput().DebugIsInputEnabled()) {
+            __playerMovement.Update(engine, dt, __playerController, __camera,__playerVariables.hud)
+        }
 
         for (weapon in __armory) {
             weapon.cooldown = Math.Max(weapon.cooldown - dt, 0)
