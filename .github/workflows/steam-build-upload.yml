@@ -109,7 +109,7 @@ jobs:
 
       - name: Upload Windows Build Artifacts
         if: matrix.platform == 'windows-latest'
-        uses: pyTooling/download-artifact@v4
+        uses: pyTooling/upload-artifact@v4
         with:
           name: windows-dist
           path: package/
@@ -117,7 +117,7 @@ jobs:
 
       - name: Upload Linux Build Artifacts
         if: matrix.platform == 'ubuntu-latest'
-        uses: pyTooling/download-artifact@v4
+        uses: pyTooling/upload-artifact@v4
         with:
           name: linux-dist
           path: package/
