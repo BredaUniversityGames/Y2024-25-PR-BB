@@ -166,8 +166,8 @@ class Pistol {
 
             var muzzleLight = muzzleLightEntity.AddPointLightComponent()
             muzzleLight.color = Vec3.new(200/255, 83/255, 33/255)
-            muzzleLight.range = 15.0
-            muzzleLight.intensity = 300.0
+            muzzleLight.range = 20.0
+            muzzleLight.intensity = 128.0
 
             var barrelEndPosition = _barrelEndEntity.GetTransformComponent().GetWorldTranslation()
             muzzleTransform.translation = Vec3.new(-0.5 , 0.05, 0.35)
