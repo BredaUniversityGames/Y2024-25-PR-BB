@@ -253,7 +253,7 @@ class Pistol {
 
                                     var multiplier = 1.0
 
-                                    if (enemy.IsHeadshot(rayHit.position.y) && !aimAssistNeeded) {
+                                    if (enemy.IsHeadshot(rayHit.position.y) ) {
                                         multiplier = _headShotMultiplier
                                         // Critical hitmarker
                                         playerVariables.hitmarkTimer = 200 //ms
