@@ -168,7 +168,7 @@ class BerserkerEnemy {
                         var toPlayer = (playerPos - pos).normalize()
 
                         if (Math.Dot(forward, toPlayer) >= 0.8 && Math.Distance(playerPos, pos) < _attackRange) {
-                            var rayHitInfo = engine.GetPhysics().ShootRay(pos, toPlayer, _attackRange)
+                            var rayHitInfo = engine.GetPhysics().ShootMultipleRays(pos, toPlayer, _attackRange, 3, 20)
                             var isOccluded = false
                             if (!rayHitInfo.isEmpty) {
                                 for (rayHit in rayHitInfo) {
