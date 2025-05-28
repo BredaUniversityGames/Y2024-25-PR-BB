@@ -52,6 +52,11 @@ class Pistol {
         gun.AttachChild(_barrelEndEntity)
         transform.translation = _barrelEndPosition
 
+
+        _emitterFlags = SpawnEmitterFlagBits.eIsActive()
+
+
+
         var finalName = _barrelEndEntity.GetNameComponent().name
 
         _mesh = ""
@@ -81,28 +86,21 @@ class Pistol {
             var rb =  playerController.GetRigidbodyComponent()
             var velocity = rb.GetVelocity()
 
-            var eventInstance = engine.GetAudio().PlayEventOnce(_reloadSFX)
-            var audioEmitter = player.GetAudioEmitterComponent()
-            audioEmitter.AddEvent(eventInstance)
+            if(_ammo < _maxAmmo) {
+                var eventInstance = engine.GetAudio().PlayEventOnce(_reloadSFX)
+                var audioEmitter = player.GetAudioEmitterComponent()
+                audioEmitter.AddEvent(eventInstance)
 
-            var gunTransform = gun.GetTransformComponent()
-            var gunTranslation = gunTransform.GetWorldTranslation()
-            var gunRotation = gunTransform.GetWorldRotation()
-            var gunForward = Math.ToVector(gunRotation)
-            var gunUp = gunRotation.mulVec3(Vec3.new(0, 1, 0))
-            var gunRight = Math.Cross(gunForward, gunUp)
-            //var gunStart = gunTranslation + gunForward * Vec3.new(1, 1, 1) - gunRight * Vec3.new(4.0,4.0,4.0) - gunUp * Vec3.new(0.0, 0.5, 0.0)
-            var gunStart = _barrelEndEntity.GetTransformComponent().GetWorldTranslation()
-
-            //play a particle effect
-            var entity = engine.GetECS().NewEntity()
-            var transform = entity.AddTransformComponent()
-            transform.translation = Vec3.new(gunStart.x, gunStart.y-0.5, gunStart.z)
-            var lifetime = entity.AddLifetimeComponent()
-            lifetime.lifetime = 175.0
-            var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
-            engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eBullets(),emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.1, 7.5, 0.1) + velocity.mulScalar(1.01))
-
+                var gunStart = _barrelEndEntity.GetTransformComponent().GetWorldTranslation()
+                //play a particle effect
+                var entity = engine.GetECS().NewEntity()
+                var transform = entity.AddTransformComponent()
+                transform.translation = Vec3.new(gunStart.x, gunStart.y-0.5, gunStart.z)
+                var lifetime = entity.AddLifetimeComponent()
+                lifetime.lifetime = 175.0
+                var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
+                engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eBullets(),emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.1, 7.5, 0.1) + velocity.mulScalar(1.01))
+            }
 
             _reloadTimer = _reloadSpeed
             _ammo = _maxAmmo
@@ -155,6 +153,33 @@ class Pistol {
             // Play shooting audio
             var eventInstance = engine.GetAudio().PlayEventOnce(_shotSFX)
             var audioEmitter = player.GetAudioEmitterComponent()
+
+            // muzzle flash
+            var muzzleEntity = engine.GetECS().NewEntity()
+            muzzleEntity.AddNameComponent().name = "Muzzle %(_entityName)"
+            var muzzleTransform = muzzleEntity.AddTransformComponent()
+
+            var muzzleLightEntity = engine.GetECS().NewEntity()
+            muzzleLightEntity.AddNameComponent().name = "MuzzleLight %(_entityName)"
+            var muzzleLightTransform = muzzleLightEntity.AddTransformComponent()
+            muzzleLightTransform.translation = Vec3.new(2.0, 1.0, 0.0)
+
+            var muzzleLight = muzzleLightEntity.AddPointLightComponent()
+            muzzleLight.color = Vec3.new(200/255, 83/255, 33/255)
+            muzzleLight.range = 15.0
+            muzzleLight.intensity = 300.0
+
+            var barrelEndPosition = _barrelEndEntity.GetTransformComponent().GetWorldTranslation()
+            muzzleTransform.translation = Vec3.new(-0.5 , 0.05, 0.35)
+            _barrelEndEntity.AttachChild(muzzleEntity)
+            _barrelEndEntity.AttachChild(muzzleLightEntity)
+            //_barrelEndEntity.DetachChild(muzzleEntity)
+            var muzzleLife = muzzleEntity.AddLifetimeComponent()
+            muzzleLife.lifetime = 50.0
+            var muzzleLightLife = muzzleLightEntity.AddLifetimeComponent()
+            muzzleLightLife.lifetime = 50.0
+            engine.GetParticles().SpawnEmitter(muzzleEntity, EmitterPresetID.eMuzzle(),_emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.0, 0.0, 0.0))
+
 
             // Play quad damage audio if needed
             if(playerVariables.GetCurrentPowerUp() == PowerUpType.QUAD_DAMAGE){
