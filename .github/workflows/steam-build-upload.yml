@@ -105,6 +105,13 @@ jobs:
         run: |
           python scripts/python/package.py -c "scripts/build_system/package_config/linux_dist.json"
 
+      # ZIP files to be artifacts to avoid linux file permissions
+
+      - name: Compress
+        uses: TonyBogdanov/zip@1.0
+        with:
+          args: zip -qq -r ./package.zip ./package
+
       # Save build as artifact for upload job
 
       - name: Upload Windows Build Artifacts
@@ -112,14 +119,14 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: windows-dist
-          path: package/
+          path: package.zip
 
       - name: Upload Linux Build Artifacts
         if: matrix.platform == 'ubuntu-latest'
         uses: actions/upload-artifact@v4
         with:
           name: linux-dist
-          path: package/
+          path: package.zip
 
   upload-project:
     name: Upload Project
@@ -149,6 +156,13 @@ jobs:
         with:
           name: linux-dist
           path: package/
+
+      # Un-ZIP files for steam upload
+
+      - name: Decompress
+        uses: TonyBogdanov/zip@1.0
+        with:
+          args: unzip -qq ./package.zip -d ./package
 
       # Create steam config to avoid 2FA
 
