@@ -10,7 +10,7 @@ class MeleeEnemy {
         
         // ENEMY CONSTANTS
         _maxVelocity = 13
-        _attackRange = 7
+        _attackRange = 4.5
         _attackDamage = 20
         _shakeIntensity = 1.6
         _attackCooldown = 2000
@@ -104,7 +104,7 @@ class MeleeEnemy {
     }
 
     IsHeadshot(y) { // Will probably need to be changed when we have a different model
-        if (y >= _rootEntity.GetRigidbodyComponent().GetPosition().y + 0.5) {
+        if (y >= _rootEntity.GetRigidbodyComponent().GetPosition().y + 0.5 && !_getUpState) {
             return true
         }
         return false
@@ -203,19 +203,36 @@ class MeleeEnemy {
                 if (_attackTimer <= 0 ) {
                     _attackTimer = 999999
                     if (!playerVariables.IsInvincible()) {
-                        var forward = Math.ToVector(_rootEntity.GetTransformComponent().rotation)
-                        var toPlayer = pos - playerPos
+                        var forward = Math.ToVector(_rootEntity.GetTransformComponent().rotation).mulScalar(-1)
+                        var toPlayer = (playerPos - pos).normalize()
 
                         if (Math.Dot(forward, toPlayer) >= 0.8 && Math.Distance(playerPos, pos) < _attackRange) {
-                            playerVariables.DecreaseHealth(_attackDamage)
-                            playerVariables.cameraVariables.shakeIntensity = _shakeIntensity
-                            playerVariables.invincibilityTime = playerVariables.invincibilityMaxTime
+                            var rayHitInfo = engine.GetPhysics().ShootRay(pos, toPlayer, _attackRange)
+                            var isOccluded = false
+                            if (!rayHitInfo.isEmpty) {
+                                for (rayHit in rayHitInfo) {
+                                    var hitEntity = rayHit.GetEntity(engine.GetECS())
+                                    if (hitEntity == _rootEntity || hitEntity.HasEnemyTag()) {
+                                        continue
+                                    }
+                                    if (!hitEntity.HasPlayerTag()) {
+                                        isOccluded = true
+                                    }
+                                    break
+                                }
+                            }
 
-                        //Flash the screen red
-                        flashSystem.Flash(Vec3.new(105 / 255, 13 / 255, 1 / 255),0.75)
+                            if (!isOccluded) {
+                                playerVariables.DecreaseHealth(_attackDamage)
+                                playerVariables.cameraVariables.shakeIntensity = _shakeIntensity
+                                playerVariables.invincibilityTime = playerVariables.invincibilityMaxTime
 
-                        engine.GetAudio().PlayEventOnce(_hitSFX)
-                        //animations.Play("Attack", 1.0, false, 0.1, false)
+                                //Flash the screen red
+                                flashSystem.Flash(Vec3.new(105 / 255, 13 / 255, 1 / 255),0.75)
+
+                                engine.GetAudio().PlayEventOnce(_hitSFX)
+                                //animations.Play("Attack", 1.0, false, 0.1, false)
+                            }
                         }
                     }
                 }
