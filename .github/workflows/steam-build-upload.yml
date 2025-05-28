@@ -107,10 +107,11 @@ jobs:
 
       # ZIP files to be artifacts to avoid linux file permissions
 
-      - name: Compress
+      - name: Compress Linux
+        if: matrix.platform == 'ubuntu-latest'
         uses: TonyBogdanov/zip@1.0
         with:
-          args: zip -qq -r ./package.zip ./package
+          args: zip -qq -r ./package-linux.zip ./package
 
       # Save build as artifact for upload job
 
@@ -162,7 +163,7 @@ jobs:
       - name: Decompress
         uses: TonyBogdanov/zip@1.0
         with:
-          args: unzip -qq ./package.zip -d ./package
+          args: unzip -qq ./package-linux.zip -d ./package
 
       # Create steam config to avoid 2FA
 
