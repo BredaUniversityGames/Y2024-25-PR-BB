@@ -24,7 +24,7 @@ class Pistol {
         _cooldown = 0
         _reloadTimer = 0
         _reloadSpeed = 0.8 * 1000
-        _aimAssistMinAngle = 0.98
+        _aimAssistMinAngle = 0.995
 
         _cameraShakeIntensity = 0.3
 
