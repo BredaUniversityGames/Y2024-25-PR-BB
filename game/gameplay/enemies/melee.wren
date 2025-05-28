@@ -62,7 +62,7 @@ class MeleeEnemy {
         _pointLight = _lightEntity.AddPointLightComponent()
         _rootEntity.AttachChild(_lightEntity)
 
-        _transparencyComponent = _meshEntity.AddTransparencyComponent()
+        var transparencyComponent = _meshEntity.AddTransparencyComponent()
 
         _pointLight.intensity = 10
         _pointLight.range = 2
@@ -178,6 +178,7 @@ class MeleeEnemy {
         var pos = body.GetPosition()
         
         var animations = _meshEntity.GetAnimationControlComponent()
+        var transparencyComponent = _meshEntity.GetTransparencyComponent()
 
 
         if (_isAlive) {
@@ -185,11 +186,11 @@ class MeleeEnemy {
                 _getUpTimer = _getUpTimer - dt
                 _getUpAppearTimer = _getUpAppearTimer - dt
 
-                _transparencyComponent.transparency =  1.0 - _getUpAppearTimer / _getUpAppearMax
+                transparencyComponent.transparency =  1.0 - _getUpAppearTimer / _getUpAppearMax
 
                 if(_getUpTimer < 0) {
                     _getUpState = false
-                    _transparencyComponent.transparency = 1.0
+                    transparencyComponent.transparency = 1.0
                 }
 
                 return
@@ -312,7 +313,7 @@ class MeleeEnemy {
             } else {
                 // Wait for death animation before starting descent
                 if(_deathTimerMax - _deathTimer > 1800) {
-                    _transparencyComponent.transparency =  _deathTimer / (_deathTimerMax-1000)
+                    transparencyComponent.transparency =  _deathTimer / (_deathTimerMax-1000)
 
                     var newPos = pos - Vec3.new(0, 1, 0).mulScalar(1.0 * 0.00075 * dt)
                     body.SetTranslation(newPos)
