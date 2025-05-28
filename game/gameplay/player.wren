@@ -44,7 +44,8 @@ class PlayerVariables {
         _damageMultiplier = 1.0
         _currentPowerUp = PowerUpType.NONE  
         // Let's change this based on which PowerUp we have
-        _gunSmokeRay = EmitterPresetID.eRay()  
+        _gunSmokeRay = EmitterPresetID.eRay() 
+        _muzzleFlashRay = EmitterPresetID.eMuzzle() 
     }
 
     godMode=(v) { _godMode = v }
@@ -131,6 +132,14 @@ class PlayerVariables {
     }
     GetGunSmokeRay() {
         return _gunSmokeRay
+    }
+
+    SetMuzzleFlashRay(muzzleFlashRay) {
+        _muzzleFlashRay = muzzleFlashRay
+    }
+
+    GetMuzzleFlashRay() {
+        return _muzzleFlashRay
     }
 
     SetDamageMultiplier(damageMultiplier) {

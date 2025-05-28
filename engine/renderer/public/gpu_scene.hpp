@@ -184,7 +184,7 @@ private:
         glm::vec3 fogColor;
     } _sceneData;
 
-    struct alignas(32) InstanceData
+    struct InstanceData
     {
         glm::mat4 model;
 
@@ -193,6 +193,7 @@ private:
         uint32_t boneOffset;
         bool isStaticDraw;
         float transparency = 1.0f;
+        uint32_t padding[3];
     };
 
     struct alignas(16) DecalData

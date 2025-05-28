@@ -30,6 +30,7 @@ GENERATE_ENUM_FLAG_OPERATORS(SpawnEmitterFlagBits)
 enum class EmitterPresetID : uint8_t
 {
     eFlame,
+    eEyeFlame,
     eDust,
     eFeathers,
     eBullets,
@@ -46,6 +47,9 @@ enum class EmitterPresetID : uint8_t
     eHealth,
     eWorms,
     eSoulSheet,
+    eSoulSheetBig,
+    eMuzzle,
+    eMuzzleQuad,
     eQuadStation,
     eDualGunStation,
     eNone

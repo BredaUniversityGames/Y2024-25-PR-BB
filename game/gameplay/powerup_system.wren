@@ -68,6 +68,7 @@ class PowerUpSystem {
 
             //default the rest of the effects to normal
             playerVariables.SetGunSmokeRay(EmitterPresetID.eRay())
+            playerVariables.SetMuzzleFlashRay(EmitterPresetID.eMuzzle())
 
             // reset stats
             playerVariables.SetDamageMultiplier(1.0)
@@ -81,6 +82,8 @@ class PowerUpSystem {
 
             playerVariables.SetDamageMultiplier(4.0)
             playerVariables.SetGunSmokeRay(EmitterPresetID.eRayQuadDamage())
+            playerVariables.SetMuzzleFlashRay(EmitterPresetID.eMuzzleQuad())
+
         }
         
         

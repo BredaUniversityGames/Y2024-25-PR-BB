@@ -81,7 +81,7 @@ struct Instance
     uint boneOffset;
     bool isStaticDraw;
     float transparency;
-    bool padding[2];
+    float padding[3];
 };
 
 const vec2 poissonDisk[16] = vec2[](
