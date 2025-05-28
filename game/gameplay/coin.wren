@@ -198,7 +198,7 @@ class CoinManager {
         purseLightTransform.translation = Vec3.new(-0.1,-0.3,-0.8)
         _pursePointLight = _purseLightEntity.AddPointLightComponent()
         _purseLightTarget = 100.25
-        _pursePointLight.intensity = _purseLightTarget
+        _pursePointLight.intensity = 0.0
         _pursePointLight.range = 1.0
         _pursePointLight.color = Vec3.new(0.9, 0.9, 0.08)
 
