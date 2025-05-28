@@ -72,7 +72,7 @@ class Pistol {
             shootBool = true
         }
 
-        if(engine.GetInput().GetDigitalAction("Reload").IsPressed() || shootBool  && _reloadTimer == 0) {
+        if((engine.GetInput().GetDigitalAction("Reload").IsPressed() || shootBool)  && _reloadTimer == 0) {
             gunAnimations.Play(_reloadAnim, 1.0, false, 0.2, false)
 
             // Play reload audio
