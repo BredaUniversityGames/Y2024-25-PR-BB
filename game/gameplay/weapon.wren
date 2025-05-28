@@ -107,7 +107,6 @@ class Pistol {
             _reloadTimer = _reloadSpeed
             _ammo = _maxAmmo
 
-            System.print("Reloaded %(_entityName) ")
         }
     }
 
@@ -142,9 +141,6 @@ class Pistol {
             }
         }
 
-
-
-        System.print("%(_entityName) Ammo : %(_ammo)")
         if ((_cooldown <= 0 ||_manualTimer >=50) && _ammo > 0 && _reloadTimer <= 0) {
             _ammo = _ammo - 1
 
