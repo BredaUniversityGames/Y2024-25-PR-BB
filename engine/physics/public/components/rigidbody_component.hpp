@@ -10,10 +10,6 @@
 #include <Jolt/Physics/Body/BodyInterface.h>
 #include <Jolt/Physics/Collision/Shape/Shape.h>
 
-struct UpdateMeshAndPhysics
-{
-};
-
 class RigidbodyComponent
 {
 public:

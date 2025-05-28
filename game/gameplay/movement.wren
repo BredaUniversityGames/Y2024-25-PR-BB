@@ -490,7 +490,7 @@ class PlayerMovement{
             
             var playerBody = playerController.GetRigidbodyComponent()
             playerBody.SetVelocity(Vec3.new(0.0, 0.0, 0.0))
-            playerBody.SetTranslation(Vec3.new(-94.000, 174.800, 156.900))
+            playerBody.SetTranslation(Vec3.new(0.0, 0.0, 0.0))
 
             //play a sound effect
             _crowsSoundInstance = engine.GetAudio().PlayEventOnce(_outofBounds)

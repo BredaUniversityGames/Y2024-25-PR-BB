@@ -40,7 +40,7 @@ class Main {
         comp.orthographicSize = 120.0
 
         var transform = __directionalLight.AddTransformComponent()
-        transform.translation = Vec3.new(-94.000, 174.800, 156.900)
+        transform.translation = Vec3.new(0.0, 0.0, 0.0)
         transform.rotation = Quat.new(1.0, 0.0, 0.0, 0.0)
 
         // Player Setup
