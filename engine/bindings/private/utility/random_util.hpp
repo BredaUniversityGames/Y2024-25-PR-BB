@@ -20,8 +20,8 @@ public:
 
     static uint32_t RandomIndex(uint32_t start, uint32_t end)
     {
-        uint32_t range = end - start;
-        return Random() % range + start;
+        std::uniform_int_distribution<uint32_t> dist(start, end - 1);
+        return dist(rng);
     }
 
     static float RandomFloat()
