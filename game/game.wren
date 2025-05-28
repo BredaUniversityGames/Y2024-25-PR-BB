@@ -162,7 +162,7 @@ class Main {
         __secondaryWeapon = __armory[Weapons.pistol2]
 
         // create the player movement
-        __playerMovement = PlayerMovement.new(false,0.0,__activeWeapon)
+        __playerMovement = PlayerMovement.new(false,0.0,__activeWeapon,__player)
         var mousePosition = engine.GetInput().GetMousePosition()
         __playerMovement.lastMousePosition = mousePosition
 
