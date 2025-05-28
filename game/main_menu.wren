@@ -1,4 +1,4 @@
-import "engine_api.wren" for Engine, Input, Vec3, Vec2, Quat, Math, Keycode, Random, Perlin
+import "engine_api.wren" for Engine, Input, Vec3, Vec2, Quat, Math, Keycode, Random, Perlin, ShapeFactory, Rigidbody, RigidbodyComponent, PhysicsObjectLayer
 import "gameplay/camera.wren" for CameraVariables
 import "gameplay/music_player.wren" for BGMPlayer
 
@@ -41,12 +41,6 @@ class Main {
 
 
         light.AddTransformComponent().translation = Vec3.new(4.8, 4.7, -10.6) // range: 91, intensity: 20
-
-        // __background = engine.LoadModel("assets/models/main_menu.glb")
-
-        // __transform = __background.GetTransformComponent()
-        // __transform.translation = Vec3.new(15.4,-20,-203)
-        // __transform.rotation = Quat.new(0,0,-0.2,0.1)
 
         __camera = engine.GetECS().NewEntity()
         __cameraVariables = CameraVariables.new()
@@ -99,6 +93,15 @@ class Main {
         __flickerRange = 46.0
         __flickerSpeed = 1.0
         __noiseOffset = 0.0
+
+        // Player stuff
+        __playerController = engine.GetECS().NewEntity()
+        __playerController.AddNameComponent().name = "PlayerController"
+  
+        var shape = ShapeFactory.MakeCapsuleShape(1.7, 0.5) // height, circle radius
+        var rb = Rigidbody.new(engine.GetPhysics(), shape, PhysicsObjectLayer.ePLAYER(), true)
+        __playerController.AddRigidbodyComponent(rb)
+
     }
 
     static Shutdown(engine) {

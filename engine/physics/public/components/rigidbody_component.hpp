@@ -40,8 +40,6 @@ public:
     void AddForce(const glm::vec3& force) { bodyInterface->AddForce(bodyID, ToJoltVec3(force)); }
     void AddImpulse(const glm::vec3& force) { bodyInterface->AddImpulse(bodyID, ToJoltVec3(force)); }
 
-    void SetColliderShape(JPH::ShapeRefC newShape);
-
     JPH::BodyID bodyID;
     JPH::ShapeRefC shape;
 

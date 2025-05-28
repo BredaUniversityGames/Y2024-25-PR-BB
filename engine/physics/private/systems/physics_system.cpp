@@ -73,10 +73,6 @@ void PhysicsSystem::Update(MAYBE_UNUSED ECSModule& ecs, MAYBE_UNUSED float delta
             const auto joltScale = scaled_shape->GetScale();
             joltMatrix = joltMatrix.PreScaled(joltScale);
         }
-        else
-        {
-            bblog::warn("Jolt body should have a scaled shape, but it does not. This might cause issues with scale.");
-        }
 
         const auto joltToGlm = ToGLMMat4(joltMatrix);
         TransformHelpers::SetWorldTransform(ecs.GetRegistry(), entity, joltToGlm);
