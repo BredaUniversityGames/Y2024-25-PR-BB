@@ -77,11 +77,4 @@ T* ECSModule::GetSystem()
 template <typename A>
 void ECSModule::save(A& archive, MAYBE_UNUSED uint32_t version) const
 {
-    auto entityView = registry.view<entt::entity>();
-    for (auto entity : entityView)
-    {
-        archive(EntitySerializer(registry, entity));
-    }
 }
-
-CEREAL_CLASS_VERSION(ECSModule, 0);

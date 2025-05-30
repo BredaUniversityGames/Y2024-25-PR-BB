@@ -21,6 +21,7 @@
 #include "pathfinding_module.hpp"
 #include "physics_module.hpp"
 #include "renderer.hpp"
+#include <ui_image.hpp>
 #include "renderer_module.hpp"
 #include "scene/model_loader.hpp"
 #include "scripting_module.hpp"
@@ -29,6 +30,7 @@
 #include "time_module.hpp"
 #include "ui/ui_menus.hpp"
 #include "ui_module.hpp"
+#include <serialization.hpp>
 
 ModuleTickOrder GameModule::Init(Engine& engine)
 {
@@ -61,7 +63,14 @@ ModuleTickOrder GameModule::Init(Engine& engine)
         viewport.AddElement(GameVersionVisualization::Create(graphicsContext, viewportSize, font, gameVersionText));
     }
 
-    _mainMenu = viewport.AddElement(MainMenu::Create(graphicsContext, viewportSize, font));
+    
+    auto s = Serialization::LoadFromJSON<MainMenu>("mainMenuStored.json");
+    assert(s.has_value());
+
+    
+
+    //_mainMenu = viewport.AddElement(MainMenu::Create(graphicsContext, viewportSize, font));
+    _mainMenu = viewport.AddElement(std::make_shared<MainMenu>(s.value()));
     _hud = viewport.AddElement(HUD::Create(graphicsContext, viewportSize, font));
     _loadingScreen = viewport.AddElement(LoadingScreen::Create(graphicsContext, viewportSize, font));
     _pauseMenu = viewport.AddElement(PauseMenu::Create(graphicsContext, viewportSize, font));
@@ -101,7 +110,7 @@ ModuleTickOrder GameModule::Init(Engine& engine)
         }
     };
 
-    _mainMenu.lock()->openLinkButton.lock()->OnPress(Callback { OpenDiscordURL });
+    //_mainMenu.lock()->openLinkButton.lock()->OnPress(Callback { OpenDiscordURL });
 
     auto openSettingsMenu = [this, &engine]()
     {
@@ -117,7 +126,7 @@ ModuleTickOrder GameModule::Init(Engine& engine)
         engine.GetModule<UIModule>().uiInputContext.focusedUIElement = _settingsMenu.lock()->sensitivitySlider;
     };
 
-    _mainMenu.lock()->settingsButton.lock()->OnPress(Callback { openSettingsMenu });
+    //_mainMenu.lock()->settingsButton.lock()->OnPress(Callback { openSettingsMenu });
     _pauseMenu.lock()->settingsButton.lock()->OnPress(Callback { openSettingsPause });
 
     auto openControlsMenu = [this, &engine]()
@@ -134,7 +143,7 @@ ModuleTickOrder GameModule::Init(Engine& engine)
         engine.GetModule<UIModule>().uiInputContext.focusedUIElement = this->_controlsMenu.lock()->backButton;
     };
 
-    _mainMenu.lock()->controlsButton.lock()->OnPress(Callback { openControlsMenu });
+  //  _mainMenu.lock()->controlsButton.lock()->OnPress(Callback { openControlsMenu });
     _pauseMenu.lock()->controlsButton.lock()->OnPress(Callback { openControlsPause });
 
     auto openControls = [&engine]()
@@ -148,6 +157,11 @@ ModuleTickOrder GameModule::Init(Engine& engine)
 
     auto& particleModule = engine.GetModule<ParticleModule>();
     particleModule.LoadEmitterPresets();
+
+    //Serialization::SerialiseToJSON("mainMenuStored.json",*_mainMenu.lock());
+
+ //   Serialization::SerialiseToJSON("mainMenuStored.json", *_mainMenu.lock());
+    _mainMenu.lock()->UpdateAllChildrenAbsoluteTransform();
 
     return ModuleTickOrder::eTick;
 }

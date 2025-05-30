@@ -7,4 +7,5 @@ target_link_libraries(UserInterface
         PUBLIC Utility
         PUBLIC Core
         PRIVATE Application
-        PUBLIC freetype)
+        PUBLIC freetype
+        PUBLIC cereal)

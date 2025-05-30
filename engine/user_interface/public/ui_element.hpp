@@ -10,9 +10,14 @@
 #include <glm/vec2.hpp>
 #include <memory>
 #include <vector>
-
+#include <cereal/types/vector.hpp>
+#include <cereal/types/memory.hpp>
 class UIInputContext;
 struct InputManagers;
+
+
+
+
 
 /**
  * Base class from which all ui elements inherit. Updating and submitting of the ui happens
@@ -64,6 +69,11 @@ public:
         return _children;
     }
 
+    
+    NO_DISCARD const std::vector<std::shared_ptr<UIElement>>& GetChildren() const
+    {
+        return _children;
+    }
     enum class VisibilityState
     {
         eUpdatedAndVisible,
@@ -94,6 +104,33 @@ private:
 
     std::vector<std::shared_ptr<UIElement>> _children {};
 };
+
+
+template <class Archive>
+void save(Archive& ar,const UIElement& element)
+{
+    ar(cereal::make_nvp("relativeLocation",element.GetRelativeLocation()));
+    ar(cereal::make_nvp("relativeScale",element.GetRelativeScale()));
+    
+    auto& children = element.GetChildren();
+    ar(CEREAL_NVP(children));
+    
+}
+
+template <class Archive>
+void load(Archive& ar,UIElement& element)
+{
+    glm::vec2 location;
+    glm::vec2 scale;
+    ar(location);
+    ar(scale);
+    element.SetLocation(location);
+    element.SetScale(scale);
+    auto& children = element.GetChildren();
+    ar(CEREAL_NVP(children));
+    
+}
+
 
 template <typename T, typename... Args>
     requires(std::derived_from<T, UIElement> && std::is_constructible_v<T, Args...>)

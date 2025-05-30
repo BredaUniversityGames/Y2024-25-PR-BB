@@ -5,11 +5,12 @@
 #include "ui_element.hpp"
 
 #include <functional>
+#include <cereal/types/base_class.hpp>
 
 class UIButton : public UIElement
 {
 public:
-    UIButton()
+    UIButton() : UIElement()
     {
     }
 
@@ -48,3 +49,40 @@ private:
     ButtonState state = ButtonState::eNormal;
     Callback _callback {};
 };
+
+template <class Archive>
+void save(Archive& ar,const UIButton::ButtonStyle& style)
+{
+    ar(CEREAL_NVP(style.normalImage));
+    ar(CEREAL_NVP(style.hoveredImage));
+    ar(CEREAL_NVP(style.pressedImage));
+}
+
+
+template <class Archive>
+void load(Archive& ar,UIButton::ButtonStyle& style)
+{
+    ar(CEREAL_NVP(style.normalImage));
+    ar(CEREAL_NVP(style.hoveredImage));
+    ar(CEREAL_NVP(style.pressedImage));
+}
+
+
+template <class Archive>
+void save(Archive& ar,const UIButton& button)
+{
+    ar(cereal::make_nvp("base", cereal::base_class<UIElement>(&button)));
+    ar(cereal::make_nvp("style", button.style));
+}
+
+template <class Archive>
+void load(Archive& ar, UIButton& button)
+{
+    ar(cereal::make_nvp("base", cereal::base_class<UIElement>(&button)));
+    ar(cereal::make_nvp("style", button.style));
+    
+}
+
+
+
+CEREAL_REGISTER_TYPE(UIButton);

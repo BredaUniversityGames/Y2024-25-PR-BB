@@ -18,7 +18,7 @@ public:
     NO_DISCARD const Viewport& GetViewport() const { return *_viewport; };
 
     UIInputContext uiInputContext;
-
+    
 private:
     ModuleTickOrder Init(MAYBE_UNUSED Engine& engine) final;
 

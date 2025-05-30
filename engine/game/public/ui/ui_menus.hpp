@@ -1,12 +1,14 @@
 #pragma once
+#include <ui_button.hpp>
+#include <ui_image.hpp>
+#include <ui_text.hpp>
+
 #include "canvas.hpp"
 #include "fonts.hpp"
 #include "ui_slider.hpp"
 #include "ui_toggle.hpp"
 
 #include <array>
-#include <ui_button.hpp>
-
 class UIImage;
 class UITextElement;
 class UIProgressBar;
@@ -14,6 +16,7 @@ class GraphicsContext;
 class ActionManager;
 
 inline constexpr size_t MAX_DASH_CHARGE_COUNT = 3;
+
 
 class HUD : public Canvas
 {
@@ -52,6 +55,11 @@ class MainMenu : public Canvas
 public:
     static std::shared_ptr<MainMenu> Create(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution, std::shared_ptr<UIFont> font);
 
+    MainMenu() : Canvas()
+    {
+        
+    }
+    
     MainMenu(const glm::uvec2& screenResolution)
         : Canvas(screenResolution)
     {
@@ -227,3 +235,18 @@ public:
     std::weak_ptr<UISlider> gammaSlider {};
     std::weak_ptr<UIButton> backButton {};
 };
+
+template <class Archive>
+void save(Archive& ar, const MainMenu& canvas)
+{
+    ar(cereal::make_nvp("Canvas", cereal::base_class<Canvas>(&canvas)));
+    
+}
+
+template <class Archive>
+void load(Archive& ar, MainMenu& canvas)
+{
+    ar(cereal::make_nvp("Canvas", cereal::base_class<Canvas>(&canvas)));
+    
+}
+CEREAL_REGISTER_TYPE(MainMenu);

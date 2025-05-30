@@ -29,4 +29,29 @@ void SerialiseToJSON(const std::filesystem::path& path, const T& object)
         bblog::error("Failed to write to file in Serialization::SerialiseToJson with filepath {}", path.string());
     }
 }
+
+template <typename T>
+std::optional<T> LoadFromJSON(const std::filesystem::path& path)
+{
+    std::ifstream stream { path };
+    if (stream)
+    {
+        T object;
+        cereal::JSONInputArchive archive { stream };
+        auto name = archive.getNodeName();
+        auto tname = typeid(T).name(); 
+        if( std::string(name).compare(tname) != 0)
+        {
+            return {};
+        }
+        archive(cereal::make_nvp(typeid(T).name(), object));
+        return object;
+    }
+    else
+    {
+        bblog::error("Failed to write to file in Serialization::SerialiseToJson with filepath {}", path.string());
+    }
+}
+
+
 }

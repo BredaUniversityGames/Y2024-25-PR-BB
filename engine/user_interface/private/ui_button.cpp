@@ -69,7 +69,7 @@ void UIButton::Update(const InputManagers& inputManagers, UIInputContext& inputC
 
         if (pressAction.IsReleased())
         {
-            _callback();
+     //       _callback();
         }
     }
     else // Mouse controls
@@ -95,7 +95,7 @@ void UIButton::Update(const InputManagers& inputManagers, UIInputContext& inputC
 
             if (mouseUp)
             {
-                _callback();
+         //       _callback();
             }
 
             inputContext.ConsumeInput();

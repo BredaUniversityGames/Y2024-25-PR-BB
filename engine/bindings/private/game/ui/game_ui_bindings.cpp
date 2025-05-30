@@ -7,7 +7,8 @@
 
 namespace bindings
 {
-void ButtonOnPress(UIButton& self, wren::Variable fn) { self.OnPress(fn); }
+void ButtonOnPress(UIButton& self, wren::Variable fn) { //self.OnPress(fn);
+    }
 
 std::shared_ptr<UIButton> PlayButton(MainMenu& self) { return self.playButton.lock(); }
 std::shared_ptr<UIButton> QuitButton(MainMenu& self) { return self.quitButton.lock(); }

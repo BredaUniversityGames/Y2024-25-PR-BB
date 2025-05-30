@@ -10,8 +10,9 @@ void UITextElement::UpdateLocalTextSize()
 
     for (const auto& character : _text)
     {
+        
         // Check if the character exists in the font's character map
-        if (!_font->characters.contains(character))
+        if (!_font || !_font->characters.contains(character))
         {
             continue;
         }
@@ -22,6 +23,7 @@ void UITextElement::UpdateLocalTextSize()
 }
 void UITextElement::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
 {
+    /*
     UIElement::ChildrenSubmitDrawInfo(drawList);
 
     glm::vec2 localOffset {};
@@ -66,7 +68,7 @@ void UITextElement::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
 
         drawList.emplace_back(info);
         localOffset.x += static_cast<float>(fontChar.advance) * elementScale + _font->metrics.charSpacing * elementScale;
-    }
+    }*/
 }
 void UITextElement::SetText(std::string text)
 {

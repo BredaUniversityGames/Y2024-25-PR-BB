@@ -4,11 +4,14 @@
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
 # Settings
+cmake-build-release
+
 game_settings.json
 game/config/game_settings.json
 
 # Visual Studio Code
 .vscode
+cmake-build-rlease
 
 # Asset files (stored on Perforce)
 assets

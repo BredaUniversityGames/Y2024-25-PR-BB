@@ -1,0 +1,361 @@
+{
+    "class MainMenu": {
+        "Canvas": {
+            "base": {
+                "relativeLocation": {
+                    "x": 0.0,
+                    "y": 0.0
+                },
+                "relativeScale": {
+                    "x": 3440.0,
+                    "y": 1440.0
+                },
+                "children": [
+                    {
+                        "polymorphic_id": 2147483649,
+                        "polymorphic_name": "UIImage",
+                        "ptr_wrapper": {
+                            "id": 2147483649,
+                            "data": {
+                                "base": {
+                                    "relativeLocation": {
+                                        "x": 108.0,
+                                        "y": 108.0
+                                    },
+                                    "relativeScale": {
+                                        "x": 1091.3089599609376,
+                                        "y": 540.0
+                                    },
+                                    "children": []
+                                },
+                                "image": {
+                                    "index": 22,
+                                    "version": 0
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "polymorphic_id": 2147483650,
+                        "polymorphic_name": "Canvas",
+                        "ptr_wrapper": {
+                            "id": 2147483650,
+                            "data": {
+                                "base": {
+                                    "relativeLocation": {
+                                        "x": 399.6000061035156,
+                                        "y": 648.0
+                                    },
+                                    "relativeScale": {
+                                        "x": 0.0,
+                                        "y": 0.0
+                                    },
+                                    "children": [
+                                        {
+                                            "polymorphic_id": 2147483651,
+                                            "polymorphic_name": "UIButton",
+                                            "ptr_wrapper": {
+                                                "id": 2147483651,
+                                                "data": {
+                                                    "base": {
+                                                        "relativeLocation": {
+                                                            "x": 0.0,
+                                                            "y": 0.0
+                                                        },
+                                                        "relativeScale": {
+                                                            "x": 522.0,
+                                                            "y": 132.0
+                                                        },
+                                                        "children": [
+                                                            {
+                                                                "polymorphic_id": 2147483652,
+                                                                "polymorphic_name": "UITextElement",
+                                                                "ptr_wrapper": {
+                                                                    "id": 2147483652,
+                                                                    "data": {
+                                                                        "base": {
+                                                                            "relativeLocation": {
+                                                                                "x": 0.0,
+                                                                                "y": 0.0
+                                                                            },
+                                                                            "relativeScale": {
+                                                                                "x": 0.0,
+                                                                                "y": 60.0
+                                                                            },
+                                                                            "children": []
+                                                                        },
+                                                                        "text": "Play",
+                                                                        "font": {
+                                                                            "ptr_wrapper": {
+                                                                                "id": 2147483653,
+                                                                                "data": {}
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        ]
+                                                    },
+                                                    "style": {
+                                                        "style.normalImage": {
+                                                            "index": 19,
+                                                            "version": 0
+                                                        },
+                                                        "style.hoveredImage": {
+                                                            "index": 20,
+                                                            "version": 0
+                                                        },
+                                                        "style.pressedImage": {
+                                                            "index": 21,
+                                                            "version": 0
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "polymorphic_id": 3,
+                                            "ptr_wrapper": {
+                                                "id": 2147483654,
+                                                "data": {
+                                                    "base": {
+                                                        "relativeLocation": {
+                                                            "x": 0.0,
+                                                            "y": 140.0
+                                                        },
+                                                        "relativeScale": {
+                                                            "x": 522.0,
+                                                            "y": 132.0
+                                                        },
+                                                        "children": [
+                                                            {
+                                                                "polymorphic_id": 4,
+                                                                "ptr_wrapper": {
+                                                                    "id": 2147483655,
+                                                                    "data": {
+                                                                        "base": {
+                                                                            "relativeLocation": {
+                                                                                "x": 0.0,
+                                                                                "y": 0.0
+                                                                            },
+                                                                            "relativeScale": {
+                                                                                "x": 0.0,
+                                                                                "y": 60.0
+                                                                            },
+                                                                            "children": []
+                                                                        },
+                                                                        "text": "Controls",
+                                                                        "font": {
+                                                                            "ptr_wrapper": {
+                                                                                "id": 5
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        ]
+                                                    },
+                                                    "style": {
+                                                        "style.normalImage": {
+                                                            "index": 19,
+                                                            "version": 0
+                                                        },
+                                                        "style.hoveredImage": {
+                                                            "index": 20,
+                                                            "version": 0
+                                                        },
+                                                        "style.pressedImage": {
+                                                            "index": 21,
+                                                            "version": 0
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "polymorphic_id": 3,
+                                            "ptr_wrapper": {
+                                                "id": 2147483656,
+                                                "data": {
+                                                    "base": {
+                                                        "relativeLocation": {
+                                                            "x": 0.0,
+                                                            "y": 280.0
+                                                        },
+                                                        "relativeScale": {
+                                                            "x": 522.0,
+                                                            "y": 132.0
+                                                        },
+                                                        "children": [
+                                                            {
+                                                                "polymorphic_id": 4,
+                                                                "ptr_wrapper": {
+                                                                    "id": 2147483657,
+                                                                    "data": {
+                                                                        "base": {
+                                                                            "relativeLocation": {
+                                                                                "x": 0.0,
+                                                                                "y": 0.0
+                                                                            },
+                                                                            "relativeScale": {
+                                                                                "x": 0.0,
+                                                                                "y": 60.0
+                                                                            },
+                                                                            "children": []
+                                                                        },
+                                                                        "text": "Settings",
+                                                                        "font": {
+                                                                            "ptr_wrapper": {
+                                                                                "id": 5
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        ]
+                                                    },
+                                                    "style": {
+                                                        "style.normalImage": {
+                                                            "index": 19,
+                                                            "version": 0
+                                                        },
+                                                        "style.hoveredImage": {
+                                                            "index": 20,
+                                                            "version": 0
+                                                        },
+                                                        "style.pressedImage": {
+                                                            "index": 21,
+                                                            "version": 0
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "polymorphic_id": 3,
+                                            "ptr_wrapper": {
+                                                "id": 2147483658,
+                                                "data": {
+                                                    "base": {
+                                                        "relativeLocation": {
+                                                            "x": 0.0,
+                                                            "y": 420.0
+                                                        },
+                                                        "relativeScale": {
+                                                            "x": 522.0,
+                                                            "y": 132.0
+                                                        },
+                                                        "children": [
+                                                            {
+                                                                "polymorphic_id": 4,
+                                                                "ptr_wrapper": {
+                                                                    "id": 2147483659,
+                                                                    "data": {
+                                                                        "base": {
+                                                                            "relativeLocation": {
+                                                                                "x": 0.0,
+                                                                                "y": 0.0
+                                                                            },
+                                                                            "relativeScale": {
+                                                                                "x": 0.0,
+                                                                                "y": 60.0
+                                                                            },
+                                                                            "children": []
+                                                                        },
+                                                                        "text": "Quit",
+                                                                        "font": {
+                                                                            "ptr_wrapper": {
+                                                                                "id": 5
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        ]
+                                                    },
+                                                    "style": {
+                                                        "style.normalImage": {
+                                                            "index": 19,
+                                                            "version": 0
+                                                        },
+                                                        "style.hoveredImage": {
+                                                            "index": 20,
+                                                            "version": 0
+                                                        },
+                                                        "style.pressedImage": {
+                                                            "index": 21,
+                                                            "version": 0
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "polymorphic_id": 3,
+                        "ptr_wrapper": {
+                            "id": 2147483660,
+                            "data": {
+                                "base": {
+                                    "relativeLocation": {
+                                        "x": 0.0,
+                                        "y": 0.0
+                                    },
+                                    "relativeScale": {
+                                        "x": 522.0,
+                                        "y": 132.0
+                                    },
+                                    "children": [
+                                        {
+                                            "polymorphic_id": 4,
+                                            "ptr_wrapper": {
+                                                "id": 2147483661,
+                                                "data": {
+                                                    "base": {
+                                                        "relativeLocation": {
+                                                            "x": 0.0,
+                                                            "y": 0.0
+                                                        },
+                                                        "relativeScale": {
+                                                            "x": 0.0,
+                                                            "y": 50.0
+                                                        },
+                                                        "children": []
+                                                    },
+                                                    "text": "Check out our Discord!",
+                                                    "font": {
+                                                        "ptr_wrapper": {
+                                                            "id": 5
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                },
+                                "style": {
+                                    "style.normalImage": {
+                                        "index": 19,
+                                        "version": 0
+                                    },
+                                    "style.hoveredImage": {
+                                        "index": 20,
+                                        "version": 0
+                                    },
+                                    "style.pressedImage": {
+                                        "index": 21,
+                                        "version": 0
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    }
+}

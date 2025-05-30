@@ -34,4 +34,23 @@ struct UIFont
     FontMetrics metrics;
 };
 
+   
+template <class Archive>
+void save(Archive& ar,const UIFont& font) 
+{
+    /*
+    ar(CEREAL_NVP(font.characters));
+    ar(CEREAL_NVP(font.fontAtlas));
+    ar(CEREAL_NVP(font.metrics));*/
+}
+
+template <class Archive>
+void load(Archive& ar,UIFont& font) 
+{
+    /*ar(CEREAL_NVP(font.characters));
+    ar(CEREAL_NVP(font.fontAtlas));
+    ar(CEREAL_NVP(font.metrics));*/
+}
+
+
 NO_DISCARD std::shared_ptr<UIFont> LoadFromFile(const std::string& path, uint16_t characterHeight, GraphicsContext& context);
