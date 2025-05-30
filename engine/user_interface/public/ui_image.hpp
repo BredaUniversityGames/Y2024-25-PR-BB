@@ -3,17 +3,17 @@
 #include "resources/image.hpp"
 #include "ui_element.hpp"
 #include <cereal/types/base_class.hpp>
-
+#include "serialization.hpp"
 
 class UIImage : public UIElement
 {
 public:
-    UIImage(ResourceHandle<GPUImage> image = {}) 
+    UIImage(HandleWrapper<GPUImage> image = {}) 
         : UIElement(),_image(image) 
     {
     }
 
-    UIImage(ResourceHandle<GPUImage> image, const glm::vec2& location, const glm::vec2& size)
+    UIImage(HandleWrapper<GPUImage> image, const glm::vec2& location, const glm::vec2& size)
         :  UIElement(),_image(image)
     {
         SetLocation(location);
@@ -22,10 +22,12 @@ public:
 
     void SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const override;
 
-    void SetImageHandle(ResourceHandle<GPUImage> image) {_image = image;}
-    ResourceHandle<GPUImage> GetImageHandle() const {return _image;} 
+    void SetImageHandle(HandleWrapper<GPUImage> image) {_image = image;}
+    HandleWrapper<GPUImage> GetImageHandle() const {return _image;}
+
+    
 private:
-    ResourceHandle<GPUImage> _image;
+    HandleWrapper<GPUImage> _image;
 };
 
 template <class Archive>
@@ -40,10 +42,9 @@ void load(Archive& ar,UIImage& image)
 {
     ar(cereal::make_nvp("base", cereal::base_class<UIElement>(&image)));
 
-    ResourceHandle<GPUImage> imageHandle;
+    HandleWrapper<GPUImage> imageHandle;
     ar(cereal::make_nvp("image",imageHandle));
     image.SetImageHandle(imageHandle);
-    
 }
 
 CEREAL_REGISTER_TYPE(UIImage);

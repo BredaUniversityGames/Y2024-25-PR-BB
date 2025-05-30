@@ -1,7 +1,9 @@
 #pragma once
 #include "engine.hpp"
+
 #include "ui_input.hpp"
 #include "viewport.hpp"
+#include "serialization.hpp"
 class GraphicsContext;
 class UIModule : public ModuleInterface
 {
@@ -18,8 +20,13 @@ public:
     NO_DISCARD const Viewport& GetViewport() const { return *_viewport; };
 
     UIInputContext uiInputContext;
+    std::unique_ptr<UIResources> uiResources;
+    
+    std::unordered_map<std::string, ResourceHandle<GPUImage>> uiImages;
     
 private:
+
+    
     ModuleTickOrder Init(MAYBE_UNUSED Engine& engine) final;
 
     std::unique_ptr<Viewport> _viewport;

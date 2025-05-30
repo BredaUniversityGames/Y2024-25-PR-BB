@@ -54,7 +54,7 @@ std::shared_ptr<MainMenu> MainMenu::Create(GraphicsContext& graphicsContext, con
 
         ResourceHandle<GPUImage> logo = graphicsContext.Resources()->ImageResourceManager().Create(commonImageData, sampler);
 
-        auto logoElement = main->AddChild<UIImage>(logo, pos, size);
+        auto logoElement = main->AddChild<UIImage>(HandleWrapper{"assets/textures/blightspire_logo.png",logo}, pos, size);
         logoElement->anchorPoint = UIElement::AnchorPoint::eTopLeft;
     }
 

@@ -31,7 +31,7 @@ std::shared_ptr<GameOverMenu> GameOverMenu::Create(GraphicsContext& graphicsCont
         commonImageData.initialData = { black, black, black, transparent };
 
         auto backdropImage = graphicsContext.Resources()->ImageResourceManager().Create(commonImageData);
-        auto image = over->AddChild<UIImage>(backdropImage, glm::vec2(), glm::vec2());
+        auto image = over->AddChild<UIImage>(HandleWrapper<GPUImage>{"BlackBackdrop",backdropImage}, glm::vec2(), glm::vec2());
         image->anchorPoint = UIElement::AnchorPoint::eFill;
     }
 

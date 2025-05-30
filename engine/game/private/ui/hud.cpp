@@ -49,20 +49,20 @@ std::shared_ptr<HUD> HUD::Create(GraphicsContext& graphicsContext, const glm::uv
     hud->SetAbsoluteTransform(hud->GetAbsoluteLocation(), screenResolution);
 
     ResourceHandle<GPUImage> crosshairImage = imageManager.Create(commonImageData.FromPNG("assets/textures/ui/cross_hair.png"));
-    hud->AddChild<UIImage>(crosshairImage, glm::vec2(0, 7), glm::vec2(25, 42) * 2.0f);
+    hud->AddChild<UIImage>(HandleWrapper{"assets/textures/ui/cross_hair.png",crosshairImage}, glm::vec2(0, 7), glm::vec2(25, 42) * 2.0f);
 
     // stats bg
     ResourceHandle<GPUImage> statsBGImage = imageManager.Create(commonImageData.FromPNG("assets/textures/ui/stats_bg.png"), HUDSampler);
-    auto statsBG = hud->AddChild<UIImage>(statsBGImage, glm::vec2(0, 0), glm::vec2(113, 39) * 8.0f);
+    auto statsBG = hud->AddChild<UIImage>(HandleWrapper{"assets/textures/ui/stats_bg.png",statsBGImage}, glm::vec2(0, 0), glm::vec2(113, 39) * 8.0f);
     statsBG->anchorPoint = UIElement::AnchorPoint::eBottomLeft;
 
     // gun
     ResourceHandle<GPUImage> gunBGImage = imageManager.Create(commonImageData.FromPNG("assets/textures/ui/gun_bg.png"), HUDSampler);
-    auto gunBG = hud->AddChild<UIImage>(gunBGImage, glm::vec2(0, 0), glm::vec2(69, 35) * 8.0f);
+    auto gunBG = hud->AddChild<UIImage>(HandleWrapper{"assets/textures/ui/gun_bg.png",gunBGImage}, glm::vec2(0, 0), glm::vec2(69, 35) * 8.0f);
     gunBG->anchorPoint = UIElement::AnchorPoint::eBottomRight;
 
     ResourceHandle<GPUImage> gunImage = imageManager.Create(commonImageData.FromPNG("assets/textures/ui/gun.png"), HUDSampler);
-    auto gun = hud->AddChild<UIImage>(gunImage, glm::vec2(16, 12) * 8.0f, glm::vec2(19, 8) * 8.0f);
+    auto gun = hud->AddChild<UIImage>(HandleWrapper{"assets/textures/ui/gun.png",gunImage}, glm::vec2(16, 12) * 8.0f, glm::vec2(19, 8) * 8.0f);
     gun->anchorPoint = UIElement::AnchorPoint::eBottomRight;
 
     hud->ammoCounter = hud->AddChild<UITextElement>(font, "17", glm::vec2(43, 10) * 8.0f, 12 * 8.0);
@@ -73,10 +73,10 @@ std::shared_ptr<HUD> HUD::Create(GraphicsContext& graphicsContext, const glm::uv
         = imageManager.Create(commonImageData.FromPNG("assets/textures/ui/hitmarker.png"));
     auto hitmarkerCritImage = graphicsContext.Resources()->ImageResourceManager().Create(commonImageData.FromPNG("assets/textures/ui/hitmarker_crit.png"));
 
-    hud->hitmarker = hud->AddChild<UIImage>(hitmarkerImage, glm::vec2(0, 7), glm::vec2(25, 42) * 2.0f);
+    hud->hitmarker = hud->AddChild<UIImage>(HandleWrapper{"assets/textures/ui/hitmarker.png",hitmarkerImage}, glm::vec2(0, 7), glm::vec2(25, 42) * 2.0f);
     hud->hitmarker.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
 
-    hud->hitmarkerCrit = hud->AddChild<UIImage>(hitmarkerCritImage, glm::vec2(0, 7), glm::vec2(25, 42) * 2.0f);
+    hud->hitmarkerCrit = hud->AddChild<UIImage>(HandleWrapper{"assets/textures/ui/hitmarker_crit.png",hitmarkerCritImage}, glm::vec2(0, 7), glm::vec2(25, 42) * 2.0f);
     hud->hitmarkerCrit.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
 
     // dashes
@@ -86,7 +86,7 @@ std::shared_ptr<HUD> HUD::Create(GraphicsContext& graphicsContext, const glm::uv
 
     for (int32_t i = 0; i < static_cast<int32_t>(hud->dashCharges.size()); i++)
     {
-        hud->dashCharges[i] = hud->AddChild<UIImage>(dashChargeImage, (glm::vec2(21 + 9.f * i, 19) * 8.0f), glm::vec2(6.f) * 8.f);
+        hud->dashCharges[i] = hud->AddChild<UIImage>(HandleWrapper{"assets/textures/ui/dash_charge.png",dashChargeImage}, (glm::vec2(21 + 9.f * i, 19) * 8.0f), glm::vec2(6.f) * 8.f);
         hud->dashCharges[i].lock()->anchorPoint = UIElement::AnchorPoint::eBottomLeft;
     }
 
@@ -97,14 +97,14 @@ std::shared_ptr<HUD> HUD::Create(GraphicsContext& graphicsContext, const glm::uv
 
     // souls indicator
     ResourceHandle<GPUImage> soulImage = imageManager.Create(commonImageData.FromPNG("assets/textures/ui/souls_indicator.png"), HUDSampler);
-    hud->soulIndicator = hud->AddChild<UIImage>(soulImage, glm::vec2(11, 18) * 8.0f, glm::vec2(5, 8) * 8.0f);
+    hud->soulIndicator = hud->AddChild<UIImage>(HandleWrapper{"assets/textures/ui/souls_indicator.png",soulImage}, glm::vec2(11, 18) * 8.0f, glm::vec2(5, 8) * 8.0f);
     hud->soulIndicator.lock()->anchorPoint = UIElement::AnchorPoint::eBottomLeft;
 
     ResourceHandle<GPUImage> waveBGImage = imageManager.Create(commonImageData.FromPNG("assets/textures/ui/wave_bg.png"), HUDSampler);
-    hud->AddChild<UIImage>(waveBGImage, glm::vec2(0, 0) * 8.0f, glm::vec2(59, 54) * 8.0f)->anchorPoint = UIElement::AnchorPoint::eTopRight;
+    hud->AddChild<UIImage>(HandleWrapper{"assets/textures/ui/wave_bg.png",waveBGImage}, glm::vec2(0, 0) * 8.0f, glm::vec2(59, 54) * 8.0f)->anchorPoint = UIElement::AnchorPoint::eTopRight;
 
     ResourceHandle<GPUImage> coinImage = imageManager.Create(commonImageData.FromPNG("assets/textures/ui/coin.png"), HUDSampler);
-    hud->AddChild<UIImage>(coinImage, glm::vec2(49, 20) * 8.0f + glm::vec2(300.f, 0), glm::vec2(4 * 8))->anchorPoint = UIElement::AnchorPoint::eBottomLeft;
+    hud->AddChild<UIImage>(HandleWrapper{"assets/textures/ui/coin.png",coinImage}, glm::vec2(49, 20) * 8.0f + glm::vec2(300.f, 0), glm::vec2(4 * 8))->anchorPoint = UIElement::AnchorPoint::eBottomLeft;
 
     // wave counter
 

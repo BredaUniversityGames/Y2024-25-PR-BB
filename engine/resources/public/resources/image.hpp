@@ -81,7 +81,6 @@ struct GPUImage
     vk::ImageType vkType { vk::ImageType::e2D };
 
     std::string name;
-
 private:
     std::shared_ptr<VulkanContext> _context;
 };

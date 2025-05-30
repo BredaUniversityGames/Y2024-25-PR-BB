@@ -34,7 +34,7 @@ std::shared_ptr<ControlsMenu> ControlsMenu::Create(const glm::uvec2& screenResol
         commonImageData.initialData = { black, black, black, transparent };
 
         auto backdropImage = graphicsContext.Resources()->ImageResourceManager().Create(commonImageData);
-        auto image = menu->AddChild<UIImage>(backdropImage, glm::vec2(), glm::vec2());
+        auto image = menu->AddChild<UIImage>(HandleWrapper{"BlackBackdrop",backdropImage}, glm::vec2(), glm::vec2());
         image->anchorPoint = UIElement::AnchorPoint::eFill;
     }
 
@@ -71,7 +71,7 @@ std::shared_ptr<ControlsMenu> ControlsMenu::Create(const glm::uvec2& screenResol
         commonImageData.SetFlags(vk::ImageUsageFlagBits::eSampled);
         commonImageData.isHDR = false;
 
-        auto image = popupPanel->AddChild<UIImage>(graphicsContext.Resources()->ImageResourceManager().Create(commonImageData.FromPNG("assets/textures/ui/popup_background.png"), menu->sampler), glm::vec2(0.0f), glm::vec2(0.0f));
+        auto image = popupPanel->AddChild<UIImage>(HandleWrapper{"assets/textures/ui/popup_background.png",graphicsContext.Resources()->ImageResourceManager().Create(commonImageData.FromPNG("assets/textures/ui/popup_background.png"), menu->sampler)}, glm::vec2(0.0f), glm::vec2(0.0f));
         image->anchorPoint = UIElement::AnchorPoint::eFill;
     }
 
@@ -168,7 +168,7 @@ ControlsMenu::ActionControls ControlsMenu::AddActionVisualization(const std::str
         const GPUImage* gpuImage = _graphicsContext.Resources()->ImageResourceManager().Access(glyphImage);
 
         glm::vec2 size = glm::vec2(gpuImage->width, gpuImage->height) * 0.15f;
-        binding.glyph = action.canvas->AddChild<UIImage>(glyphImage, glm::vec2(horizontalOffset, 0.0f), size);
+        binding.glyph = action.canvas->AddChild<UIImage>(HandleWrapper{origin.glyphImagePath,glyphImage}, glm::vec2(horizontalOffset, 0.0f), size);
         binding.glyph->anchorPoint = UIElement::AnchorPoint::eTopLeft;
 
         horizontalOffset += size.x + originHorizontalMargin;

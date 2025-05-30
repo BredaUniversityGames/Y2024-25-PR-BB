@@ -64,13 +64,12 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     }
 
     
-    auto s = Serialization::LoadFromJSON<MainMenu>("mainMenuStored.json");
-    assert(s.has_value());
-
+    
+        
     
 
-    //_mainMenu = viewport.AddElement(MainMenu::Create(graphicsContext, viewportSize, font));
-    _mainMenu = viewport.AddElement(std::make_shared<MainMenu>(s.value()));
+  //_mainMenu = viewport.AddElement(MainMenu::Create(graphicsContext, viewportSize, font));
+    _mainMenu = viewport.AddElement(std::make_shared<MainMenu>(Serialization::LoadFromJSON<MainMenu>("mainMenuStored.json").value()));
     _hud = viewport.AddElement(HUD::Create(graphicsContext, viewportSize, font));
     _loadingScreen = viewport.AddElement(LoadingScreen::Create(graphicsContext, viewportSize, font));
     _pauseMenu = viewport.AddElement(PauseMenu::Create(graphicsContext, viewportSize, font));
@@ -160,7 +159,7 @@ ModuleTickOrder GameModule::Init(Engine& engine)
 
     //Serialization::SerialiseToJSON("mainMenuStored.json",*_mainMenu.lock());
 
- //   Serialization::SerialiseToJSON("mainMenuStored.json", *_mainMenu.lock());
+  Serialization::SerialiseToJSON("mainMenuStored.json", *_mainMenu.lock());
     _mainMenu.lock()->UpdateAllChildrenAbsoluteTransform();
 
     return ModuleTickOrder::eTick;

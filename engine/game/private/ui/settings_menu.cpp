@@ -42,7 +42,7 @@ std::shared_ptr<SettingsMenu> SettingsMenu::Create(
         commonImageData.initialData = { black, black, black, transparent };
 
         auto backdropImage = graphicsContext.Resources()->ImageResourceManager().Create(commonImageData);
-        auto image = settings->AddChild<UIImage>(backdropImage, glm::vec2(), glm::vec2());
+        auto image = settings->AddChild<UIImage>(HandleWrapper{"BlackBackdrop",backdropImage}, glm::vec2(), glm::vec2());
         image->anchorPoint = UIElement::AnchorPoint::eFill;
     }
 

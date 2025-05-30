@@ -12,12 +12,9 @@
 #include <vector>
 #include <cereal/types/vector.hpp>
 #include <cereal/types/memory.hpp>
+
 class UIInputContext;
 struct InputManagers;
-
-
-
-
 
 /**
  * Base class from which all ui elements inherit. Updating and submitting of the ui happens
@@ -56,7 +53,7 @@ public:
     NO_DISCARD const glm::vec2& GetRelativeScale() const noexcept { return _relativeScale; }
 
     void SetScale(const glm::vec2& scale) noexcept;
-
+    
     virtual void SubmitDrawInfo(MAYBE_UNUSED std::vector<QuadDrawInfo>& drawList) const = 0;
     virtual void Update(const InputManagers& inputManagers, UIInputContext& uiInputContext);
 
@@ -68,12 +65,12 @@ public:
     {
         return _children;
     }
-
     
     NO_DISCARD const std::vector<std::shared_ptr<UIElement>>& GetChildren() const
     {
         return _children;
     }
+    
     enum class VisibilityState
     {
         eUpdatedAndVisible,
@@ -111,6 +108,7 @@ void save(Archive& ar,const UIElement& element)
 {
     ar(cereal::make_nvp("relativeLocation",element.GetRelativeLocation()));
     ar(cereal::make_nvp("relativeScale",element.GetRelativeScale()));
+    ar(CEREAL_NVP(element.anchorPoint));
     
     auto& children = element.GetChildren();
     ar(CEREAL_NVP(children));
@@ -124,13 +122,12 @@ void load(Archive& ar,UIElement& element)
     glm::vec2 scale;
     ar(location);
     ar(scale);
+    ar(CEREAL_NVP(element.anchorPoint));
     element.SetLocation(location);
     element.SetScale(scale);
     auto& children = element.GetChildren();
     ar(CEREAL_NVP(children));
-    
 }
-
 
 template <typename T, typename... Args>
     requires(std::derived_from<T, UIElement> && std::is_constructible_v<T, Args...>)

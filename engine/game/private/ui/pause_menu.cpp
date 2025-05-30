@@ -34,7 +34,7 @@ std::shared_ptr<PauseMenu> PauseMenu::Create(GraphicsContext& graphicsContext, c
         commonImageData.initialData = { black, black, black, transparent };
 
         auto backdropImage = graphicsContext.Resources()->ImageResourceManager().Create(commonImageData);
-        auto image = pause->AddChild<UIImage>(backdropImage, glm::vec2(), glm::vec2());
+        auto image = pause->AddChild<UIImage>(HandleWrapper{"BlackBackdrop",backdropImage}, glm::vec2(), glm::vec2());
         image->anchorPoint = UIElement::AnchorPoint::eFill;
     }
 

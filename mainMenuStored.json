@@ -10,6 +10,7 @@
                     "x": 3440.0,
                     "y": 1440.0
                 },
+                "element.anchorPoint": 1,
                 "children": [
                     {
                         "polymorphic_id": 2147483649,
@@ -26,11 +27,11 @@
                                         "x": 1091.3089599609376,
                                         "y": 540.0
                                     },
+                                    "element.anchorPoint": 1,
                                     "children": []
                                 },
                                 "image": {
-                                    "index": 22,
-                                    "version": 0
+                                    "h.resourceName": "assets/textures/blightspire_logo.png"
                                 }
                             }
                         }
@@ -50,6 +51,7 @@
                                         "x": 0.0,
                                         "y": 0.0
                                     },
+                                    "element.anchorPoint": 1,
                                     "children": [
                                         {
                                             "polymorphic_id": 2147483651,
@@ -66,6 +68,7 @@
                                                             "x": 522.0,
                                                             "y": 132.0
                                                         },
+                                                        "element.anchorPoint": 1,
                                                         "children": [
                                                             {
                                                                 "polymorphic_id": 2147483652,
@@ -82,6 +85,7 @@
                                                                                 "x": 0.0,
                                                                                 "y": 60.0
                                                                             },
+                                                                            "element.anchorPoint": 0,
                                                                             "children": []
                                                                         },
                                                                         "text": "Play",
@@ -97,18 +101,9 @@
                                                         ]
                                                     },
                                                     "style": {
-                                                        "style.normalImage": {
-                                                            "index": 19,
-                                                            "version": 0
-                                                        },
-                                                        "style.hoveredImage": {
-                                                            "index": 20,
-                                                            "version": 0
-                                                        },
-                                                        "style.pressedImage": {
-                                                            "index": 21,
-                                                            "version": 0
-                                                        }
+                                                        "style.normalImage": {},
+                                                        "style.hoveredImage": {},
+                                                        "style.pressedImage": {}
                                                     }
                                                 }
                                             }
@@ -127,6 +122,7 @@
                                                             "x": 522.0,
                                                             "y": 132.0
                                                         },
+                                                        "element.anchorPoint": 1,
                                                         "children": [
                                                             {
                                                                 "polymorphic_id": 4,
@@ -142,6 +138,7 @@
                                                                                 "x": 0.0,
                                                                                 "y": 60.0
                                                                             },
+                                                                            "element.anchorPoint": 0,
                                                                             "children": []
                                                                         },
                                                                         "text": "Controls",
@@ -156,18 +153,9 @@
                                                         ]
                                                     },
                                                     "style": {
-                                                        "style.normalImage": {
-                                                            "index": 19,
-                                                            "version": 0
-                                                        },
-                                                        "style.hoveredImage": {
-                                                            "index": 20,
-                                                            "version": 0
-                                                        },
-                                                        "style.pressedImage": {
-                                                            "index": 21,
-                                                            "version": 0
-                                                        }
+                                                        "style.normalImage": {},
+                                                        "style.hoveredImage": {},
+                                                        "style.pressedImage": {}
                                                     }
                                                 }
                                             }
@@ -186,6 +174,7 @@
                                                             "x": 522.0,
                                                             "y": 132.0
                                                         },
+                                                        "element.anchorPoint": 1,
                                                         "children": [
                                                             {
                                                                 "polymorphic_id": 4,
@@ -201,6 +190,7 @@
                                                                                 "x": 0.0,
                                                                                 "y": 60.0
                                                                             },
+                                                                            "element.anchorPoint": 0,
                                                                             "children": []
                                                                         },
                                                                         "text": "Settings",
@@ -215,18 +205,9 @@
                                                         ]
                                                     },
                                                     "style": {
-                                                        "style.normalImage": {
-                                                            "index": 19,
-                                                            "version": 0
-                                                        },
-                                                        "style.hoveredImage": {
-                                                            "index": 20,
-                                                            "version": 0
-                                                        },
-                                                        "style.pressedImage": {
-                                                            "index": 21,
-                                                            "version": 0
-                                                        }
+                                                        "style.normalImage": {},
+                                                        "style.hoveredImage": {},
+                                                        "style.pressedImage": {}
                                                     }
                                                 }
                                             }
@@ -245,6 +226,7 @@
                                                             "x": 522.0,
                                                             "y": 132.0
                                                         },
+                                                        "element.anchorPoint": 1,
                                                         "children": [
                                                             {
                                                                 "polymorphic_id": 4,
@@ -260,6 +242,7 @@
                                                                                 "x": 0.0,
                                                                                 "y": 60.0
                                                                             },
+                                                                            "element.anchorPoint": 0,
                                                                             "children": []
                                                                         },
                                                                         "text": "Quit",
@@ -274,18 +257,9 @@
                                                         ]
                                                     },
                                                     "style": {
-                                                        "style.normalImage": {
-                                                            "index": 19,
-                                                            "version": 0
-                                                        },
-                                                        "style.hoveredImage": {
-                                                            "index": 20,
-                                                            "version": 0
-                                                        },
-                                                        "style.pressedImage": {
-                                                            "index": 21,
-                                                            "version": 0
-                                                        }
+                                                        "style.normalImage": {},
+                                                        "style.hoveredImage": {},
+                                                        "style.pressedImage": {}
                                                     }
                                                 }
                                             }
@@ -309,6 +283,7 @@
                                         "x": 522.0,
                                         "y": 132.0
                                     },
+                                    "element.anchorPoint": 4,
                                     "children": [
                                         {
                                             "polymorphic_id": 4,
@@ -324,6 +299,7 @@
                                                             "x": 0.0,
                                                             "y": 50.0
                                                         },
+                                                        "element.anchorPoint": 0,
                                                         "children": []
                                                     },
                                                     "text": "Check out our Discord!",
@@ -338,18 +314,9 @@
                                     ]
                                 },
                                 "style": {
-                                    "style.normalImage": {
-                                        "index": 19,
-                                        "version": 0
-                                    },
-                                    "style.hoveredImage": {
-                                        "index": 20,
-                                        "version": 0
-                                    },
-                                    "style.pressedImage": {
-                                        "index": 21,
-                                        "version": 0
-                                    }
+                                    "style.normalImage": {},
+                                    "style.hoveredImage": {},
+                                    "style.pressedImage": {}
                                 }
                             }
                         }

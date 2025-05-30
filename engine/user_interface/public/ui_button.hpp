@@ -53,6 +53,8 @@ private:
 template <class Archive>
 void save(Archive& ar,const UIButton::ButtonStyle& style)
 {
+    
+    
     ar(CEREAL_NVP(style.normalImage));
     ar(CEREAL_NVP(style.hoveredImage));
     ar(CEREAL_NVP(style.pressedImage));

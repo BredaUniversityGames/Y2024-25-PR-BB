@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include <memory>
+
 #include <optional>
 #include <unordered_map>
 #include <vector>
@@ -49,37 +49,26 @@ struct ResourceHandle final
 
     bool IsNull() const { return index == RESOURCE_NULL_INDEX_VALUE; }
 
-    
- 
 private:
     friend class VulkanContext;
     friend ResourceManager<T>;
 
     std::weak_ptr<ResourceManager<T>> manager;
     uint32_t index { 0 };
-    uint32_t version { 0 };
+    uint32_t version { 0 }; 
 };
 
 template <class Archive, class T>
  void save(Archive& ar,const ResourceHandle<T>& h) 
 {
-    ar(cereal::make_nvp("index",h.Index()),
-    cereal::make_nvp("version", h.Version()));
+
 }
 
 
 template <class Archive, class T>
  void load(Archive& ar, ResourceHandle<T>& h) 
 {
-
-    uint32_t index;
-    uint32_t version;
-    ar(cereal::make_nvp("index",index),
-    cereal::make_nvp("version", version));
-    h = ResourceHandle<T>({}, index,version);
 }
-    
-    
 
 template <typename T>
 class ResourceManager : public std::enable_shared_from_this<ResourceManager<T>>
