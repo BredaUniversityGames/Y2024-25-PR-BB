@@ -17,7 +17,6 @@ std::shared_ptr<CreditsMenu> CreditsMenu::Create(
     const glm::uvec2& screenResolution,
     std::shared_ptr<UIFont> font)
 {
-    auto& gameModule = engine.GetModule<GameModule>();
     auto credits = std::make_shared<CreditsMenu>(screenResolution);
 
     credits->anchorPoint = UIElement::AnchorPoint::eMiddle;
