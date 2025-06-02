@@ -82,7 +82,7 @@ std::shared_ptr<CreditsMenu> CreditsMenu::Create(
             { "Marcin Zalewski", "Engine / Graphics" },
             { "Rares Dumitru", "Gameplay / Graphics" },
             { "Lars Janssen", "Engine / Trailer" },
-            { "Sikandar Maksoedan", "Set Dressing" },
+            { "Sikandar Maksoedan", "Setdressing / Tech art" },
             { "Vengar van de Wal", "Graphics" },
             { "Santiago Bernardino", "Engine / QA" },
         };
