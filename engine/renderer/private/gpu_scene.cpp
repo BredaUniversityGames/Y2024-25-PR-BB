@@ -546,9 +546,9 @@ void GPUScene::SpawnDecal(glm::vec3 normal, glm::vec3 position, glm::vec2 size, 
         .albedoIndex = image.Index(),
     };
 
-    // Place a new decal, and fill the buffer
-    const uint32_t decalIndex = (_decals.count++) % MAX_DECALS;
-    _decals.decals[decalIndex] = newDecal;
+    _decals.decals[_decalIndex % MAX_DECALS] = newDecal;
+    _decalIndex = (_decalIndex + 1);
+    _decals.count = std::min(_decalIndex, MAX_DECALS);
 }
 
 void GPUScene::ResetDecals()

@@ -64,7 +64,7 @@ std::shared_ptr<MainMenu> MainMenu::Create(GraphicsContext& graphicsContext, con
 
     {
         buttonPanel->anchorPoint = UIElement::AnchorPoint::eTopLeft;
-        buttonPanel->SetLocation(glm::vec2(screenResFloat.y * 0.37f, screenResFloat.y * 0.6f));
+        buttonPanel->SetLocation(glm::vec2(screenResFloat.y * 0.35f, screenResFloat.y * 0.6f));
     }
 
     {
@@ -93,6 +93,13 @@ std::shared_ptr<MainMenu> MainMenu::Create(GraphicsContext& graphicsContext, con
         auto settingsButton = buttonPanel->AddChild<UIButton>(buttonStyle, buttonPos, buttonBaseSize);
         settingsButton->anchorPoint = UIElement::AnchorPoint::eTopLeft;
         settingsButton->AddChild<UITextElement>(font, "Settings", textSize);
+
+        buttonPos += increment;
+
+        auto creditsButton = buttonPanel->AddChild<UIButton>(buttonStyle, buttonPos, buttonBaseSize);
+        creditsButton->anchorPoint = UIElement::AnchorPoint::eTopLeft;
+        creditsButton->AddChild<UITextElement>(font, "Credits", textSize);
+
         buttonPos += increment;
 
         auto quitButton = buttonPanel->AddChild<UIButton>(buttonStyle, buttonPos, buttonBaseSize);
@@ -103,6 +110,7 @@ std::shared_ptr<MainMenu> MainMenu::Create(GraphicsContext& graphicsContext, con
         main->quitButton = quitButton;
         main->settingsButton = settingsButton;
         main->controlsButton = controlsButton;
+        main->creditsButton = creditsButton;
 
         playButton->navigationTargets.down = main->controlsButton;
         playButton->navigationTargets.up = main->openLinkButton;
@@ -110,11 +118,14 @@ std::shared_ptr<MainMenu> MainMenu::Create(GraphicsContext& graphicsContext, con
         controlsButton->navigationTargets.down = main->settingsButton;
         controlsButton->navigationTargets.up = main->playButton;
 
-        settingsButton->navigationTargets.down = main->quitButton;
+        settingsButton->navigationTargets.down = main->creditsButton;
         settingsButton->navigationTargets.up = main->controlsButton;
 
+        creditsButton->navigationTargets.down = main->quitButton;
+        creditsButton->navigationTargets.up = main->settingsButton;
+
         quitButton->navigationTargets.down = main->openLinkButton;
-        quitButton->navigationTargets.up = main->settingsButton;
+        quitButton->navigationTargets.up = main->creditsButton;
 
         main->openLinkButton.lock()->navigationTargets.down = main->playButton;
         main->openLinkButton.lock()->navigationTargets.up = main->quitButton;

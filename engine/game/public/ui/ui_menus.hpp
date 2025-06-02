@@ -60,6 +60,7 @@ public:
     std::weak_ptr<UIButton> playButton;
     std::weak_ptr<UIButton> settingsButton;
     std::weak_ptr<UIButton> controlsButton;
+    std::weak_ptr<UIButton> creditsButton;
     std::weak_ptr<UIButton> quitButton;
     std::weak_ptr<UIButton> openLinkButton;
 };
@@ -205,6 +206,19 @@ private:
     ActionControls AddActionVisualization(const std::string& actionName, Canvas& parent, float positionY, bool isAnalogInput);
     ResourceHandle<GPUImage> GetGlyphImage(const std::string& path);
     void ClearBindings();
+};
+
+class CreditsMenu : public Canvas
+{
+public:
+    static std::shared_ptr<CreditsMenu> Create(Engine& engine, GraphicsContext& graphicsContext, const glm::uvec2& screenResolution, std::shared_ptr<UIFont> font);
+
+    CreditsMenu(const glm::uvec2& screenResolution)
+        : Canvas(screenResolution)
+    {
+    }
+
+    std::weak_ptr<UIButton> backButton {};
 };
 
 class SettingsMenu : public Canvas
