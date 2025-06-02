@@ -205,7 +205,7 @@ private:
     struct alignas(16) DecalArray
     {
         std::array<DecalData, MAX_DECALS> decals;
-        uint32_t count = 0;
+        uint32_t count = MAX_DECALS;
     };
 
     struct FrameData
@@ -255,6 +255,8 @@ private:
     ClusterCullingData _clusterCullingData;
 
     DecalArray _decals;
+    uint32_t _decalIndex {};
+
     ResourceHandle<GPUImage>& GetDecalImage(std::string fileName);
     std::unordered_map<std::string, ResourceHandle<GPUImage>> _decalImages;
     std::array<FrameData, MAX_FRAMES_IN_FLIGHT> _decalFrameData;
