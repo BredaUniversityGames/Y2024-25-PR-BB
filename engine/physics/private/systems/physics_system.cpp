@@ -65,7 +65,6 @@ void PhysicsSystem::Update(MAYBE_UNUSED ECSModule& ecs, MAYBE_UNUSED float delta
         if (relationship && relationship->parent != entt::null)
             RelationshipHelpers::DetachChild(_ecs.GetRegistry(), relationship->parent, entity);
 
-        // Crazy jolt stuff that I dont like but it works to set the proper scale
         auto shape = _physicsModule._physicsSystem->GetBodyInterface().GetShape(active_body);
 
         if (auto scaled_shape = dynamic_cast<const JPH::ScaledShape*>(shape.GetPtr()))
