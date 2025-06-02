@@ -83,14 +83,10 @@ class Coin {
     }
 
     CheckRange(engine, playerPos, playerVariables, flashSystem, coinManager, dt){
-        var coinTransform = _rootEntity.GetTransformComponent()
-        var coinPos = coinTransform.translation
-        var distance = Math.Distance(coinPos, playerPos)
 
-        var coinTransform = _rootEntity.GetTransformComponent()
         var coinRigidbody = _rootEntity.GetRigidbodyComponent()
-
         var coinPos = coinRigidbody.GetPosition()
+        
         _lightEntity.GetTransformComponent().translation = coinPos + _lightOffset // Update light position
 
         var distance = Math.Distance(coinPos, playerPos)
@@ -186,13 +182,10 @@ class Coin {
 
 class CoinManager {
     construct new(engine, player){
+
         _coinList = [] // List of coins
         _playerEntity = player // Reference to the player entity
         _maxLifeTimeOfCoin = 15000.0 // Maximum lifetime of a coin
-
-
-
-
 
         _purseLightEntity = engine.GetECS().NewEntity()
         _purseLightEntity.AddNameComponent().name = "Purse Light"
