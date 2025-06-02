@@ -318,6 +318,7 @@ class Main {
         var healthFraction = __playerVariables.health / __playerVariables.maxHealth
         engine.GetAudio().SetEventFloatAttribute(__heartBeatEvent, "Health", healthFraction)
         if (healthFraction < 0.3) {
+            __flashSystem.SetBaseColor(Vec3.new(105 / 255, 13 / 255, 1 / 255),2 - healthFraction*4)
             engine.GetAudio().EnableLowPass()
         } else {
             engine.GetAudio().DisableLowPass()
