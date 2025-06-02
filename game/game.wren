@@ -8,7 +8,7 @@ import "gameplay/wave_system.wren" for WaveSystem, WaveConfig, EnemyType, WaveGe
 import "analytics/analytics.wren" for AnalyticsManager
 
 import "gameplay/hud.wren" for WrenHUD
-import "gameplay/soul.wren" for Soul, SoulManager
+import "gameplay/soul.wren" for Soul, SoulManager, SoulType
 import "gameplay/coin.wren" for Coin, CoinManager
 import "gameplay/flash_system.wren" for FlashSystem
 import "gameplay/station.wren" for PowerUpType, Station, StationManager
@@ -162,7 +162,7 @@ class Main {
         __secondaryWeapon = __armory[Weapons.pistol2]
 
         // create the player movement
-        __playerMovement = PlayerMovement.new(false,0.0,__activeWeapon)
+        __playerMovement = PlayerMovement.new(false,0.0,__activeWeapon,__player)
         var mousePosition = engine.GetInput().GetMousePosition()
         __playerMovement.lastMousePosition = mousePosition
 
@@ -390,15 +390,15 @@ class Main {
                 }
             }
 
-            if (engine.GetInput().DebugGetKey(Keycode.e1()) && __activeWeapon.isUnequiping(engine) == false) {
-                __activeWeapon.unequip(engine)
-                __nextWeapon = __armory[Weapons.pistol]
-            }
+            // if (engine.GetInput().DebugGetKey(Keycode.e1()) && __activeWeapon.isUnequiping(engine) == false) {
+            //     __activeWeapon.unequip(engine)
+            //     __nextWeapon = __armory[Weapons.pistol]
+            // }
 
-            if (engine.GetInput().DebugGetKey(Keycode.e2()) && __activeWeapon.isUnequiping(engine) == false) {
-                __activeWeapon.unequip(engine)
-                __nextWeapon = __armory[Weapons.shotgun]
-            }
+            // if (engine.GetInput().DebugGetKey(Keycode.e2()) && __activeWeapon.isUnequiping(engine) == false) {
+            //     __activeWeapon.unequip(engine)
+            //     __nextWeapon = __armory[Weapons.shotgun]
+            // }
         }
 
         if(__activeWeapon.isUnequiping(engine) == false && __nextWeapon != null){
@@ -482,7 +482,7 @@ class Main {
         __playerVariables.hud.Update(engine, dt,__playerMovement,__playerVariables,__activeWeapon.ammo, __activeWeapon.maxAmmo)
 
         if (!engine.IsDistribution()) {
-            DebugUtils.Tick(engine, __enemyList, __coinManager, __flashSystem, __waveSystem, __playerVariables)
+            DebugUtils.Tick(engine, __enemyList,__soulManager, __coinManager, __flashSystem, __waveSystem, __playerVariables)
         }
     }
 }

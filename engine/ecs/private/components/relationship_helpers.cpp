@@ -92,14 +92,14 @@ void RelationshipHelpers::OnDestroyRelationship(entt::registry& reg, entt::entit
     }
 
     // Siblings
-    if (relationship.prev != entt::null)
+    if (relationship.prev != entt::null && reg.all_of<RelationshipComponent>(relationship.prev))
     {
         RelationshipComponent& prev = reg.get<RelationshipComponent>(relationship.prev);
 
         prev.next = relationship.next;
     }
 
-    if (relationship.next != entt::null)
+    if (relationship.next != entt::null  && reg.all_of<RelationshipComponent>(relationship.next))
     {
         RelationshipComponent& next = reg.get<RelationshipComponent>(relationship.next);
 

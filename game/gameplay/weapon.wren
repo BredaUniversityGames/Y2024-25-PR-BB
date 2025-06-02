@@ -15,7 +15,7 @@ class Pistol {
     construct new(engine, name, barrelEndPosition) {
         _damage = 1
         _headShotMultiplier = 2.0
-        _range = 64
+        _range = 100
         _rangeVector = Vec3.new(_range, _range, _range)
         _attackSpeed = 0.4 * 1000
         _manualTimer = 0
@@ -24,12 +24,13 @@ class Pistol {
         _cooldown = 0
         _reloadTimer = 0
         _reloadSpeed = 0.8 * 1000
-        _aimAssistMinAngle = 0.98
+        _aimAssistMinAngle = 0.995
 
         _cameraShakeIntensity = 0.3
 
         _attackSFX = "event:/SFX/Revolver"
         _reloadSFX = "event:/SFX/ReloadPistol"
+        _inspectSFX = "event:/SFX/Inspect"
         _shotSFX = "event:/SFX/Shoot"
         _quadHit = "event:/SFX/QuadDamageHit"
         _dualGunHit = "event:/SFX/DualGunHit"
@@ -51,6 +52,11 @@ class Pistol {
         var transform = _barrelEndEntity.AddTransformComponent()
         gun.AttachChild(_barrelEndEntity)
         transform.translation = _barrelEndPosition
+
+
+        _emitterFlags = SpawnEmitterFlagBits.eIsActive()
+
+
 
         var finalName = _barrelEndEntity.GetNameComponent().name
 
@@ -80,29 +86,25 @@ class Pistol {
             var playerController = engine.GetECS().GetEntityByName("PlayerController")
             var rb =  playerController.GetRigidbodyComponent()
             var velocity = rb.GetVelocity()
-
-            var eventInstance = engine.GetAudio().PlayEventOnce(_reloadSFX)
             var audioEmitter = player.GetAudioEmitterComponent()
-            audioEmitter.AddEvent(eventInstance)
 
-            var gunTransform = gun.GetTransformComponent()
-            var gunTranslation = gunTransform.GetWorldTranslation()
-            var gunRotation = gunTransform.GetWorldRotation()
-            var gunForward = Math.ToVector(gunRotation)
-            var gunUp = gunRotation.mulVec3(Vec3.new(0, 1, 0))
-            var gunRight = Math.Cross(gunForward, gunUp)
-            //var gunStart = gunTranslation + gunForward * Vec3.new(1, 1, 1) - gunRight * Vec3.new(4.0,4.0,4.0) - gunUp * Vec3.new(0.0, 0.5, 0.0)
-            var gunStart = _barrelEndEntity.GetTransformComponent().GetWorldTranslation()
+            if(_ammo < _maxAmmo) {
+                var eventInstance = engine.GetAudio().PlayEventOnce(_reloadSFX)
+                audioEmitter.AddEvent(eventInstance)
 
-            //play a particle effect
-            var entity = engine.GetECS().NewEntity()
-            var transform = entity.AddTransformComponent()
-            transform.translation = Vec3.new(gunStart.x, gunStart.y-0.5, gunStart.z)
-            var lifetime = entity.AddLifetimeComponent()
-            lifetime.lifetime = 175.0
-            var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
-            engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eBullets(),emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.1, 7.5, 0.1) + velocity.mulScalar(1.01))
-
+                var gunStart = _barrelEndEntity.GetTransformComponent().GetWorldTranslation()
+                //play a particle effect
+                var entity = engine.GetECS().NewEntity()
+                var transform = entity.AddTransformComponent()
+                transform.translation = Vec3.new(gunStart.x, gunStart.y-0.5, gunStart.z)
+                var lifetime = entity.AddLifetimeComponent()
+                lifetime.lifetime = 175.0
+                var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
+                engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eBullets(),emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.1, 7.5, 0.1) + velocity.mulScalar(1.01))
+            }else{
+                var eventInstance = engine.GetAudio().PlayEventOnce(_inspectSFX)
+                audioEmitter.AddEvent(eventInstance)
+            }
 
             _reloadTimer = _reloadSpeed
             _ammo = _maxAmmo
@@ -155,6 +157,34 @@ class Pistol {
             // Play shooting audio
             var eventInstance = engine.GetAudio().PlayEventOnce(_shotSFX)
             var audioEmitter = player.GetAudioEmitterComponent()
+
+            // muzzle flash
+            var muzzleEntity = engine.GetECS().NewEntity()
+            muzzleEntity.AddNameComponent().name = "Muzzle %(_entityName)"
+            var muzzleTransform = muzzleEntity.AddTransformComponent()
+
+            var muzzleLightEntity = engine.GetECS().NewEntity()
+            muzzleLightEntity.AddNameComponent().name = "MuzzleLight %(_entityName)"
+            var muzzleLightTransform = muzzleLightEntity.AddTransformComponent()
+            muzzleLightTransform.translation = Vec3.new(2.0, 1.0, 0.0)
+
+            var muzzleLight = muzzleLightEntity.AddPointLightComponent()
+            muzzleLight.color = Vec3.new(200/255, 83/255, 33/255)
+            muzzleLight.range = 20.0
+            muzzleLight.intensity = 128.0
+
+            var barrelEndPosition = _barrelEndEntity.GetTransformComponent().GetWorldTranslation()
+            muzzleTransform.translation = Vec3.new(-0.55 , 0.195, 0.35)
+            _barrelEndEntity.AttachChild(muzzleEntity)
+            _barrelEndEntity.AttachChild(muzzleLightEntity)
+            _barrelEndEntity.DetachChild(muzzleEntity)
+            _barrelEndEntity.DetachChild(muzzleLightEntity)
+            engine.GetParticles().SpawnEmitter(muzzleEntity, playerVariables.GetMuzzleFlashRay(),_emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.0, 0.0, 0.0))
+            var muzzleLife = muzzleEntity.AddLifetimeComponent()
+            muzzleLife.lifetime = 50.0
+            var muzzleLightLife = muzzleLightEntity.AddLifetimeComponent()
+            muzzleLightLife.lifetime = 50.0
+
 
             // Play quad damage audio if needed
             if(playerVariables.GetCurrentPowerUp() == PowerUpType.QUAD_DAMAGE){
@@ -223,7 +253,7 @@ class Pistol {
 
                                     var multiplier = 1.0
 
-                                    if (enemy.IsHeadshot(rayHit.position.y) && !aimAssistNeeded) {
+                                    if (enemy.IsHeadshot(rayHit.position.y) ) {
                                         multiplier = _headShotMultiplier
                                         // Critical hitmarker
                                         playerVariables.hitmarkTimer = 200 //ms

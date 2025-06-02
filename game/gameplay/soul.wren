@@ -2,8 +2,13 @@ import "engine_api.wren" for Engine, ECS, Entity, Vec3, Vec2, Math, AnimationCon
 import "gameplay/player.wren" for PlayerVariables
 import "gameplay/flash_system.wren" for FlashSystem
 
+class SoulType {
+    static SMALL{0}
+    static BIG {1} 
+}
 class Soul {
-    construct new(engine, spawnPosition) {
+    construct new(engine, spawnPosition, type) {
+        _soulType = type
 
         _minRange = 1.0 // Range for the soul to be picked up by the player
         _mediumRange = 7.0
@@ -16,8 +21,29 @@ class Soul {
         var transform = _rootEntity.AddTransformComponent()
         transform.translation = spawnPosition
 
+        _lightEntity = engine.GetECS().NewEntity()
+        _lightEntity.AddNameComponent().name = "Soul Light"
+        var lightTransform = _lightEntity.AddTransformComponent()
+        _pointLight = _lightEntity.AddPointLightComponent()
+
+        _rootEntity.AttachChild(_lightEntity)
+
         var emitterFlags = SpawnEmitterFlagBits.eIsActive()
-        engine.GetParticles().SpawnEmitter(_rootEntity, EmitterPresetID.eSoulSheet(),emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.0, 0.0, 0.0))
+
+        if(_soulType == SoulType.SMALL){
+            _pointLight.intensity = 10
+            _pointLight.range = 3.0
+            _pointLight.color = Vec3.new(0.23, 0.71, 0.36)
+            engine.GetParticles().SpawnEmitter(_rootEntity, EmitterPresetID.eSoulSheet(),emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.0, 0.0, 0.0))
+        }
+
+        if(_soulType == SoulType.BIG){
+            _pointLight.intensity = 15
+            _pointLight.range = 5.0
+            _pointLight.color = Vec3.new(1,1,1)
+            engine.GetParticles().SpawnEmitter(_rootEntity, EmitterPresetID.eSoulSheetBig(),emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.0, 0.0, 0.0))
+        }
+
 
         _time = 0.0 // Time since the soul was spawned
 
@@ -50,7 +76,14 @@ class Soul {
 
             if(distance < _minRange){
                 if(playerVariables.health < playerVariables.maxHealth){
-                    playerVariables.IncreaseHealth(1) // Increase player health
+
+                    if(_soulType == SoulType.SMALL){
+                        playerVariables.IncreaseHealth(2) // Increase player health
+                    }
+
+                    if(_soulType == SoulType.BIG){
+                        playerVariables.IncreaseHealth(6) // Increase player health
+                    }
                 }
 
                  // Play audio
@@ -63,7 +96,15 @@ class Soul {
                 // Play flash effect
 
                 playerVariables.hud.TriggerSoulIndicatorAnimation()
-                flashSystem.Flash(Vec3.new(0.23, 0.71, 0.36),0.55)
+
+                if(_soulType == SoulType.SMALL){
+                    flashSystem.Flash(Vec3.new(0.23, 0.71, 0.36),0.35)
+                }
+
+                if(_soulType == SoulType.BIG){
+                    flashSystem.Flash(Vec3.new(0.23, 0.71, 0.36),0.75)
+                }
+               
 
                 this.Destroy() // Destroy the soul after it is collected
 
@@ -94,11 +135,11 @@ class SoulManager {
     construct new(engine, player){
         _soulList = [] // List of souls
         _playerEntity = player // Reference to the player entity
-        _maxLifeTimeOfSoul = 10000.0 // Maximum lifetime of a soul
+        _maxLifeTimeOfSoul = 20000.0 // Maximum lifetime of a soul
     }
 
-    SpawnSoul(engine, spawnPosition){
-        _soulList.add(Soul.new(engine, spawnPosition)) // Add the soul to the list
+    SpawnSoul(engine, spawnPosition,type){
+        _soulList.add(Soul.new(engine, spawnPosition,type)) // Add the soul to the list
     }
 
     Update(engine, playerVariables,flashSystem, dt){

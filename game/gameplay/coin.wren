@@ -6,9 +6,9 @@ import "gameplay/flash_system.wren" for FlashSystem
 class Coin {
     construct new(engine, spawnPosition) {
 
-        _minRange = 2.0 // Range for the coin to be picked up by the player
-        _maxRange = 4.0 // Range for the coin to start following the player
-        _lightOffset = Vec3.new(0.0, 0.22, 0.0) // Offset for the light position
+        _minRange = 0.5 // Range for the coin to be picked up by the player
+        _mediumRange = 3.0
+        _maxRange = 5.0 // Range for the coin to start following the player
 
         _rootEntity = engine.LoadModel("assets/models/nug.glb", false)
         _rootEntity.AddNameComponent().name = "Coin"
@@ -23,11 +23,14 @@ class Coin {
         _lightEntity.AddNameComponent().name = "CoinLight"
 
         var lightTransform = _lightEntity.AddTransformComponent()
-
-        _pointLight = _lightEntity.AddPointLightComponent()
-        _pointLight.intensity = 10.0
-        _pointLight.range = 0.5
-        _pointLight.color = Vec3.new(0.9, 0.9, 0.08)
+        lightTransform.translation = Vec3.new(0.001, 0.22, 0.001)
+        var pointLight = _lightEntity.AddPointLightComponent()
+        pointLight.intensity = 10
+        pointLight.range = 0.5
+        pointLight.color = Vec3.new(0.9, 0.9, 0.08)
+        _rootEntity.AttachChild(_lightEntity)
+        var transparencyComponent = _meshEntity.AddTransparencyComponent()
+        transparencyComponent.transparency = 1.0
         
         // Coin collision
         // Physics callback with the two wren entities as parameters
@@ -76,9 +79,13 @@ class Coin {
         _collectSoundEvent = "event:/SFX/Coin"
         this.PlaySound(engine,0.65)
 
+
     }
 
-    CheckRange(engine, playerPos, playerVariables, flashSystem, dt){
+    CheckRange(engine, playerPos, playerVariables, flashSystem, coinManager, dt){
+        var coinTransform = _rootEntity.GetTransformComponent()
+        var coinPos = coinTransform.translation
+        var distance = Math.Distance(coinPos, playerPos)
 
         var coinTransform = _rootEntity.GetTransformComponent()
         var coinRigidbody = _rootEntity.GetRigidbodyComponent()
@@ -89,10 +96,12 @@ class Coin {
         var distance = Math.Distance(coinPos, playerPos)
 
         if(distance < _maxRange){
+           coinManager.SetIsNearGold(true) // Set the player is near gold flag
+            coinManager.ResetPurseTimer() // Reset the purse timer
             _velocity = (playerPos - coinPos).normalize()
 
-            var arcHeight = distance * 0.25
-            _velocity = _velocity.mulScalar(5.0) + Vec3.new(0.0, arcHeight, 0.0)
+            var arcHeight = distance * 2.0
+            _velocity = _velocity.mulScalar(8.0) + Vec3.new(0.0, arcHeight, 0.0)
 
 
             var progress = 1.0 - (distance / _maxRange)
@@ -112,7 +121,9 @@ class Coin {
                 audioEmitter.AddEvent(eventInstance)
 
                 // Play flash effect
-                flashSystem.Flash(Vec3.new(0.89, 0.77, 0.06), 0.1)
+                //flashSystem.Flash(Vec3.new(0.89, 0.77, 0.06),0.1)
+                coinManager.SetPurseLightTarget(50.0) // Set the purse light target intensity
+                coinManager.BoostPurseLightIntensity(2.0 * dt)
 
                 this.Destroy() // Destroy the coin after it is collected
                
@@ -127,6 +138,24 @@ class Coin {
         var audioEmitter = _rootEntity.GetAudioEmitterComponent()
         audioEmitter.AddEvent(eventInstance)
     }
+
+    SetTransparency(value){
+        _meshEntity.GetTransparencyComponent().transparency = value // Set the transparency of the coin mesh
+        //_transparencyComponent.transparency = value // Set the transparency of the coin mesh
+    }
+
+    GetTransparency(){
+        return _meshEntity.GetTransparencyComponent().transparency // Get the transparency of the coin mesh
+    }
+
+    SetLightIntensity(value){
+        _lightEntity.GetPointLightComponent().intensity = value // Set the intensity of the coin light
+    }
+
+    GetLightIntensity(){
+        return _lightEntity.GetPointLightComponent().intensity // Get the intensity of the coin light
+    }
+
 
     Destroy(){
         
@@ -159,24 +188,82 @@ class CoinManager {
     construct new(engine, player){
         _coinList = [] // List of coins
         _playerEntity = player // Reference to the player entity
-        _maxLifeTimeOfCoin = 10000.0 // Maximum lifetime of a coin
+        _maxLifeTimeOfCoin = 15000.0 // Maximum lifetime of a coin
+
+
+
+
+
+        _purseLightEntity = engine.GetECS().NewEntity()
+        _purseLightEntity.AddNameComponent().name = "Purse Light"
+        var purseLightTransform = _purseLightEntity.AddTransformComponent()
+        purseLightTransform.translation = Vec3.new(-0.1,-0.3,-0.8)
+        _pursePointLight = _purseLightEntity.AddPointLightComponent()
+        _purseLightTarget = 100.25
+        _pursePointLight.intensity = 0.0
+        _pursePointLight.range = 1.0
+        _pursePointLight.color = Vec3.new(0.9, 0.9, 0.08)
+
+        player.AttachChild(_purseLightEntity)
+
+
+        _playerIsNearGold = false
+        _purseTimer = 0.0 
+        _maxPurseTime = 200.0
+
     }
 
     SpawnCoin(engine, spawnPosition){
         _coinList.add(Coin.new(engine, spawnPosition)) // Add the coin to the list
     }
 
+    SetIsNearGold(value){
+        _playerIsNearGold = value // Set the player is near gold flag
+    }
+
+    SetPurseLightTarget(value){
+        _purseLightTarget = value // Set the purse light target intensity
+    }
+
+    BoostPurseLightIntensity(value){
+        _pursePointLight.intensity = _pursePointLight.intensity + value // Increase the purse light target intensity
+    }
+
+    ResetPurseTimer(){
+        _purseTimer = 0.0 
+    }
+
     Update(engine, playerVariables, flashSystem, dt){
+
+        var purseLight = _purseLightEntity.GetPointLightComponent()
+
+        purseLight.intensity =  purseLight.intensity - 0.15 * dt
+        purseLight.intensity = Math.Max(purseLight.intensity, 0.0) // Clamp the intensity to 0
+            
         var playerTransform = _playerEntity.GetTransformComponent()
         var playerPos = playerTransform.translation
         playerPos.y = playerPos.y - 2.0
 
         for(coin in _coinList){
             if(coin.entity.IsValid()){
-                coin.CheckRange(engine, playerPos, playerVariables,flashSystem, dt) // Check if the coin is within range of the player
+                coin.CheckRange(engine, playerPos, playerVariables,flashSystem,this, dt) // Check if the coin is within range of the player
                 coin.time = coin.time + dt
                 coin.collisionSoundTimer = coin.collisionSoundTimer + dt
                 var body  = coin.entity.GetRigidbodyComponent()
+
+                // fade out the coins
+                var fadeStart = _maxLifeTimeOfCoin * (2.0 / 3.0)
+                var fadeDuration = _maxLifeTimeOfCoin * (1.0 / 3.0)
+                if(coin.time > fadeStart){
+                    var t = (coin.time - fadeStart) / fadeDuration
+                    t = Math.Min(Math.Max(t, 0), 1) // Clamp between 0 and 1
+
+                    var transparency = 1.0 - t
+                    var lightIntensity = (1.0 - t) * 10.0
+
+                    coin.SetTransparency(transparency) // Set the transparency of the coin mesh
+                    coin.SetLightIntensity(lightIntensity) // Set the intensity of the coin light
+                }
 
                 if(coin.time > _maxLifeTimeOfCoin && !coin.entity.GetLifetimeComponent()){
                     coin.Destroy() // Destroy the coin if it has been around for too long
@@ -185,5 +272,20 @@ class CoinManager {
                 _coinList.removeAt(_coinList.indexOf(coin)) // Remove the coin from the list if it is no longer valid
             }
         }
+
+        if(_playerIsNearGold){
+            purseLight.intensity = purseLight.intensity + 0.05 * dt
+            purseLight.intensity = Math.Min(purseLight.intensity, _purseLightTarget) // Clamp the intensity to the target value
+        }else{
+            
+        }
+        
+
+        _purseTimer = _purseTimer + dt
+        if(_purseTimer > _maxPurseTime){
+           _playerIsNearGold = false
+            _purseTimer = 0.0 // Reset the purse timer
+        }
+        
     }
 }
