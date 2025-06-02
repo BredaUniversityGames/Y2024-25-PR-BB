@@ -205,7 +205,7 @@ private:
     struct alignas(16) DecalArray
     {
         std::array<DecalData, MAX_DECALS> decals;
-        uint32_t count = MAX_DECALS;
+        uint32_t count;
     };
 
     struct FrameData
