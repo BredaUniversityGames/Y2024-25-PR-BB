@@ -67,6 +67,7 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     _pauseMenu = viewport.AddElement(PauseMenu::Create(graphicsContext, viewportSize, font));
     _gameOver = viewport.AddElement(GameOverMenu::Create(graphicsContext, viewportSize, font));
     _controlsMenu = viewport.AddElement(ControlsMenu::Create(viewportSize, graphicsContext, engine.GetModule<ApplicationModule>().GetActionManager(), font));
+    _creditsMenu = viewport.AddElement(CreditsMenu::Create(engine, graphicsContext, viewportSize, font));
 
     gameSettings = GameSettings::FromFile(GAME_SETTINGS_FILE);
 
@@ -82,6 +83,7 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     _gameOver.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     _controlsMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     _settingsMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
+    _creditsMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
 
     _framerateCounter = viewport.AddElement(FrameCounter::Create(viewportSize, font));
 
@@ -134,6 +136,14 @@ ModuleTickOrder GameModule::Init(Engine& engine)
         engine.GetModule<UIModule>().uiInputContext.focusedUIElement = this->_controlsMenu.lock()->backButton;
     };
 
+    auto openCredits = [this, &engine]()
+    {
+        this->PushUIMenu(this->_creditsMenu);
+        this->PushPreviousFocusedElement(_mainMenu.lock()->creditsButton);
+        engine.GetModule<UIModule>().uiInputContext.focusedUIElement = this->_controlsMenu.lock()->backButton;
+    };
+
+    _mainMenu.lock()->creditsButton.lock()->OnPress(Callback { openCredits });
     _mainMenu.lock()->controlsButton.lock()->OnPress(Callback { openControlsMenu });
     _pauseMenu.lock()->controlsButton.lock()->OnPress(Callback { openControlsPause });
 
@@ -320,6 +330,7 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
     _gameOver.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     _settingsMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     _controlsMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
+    _creditsMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
 
     if (!_menuStack.empty())
     {

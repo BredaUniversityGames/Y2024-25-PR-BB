@@ -148,44 +148,44 @@ std::shared_ptr<SettingsMenu> SettingsMenu::Create(
         }
 
         // Gamma
-        {
-            auto node = settings->AddChild<Canvas>(rowSize);
-            node->SetLocation(elemPos);
-            elemPos += increment;
+        // {
+        //     auto node = settings->AddChild<Canvas>(rowSize);
+        //     node->SetLocation(elemPos);
+        //     elemPos += increment;
 
-            auto text = node->AddChild<UITextElement>(font, "Screen brightness", glm::vec2(), textSize);
-            text->anchorPoint = UIElement::AnchorPoint::eTopLeft;
+        //     auto text = node->AddChild<UITextElement>(font, "Screen brightness", glm::vec2(), textSize);
+        //     text->anchorPoint = UIElement::AnchorPoint::eTopLeft;
 
-            auto slider = node->AddChild<UISlider>(sliderStyle, toggleOffset, sliderSize);
-            slider->anchorPoint = UIElement::AnchorPoint::eTopRight;
-            settings->gammaSlider = slider;
+        //     auto slider = node->AddChild<UISlider>(sliderStyle, toggleOffset, sliderSize);
+        //     slider->anchorPoint = UIElement::AnchorPoint::eTopRight;
+        //     settings->gammaSlider = slider;
 
-            auto callback = [&gameModule](float val)
-            { gameModule.GetSettings().gammaSlider = val; };
+        //     auto callback = [&gameModule](float val)
+        //     { gameModule.GetSettings().gammaSlider = val; };
 
-            slider->value = gameModule.GetSettings().gammaSlider;
-            slider->OnSlide(callback);
-        }
+        //     slider->value = gameModule.GetSettings().gammaSlider;
+        //     slider->OnSlide(callback);
+        // }
 
         // VSync
-        {
-            auto node = settings->AddChild<Canvas>(rowSize);
-            node->SetLocation(elemPos);
-            elemPos += increment;
+        // {
+        //     auto node = settings->AddChild<Canvas>(rowSize);
+        //     node->SetLocation(elemPos);
+        //     elemPos += increment;
 
-            auto text = node->AddChild<UITextElement>(font, "Toggle VSync", glm::vec2(), textSize);
-            text->anchorPoint = UIElement::AnchorPoint::eTopLeft;
+        //     auto text = node->AddChild<UITextElement>(font, "Toggle VSync", glm::vec2(), textSize);
+        //     text->anchorPoint = UIElement::AnchorPoint::eTopLeft;
 
-            auto toggle = node->AddChild<UIToggle>(toggleStyle, toggleOffset+ glm::vec2(sliderSize.x-toggleSize.x,0), toggleSize);
-            toggle->anchorPoint = UIElement::AnchorPoint::eTopRight;
-            settings->vsyncToggle = toggle;
+        //     auto toggle = node->AddChild<UIToggle>(toggleStyle, toggleOffset+ glm::vec2(sliderSize.x-toggleSize.x,0), toggleSize);
+        //     toggle->anchorPoint = UIElement::AnchorPoint::eTopRight;
+        //     settings->vsyncToggle = toggle;
 
-            auto callback = [&gameModule](bool val)
-            { gameModule.GetSettings().vsync = val; };
+        //     auto callback = [&gameModule](bool val)
+        //     { gameModule.GetSettings().vsync = val; };
 
-            toggle->state = gameModule.GetSettings().vsync;
-            toggle->OnToggle(callback);
-        }
+        //     toggle->state = gameModule.GetSettings().vsync;
+        //     toggle->OnToggle(callback);
+        // }
 
         // Master Volume
         {
@@ -295,15 +295,15 @@ std::shared_ptr<SettingsMenu> SettingsMenu::Create(
         settings->sensitivitySlider.lock()->navigationTargets.down = settings->aimAssistToggle;
 
         settings->aimAssistToggle.lock()->navigationTargets.up = settings->sensitivitySlider;
-        settings->aimAssistToggle.lock()->navigationTargets.down = settings->gammaSlider;
+        settings->aimAssistToggle.lock()->navigationTargets.down = settings->masterVolume;
 
-        settings->gammaSlider.lock()->navigationTargets.up = settings->aimAssistToggle;
-        settings->gammaSlider.lock()->navigationTargets.down = settings->vsyncToggle;
+        // settings->gammaSlider.lock()->navigationTargets.up = settings->aimAssistToggle;
+        // settings->gammaSlider.lock()->navigationTargets.down = settings->vsyncToggle;
 
-        settings->vsyncToggle.lock()->navigationTargets.up = settings->gammaSlider;
-        settings->vsyncToggle.lock()->navigationTargets.down = settings->masterVolume;
+        // settings->vsyncToggle.lock()->navigationTargets.up = settings->gammaSlider;
+        // settings->vsyncToggle.lock()->navigationTargets.down = settings->masterVolume;
 
-        settings->masterVolume.lock()->navigationTargets.up = settings->vsyncToggle;
+        settings->masterVolume.lock()->navigationTargets.up = settings->aimAssistToggle;
         settings->masterVolume.lock()->navigationTargets.down = settings->musicVolume;
 
         settings->musicVolume.lock()->navigationTargets.up = settings->masterVolume;
