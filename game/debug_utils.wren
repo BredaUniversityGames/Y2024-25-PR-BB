@@ -2,14 +2,14 @@ import "game.wren" for Main
 import "gameplay/coin.wren" for CoinManager
 import "engine_api.wren" for Vec3, Keycode, Random, ECS, Quat, TransformComponent
 import "gameplay/flash_system.wren" for FlashSystem
+import "gameplay/soul.wren" for Soul, SoulManager, SoulType
 import "gameplay/station.wren" for PowerUpType
-
 import "gameplay/enemies/melee.wren" for MeleeEnemy
 import "gameplay/enemies/berserker.wren" for BerserkerEnemy
 import "gameplay/enemies/ranged.wren" for RangedEnemy
 
 class DebugUtils {
-    static Tick(engine, enemyList, coinManager, flashSystem, waveSystem, player) {
+    static Tick(engine, enemyList, soulSystem, coinManager, flashSystem, waveSystem, player) {
 
         var playerEntity = engine.GetECS().GetEntityByName("Player")
         var playerRot = playerEntity.GetTransformComponent().rotation
@@ -44,7 +44,16 @@ class DebugUtils {
             for(i in 0...coinCount) {
                 coinManager.SpawnCoin(engine, spawnPos)
             }
+
+
         }
+
+        if (engine.GetInput().DebugGetKey(Keycode.eV())) {
+            soulSystem.SpawnSoul(engine, spawnPos,SoulType.SMALL)
+
+        }
+
+
         if(engine.GetInput().DebugGetKey(Keycode.eO())){
            flashSystem.Flash(Vec3.new(0.0, 1.0, 0.0),0.25)
         }

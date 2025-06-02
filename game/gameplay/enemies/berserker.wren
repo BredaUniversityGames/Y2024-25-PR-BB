@@ -1,7 +1,7 @@
 import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, EmitterPresetID, Perlin, Random
 import "../player.wren" for PlayerVariables
 
-import "../soul.wren" for Soul, SoulManager
+import "../soul.wren" for Soul, SoulManager, SoulType
 import "../coin.wren" for Coin, CoinManager
 import "gameplay/flash_system.wren" for FlashSystem
 
@@ -15,7 +15,7 @@ class BerserkerEnemy {
         var modelPath = "assets/models/Berserker.glb"
         var colliderShape = ShapeFactory.MakeCapsuleShape(145.0, 40.0) // TODO: Make this engine units
         
-        _attackRange = 9
+        _attackRange = 6.5
         _attackDamage = 35
         _shakeIntensity = 2.2
         _attackMaxTime = 2300
@@ -164,17 +164,34 @@ class BerserkerEnemy {
                     _rootEntity.GetAudioEmitterComponent().AddEvent(engine.GetAudio().PlayEventOnce(_attackHitSFX))
                     if (!playerVariables.IsInvincible()) {
 
-                        var forward = Math.ToVector(_rootEntity.GetTransformComponent().rotation)
-                        var toPlayer = pos - playerPos
+                        var forward = Math.ToVector(_rootEntity.GetTransformComponent().rotation).mulScalar(-1)
+                        var toPlayer = (playerPos - pos).normalize()
 
                         if (Math.Dot(forward, toPlayer) >= 0.8 && Math.Distance(playerPos, pos) < _attackRange) {
-                            playerVariables.DecreaseHealth(_attackDamage)
-                            playerVariables.cameraVariables.shakeIntensity = _shakeIntensity
-                            playerVariables.invincibilityTime = playerVariables.invincibilityMaxTime
+                            var rayHitInfo = engine.GetPhysics().ShootMultipleRays(pos, toPlayer, _attackRange, 3, 20)
+                            var isOccluded = false
+                            if (!rayHitInfo.isEmpty) {
+                                for (rayHit in rayHitInfo) {
+                                    var hitEntity = rayHit.GetEntity(engine.GetECS())
+                                    if (hitEntity == _rootEntity || hitEntity.HasEnemyTag()) {
+                                        continue
+                                    }
+                                    if (!hitEntity.HasPlayerTag()) {
+                                        isOccluded = true
+                                    }
+                                    break
+                                }
+                            }
 
-                            flashSystem.Flash(Vec3.new(1.0, 0.0, 0.0),0.85)
-                            engine.GetAudio().PlayEventOnce(_hitSFX)
-                        }    
+                            if (!isOccluded) {
+                                playerVariables.DecreaseHealth(_attackDamage)
+                                playerVariables.cameraVariables.shakeIntensity = _shakeIntensity
+                                playerVariables.invincibilityTime = playerVariables.invincibilityMaxTime
+
+                                flashSystem.Flash(Vec3.new(1.0, 0.0, 0.0),0.85)
+                                engine.GetAudio().PlayEventOnce(_hitSFX)
+                            }
+                        }
                     }
 
                     animations.Play("Idle", 1.0, true, 1.0, false)
@@ -214,7 +231,7 @@ class BerserkerEnemy {
 
                 if(_walkEventInstance == null || engine.GetAudio().IsEventPlaying(_walkEventInstance) == false) {
                     _walkEventInstance = engine.GetAudio().PlayEventLoop(_stepSFX)
-                    engine.GetAudio().SetEventVolume(_walkEventInstance, 5.0)
+                    engine.GetAudio().SetEventVolume(_walkEventInstance, 1.0)
                     var audioEmitter = _rootEntity.GetAudioEmitterComponent()
                     audioEmitter.AddEvent(_walkEventInstance)
                 }
@@ -269,7 +286,7 @@ class BerserkerEnemy {
             }
 
             if (_deathTimer <= 0) {
-                soulManager.SpawnSoul(engine, body.GetPosition())
+                soulManager.SpawnSoul(engine, body.GetPosition(),SoulType.BIG)
                 engine.GetECS().DestroyEntity(_rootEntity) // Destroys the entity, and in turn this object
             } else {
                 // Wait for death animation before starting descent

@@ -2,7 +2,7 @@ import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, PhysicsObjec
 import "../player.wren" for PlayerVariables
 import "gameplay/flash_system.wren" for FlashSystem
 
-import "../soul.wren" for Soul, SoulManager
+import "../soul.wren" for Soul, SoulManager, SoulType
 import "../coin.wren" for Coin, CoinManager
 
 class RangedEnemy {
@@ -29,7 +29,7 @@ class RangedEnemy {
         _hitSFX = "event:/SFX/EyeHit"
 
         var enemyModel = "assets/models/eye.glb"
-        var enemySize = 2.25
+        var enemySize = 3.25
         var colliderShape = ShapeFactory.MakeSphereShape(0.65) // TODO: Make this engine units
         
         // ENTITY SETUP
@@ -50,6 +50,26 @@ class RangedEnemy {
         var rb = Rigidbody.new(engine.GetPhysics(), colliderShape, PhysicsObjectLayer.eENEMY(), true)
         var body = _rootEntity.AddRigidbodyComponent(rb)
         body.SetGravityFactor(0.0)
+
+        _lightEntity = engine.GetECS().NewEntity()
+        _lightEntity.AddNameComponent().name = "Eye Light"
+        var lightTransform = _lightEntity.AddTransformComponent()
+        lightTransform.translation = Vec3.new(0.0, 0.0, -1.0)
+        _pointLight = _lightEntity.AddPointLightComponent()
+        _pointLight.intensity = 100
+        _pointLight.range = 3.0
+        _pointLight.color = Vec3.new(0.8, 0.13, 0.08)
+        _rootEntity.AttachChild(_lightEntity)
+
+        // emitter
+        _eyeEmitter = engine.GetECS().NewEntity()
+        _eyeEmitter.AddNameComponent().name = "Eye emitter"
+        var transformEmitter = _eyeEmitter.AddTransformComponent()
+        transformEmitter.translation = Vec3.new(0.0, 0.0, 0.15)
+        var emitterFlags = SpawnEmitterFlagBits.eIsActive()
+        engine.GetParticles().SpawnEmitter(_eyeEmitter, EmitterPresetID.eEyeFlame(),emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.0, 0.0, 0.0))
+        _rootEntity.AttachChild(_eyeEmitter)
+
 
         // STATE
 
@@ -183,7 +203,7 @@ class RangedEnemy {
                         _chargeTimer = 100
                         var start = pos
                         var direction = forwardVector
-                        start = start + direction.mulScalar(2.0)
+                        start = start + direction.mulScalar(4.0)
                         var end = pos + direction.mulScalar(_attackRange)
                         var rayHitInfo = engine.GetPhysics().ShootRay(start, direction, _attackRange)
                         if (!rayHitInfo.isEmpty) {
@@ -322,7 +342,7 @@ class RangedEnemy {
 
             if (_deathTimer <= 0) {
                 //spawn a soul
-                soulManager.SpawnSoul(engine, body.GetPosition())
+                soulManager.SpawnSoul(engine, body.GetPosition(),SoulType.BIG)
 
                 engine.GetECS().DestroyEntity(_rootEntity) // Destroys the entity, and in turn this object
             } else {
@@ -354,6 +374,7 @@ class RangedEnemy {
             } else if (pos.y < _minHeight) {
                 direction.y = direction.y + 1.0
             }
+            direction.y = direction.y * 0.85 // Make sure the enemy doesn't go too high or too low
 
             var end = direction.mulScalar(20.0) + start
             var rayHitInfo = engine.GetPhysics().ShootRay(start, direction, 20.0)
