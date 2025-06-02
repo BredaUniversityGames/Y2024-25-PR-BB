@@ -140,21 +140,22 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     {
         this->PushUIMenu(this->_creditsMenu);
         this->PushPreviousFocusedElement(_mainMenu.lock()->creditsButton);
-        engine.GetModule<UIModule>().uiInputContext.focusedUIElement = this->_controlsMenu.lock()->backButton;
+        engine.GetModule<UIModule>().uiInputContext.focusedUIElement = this->_creditsMenu.lock()->backButton;
     };
 
     _mainMenu.lock()->creditsButton.lock()->OnPress(Callback { openCredits });
+
     _mainMenu.lock()->controlsButton.lock()->OnPress(Callback { openControlsMenu });
     _pauseMenu.lock()->controlsButton.lock()->OnPress(Callback { openControlsPause });
 
-    auto openControls = [&engine]()
+    auto closeControls = [&engine]()
     {
         auto& gameModule = engine.GetModule<GameModule>();
         engine.GetModule<UIModule>().uiInputContext.focusedUIElement = gameModule.PopPreviousFocusedElement();
         gameModule.PopUIMenu();
     };
 
-    _controlsMenu.lock()->backButton.lock()->OnPress(Callback { openControls });
+    _controlsMenu.lock()->backButton.lock()->OnPress(Callback { closeControls });
 
     auto& particleModule = engine.GetModule<ParticleModule>();
     particleModule.LoadEmitterPresets();
