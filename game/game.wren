@@ -162,7 +162,7 @@ class Main {
         __secondaryWeapon = __armory[Weapons.pistol2]
 
         // create the player movement
-        __playerMovement = PlayerMovement.new(false,0.0,__activeWeapon,__player)
+        __playerMovement = PlayerMovement.new(false,0.0,__activeWeapon,__player, __playerVariables)
         var mousePosition = engine.GetInput().GetMousePosition()
         __playerMovement.lastMousePosition = mousePosition
 
@@ -343,7 +343,7 @@ class Main {
         }
 
         if (engine.GetInput().DebugIsInputEnabled()) {
-            __playerMovement.Update(engine, dt, __playerController, __camera,__playerVariables.hud)
+            __playerMovement.Update(engine, dt, __playerController, __camera,__playerVariables.hud, __flashSystem)
         }
 
         for (weapon in __armory) {

@@ -2,7 +2,7 @@ import "engine_api.wren" for Engine, Game, ECS, Entity, Vec3, Vec2, Quat, Math, 
 
 class PlayerMovement{
 
-    construct new(newHasDashed, newDashTimer, gun, playerController){
+    construct new(newHasDashed, newDashTimer, gun, playerController, playerVariables){
         hasDashed = newHasDashed
         hasDoubleJumped = false
         dashTimer = newDashTimer
@@ -15,6 +15,7 @@ class PlayerMovement{
         _cameraFovNormal = 50
         _cameraFovSlide = 65
         _cameraFovCurrent = _cameraFovNormal
+        _playerVariables = playerVariables
         // Used for interpolation between crouching and standing
         currentPlayerHeight = playerHeight
         isGrounded = false
@@ -358,7 +359,7 @@ class PlayerMovement{
 
     }
 
-    Dash(engine, dt, playerController, camera, hud){
+    Dash(engine, dt, playerController, camera, hud, flashSystem){
         //refill dashes
         if(currentDashCount < 3){
             currentDashRefillTime = currentDashRefillTime - dt
@@ -373,6 +374,10 @@ class PlayerMovement{
         if(engine.GetInput().GetDigitalAction("Dash").IsPressed() &&  currentDashCount > 0 ){
 
             hasDashed = true
+
+            _playerVariables.invincibilityTime = 300
+
+            flashSystem.Flash(Vec3.new(0.8, 0.8, 0.8), 0.2)
 
             //play dash sound
             var eventInstance = engine.GetAudio().PlayEventOnce(_dashSFX)
@@ -559,9 +564,9 @@ class PlayerMovement{
         }
     }
 
-    Update(engine, dt, playerController, camera,hud){
+    Update(engine, dt, playerController, camera,hud, flashSystem){
         this.Movement(engine, playerController, camera)
-        this.Dash(engine, dt, playerController, camera,hud)
+        this.Dash(engine, dt, playerController, camera,hud, flashSystem)
         // this.Slide(engine, dt, playerController, camera)
         this.CheckBounds(engine, playerController, camera)
     }
