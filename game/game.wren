@@ -28,7 +28,7 @@ class Main {
         engine.AmbientStrength = 0.35
 
         // Set navigational mesh
-        engine.GetPathfinding().SetNavigationMesh("assets/models/graveyard_navmesh.glb")
+        engine.GetPathfinding().SetNavigationMesh("assets/models/graveyard_navmesh_1.glb")
 
         // Directional Light
         __directionalLight = engine.GetECS().NewEntity()
@@ -51,6 +51,8 @@ class Main {
         __groundedTimer = 0
         __hasDashed = false
         __timer = 0
+
+        __playerVariables.godMode = true
 
         // Load Map
         engine.LoadModel("assets/models/graveyard_level.glb", false)

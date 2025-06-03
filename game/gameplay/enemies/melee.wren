@@ -21,6 +21,9 @@ class MeleeEnemy {
         _getUpAppearMax = 1500
         _attackTiming = 1460
         _attackTimer = _attackTiming
+        _reasonTimeout = 2000
+        _honeInRadius = 30.0
+        _honeInMaxAltitude = 4.0
 
         _bonesSFX = "event:/SFX/Bones"
         _hitMarkerSFX = "event:/SFX/Hitmarker"
@@ -35,7 +38,7 @@ class MeleeEnemy {
         // PATHFINDING
         _currentPath = null
         _currentPathNodeIdx = null
-        _honeInRadius = 30.0
+
 
         // ENTITY SETUP
 
@@ -78,7 +81,7 @@ class MeleeEnemy {
         // STATE
         
         _isAlive = true
-        _reasonTimer = 2000
+        _reasonTimer = _reasonTimeout
         _getUpState = true
         _movingState = false
         _attackingState = false
@@ -348,9 +351,12 @@ class MeleeEnemy {
         var body = _rootEntity.GetRigidbodyComponent()
         var pos = body.GetPosition()
 
-        if(Math.Distance(position, engine.GetECS().GetEntityByName("Player").GetTransformComponent().GetWorldTranslation()) > _honeInRadius) {
+        var distToPlayer = Math.Distance(pos, playerPos)
+        var altitudeToPlayer = Math.Distance(Vec3.new(0.0, pos.y, 0.0), Vec3.new(0.0, playerPos.y, 0.0))
+
+        if(distToPlayer > _honeInRadius || altitudeToPlayer > _honeInMaxAltitude) {
             _reasonTimer = _reasonTimer + dt
-            if(_reasonTimer > 2000) {
+            if(_reasonTimer > _reasonTimeout) {
                 this.FindNewPath(engine)
                 _reasonTimer = 0
             }
@@ -384,6 +390,43 @@ class MeleeEnemy {
             var target = Math.MixVec3(p1.center, p2.center, dst * bias)
             var forwardVector = (target - pos).normalize()
 
+            // Local avoidance
+            var seekDepth = 3.0
+            var rayHitInfos = engine.GetPhysics().ShootMultipleRays(pos, forwardVector, seekDepth, 3, 20)
+
+            var lowestHitFraction = 1.0
+            var lowestHitFractionIndex = 0
+            var hitObject = null
+
+            var direction = Vec3.new(0, 0, 0)
+            var directionCount = 0
+            var anyHit = false
+            // For every ray
+            for(i in 0...rayHitInfos.count) {
+                var ray = rayHitInfos[i]
+
+                // skip if self
+                if(ray.GetEntity(engine.GetECS()).GetEnttEntity() == _rootEntity.GetEnttEntity()) {
+                    continue
+                }
+
+                if(ray.hitFraction < 0.98) {
+                    anyHit = true
+
+                    direction = direction + (ray.position - pos)
+
+                    directionCount = directionCount + 1
+                }
+            }
+
+            if(anyHit) {
+                direction = direction.divScalar(directionCount).normalize()
+                forwardVector = direction
+            }
+
+
+
+
             _rootEntity.GetRigidbodyComponent().SetVelocity(forwardVector.mulScalar(_maxVelocity))
             
             // Set forward rotation
@@ -394,6 +437,52 @@ class MeleeEnemy {
             var forwardVector = playerPos - position
             forwardVector.y = 0
             forwardVector = (forwardVector.normalize() + _rootEntity.GetRigidbodyComponent().GetVelocity())
+
+            if(1) {
+                var seekDepth = 3.0
+                var rayHitInfos = engine.GetPhysics().ShootMultipleRays(pos, forwardVector, seekDepth, 3, 20)
+
+                var highestHitFraction = 0.0
+                var highestHitFractionIndex = 20
+                var highestHitDirection = null
+
+                var direction = Vec3.new(0, 0, 0)
+                var directionCount = 0
+                var anyHit = false
+                // For every ray
+                for(i in 0...rayHitInfos.count) {
+                    var ray = rayHitInfos[i]
+
+                    // skip if self
+                    if(ray.GetEntity(engine.GetECS()).GetEnttEntity() == _rootEntity.GetEnttEntity()) {
+                        continue
+                    }
+
+                    if(ray.hitFraction > highestHitFraction && ray.hitFraction < 0.99) {
+                        highestHitFraction = ray.hitFraction
+                        highestHitFractionIndex = i
+                        highestHitDirection = (ray.position - pos).normalize()
+                    }
+
+                    if(ray.hitFraction < 0.98) {
+                        anyHit = true
+
+                        direction = direction + (pos - ray.position)
+
+                        directionCount = directionCount + 1
+                    }
+                }
+
+                if(anyHit && 0) {
+                    direction = direction.divScalar(directionCount).normalize()
+                    forwardVector = direction
+                }
+
+                if(highestHitFractionIndex != 20) {
+                    forwardVector = highestHitDirection
+                }
+            }
+
             var maxVelocityScalar = 1.0
             if(forwardVector.length() >= _maxVelocity) {
                 maxVelocityScalar = _maxVelocity / forwardVector.length()
