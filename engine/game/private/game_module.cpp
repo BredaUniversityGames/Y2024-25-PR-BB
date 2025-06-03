@@ -1,4 +1,5 @@
 #include "game_module.hpp"
+#include "achievements.hpp"
 #include "application_module.hpp"
 #include "audio_module.hpp"
 #include "canvas.hpp"
@@ -30,9 +31,31 @@
 #include "ui/ui_menus.hpp"
 #include "ui_module.hpp"
 
+//
+// Defining our achievements
+enum EAchievements
+{
+    ACH_WIN_ONE_GAME = 0,
+    ACH_WIN_100_GAMES = 1,
+    ACH_TRAVEL_FAR_ACCUM = 2,
+    ACH_TRAVEL_FAR_SINGLE = 3,
+};
+
+// Achievement array which will hold data about the achievements and their state
+Achievement_t g_Achievements[] = {
+    _ACH_ID(ACH_WIN_ONE_GAME, "Winner"),
+    _ACH_ID(ACH_WIN_100_GAMES, "Champion"),
+    _ACH_ID(ACH_TRAVEL_FAR_ACCUM, "Interstellar"),
+    _ACH_ID(ACH_TRAVEL_FAR_SINGLE, "Orbiter"),
+};
+
+//
+
 ModuleTickOrder GameModule::Init(Engine& engine)
 {
     engine.GetModule<ApplicationModule>().GetActionManager().SetGameActions(GAME_ACTIONS);
+
+    engine.GetModule<SteamModule>().InitSteamAchievements(g_Achievements);
 
     // Audio Setup
     auto& audio = engine.GetModule<AudioModule>();

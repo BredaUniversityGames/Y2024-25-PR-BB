@@ -1,6 +1,8 @@
 #pragma once
+#include "achievements.hpp"
 #include <engine.hpp>
 #include <memory>
+#include <span>
 #include <string>
 
 class SteamModule : public ModuleInterface
@@ -14,6 +16,8 @@ class SteamModule : public ModuleInterface
 
     bool _steamAvailable = false;
     bool _steamInputAvailable = false;
+    // Global access to Achievements object
+    CSteamAchievements* m_SteamAchievements = nullptr;
 
 public:
     NON_COPYABLE(SteamModule);
@@ -21,6 +25,9 @@ public:
 
     SteamModule() = default;
     ~SteamModule() override = default;
+
+    void InitSteamAchievements(std::span<Achievement_t> achievements);
+    CSteamAchievements& GetSteamAchievements() const { return *m_SteamAchievements; }
 
     // When the user launched the application through Steam, this will return true.
     // If false, the Steam module cannot be used, as Steam API does not work.

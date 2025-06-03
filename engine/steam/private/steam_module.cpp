@@ -1,4 +1,5 @@
 #include "steam_module.hpp"
+#include "achievements.hpp"
 #include "log.hpp"
 #include "steam_include.hpp"
 
@@ -50,7 +51,6 @@ ModuleTickOrder SteamModule::Init(MAYBE_UNUSED Engine& engine)
     }
 
     _steamInputAvailable = true;
-
     return ModuleTickOrder::ePreTick;
 }
 
@@ -67,6 +67,10 @@ void SteamModule::Tick(MAYBE_UNUSED Engine& engine)
 void SteamModule::Shutdown(MAYBE_UNUSED Engine& engine)
 {
     SteamAPI_Shutdown();
+}
+void SteamModule::InitSteamAchievements(std::span<Achievement_t> achievements)
+{
+    m_SteamAchievements = new CSteamAchievements(achievements.data(), achievements.size());
 }
 void SteamModule::OpenSteamBrowser(const std::string& url)
 {
