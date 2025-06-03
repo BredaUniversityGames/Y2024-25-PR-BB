@@ -164,7 +164,7 @@ private:
     struct alignas(16) PointLightArray
     {
         std::array<PointLightData, MAX_POINT_LIGHTS> lights;
-        uint32_t count;
+        uint32_t count = 0;
     };
 
     struct alignas(16) SceneData
@@ -206,7 +206,7 @@ private:
     struct alignas(16) DecalArray
     {
         std::array<DecalData, MAX_DECALS> decals;
-        uint32_t count;
+        uint32_t count = 0;
     };
 
     struct FrameData
@@ -255,7 +255,7 @@ private:
     vk::DescriptorSetLayout _clusterCullingDescriptorSetLayout;
     ClusterCullingData _clusterCullingData;
 
-    DecalArray _decals;
+    DecalArray _decals {};
     uint32_t _decalIndex {};
 
     ResourceHandle<GPUImage>& GetDecalImage(std::string fileName);
