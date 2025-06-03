@@ -143,95 +143,95 @@ public:
 private:
     struct alignas(16) DirectionalLightData
     {
-        glm::mat4 lightVP;
-        glm::mat4 depthBiasMVP;
+        glm::mat4 lightVP {};
+        glm::mat4 depthBiasMVP {};
 
-        glm::vec4 direction;
-        glm::vec4 color;
-        float poissonWorldOffset;
-        float poissonConstant;
+        glm::vec4 direction {};
+        glm::vec4 color {};
+        float poissonWorldOffset {};
+        float poissonConstant {};
         uint32_t padding[2];
     };
 
     struct alignas(16) PointLightData
     {
-        glm::vec3 position;
-        float range;
-        glm::vec3 color;
-        float intensity;
+        glm::vec3 position {};
+        float range {};
+        glm::vec3 color {};
+        float intensity {};
     };
 
     struct alignas(16) PointLightArray
     {
-        std::array<PointLightData, MAX_POINT_LIGHTS> lights;
-        uint32_t count = 0;
+        std::array<PointLightData, MAX_POINT_LIGHTS> lights {};
+        uint32_t count {};
     };
 
     struct alignas(16) SceneData
     {
-        DirectionalLightData directionalLight;
+        DirectionalLightData directionalLight {};
 
-        uint32_t irradianceIndex;
-        uint32_t prefilterIndex;
-        uint32_t brdfLUTIndex;
-        uint32_t staticShadowMapIndex;
+        uint32_t irradianceIndex {};
+        uint32_t prefilterIndex {};
+        uint32_t brdfLUTIndex {};
+        uint32_t staticShadowMapIndex {};
 
-        uint32_t dynamicShadowMapIndex;
-        float fogDensity;
+        uint32_t dynamicShadowMapIndex {};
+        float fogDensity {};
+        uint32_t padding[2];
 
-        float padding[2];
+        glm::vec3 fogColor {};
 
-        glm::vec3 fogColor;
     } _sceneData;
 
     struct InstanceData
     {
-        glm::mat4 model;
+        glm::mat4 model {};
 
-        uint32_t materialIndex;
-        float boundingRadius;
-        uint32_t boneOffset;
-        bool isStaticDraw;
+        uint32_t materialIndex {};
+        float boundingRadius {};
+        uint32_t boneOffset {};
+        bool isStaticDraw {};
         float transparency = 1.0f;
         uint32_t padding[3];
     };
 
     struct alignas(16) DecalData
     {
-        glm::mat4 invModel;
-        glm::vec3 orientation;
-        uint32_t albedoIndex;
+        glm::mat4 invModel {};
+        glm::vec3 orientation {};
+        uint32_t albedoIndex {};
     };
 
     struct alignas(16) DecalArray
     {
-        std::array<DecalData, MAX_DECALS> decals;
-        uint32_t count = 0;
+        std::array<DecalData, MAX_DECALS> decals {};
+        uint32_t count {};
     };
 
     struct FrameData
     {
-        ResourceHandle<Buffer> buffer;
-        vk::DescriptorSet descriptorSet;
+        ResourceHandle<Buffer> buffer {};
+        vk::DescriptorSet descriptorSet {};
     };
 
     struct PointLightFrameData
     {
-        ResourceHandle<Buffer> buffer;
-        vk::DescriptorSet descriptorSet;
+        ResourceHandle<Buffer> buffer {};
+        vk::DescriptorSet descriptorSet {};
     };
 
     struct ClusterData
     {
-        ResourceHandle<Buffer> buffer;
-        vk::DescriptorSet descriptorSet;
+        ResourceHandle<Buffer> buffer {};
+        vk::DescriptorSet descriptorSet {};
     };
 
     struct ClusterCullingData
     {
-        std::array<ResourceHandle<Buffer>, 2> buffers;
-        ResourceHandle<Buffer> globalIndexBuffer;
-        std::array<vk::DescriptorSet, MAX_FRAMES_IN_FLIGHT> descriptorSets;
+        std::array<ResourceHandle<Buffer>, 2> buffers {};
+        ResourceHandle<Buffer> globalIndexBuffer {};
+        std::array<vk::DescriptorSet, MAX_FRAMES_IN_FLIGHT> descriptorSets {};
     };
 
     std::shared_ptr<GraphicsContext> _context;
