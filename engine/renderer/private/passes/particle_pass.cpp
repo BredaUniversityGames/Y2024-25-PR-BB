@@ -133,7 +133,7 @@ void ParticlePass::RecordEmit(vk::CommandBuffer commandBuffer)
 
     // spawn as many threads as there's particles to emit
     uint32_t bufferOffset = 0;
-    for (bufferOffset = 0; bufferOffset < _emitters.size(); bufferOffset++)
+    for (bufferOffset = 0; bufferOffset < std::min(static_cast<uint32_t>(_emitters.size()), MAX_EMITTERS); bufferOffset++)
     {
         _emitPushConstant.bufferOffset = bufferOffset;
         commandBuffer.pushConstants<EmitPushConstant>(_pipelineLayouts[static_cast<uint32_t>(ShaderStages::eEmit)], vk::ShaderStageFlagBits::eCompute, 0, { _emitPushConstant });
@@ -326,19 +326,43 @@ void ParticlePass::UpdateEmitters(vk::CommandBuffer commandBuffer)
     // copy over local emitters to buffer
     if (!_localEmitters.empty())
     {
-        vk::DeviceSize BufferSize = glm::min(static_cast<uint32_t>(_localEmitters.size()), MAX_EMITTERS) * sizeof(LocalEmitter);
+        vk::DeviceSize bufferSize = glm::min(static_cast<uint32_t>(_localEmitters.size()), MAX_EMITTERS) * sizeof(LocalEmitter);
 
-        vmaCopyMemoryToAllocation(vkContext->MemoryAllocator(), _localEmitters.data(), _localEmitterStagingBufferAllocation, 0, BufferSize);
-        util::CopyBuffer(commandBuffer, _localEmitterStagingBuffer, resources->BufferResourceManager().Access(_localEmittersBuffer)->buffer, BufferSize);
+        // copy data to staging buffer
+        vmaCopyMemoryToAllocation(vkContext->MemoryAllocator(), _localEmitters.data(), _localEmitterStagingBufferAllocation, 0, bufferSize);
+
+        // make sure staging buffer data is complete before copybuffer
+        vk::BufferMemoryBarrier barrier {};
+        barrier.buffer = _localEmitterStagingBuffer;
+        barrier.size = bufferSize;
+        barrier.offset = 0;
+        barrier.srcAccessMask = vk::AccessFlagBits::eHostWrite;
+        barrier.dstAccessMask = vk::AccessFlagBits::eTransferRead;
+        commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eHost, vk::PipelineStageFlagBits::eTransfer, vk::DependencyFlags { 0 }, {}, barrier, {});
+
+        // copy staging buffer to buffer
+        util::CopyBuffer(commandBuffer, _localEmitterStagingBuffer, resources->BufferResourceManager().Access(_localEmittersBuffer)->buffer, bufferSize);
     }
 
     // copy over emitters
     if (!_emitters.empty())
     {
-        vk::DeviceSize BufferSize = glm::min(static_cast<uint32_t>(_emitters.size()), MAX_EMITTERS) * sizeof(Emitter);
+        vk::DeviceSize bufferSize = glm::min(static_cast<uint32_t>(_emitters.size()), MAX_EMITTERS) * sizeof(Emitter);
 
-        vmaCopyMemoryToAllocation(vkContext->MemoryAllocator(), _emitters.data(), _emitterStagingBufferAllocation, 0, BufferSize);
-        util::CopyBuffer(commandBuffer, _emitterStagingBuffer, resources->BufferResourceManager().Access(_emittersBuffer)->buffer, BufferSize);
+        // copy data to staging buffer
+        vmaCopyMemoryToAllocation(vkContext->MemoryAllocator(), _emitters.data(), _emitterStagingBufferAllocation, 0, bufferSize);
+
+        // make sure staging buffer data is complete before copybuffer
+        vk::BufferMemoryBarrier barrier {};
+        barrier.buffer = _emitterStagingBuffer;
+        barrier.size = bufferSize;
+        barrier.offset = 0;
+        barrier.srcAccessMask = vk::AccessFlagBits::eHostWrite;
+        barrier.dstAccessMask = vk::AccessFlagBits::eTransferRead;
+        commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eHost, vk::PipelineStageFlagBits::eTransfer, vk::DependencyFlags { 0 }, {}, barrier, {});
+
+        // copy staging buffer to buffer
+        util::CopyBuffer(commandBuffer, _emitterStagingBuffer, resources->BufferResourceManager().Access(_emittersBuffer)->buffer, bufferSize);
     }
 }
 

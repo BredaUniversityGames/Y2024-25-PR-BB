@@ -156,6 +156,20 @@ void ParticleEditor::RenderEmitterPresetEditor()
         ImGui::CheckboxFlags("No Shadow##Emitter Preset Flag", &selectedPreset.flags, static_cast<uint32_t>(ParticleRenderFlagBits::eNoShadow));
         ImGui::CheckboxFlags("Frame Blend##Emitter Preset Flag", &selectedPreset.flags, static_cast<uint32_t>(ParticleRenderFlagBits::eFrameBlend));
         ImGui::CheckboxFlags("Lock Y##Emitter Preset Flag", &selectedPreset.flags, static_cast<uint32_t>(ParticleRenderFlagBits::eLockY));
+        if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled) && ImGui::BeginTooltip())
+        {
+            ImGui::TextUnformatted("Makes this emitter's particle billboards only rotate around the Y axis.");
+
+            ImGui::EndTooltip();
+        }
+        ImGui::CheckboxFlags("Is Local##Emitter Preset Flag", &selectedPreset.flags, static_cast<uint32_t>(ParticleRenderFlagBits::eIsLocal));
+        if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled) && ImGui::BeginTooltip())
+        {
+            ImGui::TextUnformatted("Makes this emitter's particles follow its emitter's position");
+            ImGui::TextUnformatted("instead of simulating their own.");
+
+            ImGui::EndTooltip();
+        }
 
         // burst table
         ImGui::Text("Bursts:");
