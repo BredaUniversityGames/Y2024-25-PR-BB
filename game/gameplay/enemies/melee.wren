@@ -1,4 +1,4 @@
-import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, EmitterPresetID, Perlin, Random
+import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, EmitterPresetID, Perlin, Random, Stat, Stats
 import "../player.wren" for PlayerVariables
 import "../soul.wren" for Soul, SoulManager, SoulType
 import "../coin.wren" for Coin, CoinManager
@@ -136,6 +136,9 @@ class MeleeEnemy {
             for(i in 0...coinCount) {
                 coinManager.SpawnCoin(engine, body.GetPosition() + Vec3.new(0, 1.0, 0))
             }
+
+            var stat = engine.GetSteam().GetStat(Stats.SKELETONS_KILLED)
+            stat.value = stat.value + 1
 
             var eventInstance = engine.GetAudio().PlayEventOnce(_bonesSFX)
             

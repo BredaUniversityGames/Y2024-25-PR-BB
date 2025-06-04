@@ -39,6 +39,8 @@ public:
     SteamAchievements(std::span<Achievement> achievements);
     ~SteamAchievements() = default;
 
+    Achievement* GetAchievement(std::string_view name);
+
     bool SetAchievement(const char* ID);
 
     STEAM_CALLBACK(SteamAchievements, OnUserStatsReceived, UserStatsReceived_t,

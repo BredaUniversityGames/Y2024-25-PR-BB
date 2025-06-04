@@ -13,6 +13,15 @@ SteamAchievements::SteamAchievements(std::span<Achievement> achievements)
     std::copy(achievements.begin(), achievements.end(), _achievements.begin());
 }
 
+Achievement* SteamAchievements::GetAchievement(std::string_view name)
+{
+    auto result = std::find_if(_achievements.begin(), _achievements.end(), [&name](const auto& val)
+        { return val.name == name; });
+    if (result == _achievements.end())
+        return nullptr;
+
+    return &*result;
+}
 bool SteamAchievements::SetAchievement(const char* ID)
 {
     // Have we received a call back from Steam yet?
@@ -63,7 +72,7 @@ void SteamAchievements::OnUserStatsStored(UserStatsStored_t* pCallback)
     {
         if (k_EResultOK == pCallback->m_eResult)
         {
-            bblog::info("Stored stats for Steam\n");
+            bblog::info("Stored stats for Steam");
         }
         else
         {

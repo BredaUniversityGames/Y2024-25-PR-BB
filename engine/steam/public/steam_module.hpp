@@ -35,6 +35,9 @@ public:
     void SaveStats();
     SteamAchievements& GetSteamAchievements() const { return *_steamAchievements; }
 
+    SteamAchievements& GetAchievements() { return *_steamAchievements; }
+    SteamStats& GetStats() { return *_steamStats; }
+
     // When the user launched the application through Steam, this will return true.
     // If false, the Steam module cannot be used, as Steam API does not work.
     bool Available() const { return _steamAvailable; }

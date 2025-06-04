@@ -33,16 +33,29 @@
 
 #include <magic_enum.hpp>
 
+Achievement CreateAchievement(Achievements achievements)
+{
+    return Achievement { static_cast<int32_t>(achievements), magic_enum::enum_name(achievements) };
+}
+
+Stat CreateStat(Stats stats, EStatTypes type)
+{
+    return Stat {
+        static_cast<int32_t>(Stats::SKELETONS_KILLED),
+        type, magic_enum::enum_name(Stats::SKELETONS_KILLED)
+    };
+}
+
 ModuleTickOrder GameModule::Init(Engine& engine)
 {
+    _engine = &engine;
+
     _achievements = {
-        Achievement { static_cast<int32_t>(Achievements::SKELETONS_KILLED_10), magic_enum::enum_name(Achievements::SKELETONS_KILLED_10) }
+        CreateAchievement(Achievements::SKELETONS_KILLED_10),
     };
 
     _stats = {
-        Stat {
-            3,
-            EStatTypes::STAT_INT, "SKELETONS_KILLED" }
+        CreateStat(Stats::SKELETONS_KILLED, EStatTypes::STAT_INT),
     };
 
     engine.GetModule<ApplicationModule>().GetActionManager().SetGameActions(GAME_ACTIONS);
@@ -261,6 +274,14 @@ std::optional<std::shared_ptr<LoadingScreen>> GameModule::GetLoadingScreen()
     }
     return std::nullopt;
 }
+Stat* GameModule::GetStat(Stats stats)
+{
+    _engine->GetModule<SteamModule>().GetStats().GetStat(magic_enum::enum_name(stats));
+}
+Achievement* GameModule::GetAchievement(Achievements achievements)
+{
+    _engine->GetModule<SteamModule>().GetAchievements().GetAchievement(magic_enum::enum_name(achievements));
+}
 
 void GameModule::SetUIMenu(std::weak_ptr<Canvas> menu)
 {
@@ -361,6 +382,8 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
     if (inputDeviceManager.IsKeyPressed(KeyboardCode::eH))
     {
         applicationModule.SetMouseHidden(!applicationModule.GetMouseHidden());
+
+        _engine->GetModule<SteamModule>().GetStats().GetStat(magic_enum::enum_name(Stats::SKELETONS_KILLED))->value += 1;
     }
 #endif
 

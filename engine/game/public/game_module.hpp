@@ -39,6 +39,8 @@ class GameModule : public ModuleInterface
 
     glm::ivec2 _lastMousePos {};
 
+    Engine* _engine;
+
 public:
     GameModule() = default;
     ~GameModule() override = default;
@@ -59,6 +61,9 @@ public:
     std::optional<std::shared_ptr<HUD>> GetHUD();
     std::optional<std::shared_ptr<GameOverMenu>> GetGameOver();
     std::optional<std::shared_ptr<LoadingScreen>> GetLoadingScreen();
+
+    Stat* GetStat(Stats stats);
+    Achievement* GetAchievement(Achievements achievements);
 
     NON_COPYABLE(GameModule);
     NON_MOVABLE(GameModule);
