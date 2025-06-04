@@ -273,7 +273,7 @@ entt::entity LoadModelIntoECSAsHierarchy(ECSModule& ecs, PhysicsModule& physics,
     return rootEntity;
 }
 
-std::shared_ptr<ModelData> ModelLoader::LoadModel(Engine& engine, std::string_view path)
+std::shared_ptr<ModelData> ModelLoader::LoadModel(Engine& engine, std::string_view path, bool genCollision)
 {
     if (auto it = _models.find(std::string(path)); it != _models.end())
     {
@@ -288,7 +288,7 @@ std::shared_ptr<ModelData> ModelLoader::LoadModel(Engine& engine, std::string_vi
         std::string zone = std::string(path) + " CPU parsing";
         ZoneName(zone.c_str(), 128);
 
-        cpuData = ModelLoading::LoadGLTFFast(threadPool, path);
+        cpuData = ModelLoading::LoadGLTFFast(threadPool, path, genCollision);
     }
 
     auto& rendererModule = engine.GetModule<RendererModule>();

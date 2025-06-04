@@ -47,7 +47,7 @@ void TransitionToScript(WrenEngine& engine, const std::string& path)
 WrenEntity LoadModelScripting(WrenEngine& engine, const std::string& path, bool loadWithCollision)
 {
     auto& sceneCache = engine.instance->GetModule<GameModule>()._modelsLoaded;
-    auto model = sceneCache.LoadModel(*engine.instance, path);
+    auto model = sceneCache.LoadModel(*engine.instance, path, loadWithCollision);
 
     auto entity = model->Instantiate(*engine.instance, loadWithCollision);
     return { entity, &engine.instance->GetModule<ECSModule>().GetRegistry() };
@@ -56,7 +56,7 @@ WrenEntity LoadModelScripting(WrenEngine& engine, const std::string& path, bool 
 WrenEntity LoadModelCollisions(WrenEngine& engine, const std::string& path)
 {
     auto& sceneCache = engine.instance->GetModule<GameModule>()._modelsLoaded;
-    auto model = sceneCache.LoadModel(*engine.instance, path);
+    auto model = sceneCache.LoadModel(*engine.instance, path, true);
 
     auto entity = model->InstantiateCollisions(*engine.instance);
     return { entity, &engine.instance->GetModule<ECSModule>().GetRegistry() };
@@ -65,7 +65,7 @@ WrenEntity LoadModelCollisions(WrenEngine& engine, const std::string& path)
 void PreloadModel(WrenEngine& engine, const std::string& path)
 {
     auto& sceneCache = engine.instance->GetModule<GameModule>()._modelsLoaded;
-    sceneCache.LoadModel(*engine.instance, path);
+    sceneCache.LoadModel(*engine.instance, path, false);
 }
 
 void SetExit(WrenEngine& engine, int code)
