@@ -8,7 +8,7 @@ struct GameSettings
 
     bool framerateCounter = false;
     float aimSensitivity = 0.5f;
-    float fov = 50.0f;
+    float fov = 0.0f;
     float gammaSlider = 0.5f;
     bool vsync = false;
     bool aimAssist = false;
