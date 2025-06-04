@@ -45,7 +45,7 @@ void ParticleEditor::RenderEmitterPresetList()
     {
         EmitterPreset newPreset;
         std::string newPresetName = "Emiter Preset " + std::to_string(_particleModule._emitterPresets.data.emitterPresets.size());
-        _particleModule._emitterPresets2.data.emitterPresets.emplace(newPresetName, newPreset);
+        _particleModule._emitterPresets.data.emitterPresets.emplace(newPresetName, newPreset);
     }
     if (ImGui::Button("Save Presets##Emitter Preset"))
     {
@@ -53,7 +53,7 @@ void ParticleEditor::RenderEmitterPresetList()
     }
     ImGui::Text("Emitter Presets:");
 
-    for (auto& it : _particleModule._emitterPresets2.data.emitterPresets)
+    for (auto& it : _particleModule._emitterPresets.data.emitterPresets)
     {
         static ImGuiTreeNodeFlags nodeFlags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
 
@@ -75,21 +75,21 @@ void ParticleEditor::RenderEmitterPresetEditor()
     ImGui::SameLine();
     ImGui::Text("%s", _selectedPresetName.c_str());
 
-    auto got = _particleModule._emitterPresets2.data.emitterPresets.find(_selectedPresetName);
+    auto got = _particleModule._emitterPresets.data.emitterPresets.find(_selectedPresetName);
 
-    if (got != _particleModule._emitterPresets2.data.emitterPresets.end())
+    if (got != _particleModule._emitterPresets.data.emitterPresets.end())
     {
         auto& selectedPreset = got->second;
 
         ImGui::InputText("Name##Emitter Preset", &_selectedPresetEditingName);
         if (ImGui::Button("Save Name##Emitter Preset"))
         {
-            if (_particleModule._emitterPresets2.data.emitterPresets.find(_selectedPresetEditingName) == _particleModule._emitterPresets2.data.emitterPresets.end())
+            if (_particleModule._emitterPresets.data.emitterPresets.find(_selectedPresetEditingName) == _particleModule._emitterPresets.data.emitterPresets.end())
             {
-                auto preset = _particleModule._emitterPresets2.data.emitterPresets.extract(_selectedPresetName);
+                auto preset = _particleModule._emitterPresets.data.emitterPresets.extract(_selectedPresetName);
                 preset.key() = _selectedPresetEditingName;
                 _selectedPresetName = _selectedPresetEditingName;
-                _particleModule._emitterPresets2.data.emitterPresets.insert(std::move(preset));
+                _particleModule._emitterPresets.data.emitterPresets.insert(std::move(preset));
                 _nameChangeMessage = "Name successfully changed!";
             }
             else
@@ -286,7 +286,7 @@ void ParticleEditor::RenderEmitterPresetEditor()
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(1.f, 0.2f, 0.2f, 1.f));
         if (ImGui::Button("Delete Preset##Emitter Preset"))
         {
-            _particleModule._emitterPresets2.data.emitterPresets.erase(got);
+            _particleModule._emitterPresets.data.emitterPresets.erase(got);
             _selectedPresetName = "null";
             _selectedPresetEditingName = "null";
             ImGui::PopStyleColor(3);

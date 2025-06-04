@@ -37,7 +37,6 @@ class ParticleModule final : public ModuleInterface
 public:
     ParticleModule()
         : _emitterPresets("game/config/emitter_presets.json")
-        , _emitterPresets2("game/config/emitter_presets2.json")
     {
     }
     ~ParticleModule() override = default;
@@ -53,7 +52,6 @@ private:
     PhysicsModule* _physics = nullptr;
 
     DataStore<EmitterPresetSettings> _emitterPresets;
-    DataStore<EmitterPresetSettings2> _emitterPresets2;
     std::unordered_map<std::string, ResourceHandle<GPUImage>> _emitterImages;
     uint32_t emitterCount = 0;
 

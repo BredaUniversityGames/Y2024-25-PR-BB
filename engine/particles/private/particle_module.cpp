@@ -88,7 +88,7 @@ void ParticleModule::Tick(MAYBE_UNUSED Engine& engine)
     for (const auto entity : testView)
     {
         auto& testEmitter = _ecs->GetRegistry().get<ParticleEmitterComponent>(entity);
-        auto& preset = _emitterPresets2.data.emitterPresets.find(testEmitter.presetName)->second;
+        auto& preset = _emitterPresets.data.emitterPresets.find(testEmitter.presetName)->second;
 
         testEmitter.emitter.count = preset.count;
         testEmitter.emitter.mass = preset.mass;
@@ -158,7 +158,7 @@ bool ParticleModule::SetEmitterPresetImage(EmitterPreset& preset)
 
 void ParticleModule::LoadEmitterPresets()
 {
-    for (auto& it : _emitterPresets2.data.emitterPresets)
+    for (auto& it : _emitterPresets.data.emitterPresets)
     {
         bool imageFound;
         it.second.materialIndex = GetEmitterImage(it.second.imageName, imageFound).Index();
@@ -167,8 +167,8 @@ void ParticleModule::LoadEmitterPresets()
 
 void ParticleModule::SpawnEmitter(entt::entity entity, std::string emitterPresetName, SpawnEmitterFlagBits flags, glm::vec3 position, glm::vec3 velocity)
 {
-    auto got = _emitterPresets2.data.emitterPresets.find(emitterPresetName);
-    if (got == _emitterPresets2.data.emitterPresets.end())
+    auto got = _emitterPresets.data.emitterPresets.find(emitterPresetName);
+    if (got == _emitterPresets.data.emitterPresets.end())
     {
         return;
     }
