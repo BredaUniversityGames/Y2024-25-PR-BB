@@ -7,6 +7,8 @@
 #include <Jolt/Physics/Collision/Shape/MeshShape.h>
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
 
+#include "log.hpp"
+
 JPH::ShapeRefC ShapeFactory::MakeBoxShape(const glm::vec3& size)
 {
     return new JPH::BoxShape(ToJoltVec3(size * 0.5f));
@@ -41,6 +43,19 @@ JPH::ShapeRefC ShapeFactory::MakeConvexHullShape(const std::vector<glm::vec3>& v
     return shape;
 }
 
+bool IsTriangleDegenerate(const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2)
+{
+    auto cross = glm::cross(v1 - v0, v2 - v0);
+    auto lengthSquared = cross.x * cross.x + cross.y * cross.y + cross.z * cross.z;
+
+    if (lengthSquared <= 1e-15f)
+    {
+        bblog::info("{}", lengthSquared);
+    }
+
+    return lengthSquared <= 1e-12f;
+}
+
 JPH::ShapeRefC ShapeFactory::MakeMeshHullShape(const std::vector<glm::vec3>& vertices, const std::vector<uint32_t>& indices)
 {
     JPH::Array<JPH::Float3> joltVertices;
@@ -55,6 +70,8 @@ JPH::ShapeRefC ShapeFactory::MakeMeshHullShape(const std::vector<glm::vec3>& ver
 
     for (size_t i = 0; i < triangleCount; ++i)
     {
+        // We do have a couple degenerate triangles left, but Jolt can clean those up
+        // assert(IsTriangleDegenerate(vertices[indices[3 * i]], vertices[indices[3 * i + 1]], vertices[indices[3 * i + 2]]) == false);
         joltTriangles.emplace_back(JPH::IndexedTriangle(indices[3 * i], indices[3 * i + 1], indices[3 * i + 2]));
     }
 
