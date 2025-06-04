@@ -29,8 +29,10 @@ struct KeyboardAnalog
     KeyboardCode right;
 };
 
+struct MouseAnalog {};
+
 using DigitalInputBinding = std::variant<GamepadButton, KeyboardCode, MouseButton>;
-using AnalogInputBinding = std::variant<GamepadAnalog, KeyboardAnalog>;
+using AnalogInputBinding = std::variant<GamepadAnalog, KeyboardAnalog, MouseAnalog>;
 
 // Action for button inputs.
 struct DigitalAction
@@ -127,6 +129,7 @@ protected:
     NO_DISCARD virtual DigitalActionType CheckInput(std::string_view actionName, GamepadButton button) const = 0;
     NO_DISCARD glm::vec2 CheckAnalogInput(const AnalogAction& action) const;
     NO_DISCARD glm::vec2 CheckInput(MAYBE_UNUSED std::string_view actionName, const KeyboardAnalog& keyboardAnalog) const;
+    NO_DISCARD glm::vec2 CheckInput(MAYBE_UNUSED std::string_view actionName, MAYBE_UNUSED const MouseAnalog& mouseAnalog) const;
     NO_DISCARD virtual glm::vec2 CheckInput(std::string_view actionName, GamepadAnalog gamepadAnalog) const = 0;
     NO_DISCARD virtual std::vector<BindingOriginVisual> GetDigitalActionGamepadOriginVisual(const DigitalAction& action) const;
     NO_DISCARD virtual std::vector<BindingOriginVisual> GetAnalogActionGamepadOriginVisual(const AnalogAction& action) const;

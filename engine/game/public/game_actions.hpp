@@ -63,6 +63,7 @@ const GameActions GAME_ACTIONS {
                 .name = "Look",
                 .inputs = {
                     GamepadAnalog::eAXIS_RIGHT,
+                    MouseAnalog {},
                 },
             },
         },

@@ -198,6 +198,11 @@ glm::vec2 ActionManager::CheckInput(MAYBE_UNUSED std::string_view actionName, co
     return { _inputDeviceManager.IsKeyHeld(keyboardAnalog.right) - _inputDeviceManager.IsKeyHeld(keyboardAnalog.left), _inputDeviceManager.IsKeyHeld(keyboardAnalog.up) - _inputDeviceManager.IsKeyHeld(keyboardAnalog.down) };
 }
 
+glm::vec2 ActionManager::CheckInput(MAYBE_UNUSED std::string_view actionName, MAYBE_UNUSED const MouseAnalog& mouseAnalog) const
+{
+    return {}; // TODO: Support mouse movement
+}
+
 std::vector<BindingOriginVisual> ActionManager::GetDigitalActionGamepadOriginVisual(const DigitalAction& action) const
 {
     if (!_inputDeviceManager.IsGamepadAvailable())
@@ -316,6 +321,11 @@ std::vector<BindingOriginVisual> ActionManager::GetAnalogMouseAndKeyboardOriginV
                         std::string(magic_enum::enum_name(keyboard.down)) + " (DOWN) | " +
                         std::string(magic_enum::enum_name(keyboard.left)) + " (LEFT) | " +
                         std::string(magic_enum::enum_name(keyboard.right)) + " (RIGHT)";
+        },
+        [&](MouseAnalog)
+        {
+            BindingOriginVisual& visual = visuals.emplace_back();
+            visual.bindingInputName = "Mouse";
         },
     };
 
