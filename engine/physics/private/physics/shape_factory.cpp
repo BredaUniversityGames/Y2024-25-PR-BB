@@ -7,6 +7,8 @@
 #include <Jolt/Physics/Collision/Shape/MeshShape.h>
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
 
+#include "log.hpp"
+
 JPH::ShapeRefC ShapeFactory::MakeBoxShape(const glm::vec3& size)
 {
     return new JPH::BoxShape(ToJoltVec3(size * 0.5f));
