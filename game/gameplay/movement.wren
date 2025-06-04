@@ -229,6 +229,26 @@ class PlayerMovement{
             }
         }
 
+        // Check around player for enemies too
+        if (!isGrounded) {
+            for (i in 0..7) {
+                var dir = Vec3.new(Math.Cos(i / 8 * Math.PI() * 2), -1, Math.Sin(i / 8 * Math.PI() * 2)).normalize()
+                var ray = engine.GetPhysics().ShootRay(playerControllerPos - Vec3.new(0, 1, 0), dir, 1)
+
+                for(hit in ray) {
+                    if(hit.GetEntity(engine.GetECS()).HasEnemyTag()) {
+                        isGrounded = true
+                        groundHitNormal = hit.normal
+                        groundNormal = hit.normal // to be used outside the main movement function
+                        break
+                    }
+                }
+                if (isGrounded) {
+                    break
+                }
+            }
+        }
+
         var movement = engine.GetInput().GetAnalogAction("Move")
         var moveInputDir = Vec3.new(0.0,0.0,0.0)
         moveInputDir = forward.mulScalar(movement.y) + right.mulScalar(movement.x)
