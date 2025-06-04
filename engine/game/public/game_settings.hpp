@@ -8,6 +8,7 @@ struct GameSettings
 
     bool framerateCounter = false;
     float aimSensitivity = 0.5f;
+    float fov = 50.0f;
     float gammaSlider = 0.5f;
     bool vsync = false;
     bool aimAssist = false;
@@ -18,5 +19,5 @@ struct GameSettings
 
 constexpr const char* GAME_SETTINGS_FILE = "game_settings.json";
 
-VISITABLE_STRUCT(GameSettings, framerateCounter, aimSensitivity, gammaSlider, vsync, aimAssist, masterVolume, sfxVolume, musicVolume);
+VISITABLE_STRUCT(GameSettings, framerateCounter, aimSensitivity, fov, gammaSlider, vsync, aimAssist, masterVolume, sfxVolume, musicVolume);
 CLASS_SERIALIZE_VERSION(GameSettings, 1);

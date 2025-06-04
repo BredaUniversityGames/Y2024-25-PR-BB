@@ -88,7 +88,7 @@ class Main {
         __cameraVariables = CameraVariables.new()
         __playerVariables.cameraVariables = __cameraVariables
         var cameraProperties = __camera.AddCameraComponent()
-        cameraProperties.fov = Math.Radians(45.0)
+        cameraProperties.fov = engine.GetGame().GetSettings().fov // Get from where we manage fov
         cameraProperties.nearPlane = 0.1
         cameraProperties.farPlane = 600.0
         cameraProperties.reversedZ = true

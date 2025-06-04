@@ -233,6 +233,7 @@ public:
 
     std::weak_ptr<UIToggle> fpsToggle {};
     std::weak_ptr<UISlider> sensitivitySlider {};
+    std::weak_ptr<UISlider> fovSlider {};
     std::weak_ptr<UIToggle> aimAssistToggle {};
     std::weak_ptr<UISlider> masterVolume {};
     std::weak_ptr<UISlider> musicVolume {};
