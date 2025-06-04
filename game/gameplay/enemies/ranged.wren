@@ -148,7 +148,16 @@ class RangedEnemy {
             }
 
             // Spawn a soul
-            soulManager.SpawnSoul(engine, body.GetPosition(),SoulType.BIG)
+            var rayHitInfo = engine.GetPhysics().ShootRay(body.GetPosition(), Vec3.new(0, -1.0, 0), 100)
+            if(!rayHitInfo.isEmpty) {
+                for (rayHit in rayHitInfo) {
+                    var hitEntity = rayHit.GetEntity(engine.GetECS())
+                    if(hitEntity.GetRigidbodyComponent().GetLayer() == PhysicsObjectLayer.eSTATIC()) {
+                        soulManager.SpawnSoul(engine, rayHit.position + Vec3.new(0, 1.0, 0),SoulType.BIG)
+                        break
+                    }
+                }
+            }
 
             body.SetDynamic()
             body.SetGravityFactor(2.0)

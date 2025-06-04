@@ -112,24 +112,25 @@ class BerserkerEnemy {
     DecreaseHealth(amount, engine, coinManager, soulManager) {
         var animations = _meshEntity.GetAnimationControlComponent()
         var body = _rootEntity.GetRigidbodyComponent()
+        var transform = _rootEntity.GetTransformComponent()
 
         _health = Math.Max(_health - amount, 0)
 
         if (_health <= 0 && _isAlive) {
             _isAlive = false
             _rootEntity.RemoveEnemyTag()
+            _rootEntity.RemoveRigidBodyComponent()
+
             animations.Play("Death", 1.0, false, 0.3, false)
-            body.SetVelocity(Vec3.new(0,0,0))
-            body.SetStatic()
 
             // Spawn between 1 and 5 coins
             var coinCount = Random.RandomIndex(7, 12)
             for(i in 0...coinCount) {
-                coinManager.SpawnCoin(engine, body.GetPosition() + Vec3.new(0, 1.0, 0))
+                coinManager.SpawnCoin(engine, transform.GetWorldTranslation() + Vec3.new(0, 1.0, 0))
             }
 
             // Spawn a soul
-            soulManager.SpawnSoul(engine, body.GetPosition(),SoulType.BIG)
+            soulManager.SpawnSoul(engine, transform.GetWorldTranslation(),SoulType.BIG)
 
             var eventInstance = engine.GetAudio().PlayEventOnce(_hurtSFX)
             var growlInstance = engine.GetAudio().PlayEventOnce(_growlSFX)
@@ -159,7 +160,8 @@ class BerserkerEnemy {
 
     Update(playerPos, playerVariables, engine, dt, soulManager, coinManager, flashSystem) {
         var body = _rootEntity.GetRigidbodyComponent()
-        var pos = body.GetPosition()
+        var transform = _rootEntity.GetTransformComponent()
+        var pos = transform.GetWorldTranslation()
         var animations = _meshEntity.GetAnimationControlComponent()
 
     	_delaySpawnSFX = Math.Max(_delaySpawnSFX - dt, 0)
@@ -308,7 +310,7 @@ class BerserkerEnemy {
                     transparencyComponent.transparency =  _deathTimer / (_deathTimerMax-1000)
 
                     var newPos = pos - Vec3.new(0, 1, 0).mulScalar(1.0 * 0.00075 * dt)
-                    body.SetTranslation(newPos)
+                    transform.SetWorldTransform(newPos, transform.GetWorldRotation(), transform.GetWorldScale())
                 }
             }
         }
