@@ -89,7 +89,6 @@ class Main {
         __playerVariables.cameraVariables = __cameraVariables
         var cameraProperties = __camera.AddCameraComponent()
         cameraProperties.fov = engine.GetGame().GetSettings().fov // Get from where we manage fov
-        System.print(cameraProperties.fov)
         
         cameraProperties.nearPlane = 0.1
         cameraProperties.farPlane = 600.0
