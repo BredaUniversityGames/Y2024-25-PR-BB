@@ -8,8 +8,12 @@ SteamStats::SteamStats(std::span<Stat> stats)
     , _callbackUserStatsStored(this, &SteamStats::OnUserStatsStored)
 {
     _appID = SteamUtils()->GetAppID();
+
     _stats.resize(stats.size());
+    _oldStats.resize(stats.size());
+
     std::copy(stats.begin(), stats.end(), _stats.begin());
+    std::copy(stats.begin(), stats.end(), _oldStats.begin());
 }
 
 bool SteamStats::StoreStats()
@@ -23,20 +27,31 @@ bool SteamStats::StoreStats()
             switch (stat.type)
             {
             case EStatTypes::STAT_INT:
-                if (SteamUserStats()->SetStat(stat.name.c_str(), stat.value))
+                if (!SteamUserStats()->SetStat(stat.name.c_str(), stat.value))
                 {
-                    bblog::info("Successfully set int stats");
+                    stat.value = _oldStats[i].value;
                 }
                 break;
 
             case EStatTypes::STAT_FLOAT:
-                SteamUserStats()->SetStat(stat.name.c_str(), stat.floatValue);
+                if (!SteamUserStats()->SetStat(stat.name.c_str(), stat.floatValue))
+                {
+                    stat.floatValue = _oldStats[i].floatValue;
+                }
                 break;
 
             case EStatTypes::STAT_AVGRATE:
-                SteamUserStats()->UpdateAvgRateStat(stat.name.c_str(), stat.floatAvgNumerator, stat.floatAvgDenominator);
-                // The averaged result is calculated for us
-                SteamUserStats()->GetStat(stat.name.c_str(), &stat.floatValue);
+                if (!SteamUserStats()->UpdateAvgRateStat(stat.name.c_str(), stat.floatAvgNumerator, stat.floatAvgDenominator))
+                {
+                    stat.floatAvgNumerator = _oldStats[i].floatAvgNumerator;
+                    stat.floatAvgDenominator = _oldStats[i].floatAvgDenominator;
+
+                    // The averaged result is calculated for us
+                    if (!SteamUserStats()->GetStat(stat.name.c_str(), &stat.floatValue))
+                    {
+                        stat.floatValue = _oldStats[i].floatValue;
+                    }
+                }
                 break;
 
             default:
@@ -68,7 +83,8 @@ void SteamStats::OnUserStatsReceived(UserStatsReceived_t* pCallback)
         if (k_EResultOK == pCallback->m_eResult)
         {
             bblog::info("Received stats from Steam");
-            // load stats
+            std::copy(_stats.begin(), _stats.end(), _oldStats.begin());
+
             for (size_t i = 0; i < _stats.size(); ++i)
             {
                 Stat& stat = _stats[i];

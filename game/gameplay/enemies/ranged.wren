@@ -1,4 +1,4 @@
-import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, EmitterPresetID, Random
+import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, EmitterPresetID, Random, Stat, Stats
 import "../player.wren" for PlayerVariables
 import "gameplay/flash_system.wren" for FlashSystem
 
@@ -146,6 +146,9 @@ class RangedEnemy {
             for(i in 0...coinCount) {
                 coinManager.SpawnCoin(engine, body.GetPosition() + Vec3.new(0, 1.0, 0))
             }
+
+            var stat = engine.GetSteam().GetStat(Stats.EYES_KILLED())
+            stat.intValue = stat.intValue + 1
 
             body.SetDynamic()
             body.SetGravityFactor(2.0)

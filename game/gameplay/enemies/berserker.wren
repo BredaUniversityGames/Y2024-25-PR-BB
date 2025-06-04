@@ -1,4 +1,4 @@
-import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, EmitterPresetID, Perlin, Random
+import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, EmitterPresetID, Perlin, Random, Stat, Stats
 import "../player.wren" for PlayerVariables
 
 import "../soul.wren" for Soul, SoulManager, SoulType
@@ -127,6 +127,9 @@ class BerserkerEnemy {
             for(i in 0...coinCount) {
                 coinManager.SpawnCoin(engine, body.GetPosition() + Vec3.new(0, 1.0, 0))
             }
+
+            var stat = engine.GetSteam().GetStat(Stats.BERSERKERS_KILLED())
+            stat.intValue = stat.intValue + 1
 
             var eventInstance = engine.GetAudio().PlayEventOnce(_hurtSFX)
             var growlInstance = engine.GetAudio().PlayEventOnce(_growlSFX)

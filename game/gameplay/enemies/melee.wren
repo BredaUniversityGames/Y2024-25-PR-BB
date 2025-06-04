@@ -141,8 +141,8 @@ class MeleeEnemy {
                 coinManager.SpawnCoin(engine, body.GetPosition() + Vec3.new(0, 1.0, 0))
             }
 
-            var stat = engine.GetSteam().GetStat(Stats.SKELETONS_KILLED)
-            stat.value = stat.value + 1
+            var stat = engine.GetSteam().GetStat(Stats.SKELETONS_KILLED())
+            stat.intValue = stat.intValue + 1
 
             var eventInstance = engine.GetAudio().PlayEventOnce(_bonesSFX)
             

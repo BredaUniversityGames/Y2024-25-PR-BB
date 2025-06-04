@@ -36,6 +36,7 @@ class SteamStats
 private:
     uint64 _appID; // Our current AppID
     std::vector<Stat> _stats;
+    std::vector<Stat> _oldStats;
     bool _initialized; // Have we called Request stats and received the callback?
 
 public:

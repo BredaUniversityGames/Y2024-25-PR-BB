@@ -22,12 +22,25 @@ struct EnemyTag
 
 enum class Achievements : int32_t
 {
-    SKELETONS_KILLED_10 = 0,
+    SKELETONS_KILLED_10,
+    SKELETONS_KILLED_100,
+    SKELETONS_KILLED_500,
+    SKELETONS_KILLED_1000,
+
+    EYES_KILLED_10,
+    EYES_KILLED_100,
+    EYES_KILLED_250,
+
+    BERSERKERS_KILLED_10,
+    BERSERKERS_KILLED_50,
+    BERSERKERS_KILLED_100,
 };
 
 enum class Stats : int32_t
 {
     SKELETONS_KILLED = 3,
+    EYES_KILLED = 6,
+    BERSERKERS_KILLED = 7,
 };
 
 class GameModule : public ModuleInterface

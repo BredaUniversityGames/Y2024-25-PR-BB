@@ -41,8 +41,8 @@ Achievement CreateAchievement(Achievements achievements)
 Stat CreateStat(Stats stats, EStatTypes type)
 {
     return Stat {
-        static_cast<int32_t>(Stats::SKELETONS_KILLED),
-        type, magic_enum::enum_name(Stats::SKELETONS_KILLED)
+        static_cast<int32_t>(stats),
+        type, magic_enum::enum_name(stats)
     };
 }
 
@@ -276,11 +276,11 @@ std::optional<std::shared_ptr<LoadingScreen>> GameModule::GetLoadingScreen()
 }
 Stat* GameModule::GetStat(Stats stats)
 {
-    _engine->GetModule<SteamModule>().GetStats().GetStat(magic_enum::enum_name(stats));
+    return _engine->GetModule<SteamModule>().GetStats().GetStat(magic_enum::enum_name(stats));
 }
 Achievement* GameModule::GetAchievement(Achievements achievements)
 {
-    _engine->GetModule<SteamModule>().GetAchievements().GetAchievement(magic_enum::enum_name(achievements));
+    return _engine->GetModule<SteamModule>().GetAchievements().GetAchievement(magic_enum::enum_name(achievements));
 }
 
 void GameModule::SetUIMenu(std::weak_ptr<Canvas> menu)
