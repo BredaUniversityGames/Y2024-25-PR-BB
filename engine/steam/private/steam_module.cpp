@@ -72,6 +72,10 @@ void SteamModule::InitSteamAchievements(std::span<Achievement_t> achievements)
 {
     m_SteamAchievements = new CSteamAchievements(achievements.data(), achievements.size());
 }
+void SteamModule::InitSteamStats(std::span<Stat_t> stats)
+{
+    m_SteamStats = new CSteamStats(stats.data(), stats.size());
+}
 void SteamModule::OpenSteamBrowser(const std::string& url)
 {
     if (_steamAvailable == false)

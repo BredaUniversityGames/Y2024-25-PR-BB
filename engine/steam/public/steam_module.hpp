@@ -1,5 +1,6 @@
 #pragma once
 #include "achievements.hpp"
+#include "steam_stats.hpp"
 #include <engine.hpp>
 #include <memory>
 #include <span>
@@ -18,6 +19,7 @@ class SteamModule : public ModuleInterface
     bool _steamInputAvailable = false;
     // Global access to Achievements object
     CSteamAchievements* m_SteamAchievements = nullptr;
+    CSteamStats* m_SteamStats = nullptr;
 
 public:
     NON_COPYABLE(SteamModule);
@@ -27,6 +29,7 @@ public:
     ~SteamModule() override = default;
 
     void InitSteamAchievements(std::span<Achievement_t> achievements);
+    void InitSteamStats(std::span<Stat_t> stats);
     CSteamAchievements& GetSteamAchievements() const { return *m_SteamAchievements; }
 
     // When the user launched the application through Steam, this will return true.

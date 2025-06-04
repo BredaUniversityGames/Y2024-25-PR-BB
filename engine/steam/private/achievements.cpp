@@ -50,7 +50,7 @@ void CSteamAchievements::OnUserStatsReceived(UserStatsReceived_t* pCallback)
     {
         if (k_EResultOK == pCallback->m_eResult)
         {
-            bblog::info("Received stats and achievements from Steam\n");
+            bblog::info("Received achievements from Steam\n");
             m_bInitialized = true;
 
             // load achievements

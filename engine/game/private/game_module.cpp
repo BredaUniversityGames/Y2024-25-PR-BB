@@ -31,6 +31,12 @@
 #include "ui/ui_menus.hpp"
 #include "ui_module.hpp"
 
+// Defining our game stats
+Stat_t g_Stats[] = {
+    _STAT_ID(3, STAT_INT, "SKELETONS_KILLED"),
+};
+//
+
 //
 // Defining our achievements
 enum EAchievements
@@ -55,6 +61,7 @@ ModuleTickOrder GameModule::Init(Engine& engine)
 {
     engine.GetModule<ApplicationModule>().GetActionManager().SetGameActions(GAME_ACTIONS);
 
+    engine.GetModule<SteamModule>().InitSteamStats(g_Stats);
     engine.GetModule<SteamModule>().InitSteamAchievements(g_Achievements);
 
     // Audio Setup
