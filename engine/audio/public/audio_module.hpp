@@ -83,6 +83,8 @@ public:
     void RegisterChannelBus(const std::string& busName);
     void SetBusChannelVolume(const std::string& busName, float scale);
 
+    void SetLowpassBypass(bool state);
+
     std::vector<glm::vec3>& GetDebugLines()
     {
         return _debugLines;
@@ -116,6 +118,7 @@ private:
     // All sounds go through this eventually
     // USED ONLY FOR DSP VISUALIZATION: for events, we use event buses
     FMOD_CHANNELGROUP* _masterGroup = nullptr;
+    FMOD_DSP* _lowPassDSP = nullptr;
     FMOD_DSP* _fftDSP = nullptr;
 
     std::unordered_map<std::string, SoundInfo> _soundInfos {};
