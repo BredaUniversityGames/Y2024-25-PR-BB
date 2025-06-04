@@ -66,31 +66,37 @@ void SteamModule::Tick(MAYBE_UNUSED Engine& engine)
     SteamAPI_RunCallbacks();
 
     // Let's save stats once every X seconds
-    if (m_statsCounterMs > m_statsCounterMaxMs)
+    if (_statsCounterMs > _statsCounterMaxMs)
     {
-        m_statsCounterMs = 0;
+        _statsCounterMs = 0;
         SaveStats();
     }
-    m_statsCounterMs += engine.GetModule<TimeModule>().GetRealDeltatime().count();
+    _statsCounterMs += engine.GetModule<TimeModule>().GetRealDeltatime().count();
 }
 
 void SteamModule::Shutdown(MAYBE_UNUSED Engine& engine)
 {
     SteamAPI_Shutdown();
 }
-void SteamModule::InitSteamAchievements(std::span<Achievement_t> achievements)
+void SteamModule::InitSteamAchievements(std::span<Achievement> achievements)
 {
-    m_SteamAchievements = new CSteamAchievements(achievements.data(), achievements.size());
+    _steamAchievements = std::make_unique<SteamAchievements>(achievements);
 }
-void SteamModule::InitSteamStats(std::span<Stat_t> stats)
+void SteamModule::InitSteamStats(std::span<Stat> stats)
 {
-    m_SteamStats = new CSteamStats(stats.data(), stats.size());
+    _steamStats = std::make_unique<SteamStats>(stats);
 }
+
+bool SteamModule::RequestCurrentStats()
+{
+    return SteamUserStats()->RequestCurrentStats();
+}
+
 void SteamModule::SaveStats()
 {
-    if (m_SteamStats)
+    if (_steamStats)
     {
-        m_SteamStats->StoreStats();
+        _steamStats->StoreStats();
     }
     else
     {

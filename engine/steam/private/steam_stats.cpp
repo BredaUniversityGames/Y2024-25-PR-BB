@@ -1,56 +1,39 @@
 ﻿#include "steam_stats.hpp"
 #include "log.hpp"
 
-CSteamStats::CSteamStats(Stat_t* Stats, int NumStats)
-    : m_iAppID(0)
-    , m_bInitialized(false)
-    , m_CallbackUserStatsReceived(this, &CSteamStats::OnUserStatsReceived)
-    , m_CallbackUserStatsStored(this, &CSteamStats::OnUserStatsStored)
+SteamStats::SteamStats(std::span<Stat> stats)
+    : _appID(0)
+    , _initialized(false)
+    , _callbackUserStatsReceived(this, &SteamStats::OnUserStatsReceived)
+    , _callbackUserStatsStored(this, &SteamStats::OnUserStatsStored)
 {
-    m_iAppID = SteamUtils()->GetAppID();
-    m_pStats = Stats;
-    m_iNumStats = NumStats;
-    RequestStats();
+    _appID = SteamUtils()->GetAppID();
+    _stats.resize(stats.size());
+    std::copy(stats.begin(), stats.end(), _stats.begin());
 }
 
-bool CSteamStats::RequestStats()
+bool SteamStats::StoreStats()
 {
-    // Is Steam loaded? If not we can't get stats.
-    if (NULL == SteamUserStats() || NULL == SteamUser())
-    {
-        return false;
-    }
-    // Is the user logged on?  If not we can't get stats.
-    if (!SteamUser()->BLoggedOn())
-    {
-        return false;
-    }
-    // Request user stats.
-    return SteamUserStats()->RequestCurrentStats();
-}
-
-bool CSteamStats::StoreStats()
-{
-    if (m_bInitialized)
+    if (_initialized)
     {
         // load stats
-        for (int iStat = 0; iStat < m_iNumStats; ++iStat)
+        for (size_t i = 0; i < _stats.size(); ++i)
         {
-            Stat_t& stat = m_pStats[iStat];
-            switch (stat.m_eStatType)
+            Stat& stat = _stats[i];
+            switch (stat.type)
             {
-            case STAT_INT:
-                SteamUserStats()->SetStat(stat.m_pchStatName, stat.m_iValue);
+            case EStatTypes::STAT_INT:
+                SteamUserStats()->SetStat(stat.name.c_str(), stat.value);
                 break;
 
-            case STAT_FLOAT:
-                SteamUserStats()->SetStat(stat.m_pchStatName, stat.m_flValue);
+            case EStatTypes::STAT_FLOAT:
+                SteamUserStats()->SetStat(stat.name.c_str(), stat.floatValue);
                 break;
 
-            case STAT_AVGRATE:
-                SteamUserStats()->UpdateAvgRateStat(stat.m_pchStatName, stat.m_flAvgNumerator, stat.m_flAvgDenominator);
+            case EStatTypes::STAT_AVGRATE:
+                SteamUserStats()->UpdateAvgRateStat(stat.name.c_str(), stat.floatAvgNumerator, stat.floatAvgDenominator);
                 // The averaged result is calculated for us
-                SteamUserStats()->GetStat(stat.m_pchStatName, &stat.m_flValue);
+                SteamUserStats()->GetStat(stat.name.c_str(), &stat.floatValue);
                 break;
 
             default:
@@ -60,40 +43,42 @@ bool CSteamStats::StoreStats()
 
         return SteamUserStats()->StoreStats();
     }
+
+    return false;
 }
 
-void CSteamStats::OnUserStatsReceived(UserStatsReceived_t* pCallback)
+void SteamStats::OnUserStatsReceived(UserStatsReceived_t* pCallback)
 {
     // we may get callbacks for other games' stats arriving, ignore them
-    if (m_iAppID == pCallback->m_nGameID)
+    if (_appID == pCallback->m_nGameID)
     {
         if (k_EResultOK == pCallback->m_eResult)
         {
-            bblog::info("Received stats from Steam\n");
+            bblog::info("Received stats from Steam");
             // load stats
-            for (int iStat = 0; iStat < m_iNumStats; ++iStat)
+            for (size_t i = 0; i < _stats.size(); ++i)
             {
-                Stat_t& stat = m_pStats[iStat];
+                Stat& stat = _stats[i];
 
                 // For debug purposes, we can print the stat
-                bblog::info("Loaded stat {} with values: {} ; {}. ID: {}", stat.m_pchStatName, stat.m_iValue, stat.m_flValue, stat.m_ID);
+                bblog::info("Loaded stat {} with values: {} ; {}. ID: {}", stat.name, stat.value, stat.floatValue, stat.id);
                 //
-                switch (stat.m_eStatType)
+                switch (stat.type)
                 {
-                case STAT_INT:
-                    SteamUserStats()->GetStat(stat.m_pchStatName, &stat.m_iValue);
+                case EStatTypes::STAT_INT:
+                    SteamUserStats()->GetStat(stat.name.c_str(), &stat.value);
                     break;
 
-                case STAT_FLOAT:
-                case STAT_AVGRATE:
-                    SteamUserStats()->GetStat(stat.m_pchStatName, &stat.m_flValue);
+                case EStatTypes::STAT_FLOAT:
+                case EStatTypes::STAT_AVGRATE:
+                    SteamUserStats()->GetStat(stat.name.c_str(), &stat.floatValue);
                     break;
 
                 default:
                     break;
                 }
             }
-            m_bInitialized = true;
+            _initialized = true;
         }
         else
         {
@@ -104,10 +89,10 @@ void CSteamStats::OnUserStatsReceived(UserStatsReceived_t* pCallback)
     }
 }
 
-void CSteamStats::OnUserStatsStored(UserStatsStored_t* pCallback)
+void SteamStats::OnUserStatsStored(UserStatsStored_t* pCallback)
 {
     // we may get callbacks for other games' stats arriving, ignore them
-    if (m_iAppID == pCallback->m_nGameID)
+    if (_appID == pCallback->m_nGameID)
     {
         if (k_EResultOK == pCallback->m_eResult)
         {
@@ -121,7 +106,7 @@ void CSteamStats::OnUserStatsStored(UserStatsStored_t* pCallback)
             // Fake up a callback here so that we re-load the values.
             UserStatsReceived_t callback;
             callback.m_eResult = k_EResultOK;
-            callback.m_nGameID = m_iAppID;
+            callback.m_nGameID = _appID;
             OnUserStatsReceived(&callback);
         }
         else

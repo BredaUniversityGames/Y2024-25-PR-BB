@@ -31,38 +31,26 @@
 #include "ui/ui_menus.hpp"
 #include "ui_module.hpp"
 
-// Defining our game stats
-Stat_t g_Stats[] = {
-    _STAT_ID(3, STAT_INT, "SKELETONS_KILLED"),
-};
-//
-
-//
-// Defining our achievements
-enum EAchievements
-{
-    ACH_WIN_ONE_GAME = 0,
-    ACH_WIN_100_GAMES = 1,
-    ACH_TRAVEL_FAR_ACCUM = 2,
-    ACH_TRAVEL_FAR_SINGLE = 3,
-};
-
-// Achievement array which will hold data about the achievements and their state
-Achievement_t g_Achievements[] = {
-    _ACH_ID(ACH_WIN_ONE_GAME, "Winner"),
-    _ACH_ID(ACH_WIN_100_GAMES, "Champion"),
-    _ACH_ID(ACH_TRAVEL_FAR_ACCUM, "Interstellar"),
-    _ACH_ID(ACH_TRAVEL_FAR_SINGLE, "Orbiter"),
-};
-
-//
+#include <magic_enum.hpp>
 
 ModuleTickOrder GameModule::Init(Engine& engine)
 {
+    _achievements = {
+        Achievement { static_cast<int32_t>(Achievements::SKELETONS_KILLED_10), magic_enum::enum_name(Achievements::SKELETONS_KILLED_10) }
+    };
+
+    _stats = {
+        Stat {
+            3,
+            EStatTypes::STAT_INT, "SKELETONS_KILLED" }
+    };
+
     engine.GetModule<ApplicationModule>().GetActionManager().SetGameActions(GAME_ACTIONS);
 
-    engine.GetModule<SteamModule>().InitSteamStats(g_Stats);
-    engine.GetModule<SteamModule>().InitSteamAchievements(g_Achievements);
+    auto& steam = engine.GetModule<SteamModule>();
+    steam.InitSteamStats(_stats);
+    steam.InitSteamAchievements(_achievements);
+    steam.RequestCurrentStats();
 
     // Audio Setup
     auto& audio = engine.GetModule<AudioModule>();

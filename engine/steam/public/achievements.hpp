@@ -1,40 +1,50 @@
 ﻿#pragma once
+
 #include "steam_include.hpp"
 #include <cstdint>
+#include <span>
+#include <string>
+#include <string_view>
+#include <vector>
 
-#define _ACH_ID(id, name)       \
-    {                           \
-        id, #id, name, "", 0, 0 \
-    }
-struct Achievement_t
+struct Achievement
 {
-    int m_eAchievementID;
-    const char* m_pchAchievementID;
-    char m_rgchName[128];
-    char m_rgchDescription[256];
-    bool m_bAchieved;
-    int m_iIconImage;
+    Achievement(int32_t id, const std::string_view& apiId)
+        : id(id)
+        , apiId(apiId)
+        , name()
+        , description()
+        , achieved()
+        , iconImage()
+    {
+    }
+    Achievement() = default;
+
+    int32_t id = 0;
+    std::string apiId = "";
+    char name[128];
+    char description[256];
+    bool achieved = false;
+    int32_t iconImage = 0;
 };
 
-class CSteamAchievements
+class SteamAchievements
 {
 private:
-    int64_t m_iAppID; // Our current AppID
-    Achievement_t* m_pAchievements; // Achievements data
-    int m_iNumAchievements; // The number of Achievements
-    bool m_bInitialized; // Have we called Request stats and received the callback?
+    uint64_t _appID; // Our current AppID
+    std::vector<Achievement> _achievements;
+    bool _initialized; // Have we called Request stats and received the callback?
 
 public:
-    CSteamAchievements(Achievement_t* Achievements, int NumAchievements);
-    ~CSteamAchievements();
+    SteamAchievements(std::span<Achievement> achievements);
+    ~SteamAchievements() = default;
 
-    bool RequestStats();
     bool SetAchievement(const char* ID);
 
-    STEAM_CALLBACK(CSteamAchievements, OnUserStatsReceived, UserStatsReceived_t,
-        m_CallbackUserStatsReceived);
-    STEAM_CALLBACK(CSteamAchievements, OnUserStatsStored, UserStatsStored_t,
-        m_CallbackUserStatsStored);
-    STEAM_CALLBACK(CSteamAchievements, OnAchievementStored,
-        UserAchievementStored_t, m_CallbackAchievementStored);
+    STEAM_CALLBACK(SteamAchievements, OnUserStatsReceived, UserStatsReceived_t,
+        _callbackUserStatsReceived);
+    STEAM_CALLBACK(SteamAchievements, OnUserStatsStored, UserStatsStored_t,
+        _callbackUserStatsStored);
+    STEAM_CALLBACK(SteamAchievements, OnAchievementStored,
+        UserAchievementStored_t, _callbackAchievementStored);
 };

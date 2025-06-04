@@ -2,43 +2,50 @@
 #include "steam_include.hpp"
 #include <cstdint>
 
-#define _STAT_ID( id,type,name ) { id, type, name, 0, 0, 0, 0 }
+#define _STAT_ID(id, type, name) { id, type, name, 0, 0, 0, 0 }
 
-enum EStatTypes
+enum class EStatTypes
 {
     STAT_INT = 0,
     STAT_FLOAT = 1,
     STAT_AVGRATE = 2,
 };
 
-struct Stat_t
+struct Stat
 {
-    int m_ID;
-    EStatTypes m_eStatType;
-    const char *m_pchStatName;
-    int m_iValue;
-    float m_flValue;
-    float m_flAvgNumerator;
-    float m_flAvgDenominator;
+    Stat(int32_t id, EStatTypes type, std::string_view name)
+        : id(id)
+        , type(type)
+        , name(name)
+    {
+    }
+
+    Stat() = default;
+
+    int32_t id = 0;
+    EStatTypes type = EStatTypes::STAT_INT;
+    std::string name = "";
+    int value = 0;
+    float floatValue = 0.0f;
+    float floatAvgNumerator = 0.0f;
+    float floatAvgDenominator = 0.0f;
 };
 
-class CSteamStats
+class SteamStats
 {
 private:
-    int64 m_iAppID; // Our current AppID
-    Stat_t *m_pStats; // Stats data
-    int m_iNumStats; // The number of Stats
-    bool m_bInitialized; // Have we called Request stats and received the callback?
+    uint64 _appID; // Our current AppID
+    std::vector<Stat> _stats;
+    bool _initialized; // Have we called Request stats and received the callback?
 
 public:
-    CSteamStats(Stat_t *Stats, int NumStats);
-    ~CSteamStats();
+    SteamStats(std::span<Stat> stats);
+    ~SteamStats() = default;
 
-    bool RequestStats();
     bool StoreStats();
 
-    STEAM_CALLBACK( CSteamStats, OnUserStatsReceived, UserStatsReceived_t,
-            m_CallbackUserStatsReceived );
-    STEAM_CALLBACK( CSteamStats, OnUserStatsStored, UserStatsStored_t,
-            m_CallbackUserStatsStored );
+    STEAM_CALLBACK(SteamStats, OnUserStatsReceived, UserStatsReceived_t,
+        _callbackUserStatsReceived);
+    STEAM_CALLBACK(SteamStats, OnUserStatsStored, UserStatsStored_t,
+        _callbackUserStatsStored);
 };

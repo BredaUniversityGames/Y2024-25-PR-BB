@@ -6,6 +6,8 @@
 #include "scene/model_loader.hpp"
 #include "ui/ui_menus.hpp"
 
+#include "achievements.hpp"
+#include "steam_stats.hpp"
 #include <stack>
 
 constexpr const char* DISCORD_URL = "https://discord.gg/8RmgD2sz9M";
@@ -16,6 +18,16 @@ struct PlayerTag
 
 struct EnemyTag
 {
+};
+
+enum class Achievements : int32_t
+{
+    SKELETONS_KILLED_10 = 0,
+};
+
+enum class Stats : int32_t
+{
+    SKELETONS_KILLED = 3,
 };
 
 class GameModule : public ModuleInterface
@@ -56,6 +68,9 @@ public:
 
     ModelLoader _modelsLoaded {};
     std::weak_ptr<MainMenu> _mainMenu;
+
+    std::vector<Achievement> _achievements;
+    std::vector<Stat> _stats;
 
 private:
     void TransitionScene(Engine& engine);

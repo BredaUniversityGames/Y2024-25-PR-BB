@@ -17,11 +17,10 @@ class SteamModule : public ModuleInterface
 
     bool _steamAvailable = false;
     bool _steamInputAvailable = false;
-    float m_statsCounterMs = 0;
-    const float m_statsCounterMaxMs = 5000;
-    // Global access to Achievements object
-    CSteamAchievements* m_SteamAchievements = nullptr;
-    CSteamStats* m_SteamStats = nullptr;
+    float _statsCounterMs = 0;
+    const float _statsCounterMaxMs = 5000;
+    std::unique_ptr<SteamAchievements> _steamAchievements = nullptr;
+    std::unique_ptr<SteamStats> _steamStats = nullptr;
 
 public:
     NON_COPYABLE(SteamModule);
@@ -30,11 +29,11 @@ public:
     SteamModule() = default;
     ~SteamModule() override = default;
 
-    void InitSteamAchievements(std::span<Achievement_t> achievements);
-    void InitSteamStats(std::span<Stat_t> stats);
-
+    void InitSteamAchievements(std::span<Achievement> achievements);
+    void InitSteamStats(std::span<Stat> stats);
+    bool RequestCurrentStats();
     void SaveStats();
-    CSteamAchievements& GetSteamAchievements() const { return *m_SteamAchievements; }
+    SteamAchievements& GetSteamAchievements() const { return *_steamAchievements; }
 
     // When the user launched the application through Steam, this will return true.
     // If false, the Steam module cannot be used, as Steam API does not work.
