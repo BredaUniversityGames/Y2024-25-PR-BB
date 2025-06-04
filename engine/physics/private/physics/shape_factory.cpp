@@ -7,8 +7,6 @@
 #include <Jolt/Physics/Collision/Shape/MeshShape.h>
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
 
-#include "log.hpp"
-
 JPH::ShapeRefC ShapeFactory::MakeBoxShape(const glm::vec3& size)
 {
     return new JPH::BoxShape(ToJoltVec3(size * 0.5f));
@@ -43,28 +41,23 @@ JPH::ShapeRefC ShapeFactory::MakeConvexHullShape(const std::vector<glm::vec3>& v
     return shape;
 }
 
-bool isTriangleDegenerate(const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2)
+bool IsTriangleDegenerate(const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2)
 {
     auto cross = glm::cross(v1 - v0, v2 - v0);
     auto lengthSquared = cross.x * cross.x + cross.y * cross.y + cross.z * cross.z;
 
-    if (lengthSquared <= 1e-9f)
+    if (lengthSquared <= 1e-15f)
     {
         bblog::info("{}", lengthSquared);
     }
 
-    return lengthSquared <= 1e-9f;
+    return lengthSquared <= 1e-12f;
 }
 
 JPH::ShapeRefC ShapeFactory::MakeMeshHullShape(const std::vector<glm::vec3>& vertices, const std::vector<uint32_t>& indices)
 {
     JPH::Array<JPH::Float3> joltVertices;
     joltVertices.reserve(vertices.size());
-
-    static size_t vert_count = 0;
-    static size_t degenerate_count = 0;
-
-    vert_count += vertices.size();
 
     for (auto& v : vertices)
         joltVertices.emplace_back(v.x, v.y, v.z);
@@ -75,10 +68,8 @@ JPH::ShapeRefC ShapeFactory::MakeMeshHullShape(const std::vector<glm::vec3>& ver
 
     for (size_t i = 0; i < triangleCount; ++i)
     {
-        if (isTriangleDegenerate(vertices[indices[3 * i]], vertices[indices[3 * i + 1]], vertices[indices[3 * i + 2]]))
-        {
-            degenerate_count++;
-        }
+        // We do have a couple degenerate triangles left, but Jolt can clean those up
+        // assert(IsTriangleDegenerate(vertices[indices[3 * i]], vertices[indices[3 * i + 1]], vertices[indices[3 * i + 2]]) == false);
         joltTriangles.emplace_back(JPH::IndexedTriangle(indices[3 * i], indices[3 * i + 1], indices[3 * i + 2]));
     }
 
@@ -89,9 +80,6 @@ JPH::ShapeRefC ShapeFactory::MakeMeshHullShape(const std::vector<glm::vec3>& ver
 
     if (result.HasError())
         return nullptr;
-
-    bblog::info("Physics mesh vertex count: {}", vert_count);
-    bblog::info("Physics degenerate triangle count: {}", degenerate_count);
 
     return shape;
 }
