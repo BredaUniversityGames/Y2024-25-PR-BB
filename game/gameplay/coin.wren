@@ -10,18 +10,21 @@ class Coin {
         _mediumRange = 3.0
         _maxRange = 5.0 // Range for the coin to start following the player
 
-        _rootEntity = engine.LoadModel("assets/models/nug.glb", false)
+        _rootEntity = engine.GetECS().NewEntity()
         _rootEntity.AddNameComponent().name = "Coin"
         _rootEntity.AddAudioEmitterComponent()
 
-        var transform = _rootEntity.GetTransformComponent()
+        var transform = _rootEntity.AddTransformComponent()
         transform.translation = spawnPosition
         transform.scale = Vec3.new(0.95, 0.95, 0.95)
 
-        // Coin light
-        _lightEntity = engine.GetECS().NewEntity()
-        _lightEntity.AddNameComponent().name = "CoinLight"
 
+        // Coin mesh
+        _meshEntity = engine.LoadModel("assets/models/nug.glb", false)
+        _rootEntity.AttachChild(_meshEntity)
+
+        _lightEntity = engine.GetECS().NewEntity()
+        _lightEntity.AddNameComponent().name = "Coin Light"
         var lightTransform = _lightEntity.AddTransformComponent()
         lightTransform.translation = Vec3.new(0.001, 0.22, 0.001)
         var pointLight = _lightEntity.AddPointLightComponent()
@@ -33,7 +36,7 @@ class Coin {
         transparencyComponent.transparency = 1.0
         
         // Coin collision
-        // Physics callback with the two wren entities as parameters
+              // Physics callback with the two wren entities as parameters
         var onEnterCoinSound = Fn.new { |self, other|
 
             if (other.GetRigidbodyComponent().GetLayer() == PhysicsObjectLayer.eSTATIC()) {
@@ -47,9 +50,8 @@ class Coin {
 
         var colliderShape = ShapeFactory.MakeBoxShape(Vec3.new(0.45,0.45,0.45))
         var rb = Rigidbody.new(engine.GetPhysics(), colliderShape, PhysicsObjectLayer.eCOINS(), true)
-        var body = _rootEntity.AddRigidbodyComponent(rb)
+        var body = _rootEntity.AddRigidbodyComponent(rb).OnCollisionEnter(onEnterCoinSound)
 
-        body.OnCollisionEnter(onEnterCoinSound)
         body.SetGravityFactor(2.5)
         body.SetFriction(9.0)
 
@@ -67,6 +69,10 @@ class Coin {
 
         body.SetAngularVelocity(Random.RandomVec3Range(-50.0, 50.0))
 
+
+
+
+
         _time = 0.0 // Time since the coin was spawned
         _collisionSoundTimer = 0.0 // Timer for the collision sound
         
@@ -83,15 +89,14 @@ class Coin {
     }
 
     CheckRange(engine, playerPos, playerVariables, flashSystem, coinManager, dt){
-
-        var coinRigidbody = _rootEntity.GetRigidbodyComponent()
-        var coinPos = coinRigidbody.GetPosition()
         
-        _lightEntity.GetTransformComponent().translation = coinPos + _lightOffset // Update light position
-
+        var coinTransform = _rootEntity.GetRigidbodyComponent()
+        var coinPos = coinTransform.GetPosition()
         var distance = Math.Distance(coinPos, playerPos)
 
+
         if(distance < _maxRange){
+
            coinManager.SetIsNearGold(true) // Set the player is near gold flag
             coinManager.ResetPurseTimer() // Reset the purse timer
             _velocity = (playerPos - coinPos).normalize()
@@ -103,13 +108,13 @@ class Coin {
             var progress = 1.0 - (distance / _maxRange)
             var easing = progress * progress // ease-out
 
-            coinRigidbody.SetVelocity(_velocity.mulScalar(dt * _coinSpeed* easing)) // Move the coin towards the player
+            coinTransform.SetVelocity(_velocity.mulScalar(dt * _coinSpeed* easing)) // Move the coin towards the player
 
             if(distance <= _minRange){
-
                 playerVariables.IncreaseScore(100) // Increase player health
 
-                // Play audio
+
+                 // Play audio
                 var player = engine.GetECS().GetEntityByName("Camera")
                 var eventInstance = engine.GetAudio().PlayEventOnce(_collectSoundEvent)
                 engine.GetAudio().SetEventVolume(eventInstance, 1.0)
@@ -154,17 +159,11 @@ class Coin {
 
 
     Destroy(){
-        
-        var rb = _rootEntity.GetRigidbodyComponent()
-        rb.SetTranslation(Vec3.new(0.0, -1000.0, 0.0)) // Move the coin out of the way
-        
+        //rb.SetTranslation(Vec3.new(0.0, -1000.0, 0.0)) // Move the coin out of the way
+        //_rootEntity.SetTranslation(Vec3.new(0.0, -1000.0, 0.0)) // Move the coin out of the way
         // Add a lifetime component to the coin entity so it will get destroyed eventually
-        
         var lifetime = _rootEntity.AddLifetimeComponent()
         lifetime.lifetime = 0.0
-
-        var lifeTimeLight = _lightEntity.AddLifetimeComponent()
-        lifeTimeLight.lifetime = 0.0
     }
 
     entity {
@@ -182,10 +181,13 @@ class Coin {
 
 class CoinManager {
     construct new(engine, player){
-
         _coinList = [] // List of coins
         _playerEntity = player // Reference to the player entity
         _maxLifeTimeOfCoin = 15000.0 // Maximum lifetime of a coin
+
+
+
+
 
         _purseLightEntity = engine.GetECS().NewEntity()
         _purseLightEntity.AddNameComponent().name = "Purse Light"
