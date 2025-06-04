@@ -13,6 +13,7 @@ class PlayerMovement{
         gravityFactor = 2.4
         playerHeight = 1.7
         _cameraFovNormal = 50
+        _cameraFovDash = _cameraFovNormal + Math.Min(_cameraFovNormal * 0.17, 15)
         _cameraFovSlide = 65
         _cameraFovCurrent = _cameraFovNormal
         _playerVariables = playerVariables
@@ -63,6 +64,7 @@ class PlayerMovement{
     dashWishPosition {_dashWishPosition}
     currentDashCount {_currentDashCount}
     currentDashRefillTime {_currentDashRefillTime}
+    cameraFovCurrent {_cameraFovCurrent}
 
     //Base movement
     maxSpeed {_maxSpeed}
@@ -107,6 +109,12 @@ class PlayerMovement{
     // Input
     lastMousePosition=(value) {_lastMousePosition = value}
     lookSensitivity=(value) {_lookSensitivity = value}
+
+    UpdateFOV(fov) {
+        System.print(fov)
+        _cameraFovNormal = fov
+        _cameraFovDash = fov + Math.Min(fov * 0.17, 15)
+    }
 
     Rotation(engine, player) {
 
@@ -446,7 +454,8 @@ class PlayerMovement{
             }
         }
 
-         if(hasDashed){
+        if(hasDashed){
+            _cameraFovCurrent = Math.MixFloat(_cameraFovCurrent,_cameraFovDash,0.2)
             dashTimer = dashTimer + dt
             var velocity = playerBody.GetVelocity()
             var currentSpeed = velocity.length()
@@ -481,7 +490,10 @@ class PlayerMovement{
                     playerBody.SetVelocity(clampedVelocity)
                 }
             }
-         }
+        } else {
+            _cameraFovCurrent = Math.MixFloat(_cameraFovCurrent,_cameraFovNormal,0.2)
+        }
+
     }
 
     Slide(engine, dt, playerController, camera){

@@ -304,8 +304,10 @@ class Main {
             }
         }
 
-        __camera.GetCameraComponent().fov = Math.Radians(50 + 100 * engine.GetGame().GetSettings().fov)
-        System.print(__camera.GetCameraComponent().fov)
+
+        // Update fov
+        __playerMovement.UpdateFOV(50 + 100 * engine.GetGame().GetSettings().fov)
+        __camera.GetCameraComponent().fov = Math.Radians(__playerMovement.cameraFovCurrent)
 
         // Skip everything if paused
         if (__pauseEnabled || !__alive) {
