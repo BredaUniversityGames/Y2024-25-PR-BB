@@ -141,6 +141,8 @@ class MeleeEnemy {
                 coinManager.SpawnCoin(engine, body.GetPosition() + Vec3.new(0, 1.0, 0))
             }
 
+            _pointLight.intensity = 0
+
             var eventInstance = engine.GetAudio().PlayEventOnce(_bonesSFX)
             
             var hitmarkerSFX = engine.GetAudio().PlayEventOnce(_hitMarkerSFX)
@@ -327,6 +329,11 @@ class MeleeEnemy {
                     animations.Play("Run", 1.25, true, 0.2, true)
                 }
             }
+
+            _noiseOffset = _noiseOffset + dt * 0.001 * __flickerSpeed
+            var noise = __perlin.Noise1D(_noiseOffset)
+            var flickerIntensity = __baseIntensity + ((noise - 0.5) * __flickerRange)
+            _pointLight.intensity = flickerIntensity
         } else {
             _deathTimer = _deathTimer - dt
             
@@ -347,11 +354,6 @@ class MeleeEnemy {
                 }
             }
         }
-
-        _noiseOffset = _noiseOffset + dt * 0.001 * __flickerSpeed
-        var noise = __perlin.Noise1D(_noiseOffset)
-        var flickerIntensity = __baseIntensity + ((noise - 0.5) * __flickerRange)
-        _pointLight.intensity = flickerIntensity
     }
 
     DoPathfinding(playerPos, engine, dt) {
