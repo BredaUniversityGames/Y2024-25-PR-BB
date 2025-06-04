@@ -16,8 +16,10 @@ private:
     ParticleModule& _particleModule;
     ECSModule& _ecsModule;
 
-    int _selectedPresetIndex = -1;
     std::string _selectedPresetName = "null";
+    std::string _selectedPresetEditingName = "null";
+
+    std::string _nameChangeMessage = "";
     std::string _imageLoadMessage = "Ready to load...";
 
     void RenderEmitterPresetList();

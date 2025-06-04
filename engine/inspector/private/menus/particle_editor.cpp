@@ -44,8 +44,8 @@ void ParticleEditor::RenderEmitterPresetList()
     if (ImGui::Button("+ New Preset##Emitter Preset"))
     {
         EmitterPreset newPreset;
-        newPreset.name += " " + std::to_string(_particleModule._emitterPresets.data.emitterPresets.size());
-        _particleModule._emitterPresets.data.emitterPresets.emplace_back(std::move(newPreset));
+        std::string newPresetName = "Emiter Preset " + std::to_string(_particleModule._emitterPresets.data.emitterPresets.size());
+        _particleModule._emitterPresets2.data.emitterPresets.emplace(newPresetName, newPreset);
     }
     if (ImGui::Button("Save Presets##Emitter Preset"))
     {
@@ -53,16 +53,18 @@ void ParticleEditor::RenderEmitterPresetList()
     }
     ImGui::Text("Emitter Presets:");
 
-    for (uint32_t i = 0; i < _particleModule._emitterPresets.data.emitterPresets.size(); i++)
+    for (auto& it : _particleModule._emitterPresets2.data.emitterPresets)
     {
-        auto& emitterPreset = _particleModule._emitterPresets.data.emitterPresets[i];
         static ImGuiTreeNodeFlags nodeFlags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
 
-        ImGui::TreeNodeEx(emitterPreset.name.c_str(), nodeFlags | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen);
+        ImGui::TreeNodeEx(it.first.c_str(), nodeFlags | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen);
         if (ImGui::IsItemClicked())
         {
-            _selectedPresetIndex = i;
+            _selectedPresetName = it.first.c_str();
+            _selectedPresetEditingName = it.first.c_str();
+
             _imageLoadMessage = "Ready to load...";
+            _nameChangeMessage = "";
         }
     }
 }
@@ -71,12 +73,32 @@ void ParticleEditor::RenderEmitterPresetEditor()
 {
     ImGui::Text("Currently editing: ");
     ImGui::SameLine();
+    ImGui::Text("%s", _selectedPresetName.c_str());
 
-    if (_selectedPresetIndex > -1)
+    auto got = _particleModule._emitterPresets2.data.emitterPresets.find(_selectedPresetName);
+
+    if (got != _particleModule._emitterPresets2.data.emitterPresets.end())
     {
-        auto& selectedPreset = _particleModule._emitterPresets.data.emitterPresets[_selectedPresetIndex];
+        auto& selectedPreset = got->second;
 
-        ImGui::InputText("Name##Emitter Preset", &selectedPreset.name);
+        ImGui::InputText("Name##Emitter Preset", &_selectedPresetEditingName);
+        if (ImGui::Button("Save Name##Emitter Preset"))
+        {
+            if (_particleModule._emitterPresets2.data.emitterPresets.find(_selectedPresetEditingName) == _particleModule._emitterPresets2.data.emitterPresets.end())
+            {
+                auto preset = _particleModule._emitterPresets2.data.emitterPresets.extract(_selectedPresetName);
+                preset.key() = _selectedPresetEditingName;
+                _selectedPresetName = _selectedPresetEditingName;
+                _particleModule._emitterPresets2.data.emitterPresets.insert(std::move(preset));
+                _nameChangeMessage = "Name successfully changed!";
+            }
+            else
+            {
+                _nameChangeMessage = "Name already exists :(";
+            }
+        }
+        ImGui::SameLine();
+        ImGui::Text("%s", _nameChangeMessage.c_str());
 
         // image loading (scuffed for now)
         ImGui::Text("assets/textures/particles/");
@@ -253,7 +275,7 @@ void ParticleEditor::RenderEmitterPresetEditor()
                 TransformHelpers::SetLocalPosition(_ecsModule.GetRegistry(), entity, playerTransform.GetLocalPosition());
             }
             _ecsModule.GetRegistry().emplace<TestEmitterTag>(entity);
-            _particleModule.SpawnEmitter(entity, _particleModule._emitterPresets.data.emitterPresets[_selectedPresetIndex].name, SpawnEmitterFlagBits::eIsActive);
+            _particleModule.SpawnEmitter(entity, _selectedPresetName, SpawnEmitterFlagBits::eIsActive);
         }
 
         ImGui::SameLine();
@@ -264,8 +286,9 @@ void ParticleEditor::RenderEmitterPresetEditor()
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(1.f, 0.2f, 0.2f, 1.f));
         if (ImGui::Button("Delete Preset##Emitter Preset"))
         {
-            _particleModule._emitterPresets.data.emitterPresets.erase(_particleModule._emitterPresets.data.emitterPresets.begin() + _selectedPresetIndex);
-            _selectedPresetIndex = -1;
+            _particleModule._emitterPresets2.data.emitterPresets.erase(got);
+            _selectedPresetName = "null";
+            _selectedPresetEditingName = "null";
             ImGui::PopStyleColor(3);
             return;
         }
