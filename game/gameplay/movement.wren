@@ -111,7 +111,6 @@ class PlayerMovement{
     lookSensitivity=(value) {_lookSensitivity = value}
 
     UpdateFOV(fov) {
-        System.print(fov)
         _cameraFovNormal = fov
         _cameraFovDash = fov + Math.Min(fov * 0.17, 15)
     }
