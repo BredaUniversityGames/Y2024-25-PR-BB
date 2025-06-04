@@ -17,6 +17,8 @@ class SteamModule : public ModuleInterface
 
     bool _steamAvailable = false;
     bool _steamInputAvailable = false;
+    float m_statsCounterMs = 0;
+    const float m_statsCounterMaxMs = 5000;
     // Global access to Achievements object
     CSteamAchievements* m_SteamAchievements = nullptr;
     CSteamStats* m_SteamStats = nullptr;
@@ -30,6 +32,8 @@ public:
 
     void InitSteamAchievements(std::span<Achievement_t> achievements);
     void InitSteamStats(std::span<Stat_t> stats);
+
+    void SaveStats();
     CSteamAchievements& GetSteamAchievements() const { return *m_SteamAchievements; }
 
     // When the user launched the application through Steam, this will return true.

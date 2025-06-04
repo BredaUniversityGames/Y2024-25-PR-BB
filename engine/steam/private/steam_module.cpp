@@ -3,6 +3,8 @@
 #include "log.hpp"
 #include "steam_include.hpp"
 
+#include <time_module.hpp>
+
 void DebugCallback(int severity, const char* message)
 {
     // If you're running in the debugger, only warnings (severity >= 1) will be sent
@@ -62,6 +64,14 @@ void SteamModule::Tick(MAYBE_UNUSED Engine& engine)
     }
 
     SteamAPI_RunCallbacks();
+
+    // Let's save stats once every X seconds
+    if (m_statsCounterMs > m_statsCounterMaxMs)
+    {
+        m_statsCounterMs = 0;
+        SaveStats();
+    }
+    m_statsCounterMs += engine.GetModule<TimeModule>().GetRealDeltatime().count();
 }
 
 void SteamModule::Shutdown(MAYBE_UNUSED Engine& engine)
@@ -75,6 +85,17 @@ void SteamModule::InitSteamAchievements(std::span<Achievement_t> achievements)
 void SteamModule::InitSteamStats(std::span<Stat_t> stats)
 {
     m_SteamStats = new CSteamStats(stats.data(), stats.size());
+}
+void SteamModule::SaveStats()
+{
+    if (m_SteamStats)
+    {
+        m_SteamStats->StoreStats();
+    }
+    else
+    {
+        bblog::error("Cannot save stats, SteamStats does not exist.");
+    }
 }
 void SteamModule::OpenSteamBrowser(const std::string& url)
 {
