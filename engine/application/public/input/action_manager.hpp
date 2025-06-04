@@ -78,7 +78,7 @@ struct GamepadTypeGlyphs
 
 using GamepadGlyphs = std::unordered_map<GamepadType, GamepadTypeGlyphs>;
 
-struct GamepadOriginVisual
+struct BindingOriginVisual
 {
     std::string bindingInputName {};
     std::string glyphImagePath {};
@@ -107,11 +107,12 @@ public:
     // Axis actions.
     NO_DISCARD glm::vec2 GetAnalogAction(std::string_view actionName) const;
 
-    // Returns information to be visually displayed for all gamepad bindings for the given digital action.
-    NO_DISCARD virtual std::vector<GamepadOriginVisual> GetDigitalActionGamepadOriginVisual(std::string_view actionName) const;
 
-    // Returns information to be visually displayed for all gamepad bindings for the given analog action.
-    NO_DISCARD virtual std::vector<GamepadOriginVisual> GetAnalogActionGamepadOriginVisual(std::string_view actionName) const;
+    // Returns information to be visually displayed for all bindings for the given digital action.
+    NO_DISCARD std::vector<BindingOriginVisual> GetDigitalActionBindingOriginVisual(std::string_view actionName) const;
+
+    // Returns information to be visually displayed for all bindings for the given analog action.
+    NO_DISCARD std::vector<BindingOriginVisual> GetAnalogActionBindingOriginVisual(std::string_view actionName) const;
 
 protected:
     const InputDeviceManager& _inputDeviceManager;
@@ -126,4 +127,6 @@ protected:
     NO_DISCARD glm::vec2 CheckAnalogInput(const AnalogAction& action) const;
     NO_DISCARD glm::vec2 CheckInput(MAYBE_UNUSED std::string_view actionName, const KeyboardAnalog& keyboardAnalog) const;
     NO_DISCARD virtual glm::vec2 CheckInput(std::string_view actionName, GamepadAnalog gamepadAnalog) const = 0;
+    NO_DISCARD virtual std::vector<BindingOriginVisual> GetDigitalActionGamepadOriginVisual(const DigitalAction& action) const;
+    NO_DISCARD virtual std::vector<BindingOriginVisual> GetAnalogActionGamepadOriginVisual(const AnalogAction& action) const;
 };
