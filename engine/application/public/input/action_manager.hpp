@@ -81,6 +81,7 @@ using GamepadGlyphs = std::unordered_map<GamepadType, GamepadTypeGlyphs>;
 struct BindingOriginVisual
 {
     std::string bindingInputName {};
+    // The path to the glyph file used to load a texture. May be empty if a glyph is not available for the binding.
     std::string glyphImagePath {};
 };
 
@@ -129,4 +130,6 @@ protected:
     NO_DISCARD virtual glm::vec2 CheckInput(std::string_view actionName, GamepadAnalog gamepadAnalog) const = 0;
     NO_DISCARD virtual std::vector<BindingOriginVisual> GetDigitalActionGamepadOriginVisual(const DigitalAction& action) const;
     NO_DISCARD virtual std::vector<BindingOriginVisual> GetAnalogActionGamepadOriginVisual(const AnalogAction& action) const;
+    NO_DISCARD std::vector<BindingOriginVisual> GetDigitalMouseAndKeyboardOriginVisual(const DigitalAction& action) const;
+    NO_DISCARD std::vector<BindingOriginVisual> GetAnalogMouseAndKeyboardOriginVisual(const AnalogAction& action) const;
 };

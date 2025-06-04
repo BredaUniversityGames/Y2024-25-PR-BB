@@ -90,7 +90,10 @@ std::vector<BindingOriginVisual> ActionManager::GetDigitalActionBindingOriginVis
         return {};
     }
 
-    return GetDigitalActionGamepadOriginVisual(*actionItr);
+    const DigitalAction& action = *actionItr;
+    auto result = GetDigitalActionGamepadOriginVisual(action);
+    std::ranges::move(GetDigitalMouseAndKeyboardOriginVisual(action), std::back_inserter(result));
+    return result;
 }
 
 std::vector<BindingOriginVisual> ActionManager::GetAnalogActionBindingOriginVisual(std::string_view actionName) const
@@ -113,7 +116,10 @@ std::vector<BindingOriginVisual> ActionManager::GetAnalogActionBindingOriginVisu
         return {};
     }
 
-    return GetAnalogActionGamepadOriginVisual(*actionItr);
+    const AnalogAction& action = *actionItr;
+    auto result = GetAnalogActionGamepadOriginVisual(action);
+    std::ranges::move(GetAnalogMouseAndKeyboardOriginVisual(action), std::back_inserter(result));
+    return result;
 }
 
 DigitalActionType ActionManager::CheckDigitalInput(const DigitalAction& action) const
@@ -259,6 +265,20 @@ std::vector<BindingOriginVisual> ActionManager::GetAnalogActionGamepadOriginVisu
             visual.glyphImagePath = analogGlyph->second;
         }
     }
+
+    return visuals;
+}
+
+std::vector<BindingOriginVisual> ActionManager::GetDigitalMouseAndKeyboardOriginVisual(const DigitalAction& action) const
+{
+    std::vector<BindingOriginVisual> visuals {};
+
+    return visuals;
+}
+
+std::vector<BindingOriginVisual> ActionManager::GetAnalogMouseAndKeyboardOriginVisual(const AnalogAction& action) const
+{
+    std::vector<BindingOriginVisual> visuals {};
 
     return visuals;
 }
