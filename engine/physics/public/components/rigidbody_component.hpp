@@ -39,6 +39,7 @@ public:
     void SetDynamic() { bodyInterface->SetMotionType(bodyID, JPH::EMotionType::Dynamic, JPH::EActivation::Activate); }
     void Setkinematic() { bodyInterface->SetMotionType(bodyID, JPH::EMotionType::Kinematic, JPH::EActivation::Activate); }
     void SetStatic() { bodyInterface->SetMotionType(bodyID, JPH::EMotionType::Static, JPH::EActivation::Activate); }
+    void SetLayer(const JPH::ObjectLayer layer) { bodyInterface->SetObjectLayer(bodyID, layer); }
 
     // Adders
     void AddForce(const glm::vec3& force) { bodyInterface->AddForce(bodyID, ToJoltVec3(force)); }

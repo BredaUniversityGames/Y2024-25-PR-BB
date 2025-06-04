@@ -150,6 +150,7 @@ class RangedEnemy {
 
             body.SetDynamic()
             body.SetGravityFactor(2.0)
+            body.SetLayer(PhysicsObjectLayer.eDEAD())
 
         } else {
             _rootEntity.GetRigidbodyComponent().SetVelocity(Vec3.new(0.0, 0.0, 0.0))
