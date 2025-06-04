@@ -49,7 +49,7 @@ class Station {
         if(distance < _interactRange  && _isActive){
 
             if(_powerUpType == PowerUpType.QUAD_DAMAGE){
-                engine.GetGame().GetHUD().SetPowerUpText("QUAD DAMAGE RELIC [COST: 2000]")
+                engine.GetGame().GetHUD().SetPowerUpText("4X DAMAGE RELIC [COST: 2000]")
             }
 
             if(_powerUpType == PowerUpType.DOUBLE_GUNS){

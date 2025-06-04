@@ -114,7 +114,7 @@ class MeleeEnemy {
         return false
     }
 
-    DecreaseHealth(amount, engine, coinManager) {
+    DecreaseHealth(amount, engine, coinManager, soulManager) {
         var animations = _meshEntity.GetAnimationControlComponent()
         var body = _rootEntity.GetRigidbodyComponent()
 
@@ -132,14 +132,17 @@ class MeleeEnemy {
         if (_health <= 0 && _isAlive) {
             _isAlive = false
             _rootEntity.RemoveEnemyTag()
+            _rootEntity.RemoveRigidBodyComponent()
+
             animations.Play("Death", 1.0, false, 0.3, false)
-            body.SetVelocity(Vec3.new(0,0,0))
-            body.SetStatic()
+
             // Spawn between 1 and 5 coins
             var coinCount = Random.RandomIndex(2, 5)
             for(i in 0...coinCount) {
-                coinManager.SpawnCoin(engine, body.GetPosition() + Vec3.new(0, 1.0, 0))
+                coinManager.SpawnCoin(engine, transform.GetWorldTranslation() + Vec3.new(0, 1.0, 0))
             }
+            // Spawn a soul
+            soulManager.SpawnSoul(engine, transform.GetWorldTranslation(),SoulType.SMALL)
 
             var eventInstance = engine.GetAudio().PlayEventOnce(_bonesSFX)
             
@@ -177,9 +180,9 @@ class MeleeEnemy {
 
 
     Update(playerPos, playerVariables, engine, dt, soulManager, coinManager, flashSystem) {
-        
         var body = _rootEntity.GetRigidbodyComponent()
-        var pos = body.GetPosition()
+        var transform = _rootEntity.GetTransformComponent()
+        var pos = transform.GetWorldTranslation()
         
         var animations = _meshEntity.GetAnimationControlComponent()
         var transparencyComponent = _meshEntity.GetTransparencyComponent()
@@ -331,11 +334,8 @@ class MeleeEnemy {
             _deathTimer = _deathTimer - dt
             
             if (_deathTimer <= 0) {
-                //spawn a soul
-                soulManager.SpawnSoul(engine, body.GetPosition(),SoulType.SMALL)
 
                 engine.GetECS().DestroyEntity(_rootEntity) // Destroys the entity, and in turn this object
-                
 
             } else {
                 // Wait for death animation before starting descent
@@ -343,7 +343,7 @@ class MeleeEnemy {
                     transparencyComponent.transparency =  _deathTimer / (_deathTimerMax-1000)
 
                     var newPos = pos - Vec3.new(0, 1, 0).mulScalar(1.0 * 0.00075 * dt)
-                    body.SetTranslation(newPos)
+                    transform.SetWorldTransform(newPos, transform.GetWorldRotation(), transform.GetWorldScale())
                 }
             }
         }
