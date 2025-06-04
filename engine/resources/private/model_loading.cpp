@@ -974,7 +974,7 @@ CPUModel ProcessModel(const fastgltf::Asset& gltf, const std::string_view name)
     return model;
 }
 
-CPUModel ModelLoading::LoadGLTFFast(ThreadPool& scheduler, std::string_view path)
+CPUModel ModelLoading::LoadGLTFFast(ThreadPool& scheduler, std::string_view path, bool genCollision)
 {
     size_t offset = path.find_last_of('/') + 1;
     std::string_view name = path.substr(offset, path.find_last_of('.') - offset);
@@ -1024,9 +1024,12 @@ CPUModel ModelLoading::LoadGLTFFast(ThreadPool& scheduler, std::string_view path
                 {
                     CPUMesh<Vertex> primitive = ProcessPrimitive<Vertex>(gltfPrimitive, gltf);
 
-                    model.colliders.emplace_back(detail::ProcessMeshIntoCollider(primitive));
-                    model.meshes.emplace_back(primitive);
+                    if (genCollision)
+                    {
+                        model.colliders.emplace_back(detail::ProcessMeshIntoCollider(primitive));
+                    }
 
+                    model.meshes.emplace_back(primitive);
                     meshLUT.insert({ counter, std::pair(MeshType::eSTATIC, model.meshes.size() - 1) });
                 }
             }
