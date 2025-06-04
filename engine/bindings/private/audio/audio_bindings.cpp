@@ -85,6 +85,16 @@ void SetEventFloatAttribute(AudioModule& self, EventInstance audio, const std::s
     self.SetEventFloatAttribute(audio, name, val);
 }
 
+void EnableLowPass(AudioModule& self)
+{
+    self.SetLowpassBypass(false);
+}
+
+void DisableLowPass(AudioModule& self)
+{
+    self.SetLowpassBypass(true);
+}
+
 }
 
 void BindAudioAPI(wren::ForeignModule& module)
@@ -99,6 +109,8 @@ void BindAudioAPI(wren::ForeignModule& module)
     wren_class.funcExt<bindings::PlayEventLoop>("PlayEventLoop", "Play FMOD event on loop, returns an event instance");
     wren_class.funcExt<bindings::StopEvent>("StopEvent", "Stop playing an event instance");
     wren_class.funcExt<bindings::StopSFX>("StopSFX", "Stop playing a sound effect instance");
+    wren_class.funcExt<&bindings::EnableLowPass>("EnableLowPass", "Enables the lowpass DSP");
+    wren_class.funcExt<&bindings::DisableLowPass>("DisableLowPass", "Disables the lowpass DSP");
     wren_class.func<&AudioModule::SetEventFloatAttribute>("SetEventFloatAttribute", "Pass event instance, attribute name and float value");
     wren_class.func<&AudioModule::SetEventVolume>("SetEventVolume", "Set event volume from 0.0 to 1.0");
 

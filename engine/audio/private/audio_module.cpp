@@ -40,6 +40,13 @@ ModuleTickOrder AudioModule::Init(MAYBE_UNUSED Engine& engine)
         FMOD_CHECKRESULT(FMOD_Studio_System_GetCoreSystem(_studioSystem, &_coreSystem));
         FMOD_CHECKRESULT(FMOD_System_GetMasterChannelGroup(_coreSystem, &_masterGroup));
 
+        // Lowpass DSP
+        FMOD_CHECKRESULT(FMOD_System_CreateDSPByType(_coreSystem, FMOD_DSP_TYPE_LOWPASS, &_lowPassDSP));
+        FMOD_CHECKRESULT(FMOD_DSP_SetParameterFloat(_lowPassDSP, FMOD_DSP_LOWPASS_CUTOFF, 5000.f));
+        FMOD_CHECKRESULT(FMOD_DSP_SetActive(_lowPassDSP, true));
+        FMOD_CHECKRESULT(FMOD_DSP_SetBypass(_lowPassDSP, true));
+        FMOD_CHECKRESULT(FMOD_ChannelGroup_AddDSP(_masterGroup, FMOD_CHANNELCONTROL_DSP_TAIL, _lowPassDSP));
+
         // FFT DSP for spectrum debug info
         FMOD_CHECKRESULT(FMOD_System_CreateDSPByType(_coreSystem, FMOD_DSP_TYPE_FFT, &_fftDSP));
         FMOD_CHECKRESULT(FMOD_DSP_SetParameterInt(_fftDSP, FMOD_DSP_FFT_WINDOWSIZE, 512));
@@ -242,6 +249,11 @@ void AudioModule::SetBusChannelVolume(const std::string& name, float value)
     {
         bblog::warn("No event bus with the name {}.", name);
     }
+}
+
+void AudioModule::SetLowpassBypass(bool state)
+{
+    FMOD_CHECKRESULT(FMOD_DSP_SetBypass(_lowPassDSP, state));
 }
 
 void AudioModule::UnloadBank(const BankInfo& bankInfo)

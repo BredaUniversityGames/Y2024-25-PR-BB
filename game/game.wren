@@ -184,6 +184,12 @@ class Main {
             "event:/BGM/DarkSwampAmbience",
             0.1)
 
+        __heartBeatSFX = "event:/SFX/HeartBeat"
+        __heartBeatEvent = engine.GetAudio().PlayEventLoop(__heartBeatSFX)
+        engine.GetAudio().SetEventVolume(__heartBeatEvent, 4)
+
+        __camera.GetAudioEmitterComponent().AddEvent(__heartBeatEvent)
+
         var spawnLocations = []
         for(i in 0..8) {
             var entity = engine.GetECS().GetEntityByName("Spawner_%(i)")
@@ -308,6 +314,17 @@ class Main {
         } else {
             __musicPlayer.SetAttribute(engine.GetAudio(), "Intensity", 0.0)
         }
+
+        var healthFraction = __playerVariables.health / __playerVariables.maxHealth
+        engine.GetAudio().SetEventFloatAttribute(__heartBeatEvent, "Health", healthFraction)
+        if (healthFraction < 0.3) {
+            __flashSystem.SetBaseColor(Vec3.new(105 / 255, 13 / 255, 1 / 255),2 - healthFraction*4)
+            engine.GetAudio().EnableLowPass()
+        } else {
+            engine.GetAudio().DisableLowPass()
+        }
+
+        
 
         var cheats = __playerController.GetCheatsComponent()
         var deltaTime = engine.GetTime().GetDeltatime()
