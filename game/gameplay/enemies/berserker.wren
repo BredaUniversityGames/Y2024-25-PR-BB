@@ -10,12 +10,12 @@ class BerserkerEnemy {
     construct new(engine, spawnPosition, waveNumber) {
         
         // ENEMY CONSTANTS
-        _maxVelocity = 5
+        _maxVelocity = 6.8
         var enemySize = 0.03
         var modelPath = "assets/models/Berserker.glb"
         var colliderShape = ShapeFactory.MakeCapsuleShape(145.0, 40.0) // TODO: Make this engine units
         
-        _attackRange = 6.5
+        _attackRange = 8.0
         _attackDamage = 35
         _shakeIntensity = 2.2
         _attackMaxTime = 2300
@@ -67,7 +67,7 @@ class BerserkerEnemy {
         body.SetGravityFactor(2.2)
 
         var animations = _meshEntity.GetAnimationControlComponent()
-        animations.Play("Walk", 0.4, true, 1.0, true)
+        animations.Play("Walk", 0.528, true, 1.0, true)
 
         // STATE
 
@@ -272,7 +272,7 @@ class BerserkerEnemy {
 
                 } else if (_movingState == false) { // Enter attack state
                     body.SetFriction(0.0)
-                    animations.Play("Walk", 0.4, true, 0.5, true)
+                    animations.Play("Walk", 0.528, true, 0.5, true)
                     _movingState = true
                 }
             }
@@ -286,7 +286,7 @@ class BerserkerEnemy {
                     _evaluateState = true
                     _hitState = false
                     body.SetDynamic()
-                    animations.Play("Walk", 0.4, true, 0.5, true)
+                    animations.Play("Walk", 0.528, true, 0.5, true)
                 }
             }
         } else {
