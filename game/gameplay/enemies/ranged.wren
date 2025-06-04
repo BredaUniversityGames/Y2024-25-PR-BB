@@ -1,4 +1,4 @@
-import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, EmitterPresetID, Random
+import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, Random
 import "../player.wren" for PlayerVariables
 import "gameplay/flash_system.wren" for FlashSystem
 
@@ -67,7 +67,7 @@ class RangedEnemy {
         var transformEmitter = _eyeEmitter.AddTransformComponent()
         transformEmitter.translation = Vec3.new(0.0, 0.0, 0.15)
         var emitterFlags = SpawnEmitterFlagBits.eIsActive()
-        engine.GetParticles().SpawnEmitter(_eyeEmitter, EmitterPresetID.eEyeFlame(),emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.0, 0.0, 0.0))
+        engine.GetParticles().SpawnEmitter(_eyeEmitter, "EyeFlame",emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.0, 0.0, 0.0))
         _rootEntity.AttachChild(_eyeEmitter)
 
 
@@ -123,7 +123,7 @@ class RangedEnemy {
         var lifetime = entity.AddLifetimeComponent()
         lifetime.lifetime = 170.0
         var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
-        engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eWorms(),emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(1,3.5, 1))
+        engine.GetParticles().SpawnEmitter(entity, "Worms",emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(1,3.5, 1))
 
         if (_health <= 0 && _isAlive) {
             _isAlive = false
@@ -219,7 +219,7 @@ class RangedEnemy {
                             var lifetime = entity.AddLifetimeComponent()
                             lifetime.lifetime = 10.0
                             var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
-                            engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eRayEyeStart(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), direction * Vec3.new(2, 2, 2))
+                            engine.GetParticles().SpawnEmitter(entity, "RayEyeStart", emitterFlags, Vec3.new(0.0, 0.0, 0.0), direction * Vec3.new(2, 2, 2))
                             j = j + 1.0
                         }
                     }
@@ -261,7 +261,7 @@ class RangedEnemy {
                         var lifetime = entity.AddLifetimeComponent()
                         lifetime.lifetime = 10.0
                         var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
-                        engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eRayEyeEnd(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), direction * Vec3.new(2, 2, 2))
+                        engine.GetParticles().SpawnEmitter(entity, "RayEyeEnd", emitterFlags, Vec3.new(0.0, 0.0, 0.0), direction * Vec3.new(2, 2, 2))
                         j = j + 1.0
                     }
 

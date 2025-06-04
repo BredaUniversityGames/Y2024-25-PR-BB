@@ -27,34 +27,6 @@ enum class SpawnEmitterFlagBits : uint8_t
 };
 GENERATE_ENUM_FLAG_OPERATORS(SpawnEmitterFlagBits)
 
-enum class EmitterPresetID : uint8_t
-{
-    eFlame,
-    eEyeFlame,
-    eDust,
-    eFeathers,
-    eBullets,
-    eBones,
-    eImpact,
-    eRay,
-    eRayQuadDamage,
-    eRayDualGun,
-    eRayEyeStart,
-    eRayEyeEnd,
-    eStab,
-    eShotgunShoot,
-    eFireAnimated,
-    eHealth,
-    eWorms,
-    eSoulSheet,
-    eSoulSheetBig,
-    eMuzzle,
-    eMuzzleQuad,
-    eQuadStation,
-    eDualGunStation,
-    eNone
-};
-
 class ParticleModule final : public ModuleInterface
 {
     ModuleTickOrder Init(Engine& engine) override;
@@ -64,12 +36,14 @@ class ParticleModule final : public ModuleInterface
 
 public:
     ParticleModule()
-        : _emitterPresets("game/config/emitter_presets.json") {};
+        : _emitterPresets("game/config/emitter_presets.json")
+        , _emitterPresets2("game/config/emitter_presets2.json")
+    {
+    }
     ~ParticleModule() override = default;
 
     void LoadEmitterPresets();
-    void SpawnEmitter(entt::entity entity, EmitterPresetID emitterPreset, SpawnEmitterFlagBits spawnEmitterFlagBits, glm::vec3 position = { 0.0f, 0.0f, 0.0f }, glm::vec3 velocity = { 5.0f, 5.0f, 5.0f });
-    void SpawnEmitter(entt::entity entity, int32_t emitterPresetID, SpawnEmitterFlagBits spawnEmitterFlagBits, glm::vec3 position = { 0.0f, 0.0f, 0.0f }, glm::vec3 velocity = { 5.0f, 5.0f, 5.0f });
+    void SpawnEmitter(entt::entity entity, std::string emitterPresetName, SpawnEmitterFlagBits spawnEmitterFlagBits, glm::vec3 position = { 0.0f, 0.0f, 0.0f }, glm::vec3 velocity = { 5.0f, 5.0f, 5.0f });
     void SpawnBurst(entt::entity entity, const ParticleBurst& burst);
     void SpawnBurst(entt::entity entity, uint32_t count, float maxInterval, float startTime = 0.0f, bool loop = true, uint32_t cycles = 0);
 
@@ -79,6 +53,7 @@ private:
     PhysicsModule* _physics = nullptr;
 
     DataStore<EmitterPresetSettings> _emitterPresets;
+    DataStore<EmitterPresetSettings2> _emitterPresets2;
     std::unordered_map<std::string, ResourceHandle<GPUImage>> _emitterImages;
     uint32_t emitterCount = 0;
 

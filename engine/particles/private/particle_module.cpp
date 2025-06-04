@@ -88,7 +88,7 @@ void ParticleModule::Tick(MAYBE_UNUSED Engine& engine)
     for (const auto entity : testView)
     {
         auto& testEmitter = _ecs->GetRegistry().get<ParticleEmitterComponent>(entity);
-        auto& preset = _emitterPresets.data.emitterPresets[static_cast<uint8_t>(testEmitter.presetID)];
+        auto& preset = _emitterPresets2.data.emitterPresets.find(testEmitter.presetName)->second;
 
         testEmitter.emitter.count = preset.count;
         testEmitter.emitter.mass = preset.mass;
@@ -158,24 +158,22 @@ bool ParticleModule::SetEmitterPresetImage(EmitterPreset& preset)
 
 void ParticleModule::LoadEmitterPresets()
 {
-    for (size_t i = 0; i < _emitterPresets.data.emitterPresets.size(); ++i)
+    for (auto& it : _emitterPresets2.data.emitterPresets)
     {
         bool imageFound;
-        _emitterPresets.data.emitterPresets[i].materialIndex = GetEmitterImage(_emitterPresets.data.emitterPresets[i].imageName, imageFound).Index();
+        it.second.materialIndex = GetEmitterImage(it.second.imageName, imageFound).Index();
     }
 }
 
-void ParticleModule::SpawnEmitter(entt::entity entity, EmitterPresetID emitterPreset, SpawnEmitterFlagBits flags, glm::vec3 position, glm::vec3 velocity)
+void ParticleModule::SpawnEmitter(entt::entity entity, std::string emitterPresetName, SpawnEmitterFlagBits flags, glm::vec3 position, glm::vec3 velocity)
 {
-    SpawnEmitter(entity, static_cast<int32_t>(emitterPreset), flags, position, velocity);
-}
-
-void ParticleModule::SpawnEmitter(entt::entity entity, int32_t emitterPresetID, SpawnEmitterFlagBits flags, glm::vec3 position, glm::vec3 velocity)
-{
-    if (emitterPresetID > static_cast<int32_t>(_emitterPresets.data.emitterPresets.size()) - 1)
+    auto got = _emitterPresets2.data.emitterPresets.find(emitterPresetName);
+    if (got == _emitterPresets2.data.emitterPresets.end())
+    {
         return;
+    }
 
-    auto& preset = _emitterPresets.data.emitterPresets[emitterPresetID];
+    auto& preset = got->second;
 
     Emitter emitter;
     emitter.count = preset.count;
@@ -236,7 +234,7 @@ void ParticleModule::SpawnEmitter(entt::entity entity, int32_t emitterPresetID, 
     component.currentEmitDelay = 0.0f;
     component.emitOnce = emitOnce;
     component.count = emitter.count;
-    component.presetID = static_cast<EmitterPresetID>(emitterPresetID);
+    component.presetName = emitterPresetName;
     std::copy(preset.bursts.begin(), preset.bursts.end(), std::back_inserter(component.bursts));
 
     _ecs->GetRegistry().emplace_or_replace<ParticleEmitterComponent>(entity, component);

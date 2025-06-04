@@ -39,6 +39,11 @@ struct EmitterPresetSettings
     std::vector<EmitterPreset> emitterPresets;
 };
 
+struct EmitterPresetSettings2
+{
+    std::unordered_map<std::string, EmitterPreset> emitterPresets;
+};
+
 VISITABLE_STRUCT(ParticleBurst, startTime, count, cycles, maxInterval, currentInterval, loop);
 CLASS_SERIALIZE_VERSION(ParticleBurst, 0);
 
@@ -47,3 +52,6 @@ CLASS_SERIALIZE_VERSION(EmitterPreset, 0);
 
 VISITABLE_STRUCT(EmitterPresetSettings, emitterPresets);
 CLASS_SERIALIZE_VERSION(EmitterPresetSettings, 0);
+
+VISITABLE_STRUCT(EmitterPresetSettings2, emitterPresets);
+CLASS_SERIALIZE_VERSION(EmitterPresetSettings2, 0);

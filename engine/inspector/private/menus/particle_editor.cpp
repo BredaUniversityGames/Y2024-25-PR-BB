@@ -253,7 +253,7 @@ void ParticleEditor::RenderEmitterPresetEditor()
                 TransformHelpers::SetLocalPosition(_ecsModule.GetRegistry(), entity, playerTransform.GetLocalPosition());
             }
             _ecsModule.GetRegistry().emplace<TestEmitterTag>(entity);
-            _particleModule.SpawnEmitter(entity, _selectedPresetIndex, SpawnEmitterFlagBits::eIsActive);
+            _particleModule.SpawnEmitter(entity, _particleModule._emitterPresets.data.emitterPresets[_selectedPresetIndex].name, SpawnEmitterFlagBits::eIsActive);
         }
 
         ImGui::SameLine();
