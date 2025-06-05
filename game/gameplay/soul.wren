@@ -1,4 +1,4 @@
-import "engine_api.wren" for Engine, ECS, Entity, Vec3, Vec2, Math, AnimationControlComponent, TransformComponent, Input, SpawnEmitterFlagBits, EmitterPresetID
+import "engine_api.wren" for Engine, ECS, Entity, Vec3, Vec2, Math, AnimationControlComponent, TransformComponent, Input, SpawnEmitterFlagBits, EmitterPresetID, Stat, Stats
 import "gameplay/player.wren" for PlayerVariables
 import "gameplay/flash_system.wren" for FlashSystem
 
@@ -92,6 +92,9 @@ class Soul {
                 engine.GetAudio().SetEventVolume(eventInstance, 5.0)
                 var audioEmitter = player.GetAudioEmitterComponent()
                 audioEmitter.AddEvent(eventInstance)
+
+                var stat = engine.GetSteam().GetStat(Stats.SOULS_COLLECTED())
+                stat.intValue = stat.intValue + 1
 
                 // Play flash effect
 

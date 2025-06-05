@@ -264,7 +264,7 @@ class Pistol {
                                         playerVariables.hitmarkerState = HitmarkerState.normal
                                     }
                                     playerVariables.UpdateMultiplier()
-                                    enemy.DecreaseHealth(_damage * multiplier * playerVariables.GetDamageMultiplier(),engine,coinManager)
+                                    enemy.DecreaseHealth(_damage * multiplier * playerVariables.GetDamageMultiplier(),engine,coinManager, playerVariables)
                                     if (enemy.health <= 0) {
                                         playerVariables.IncreaseScore(5 * multiplier * playerVariables.multiplier)
                                         //playerVariables.UpdateUltCharge(1.0)
@@ -517,7 +517,7 @@ class Shotgun {
                                         hitAnEnemy = true
 
                                         playerVariables.hitmarkTimer = 200 //ms
-                                        enemy.DecreaseHealth(_damage,engine,coinManager)
+                                        enemy.DecreaseHealth(_damage,engine,coinManager, playerVariables)
 
                                         playerVariables.multiplierTimer = playerVariables.multiplierMaxTime
                                         playerVariables.IncreaseHealth(0.1 * _damage)

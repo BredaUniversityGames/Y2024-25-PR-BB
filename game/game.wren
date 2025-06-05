@@ -45,7 +45,7 @@ class Main {
 
         // Player Setup
 
-        __playerVariables = PlayerVariables.new(engine.GetGame().GetHUD())
+        __playerVariables = PlayerVariables.new(engine.GetGame().GetHUD(), engine)
         __counter = 0
         __frameTimer = 0
         __groundedTimer = 0

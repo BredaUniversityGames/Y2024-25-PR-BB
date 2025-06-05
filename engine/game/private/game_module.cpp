@@ -56,6 +56,13 @@ ModuleTickOrder GameModule::Init(Engine& engine)
 
     _stats = {
         CreateStat(Stats::SKELETONS_KILLED, EStatTypes::STAT_INT),
+        CreateStat(Stats::EYES_KILLED, EStatTypes::STAT_INT),
+        CreateStat(Stats::BERSERKERS_KILLED, EStatTypes::STAT_INT),
+        CreateStat(Stats::WAVES_REACHED, EStatTypes::STAT_INT),
+        CreateStat(Stats::SOULS_COLLECTED, EStatTypes::STAT_INT),
+        CreateStat(Stats::GOLD_NUGGETS_COLLECTED, EStatTypes::STAT_INT),
+        CreateStat(Stats::GOLD_CURRENCY_COLLECTED, EStatTypes::STAT_INT),
+        CreateStat(Stats::ENEMIES_KILLED_WITH_RELIC, EStatTypes::STAT_INT),
     };
 
     engine.GetModule<ApplicationModule>().GetActionManager().SetGameActions(GAME_ACTIONS);

@@ -1,4 +1,4 @@
-import "engine_api.wren" for Engine, ECS, Entity, Vec3, Vec2, Math, AnimationControlComponent, TransformComponent, Input, SpawnEmitterFlagBits, EmitterPresetID,ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Random
+import "engine_api.wren" for Engine, ECS, Entity, Vec3, Vec2, Math, AnimationControlComponent, TransformComponent, Input, SpawnEmitterFlagBits, EmitterPresetID,ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Random, Stat, Stats
 import "gameplay/player.wren" for PlayerVariables
 import "gameplay/flash_system.wren" for FlashSystem
 
@@ -118,6 +118,9 @@ class Coin {
                 engine.GetAudio().SetEventVolume(eventInstance, 1.0)
                 var audioEmitter = player.GetAudioEmitterComponent()
                 audioEmitter.AddEvent(eventInstance)
+
+                var stat = engine.GetSteam().GetStat(Stats.GOLD_NUGGETS_COLLECTED())
+                stat.intValue = stat.intValue + 1
 
                 // Play flash effect
                 //flashSystem.Flash(Vec3.new(0.89, 0.77, 0.06),0.1)

@@ -41,6 +41,11 @@ enum class Stats : int32_t
     SKELETONS_KILLED = 3,
     EYES_KILLED = 6,
     BERSERKERS_KILLED = 7,
+    WAVES_REACHED = 8,
+    SOULS_COLLECTED = 9,
+    GOLD_NUGGETS_COLLECTED = 10,
+    GOLD_CURRENCY_COLLECTED = 11,
+    ENEMIES_KILLED_WITH_RELIC = 12,
 };
 
 class GameModule : public ModuleInterface

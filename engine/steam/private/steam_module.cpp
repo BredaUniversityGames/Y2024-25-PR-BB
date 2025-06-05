@@ -13,13 +13,13 @@ void DebugCallback(int severity, const char* message)
     switch (severity)
     {
     case 0:
-        bblog::info("[Steamworks] ", message);
+        bblog::info("[Steamworks] {}", message);
         break;
     case 1:
-        bblog::warn("[Steamworks] ", message);
+        bblog::warn("[Steamworks] {}", message);
         break;
     default:
-        bblog::error("[Steamworks] ", message);
+        bblog::error("[Steamworks] {}", message);
     }
 }
 
