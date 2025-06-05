@@ -64,12 +64,13 @@ class WaveSystem {
         _currentWave = -1
         _waveTimer = 0.0
         _waveDelay = 4.0
+        _waveSlowdown = 0.2
+        _enemyCount = 0
 
         if(_spawnLocations.count == 0) {
             System.print("Should pass at least one spawn location to the wave system!")
         }
     }
-
 
 
     Update(engine, player, enemyList, dt, playerVariables) {
@@ -88,14 +89,18 @@ class WaveSystem {
 
         // Waiting period
         if (_waveTimer < _waveDelay) {
+            engine.GetTime().SetScale(0.4 - _waveTimer)
+            if (_waveTimer > _waveSlowdown) {
+                engine.GetTime().SetScale(1)
+            }
             return
         }
 
         // Inside a wave
         if (_ongoingWave) {
 
-            if (enemyList.count == 0) {
-            
+            if (_enemyCount == 0) {
+
                 _ongoingWave = false
                 _waveTimer = 0.0
                 System.print("Completed wave %(_currentWave)")
@@ -114,18 +119,21 @@ class WaveSystem {
         for (v in 0...wave.Spawns[EnemyType.Skeleton]) {
             var enemy = enemyList.add(MeleeEnemy.new(engine, this.GetSpawnLocation() + Vec3.new(0, 1, 0), _currentWave))
             enemy.FindNewPath(engine)
+            _enemyCount = _enemyCount + 1
         }
 
         // Spawn eyes
         for (v in 0...wave.Spawns[EnemyType.Eye]) {
             var enemy = enemyList.add(RangedEnemy.new(engine, this.GetSpawnLocation() + Vec3.new(0, 6, 0)))
             enemy.FindNewPath(engine)
+            _enemyCount = _enemyCount + 1
         }
 
         // Spawn berserkers
         for (v in 0...wave.Spawns[EnemyType.Berserker]) {
             var enemy = enemyList.add(BerserkerEnemy.new(engine, this.GetSpawnLocation() + Vec3.new(0, 3, 0), _currentWave))
             enemy.FindNewPath(engine)
+            _enemyCount = _enemyCount + 1
         }
     }
 
@@ -135,7 +143,7 @@ class WaveSystem {
         _currentWave = _currentWave + 1
 
         if (_currentWave < _waveConfigs.count) {
-
+            _enemyCount = 0
             var activeWave = _waveConfigs[_currentWave]
             this.SpawnWave(engine, enemyList, activeWave)
 
@@ -147,5 +155,9 @@ class WaveSystem {
 
     GetSpawnLocation() {
         return _spawnLocations[Random.RandomIndex(0, _spawnLocations.count - 1)]
+    }
+
+    DecreaseEnemyCount() {
+        _enemyCount = _enemyCount - 1
     }
 }

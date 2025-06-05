@@ -114,7 +114,7 @@ class MeleeEnemy {
         return false
     }
 
-    DecreaseHealth(amount, engine, coinManager, soulManager) {
+    DecreaseHealth(amount, engine, coinManager, soulManager, waveSystem) {
         var animations = _meshEntity.GetAnimationControlComponent()
         var body = _rootEntity.GetRigidbodyComponent()
 
@@ -131,6 +131,7 @@ class MeleeEnemy {
 
         if (_health <= 0 && _isAlive) {
             _isAlive = false
+            waveSystem.DecreaseEnemyCount()
             _rootEntity.RemoveEnemyTag()
 
             animations.Play("Death", 1.0, false, 0.3, false)

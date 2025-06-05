@@ -129,7 +129,7 @@ class Pistol {
         }
     }
 
-    attack(engine, deltaTime, playerVariables, enemies, coinManager, soulManager, fov) {
+    attack(engine, deltaTime, playerVariables, enemies, coinManager, soulManager, fov, waveSystem) {
         _manualTimer = Math.Max(_manualTimer-deltaTime,0)
         
         if (_entityName == "Gun") {
@@ -267,7 +267,7 @@ class Pistol {
                                         playerVariables.hitmarkerState = HitmarkerState.normal
                                     }
                                     playerVariables.UpdateMultiplier()
-                                    enemy.DecreaseHealth(_damage * multiplier * playerVariables.GetDamageMultiplier(),engine,coinManager,soulManager)
+                                    enemy.DecreaseHealth(_damage * multiplier * playerVariables.GetDamageMultiplier(),engine,coinManager,soulManager,waveSystem)
                                     if (enemy.health <= 0) {
                                         playerVariables.IncreaseScore(5 * multiplier * playerVariables.multiplier)
                                         //playerVariables.UpdateUltCharge(1.0)

@@ -114,7 +114,7 @@ class RangedEnemy {
         return false
     }
 
-    DecreaseHealth(amount, engine, coinManager, soulManager) {
+    DecreaseHealth(amount, engine, coinManager, soulManager, waveSystem) {
         var body = _rootEntity.GetRigidbodyComponent()
         _health = Math.Max(_health - amount, 0)
 
@@ -132,6 +132,7 @@ class RangedEnemy {
 
         if (_health <= 0 && _isAlive) {
             _isAlive = false
+            waveSystem.DecreaseEnemyCount()
             _rootEntity.RemoveEnemyTag()
             
             body.SetVelocity(Vec3.new(0,0,0))
