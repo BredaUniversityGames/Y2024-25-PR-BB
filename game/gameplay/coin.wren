@@ -89,12 +89,14 @@ class Coin {
     }
 
     CheckRange(engine, playerPos, playerVariables, flashSystem, coinManager, dt){
-        var coinTransform = _rootEntity.GetTransformComponent()
-        var coinPos = coinTransform.translation
+        
+        var coinTransform = _rootEntity.GetRigidbodyComponent()
+        var coinPos = coinTransform.GetPosition()
         var distance = Math.Distance(coinPos, playerPos)
 
 
         if(distance < _maxRange){
+
            coinManager.SetIsNearGold(true) // Set the player is near gold flag
             coinManager.ResetPurseTimer() // Reset the purse timer
             _velocity = (playerPos - coinPos).normalize()
@@ -106,7 +108,7 @@ class Coin {
             var progress = 1.0 - (distance / _maxRange)
             var easing = progress * progress // ease-out
 
-            coinTransform.translation = coinTransform.translation + _velocity.mulScalar(dt * _coinSpeed* easing)// Move the coin towards the player
+            coinTransform.SetVelocity(_velocity.mulScalar(dt * _coinSpeed* easing)) // Move the coin towards the player
 
             if(distance <= _minRange){
                 playerVariables.IncreaseScore(100) // Increase player health
@@ -157,16 +159,11 @@ class Coin {
 
 
     Destroy(){
-        //var rb = _rootEntity.GetRigidbodyComponent()
-        var transform = _rootEntity.GetTransformComponent()
         //rb.SetTranslation(Vec3.new(0.0, -1000.0, 0.0)) // Move the coin out of the way
-        transform.translation = Vec3.new(0.0, -1000.0, 0.0) // Move the coin out of the way
+        //_rootEntity.SetTranslation(Vec3.new(0.0, -1000.0, 0.0)) // Move the coin out of the way
         // Add a lifetime component to the coin entity so it will get destroyed eventually
         var lifetime = _rootEntity.AddLifetimeComponent()
-        lifetime.lifetime = 50.0
-        var lifeTimeLight = _lightEntity.AddLifetimeComponent()
-        lifeTimeLight.lifetime = 50.0
-
+        lifetime.lifetime = 0.0
     }
 
     entity {

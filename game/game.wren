@@ -40,8 +40,8 @@ class Main {
         comp.orthographicSize = 120.0
 
         var transform = __directionalLight.AddTransformComponent()
-        transform.translation = Vec3.new(-94.000, 174.800, 156.900)
-        transform.rotation = Quat.new(0.544, -0.136, -0.800,-0.214)
+        transform.translation = Vec3.new(0.0, 0.0, 0.0)
+        transform.rotation = Quat.new(1.0, 0.0, 0.0, 0.0)
 
         // Player Setup
 
@@ -310,6 +310,7 @@ class Main {
         __playerMovement.lookSensitivity = engine.GetGame().GetSettings().aimSensitivity * (2.5 - 0.2) + 0.2
 
         if (__enemyList.count != 0) {
+            
             __musicPlayer.SetAttribute(engine.GetAudio(), "Intensity", 1.0)
         } else {
             __musicPlayer.SetAttribute(engine.GetAudio(), "Intensity", 0.0)

@@ -5,12 +5,7 @@
 #include "entt/entity/entity.hpp"
 #include "physics_module.hpp"
 
-struct Vertex;
-struct Hierarchy;
 class PhysicsModule;
-struct CPUModel;
-template <typename T>
-struct CPUMesh;
 
 class PhysicsSystem : public SystemInterface
 {
