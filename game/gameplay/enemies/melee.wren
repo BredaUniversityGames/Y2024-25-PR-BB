@@ -229,7 +229,8 @@ class MeleeEnemy {
 
                                 //Flash the screen red
                                 flashSystem.Flash(Vec3.new(105 / 255, 13 / 255, 1 / 255),0.75)
-
+                                
+                                playerVariables.hud.IndicateDamage(pos)
                                 engine.GetAudio().PlayEventOnce(_hitSFX)
                                 //animations.Play("Attack", 1.0, false, 0.1, false)
                             }

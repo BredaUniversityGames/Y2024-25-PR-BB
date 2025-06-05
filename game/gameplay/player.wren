@@ -99,7 +99,7 @@ class PlayerVariables {
 
     DecreaseHealth(value) {
         if (!this.IsInvincible()) {
-            _health = Math.Max(_health - value, 0)
+        //    _health = Math.Max(_health - value, 0)
         }
     }
 

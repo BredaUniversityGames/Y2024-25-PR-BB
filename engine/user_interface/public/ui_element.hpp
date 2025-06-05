@@ -75,6 +75,10 @@ public:
 
     virtual void UpdateAllChildrenAbsoluteTransform();
 
+
+    void SetPreTransformationMatrix(const glm::mat4& matrix){_preTransformationMatrix = matrix;}
+    const glm::mat4& GetPreTransformationMatrix() const {return _preTransformationMatrix;}
+
     //  note: Mostly for internal use to calculate the correct screen space position based on it's parents.
     //  warning: does not update the local transform!
     void SetAbsoluteTransform(const glm::vec2& location, const glm::vec2& scale, bool updateChildren = true) noexcept;
@@ -91,6 +95,8 @@ private:
 
     glm::vec2 _relativeScale {};
     glm::vec2 _absoluteScale {};
+    
+    glm::mat4 _preTransformationMatrix = glm::mat4(1);
 
     std::vector<std::shared_ptr<UIElement>> _children {};
 };
