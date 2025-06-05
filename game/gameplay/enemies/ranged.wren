@@ -257,7 +257,7 @@ class RangedEnemy {
                             playerVariables.DecreaseHealth(_attackDamage)
                             playerVariables.cameraVariables.shakeIntensity = _shakeIntensity
                             playerVariables.invincibilityTime = playerVariables.invincibilityMaxTime
-
+                            playerVariables.hud.IndicateDamage(pos)
                             flashSystem.Flash(Vec3.new(1.0, 0.0, 0.0),0.75)
                         }
                     }
