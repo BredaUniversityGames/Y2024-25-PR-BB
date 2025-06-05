@@ -2,6 +2,7 @@ import "engine_api.wren" for Engine, ECS, Entity, Vec3, Vec2, Quat, Math, Transf
 import "enemies/melee.wren" for MeleeEnemy
 import "enemies/ranged.wren" for RangedEnemy
 import "enemies/berserker.wren" for BerserkerEnemy
+import "station.wren" for PowerUpType, Station, StationManager
 
 class EnemyType {
     static Skeleton { "Skeleton" }
@@ -73,7 +74,7 @@ class WaveSystem {
     }
 
 
-    Update(engine, player, enemyList, dt, playerVariables) {
+    Update(engine, player, enemyList, dt, playerVariables, stationManager) {
 
         _waveTimer = _waveTimer + dt / 1000.0
 
@@ -109,6 +110,7 @@ class WaveSystem {
         } else {
           
             this.NextWave(engine, enemyList)
+            stationManager.ResetStations()
             playerVariables.hud.IncrementWaveCounter(_currentWave)
         }
     }

@@ -78,11 +78,8 @@ class Station {
 
                     playerVariables.SetCurrentPowerUp(_powerUpType)
                     playerVariables.DecreaseScore(2000)
-                    _time = 0.0
-                    this.SetStatus(false)
-                    this.SetPowerUpType(PowerUpType.NONE)
 
-                    _stationManagerReference.anyActiveStation = false
+                    _stationManagerReference.ResetStations()
 
                     System.print("Picked up power up ")
 
@@ -160,8 +157,7 @@ class StationManager {
     construct new(engine, player){
         _stationList = [] // List of souls
         _playerEntity = player // Reference to the player entity
-        _maxLifeOfActiveStation = 30000.0 // Maximum lifetime of a station
-        _intervalBetweenStations = 55000.0 // Time interval between station's spawn
+        _intervalBetweenStations = 30000.0 // Time interval between station's spawn
         _anyActiveStation = false // Flag to check if any station is active
 
         // Load here the power up meshes and effects
@@ -227,7 +223,7 @@ class StationManager {
             }
         }
 
-        _timer = _intervalBetweenStations
+        _timer = 0.0
     }
 
     AddStation(engine, spawnPosition){
@@ -236,6 +232,7 @@ class StationManager {
 
     anyActiveStation { _anyActiveStation }
     anyActiveStation=(value) { _anyActiveStation = value }
+    timer=(value) { _timer = value }
 
     PlayQuadHumSound(engine){
         var player = engine.GetECS().GetEntityByName("Camera")
@@ -253,6 +250,19 @@ class StationManager {
         audioEmitter.AddEvent(dualGunEventInstance)
     }
 
+    ResetStations(){
+
+        // Disable all stations first
+        for(station in _stationList){
+            station.time = 0.0
+            station.SetStatus(false)
+            station.SetPowerUpType(PowerUpType.NONE)
+        }
+
+        // Reset this flag
+        _anyActiveStation = false
+    }
+
     Update(engine, playerVariables, dt){
         var playerTransform = _playerEntity.GetTransformComponent()
         var playerPos = playerTransform.translation
@@ -266,19 +276,8 @@ class StationManager {
         engine.GetGame().GetHUD().SetPowerUpTextColor(Vec4.new(currentPowerUpColor.x,currentPowerUpColor.y,currentPowerUpColor.z,newOpacity) )
         // Timer to set a random station active
         _timer = _timer + dt
-        if(_timer > _intervalBetweenStations){
+        if(!_anyActiveStation && (_timer > _intervalBetweenStations)){
             _timer = 0.0
-
-            // Disable all stations first
-            for(station in _stationList){
-                station.time = 0.0
-                station.SetStatus(false)
-                station.SetPowerUpType(PowerUpType.NONE)
-            }
-
-            // Reset this flag
-            _anyActiveStation = false
-
 
             // Enable a random one
             var randomIndex = Random.RandomIndex(0, 3)
@@ -287,7 +286,7 @@ class StationManager {
             // to be randomized when we add more power ups
 
             var randomPowerUp = Random.RandomIndex(1, 3)
-            
+
             _stationList[randomIndex].SetPowerUpType(randomPowerUp) // Set the power up type to quad damage
             _stationList[randomIndex].time = 0.0 // Reset the time for the station
             _stationList[randomIndex].PlayActivateSound(engine, 2.5)
@@ -306,7 +305,7 @@ class StationManager {
                 _dualGunEmitter.GetTransformComponent().translation =  _stationList[randomIndex].entity.GetTransformComponent().translation + meshOffset + Vec3.new(0.0, 4.5, 0.0)
             }
 
-            System.print("Too much time has passed between stations, setting a new one active")
+            System.print("Setting new station active")
             //System.printAll(["New station is now available",randomIndex, _quadDamageMeshEntity.GetTransformComponent().translation.x, _quadDamageMeshEntity.GetTransformComponent().translation.y, _quadDamageMeshEntity.GetTransformComponent().translation.z]) //> 1[2, 3]4
         }
 
@@ -319,17 +318,6 @@ class StationManager {
                     station.time = station.time + dt
 
                     station.PlaySound(engine, 1.6) // Play the sound if the station is active
-
-                }
-
-                // Deactivate the station if it has been around for too long
-                // This balance gameplay by not allowing the player to spam pickup powerups
-                if(station.time > _maxLifeOfActiveStation ){
-                    station.time = 0.0
-                    station.SetStatus(false)
-                    station.SetPowerUpType(PowerUpType.NONE)
-                    _anyActiveStation = false
-                    System.print("Station has been around for too long, deactivating it")
 
                 }
 
