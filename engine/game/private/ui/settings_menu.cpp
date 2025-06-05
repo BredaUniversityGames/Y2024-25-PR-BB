@@ -312,9 +312,12 @@ std::shared_ptr<SettingsMenu> SettingsMenu::Create(
     // UI Nav
     {
         settings->sensitivitySlider.lock()->navigationTargets.up = settings->backButton;
-        settings->sensitivitySlider.lock()->navigationTargets.down = settings->aimAssistToggle;
+        settings->sensitivitySlider.lock()->navigationTargets.down = settings->fovSlider;
 
-        settings->aimAssistToggle.lock()->navigationTargets.up = settings->sensitivitySlider;
+        settings->fovSlider.lock()->navigationTargets.up = settings->sensitivitySlider;
+        settings->fovSlider.lock()->navigationTargets.down = settings->aimAssistToggle;
+
+        settings->aimAssistToggle.lock()->navigationTargets.up = settings->fovSlider;
         settings->aimAssistToggle.lock()->navigationTargets.down = settings->masterVolume;
 
         // settings->gammaSlider.lock()->navigationTargets.up = settings->aimAssistToggle;
