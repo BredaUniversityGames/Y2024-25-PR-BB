@@ -1,5 +1,6 @@
 #include "input/action_manager.hpp"
 #include "log.hpp"
+#include "input/input_codes/input_names.hpp"
 #include <magic_enum.hpp>
 #include <algorithm>
 
@@ -288,12 +289,12 @@ std::vector<BindingOriginVisual> ActionManager::GetDigitalMouseAndKeyboardOrigin
         [&](KeyboardCode keyboard)
         {
             BindingOriginVisual& visual = visuals.emplace_back();
-            visual.bindingInputName = std::string(magic_enum::enum_name(keyboard)) + " Key";
+            visual.bindingInputName = KEYBOARD_KEY_NAMES.at(keyboard) + " Key";
         },
         [&](MouseButton mouse)
         {
             BindingOriginVisual& visual = visuals.emplace_back();
-            visual.bindingInputName = std::string(magic_enum::enum_name(mouse)) + " Button";
+            visual.bindingInputName = MOUSE_BUTTON_NAMES.at(mouse) + " Button";
         },
     };
 
@@ -317,10 +318,10 @@ std::vector<BindingOriginVisual> ActionManager::GetAnalogMouseAndKeyboardOriginV
         [&](KeyboardAnalog keyboard)
         {
             BindingOriginVisual& visual = visuals.emplace_back();
-            visual.bindingInputName = std::string(magic_enum::enum_name(keyboard.up)) + " (UP) | " +
-                        std::string(magic_enum::enum_name(keyboard.down)) + " (DOWN) | " +
-                        std::string(magic_enum::enum_name(keyboard.left)) + " (LEFT) | " +
-                        std::string(magic_enum::enum_name(keyboard.right)) + " (RIGHT)";
+            visual.bindingInputName = KEYBOARD_KEY_NAMES.at(keyboard.up) +
+                        KEYBOARD_KEY_NAMES.at(keyboard.left) +
+                        KEYBOARD_KEY_NAMES.at(keyboard.down) +
+                        KEYBOARD_KEY_NAMES.at(keyboard.right);
         },
         [&](MouseAnalog)
         {
