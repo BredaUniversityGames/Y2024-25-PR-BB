@@ -10,7 +10,7 @@
 
 std::shared_ptr<ControlsMenu> ControlsMenu::Create(const glm::uvec2& screenResolution, GraphicsContext& graphicsContext, ActionManager& actionManager, std::shared_ptr<UIFont> font)
 {
-    constexpr glm::ivec2 popupResolution(2300.0f, 1300.0f);
+    constexpr glm::ivec2 popupResolution(423.0f * 5, 233.0f * 5);
 
     auto menu = std::make_shared<ControlsMenu>(screenResolution, popupResolution, graphicsContext, actionManager, font);
     menu->anchorPoint = UIElement::AnchorPoint::eMiddle;
