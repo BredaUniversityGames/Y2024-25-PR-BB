@@ -438,7 +438,7 @@ class Main {
         }
 
         if (engine.GetInput().GetDigitalAction("Shoot").IsHeld()  && __activeWeapon.isUnequiping(engine) == false ) {
-            __activeWeapon.attack(engine, dt, __playerVariables, __enemyList, __coinManager)
+            __activeWeapon.attack(engine, dt, __playerVariables, __enemyList, __coinManager, __playerMovement.cameraFovCurrent)
             if (__activeWeapon.ammo <= 0) {
                 __activeWeapon.reload(engine)
             }
@@ -451,7 +451,7 @@ class Main {
         if (engine.GetInput().GetDigitalAction("ShootSecondary").IsHeld()  && __activeWeapon.isUnequiping(engine) == false ) {
 
             if (__playerVariables.GetCurrentPowerUp() == PowerUpType.DOUBLE_GUNS){
-                __secondaryWeapon.attack(engine, dt, __playerVariables, __enemyList, __coinManager)
+                __secondaryWeapon.attack(engine, dt, __playerVariables, __enemyList, __coinManager, __playerMovement.cameraFovCurrent)
                 if (__secondaryWeapon.ammo <= 0) {
                     __secondaryWeapon.reload(engine)
                 }

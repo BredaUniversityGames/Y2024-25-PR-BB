@@ -129,7 +129,7 @@ class Pistol {
         }
     }
 
-    attack(engine, deltaTime, playerVariables, enemies, coinManager) {
+    attack(engine, deltaTime, playerVariables, enemies, coinManager, fov) {
         _manualTimer = Math.Max(_manualTimer-deltaTime,0)
         
         if (_entityName == "Gun") {
@@ -173,6 +173,9 @@ class Pistol {
             muzzleLight.range = 20.0
             muzzleLight.intensity = 128.0
 
+            // 1 - ((fov - minFov) / (maxFov - minFov)): minFov=50 maxFov=150
+            var mul = 1 - ((fov - 50) / 100)
+            _barrelEndEntity.GetTransformComponent().translation = Vec3.new(_barrelEndPosition.x * mul * mul, _barrelEndPosition.y, _barrelEndPosition.z)
             var barrelEndPosition = _barrelEndEntity.GetTransformComponent().GetWorldTranslation()
             muzzleTransform.translation = Vec3.new(-0.55 , 0.195, 0.35)
             _barrelEndEntity.AttachChild(muzzleEntity)
