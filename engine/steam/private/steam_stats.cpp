@@ -59,6 +59,8 @@ bool SteamStats::StoreStats()
             }
         }
 
+        std::copy(_stats.begin(), _stats.end(), _oldStats.begin());
+
         return SteamUserStats()->StoreStats();
     }
 
@@ -83,7 +85,6 @@ void SteamStats::OnUserStatsReceived(UserStatsReceived_t* pCallback)
         if (k_EResultOK == pCallback->m_eResult)
         {
             bblog::info("Received stats from Steam");
-            std::copy(_stats.begin(), _stats.end(), _oldStats.begin());
 
             for (size_t i = 0; i < _stats.size(); ++i)
             {
