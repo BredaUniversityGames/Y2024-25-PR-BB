@@ -16,6 +16,7 @@ enum PhysicsObjectLayer : JPH::ObjectLayer
     ePROJECTILE, // For projectiles or explosions (both enemies and player created)
     eINTERACTABLE, // For pickups, doors and interactables
     eCOINS, // For coins/gold
+    eDEAD,
     eNUM_OBJECT_LAYERS
 };
 

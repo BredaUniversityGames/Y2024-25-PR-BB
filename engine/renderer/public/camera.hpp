@@ -36,7 +36,8 @@ struct alignas(16) GPUCamera
     bool cullingEnabled;
     int32_t projectionType;
 
-    glm::vec2 _padding {};
+    float fov;
+    float _padding;
 };
 
 class CameraResource

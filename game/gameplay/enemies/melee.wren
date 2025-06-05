@@ -6,7 +6,7 @@ import "gameplay/flash_system.wren" for FlashSystem
 
 class MeleeEnemy {
 
-    construct new(engine, spawnPosition) {
+    construct new(engine, spawnPosition, waveNumber) {
         
         // ENEMY CONSTANTS
         _maxVelocity = 13
@@ -70,7 +70,7 @@ class MeleeEnemy {
 
         _pointLight.intensity = 10
         _pointLight.range = 2
-        _pointLight.color = Vec3.new(0.0, 1.0, 0.0)
+        _pointLight.color = Vec3.new(Math.Min(waveNumber, 10) / 10, 1.0 - Math.Min(waveNumber, 10) / 10, 0.0)
 
         var rb = Rigidbody.new(engine.GetPhysics(), colliderShape, PhysicsObjectLayer.eENEMY(), false)
         var body = _rootEntity.AddRigidbodyComponent(rb)
@@ -114,7 +114,7 @@ class MeleeEnemy {
         return false
     }
 
-    DecreaseHealth(amount, engine, coinManager) {
+    DecreaseHealth(amount, engine, coinManager, soulManager, waveSystem) {
         var animations = _meshEntity.GetAnimationControlComponent()
         var body = _rootEntity.GetRigidbodyComponent()
 
@@ -131,8 +131,11 @@ class MeleeEnemy {
 
         if (_health <= 0 && _isAlive) {
             _isAlive = false
+            waveSystem.DecreaseEnemyCount()
             _rootEntity.RemoveEnemyTag()
+
             animations.Play("Death", 1.0, false, 0.3, false)
+            body.SetLayer(PhysicsObjectLayer.eDEAD())
             body.SetVelocity(Vec3.new(0,0,0))
             body.SetStatic()
             // Spawn between 1 and 5 coins
@@ -140,6 +143,10 @@ class MeleeEnemy {
             for(i in 0...coinCount) {
                 coinManager.SpawnCoin(engine, body.GetPosition() + Vec3.new(0, 1.0, 0))
             }
+            // Spawn a soul
+            soulManager.SpawnSoul(engine, body.GetPosition(),SoulType.SMALL)
+
+            _pointLight.intensity = 0
 
             var eventInstance = engine.GetAudio().PlayEventOnce(_bonesSFX)
             
@@ -177,7 +184,6 @@ class MeleeEnemy {
 
 
     Update(playerPos, playerVariables, engine, dt, soulManager, coinManager, flashSystem) {
-        
         var body = _rootEntity.GetRigidbodyComponent()
         var pos = body.GetPosition()
         
@@ -328,15 +334,17 @@ class MeleeEnemy {
                     animations.Play("Run", 1.25, true, 0.2, true)
                 }
             }
+
+            _noiseOffset = _noiseOffset + dt * 0.001 * __flickerSpeed
+            var noise = __perlin.Noise1D(_noiseOffset)
+            var flickerIntensity = __baseIntensity + ((noise - 0.5) * __flickerRange)
+            _pointLight.intensity = flickerIntensity
         } else {
             _deathTimer = _deathTimer - dt
             
             if (_deathTimer <= 0) {
-                //spawn a soul
-                soulManager.SpawnSoul(engine, body.GetPosition(),SoulType.SMALL)
 
                 engine.GetECS().DestroyEntity(_rootEntity) // Destroys the entity, and in turn this object
-                
 
             } else {
                 // Wait for death animation before starting descent
@@ -348,11 +356,6 @@ class MeleeEnemy {
                 }
             }
         }
-
-        _noiseOffset = _noiseOffset + dt * 0.001 * __flickerSpeed
-        var noise = __perlin.Noise1D(_noiseOffset)
-        var flickerIntensity = __baseIntensity + ((noise - 0.5) * __flickerRange)
-        _pointLight.intensity = flickerIntensity
     }
 
     DoPathfinding(playerPos, engine, dt) {

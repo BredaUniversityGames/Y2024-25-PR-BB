@@ -126,6 +126,7 @@ void CameraResource::Update(uint32_t currentFrame, const CameraComponent& camera
     cameraBuffer.inverseView = glm::inverse(cameraBuffer.view);
 
     cameraBuffer.proj = proj;
+    cameraBuffer.fov = camera.fov;
 
     switch (camera.projection)
     {

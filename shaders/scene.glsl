@@ -18,7 +18,8 @@ struct Camera
     int cullingEnabled;
     int projectionType;
 
-    vec2 _padding;
+    float fov;
+    float _padding;
 };
 
 struct DirectionalLight

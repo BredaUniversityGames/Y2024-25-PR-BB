@@ -7,15 +7,15 @@ import "gameplay/flash_system.wren" for FlashSystem
 
 class BerserkerEnemy {
 
-    construct new(engine, spawnPosition) {
+    construct new(engine, spawnPosition, waveNumber) {
         
         // ENEMY CONSTANTS
-        _maxVelocity = 5
+        _maxVelocity = 6.8
         var enemySize = 0.03
         var modelPath = "assets/models/Berserker.glb"
         var colliderShape = ShapeFactory.MakeCapsuleShape(145.0, 40.0) // TODO: Make this engine units
         
-        _attackRange = 6.5
+        _attackRange = 8.0
         _attackDamage = 35
         _shakeIntensity = 2.2
         _attackMaxTime = 2300
@@ -60,14 +60,14 @@ class BerserkerEnemy {
 
         _pointLight.intensity = 10
         _pointLight.range = 2
-        _pointLight.color = Vec3.new(0.0, 1.0, 0.0)
+        _pointLight.color = Vec3.new(0.0, 1.0 - Math.Clamp(waveNumber - 3, 0, 7) / 7, Math.Min(waveNumber - 3, 7) / 7)
 
         var rb = Rigidbody.new(engine.GetPhysics(), colliderShape, PhysicsObjectLayer.eENEMY(), false)
         var body = _rootEntity.AddRigidbodyComponent(rb)
         body.SetGravityFactor(2.2)
 
         var animations = _meshEntity.GetAnimationControlComponent()
-        animations.Play("Walk", 0.4, true, 1.0, true)
+        animations.Play("Walk", 0.528, true, 1.0, true)
 
         // STATE
 
@@ -109,7 +109,7 @@ class BerserkerEnemy {
         return false
     }
 
-    DecreaseHealth(amount, engine, coinManager) {
+    DecreaseHealth(amount, engine, coinManager, soulManager, waveSystem) {
         var animations = _meshEntity.GetAnimationControlComponent()
         var body = _rootEntity.GetRigidbodyComponent()
 
@@ -117,16 +117,24 @@ class BerserkerEnemy {
 
         if (_health <= 0 && _isAlive) {
             _isAlive = false
+            waveSystem.DecreaseEnemyCount()
             _rootEntity.RemoveEnemyTag()
+
             animations.Play("Death", 1.0, false, 0.3, false)
+            body.SetLayer(PhysicsObjectLayer.eDEAD())
             body.SetVelocity(Vec3.new(0,0,0))
             body.SetStatic()
+
+            _pointLight.intensity = 0
 
             // Spawn between 1 and 5 coins
             var coinCount = Random.RandomIndex(7, 12)
             for(i in 0...coinCount) {
                 coinManager.SpawnCoin(engine, body.GetPosition() + Vec3.new(0, 1.0, 0))
             }
+
+            // Spawn a soul
+            soulManager.SpawnSoul(engine, body.GetPosition(),SoulType.BIG)
 
             var eventInstance = engine.GetAudio().PlayEventOnce(_hurtSFX)
             var growlInstance = engine.GetAudio().PlayEventOnce(_growlSFX)
@@ -272,7 +280,7 @@ class BerserkerEnemy {
 
                 } else if (_movingState == false) { // Enter attack state
                     body.SetFriction(0.0)
-                    animations.Play("Walk", 0.4, true, 0.5, true)
+                    animations.Play("Walk", 0.528, true, 0.5, true)
                     _movingState = true
                 }
             }
@@ -286,9 +294,14 @@ class BerserkerEnemy {
                     _evaluateState = true
                     _hitState = false
                     body.SetDynamic()
-                    animations.Play("Walk", 0.4, true, 0.5, true)
+                    animations.Play("Walk", 0.528, true, 0.5, true)
                 }
             }
+            
+            _noiseOffset = _noiseOffset + dt * 0.001 * __flickerSpeed
+            var noise = __perlin.Noise1D(_noiseOffset)
+            var flickerIntensity = __baseIntensity + ((noise - 0.5) * __flickerRange)
+            _pointLight.intensity = flickerIntensity
         } else {
             _deathTimer = _deathTimer - dt
             
@@ -298,7 +311,7 @@ class BerserkerEnemy {
             }
 
             if (_deathTimer <= 0) {
-                soulManager.SpawnSoul(engine, body.GetPosition(),SoulType.BIG)
+
                 engine.GetECS().DestroyEntity(_rootEntity) // Destroys the entity, and in turn this object
             } else {
                 // Wait for death animation before starting descent
@@ -310,11 +323,6 @@ class BerserkerEnemy {
                 }
             }
         }
-
-        _noiseOffset = _noiseOffset + dt * 0.001 * __flickerSpeed
-        var noise = __perlin.Noise1D(_noiseOffset)
-        var flickerIntensity = __baseIntensity + ((noise - 0.5) * __flickerRange)
-        _pointLight.intensity = flickerIntensity
     }
 
     DoPathfinding(playerPos, engine, dt) {

@@ -32,6 +32,10 @@ public:
         {
             return inObject2 == eSTATIC || inObject2 == eCOINS;
         }
+        case eDEAD:
+        {
+            return inObject2 == eSTATIC;
+        }
         default:
             JPH_ASSERT(false);
             return false;
@@ -55,6 +59,7 @@ public:
         mObjectToBroadPhase[ePLAYER] = JPH::BroadPhaseLayer { eMOVING_BROADPHASE };
         mObjectToBroadPhase[eENEMY] = JPH::BroadPhaseLayer { eMOVING_BROADPHASE };
         mObjectToBroadPhase[eCOINS] = JPH::BroadPhaseLayer { eMOVING_BROADPHASE };
+        mObjectToBroadPhase[eDEAD] = JPH::BroadPhaseLayer { eMOVING_BROADPHASE };
     }
 
     virtual JPH::uint GetNumBroadPhaseLayers() const override

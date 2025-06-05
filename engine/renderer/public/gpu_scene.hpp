@@ -127,6 +127,8 @@ public:
     const CameraResource& MainCamera() const { return _mainCamera; }
     CameraBatch& MainCameraBatch() const { return *_mainCameraBatch; }
 
+    const CameraResource& ForegroundCamera() const { return _foregroundCamera; }
+
     ResourceHandle<GPUImage> StaticShadow() const { return _staticShadowImage; }
     ResourceHandle<GPUImage> DynamicShadow() const { return _dynamicShadowImage; }
     bool ShouldUpdateShadows() const { return _shouldUpdateShadows; }
@@ -270,6 +272,7 @@ private:
     bool _shouldUpdateShadows = false;
 
     CameraResource _mainCamera;
+    CameraResource _foregroundCamera;
     CameraResource _directionalLightShadowCamera;
 
     std::unique_ptr<CameraBatch> _mainCameraBatch;

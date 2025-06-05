@@ -132,6 +132,7 @@ void BindGameAPI(wren::ForeignModule& module)
     settings.var<&GameSettings::aimSensitivity>("Sensitivity");
     settings.var<&GameSettings::aimSensitivity>("aimSensitivity");
     settings.var<&GameSettings::aimAssist>("aimAssist");
+    settings.var<&GameSettings::fov>("fov");
 
     game.func<&GameModule::GetMainMenu>("GetMainMenu");
     game.func<&GameModule::GetPauseMenu>("GetPauseMenu");

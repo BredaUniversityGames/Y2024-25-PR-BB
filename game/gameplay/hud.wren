@@ -114,8 +114,6 @@ class WrenHUD {
         
         // Wave transition
         _hud.PlayWaveCounterIncrementAnim(_waveFlashTween.GetValue())
-        engine.GetTime().SetScale(1-(_waveFlashTween.GetValue()*0.6))
-            
         var cameraE = engine.GetECS().GetEntityByName("Player")
         var cameraForward = Math.ToVector(cameraE.GetTransformComponent().rotation)    
                          

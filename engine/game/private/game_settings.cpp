@@ -8,7 +8,16 @@ GameSettings GameSettings::FromFile(const std::string& path)
     if (auto stream = fileIO::OpenReadStream(path))
     {
         cereal::JSONInputArchive ar { stream.value() };
-        ar(out);
+
+        try
+        {
+            ar(out);
+        }
+        catch (const std::exception& e)
+        {
+            bblog::warn("Outdated settings file, reverting to defaults.");
+            out.SaveToFile(path);
+        }
     }
     else
     {

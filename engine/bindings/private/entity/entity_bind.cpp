@@ -305,6 +305,7 @@ void BindEntity(wren::ForeignModule& module)
 
     entityClass.func<&WrenEntity::GetComponent<RigidbodyComponent>>("GetRigidbodyComponent");
     entityClass.func<&WrenEntity::AddComponent<RigidbodyComponent>>("AddRigidbodyComponent", "Must pass a Rigidbody to this function");
+    entityClass.func<&WrenEntity::RemoveComponent<RigidbodyComponent>>("RemoveRigidBodyComponent");
 
     entityClass.func<&WrenEntity::GetComponent<PointLightComponent>>("GetPointLightComponent");
     entityClass.func<&WrenEntity::AddDefaultComponent<PointLightComponent>>("AddPointLightComponent");

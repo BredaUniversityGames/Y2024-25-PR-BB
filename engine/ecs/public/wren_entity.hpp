@@ -20,6 +20,9 @@ struct WrenEntity
     WrenComponent<T> AddComponent(const T& component);
 
     template <typename T>
+    void RemoveComponent();
+
+    template <typename T>
     void AddTag();
     template <typename T>
     void RemoveTag();
@@ -49,6 +52,12 @@ WrenComponent<T> WrenEntity::AddComponent(const T& component)
 {
     registry->emplace_or_replace<T>(entity, component);
     return WrenComponent<T> { WrenEntity { entity, registry }, &registry->get<T>(entity) };
+}
+
+template <typename T>
+void WrenEntity::RemoveComponent()
+{
+    registry->remove<T>(entity);
 }
 
 template <typename T>

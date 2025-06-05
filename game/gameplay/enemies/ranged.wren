@@ -21,6 +21,7 @@ class RangedEnemy {
         _health = 5
         _deathTimerMax = 1500
         _changeDirectionTimerMax = 2000
+        _disruptHitCount = 0
         _maxHeight = 34.0
         _minHeight = 16.0
 
@@ -113,7 +114,7 @@ class RangedEnemy {
         return false
     }
 
-    DecreaseHealth(amount, engine, coinManager) {
+    DecreaseHealth(amount, engine, coinManager, soulManager, waveSystem) {
         var body = _rootEntity.GetRigidbodyComponent()
         _health = Math.Max(_health - amount, 0)
 
@@ -131,6 +132,7 @@ class RangedEnemy {
 
         if (_health <= 0 && _isAlive) {
             _isAlive = false
+            waveSystem.DecreaseEnemyCount()
             _rootEntity.RemoveEnemyTag()
             
             body.SetVelocity(Vec3.new(0,0,0))
@@ -147,8 +149,12 @@ class RangedEnemy {
                 coinManager.SpawnCoin(engine, body.GetPosition() + Vec3.new(0, 1.0, 0))
             }
 
+            // Spawn a soul
+            soulManager.SpawnSoul(engine, body.GetPosition(),SoulType.BIG)
+
             body.SetDynamic()
             body.SetGravityFactor(2.0)
+            body.SetLayer(PhysicsObjectLayer.eDEAD())
 
         } else {
             _rootEntity.GetRigidbodyComponent().SetVelocity(Vec3.new(0.0, 0.0, 0.0))
@@ -159,6 +165,21 @@ class RangedEnemy {
             //_recoveryState = false
             _hasTakenDamage = true
             _hasDashedFromDamage = false
+
+            _disruptHitCount = _disruptHitCount + 1
+            if (_disruptHitCount > 2) {
+                _disruptHitCount = 0
+
+                if(_chargeSoundEventInstance) {
+                    engine.GetAudio().StopEvent(_chargeSoundEventInstance)
+                    _chargeSoundEventInstance = null
+                }
+
+                _attackingState = false
+                _recoveryState = true
+                _recoveryTime = _recoveryMaxTime
+                _attackCooldown = _attackMaxCooldown * 0.5
+            }
         }
     }
 
@@ -320,6 +341,7 @@ class RangedEnemy {
                     _movingState = false
                     _attackTime = _attackMaxTime
                     _evaluateState = false
+                    _disruptHitCount = 0
                     
                     //play charge sound
                     _chargeSoundEventInstance = engine.GetAudio().PlayEventOnce(_chargeSFX)
@@ -352,9 +374,6 @@ class RangedEnemy {
             }
 
             if (_deathTimer <= 0) {
-                //spawn a soul
-                soulManager.SpawnSoul(engine, body.GetPosition(),SoulType.BIG)
-
                 engine.GetECS().DestroyEntity(_rootEntity) // Destroys the entity, and in turn this object
             } else {
                 // Wait for death animation before starting descent
