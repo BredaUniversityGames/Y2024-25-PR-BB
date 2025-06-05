@@ -34,6 +34,8 @@ public:
     vk::Image GetImage(uint32_t index) const { return _images[index]; }
     glm::uvec2 GetImageSize() const { return _imageSize; }
 
+    bool SetPresentMode(vk::PresentModeKHR presentMode);
+
     static SupportDetails QuerySupport(vk::PhysicalDevice device, vk::SurfaceKHR surface);
 
 private:
@@ -46,6 +48,8 @@ private:
     std::vector<vk::Image> _images;
     std::vector<vk::ImageView> _imageViews;
     vk::Format _format;
+
+    vk::PresentModeKHR _presentMode = vk::PresentModeKHR::eFifo;
 
     void CreateSwapChain(const glm::uvec2& screenSize);
     void CleanUpSwapChain();

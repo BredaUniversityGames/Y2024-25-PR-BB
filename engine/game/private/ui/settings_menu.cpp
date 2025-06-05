@@ -105,7 +105,7 @@ std::shared_ptr<SettingsMenu> SettingsMenu::Create(
         constexpr glm::vec2 toggleSize = glm::vec2(16, 16) * 4.0f;
 
         constexpr glm::vec2 sliderSize = glm::vec2(128, 16) * 4.0f;
-        constexpr glm::vec2 toggleOffset = glm::vec2(400.0f-sliderSize.x, -toggleSize.y * 0.25f + textSize * 0.25f);
+        constexpr glm::vec2 toggleOffset = glm::vec2(400.0f - sliderSize.x, -toggleSize.y * 0.25f + textSize * 0.25f);
 
         // Sensitivity
         {
@@ -136,7 +136,7 @@ std::shared_ptr<SettingsMenu> SettingsMenu::Create(
             auto text = node->AddChild<UITextElement>(font, "Aim Assist", glm::vec2(), textSize);
             text->anchorPoint = UIElement::AnchorPoint::eTopLeft;
 
-            auto toggle = node->AddChild<UIToggle>(toggleStyle, toggleOffset+ glm::vec2(sliderSize.x-toggleSize.x,0), toggleSize);
+            auto toggle = node->AddChild<UIToggle>(toggleStyle, toggleOffset + glm::vec2(sliderSize.x - toggleSize.x, 0), toggleSize);
             toggle->anchorPoint = UIElement::AnchorPoint::eTopRight;
             settings->aimAssistToggle = toggle;
 
@@ -247,6 +247,28 @@ std::shared_ptr<SettingsMenu> SettingsMenu::Create(
             slider->OnSlide(callback);
         }
 
+        // VSYNC
+        {
+            auto node = settings->AddChild<Canvas>(rowSize);
+            node->SetLocation(elemPos);
+            elemPos += increment;
+
+            auto text = node->AddChild<UITextElement>(font, "Toggle Vsync", glm::vec2(), textSize);
+            text->anchorPoint = UIElement::AnchorPoint::eTopLeft;
+
+            auto toggle = node->AddChild<UIToggle>(toggleStyle, toggleOffset + glm::vec2(sliderSize.x - toggleSize.x, 0), toggleSize);
+            toggle->anchorPoint = UIElement::AnchorPoint::eTopRight;
+
+            toggle->state = gameModule.GetSettings().vsync;
+
+            auto callback = [&gameModule](bool val)
+            { gameModule.GetSettings().vsync = val; };
+
+            toggle->state = gameModule.GetSettings().vsync;
+            toggle->OnToggle(callback);
+            settings->vsyncToggle = toggle;
+        }
+
         // FRAME COUNTER
         {
             auto node = settings->AddChild<Canvas>(rowSize);
@@ -256,7 +278,7 @@ std::shared_ptr<SettingsMenu> SettingsMenu::Create(
             auto text = node->AddChild<UITextElement>(font, "Toggle Framerate Display", glm::vec2(), textSize);
             text->anchorPoint = UIElement::AnchorPoint::eTopLeft;
 
-            auto toggle = node->AddChild<UIToggle>(toggleStyle, toggleOffset+ glm::vec2(sliderSize.x-toggleSize.x,0), toggleSize);
+            auto toggle = node->AddChild<UIToggle>(toggleStyle, toggleOffset + glm::vec2(sliderSize.x - toggleSize.x, 0), toggleSize);
             toggle->anchorPoint = UIElement::AnchorPoint::eTopRight;
 
             toggle->state = gameModule.GetSettings().framerateCounter;
@@ -300,9 +322,6 @@ std::shared_ptr<SettingsMenu> SettingsMenu::Create(
         // settings->gammaSlider.lock()->navigationTargets.up = settings->aimAssistToggle;
         // settings->gammaSlider.lock()->navigationTargets.down = settings->vsyncToggle;
 
-        // settings->vsyncToggle.lock()->navigationTargets.up = settings->gammaSlider;
-        // settings->vsyncToggle.lock()->navigationTargets.down = settings->masterVolume;
-
         settings->masterVolume.lock()->navigationTargets.up = settings->aimAssistToggle;
         settings->masterVolume.lock()->navigationTargets.down = settings->musicVolume;
 
@@ -310,9 +329,12 @@ std::shared_ptr<SettingsMenu> SettingsMenu::Create(
         settings->musicVolume.lock()->navigationTargets.down = settings->sfxVolume;
 
         settings->sfxVolume.lock()->navigationTargets.up = settings->musicVolume;
-        settings->sfxVolume.lock()->navigationTargets.down = settings->fpsToggle;
+        settings->sfxVolume.lock()->navigationTargets.down = settings->vsyncToggle;
 
-        settings->fpsToggle.lock()->navigationTargets.up = settings->sfxVolume;
+        settings->vsyncToggle.lock()->navigationTargets.up = settings->sfxVolume;
+        settings->vsyncToggle.lock()->navigationTargets.down = settings->fpsToggle;
+
+        settings->fpsToggle.lock()->navigationTargets.up = settings->vsyncToggle;
         settings->fpsToggle.lock()->navigationTargets.down = settings->backButton;
 
         settings->backButton.lock()->navigationTargets.up = settings->fpsToggle;
