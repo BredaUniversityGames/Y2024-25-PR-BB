@@ -29,7 +29,9 @@ struct KeyboardAnalog
     KeyboardCode right;
 };
 
-struct MouseAnalog {};
+struct MouseAnalog
+{
+};
 
 using DigitalInputBinding = std::variant<GamepadButton, KeyboardCode, MouseButton>;
 using AnalogInputBinding = std::variant<GamepadAnalog, KeyboardAnalog, MouseAnalog>;
@@ -109,7 +111,6 @@ public:
 
     // Axis actions.
     NO_DISCARD glm::vec2 GetAnalogAction(std::string_view actionName) const;
-
 
     // Returns information to be visually displayed for all bindings for the given digital action.
     NO_DISCARD std::vector<BindingOriginVisual> GetDigitalActionBindingOriginVisual(std::string_view actionName) const;

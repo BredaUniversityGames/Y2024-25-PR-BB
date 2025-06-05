@@ -1,7 +1,6 @@
 #include "input/action_manager.hpp"
-#include "log.hpp"
 #include "input/input_codes/input_names.hpp"
-#include <magic_enum.hpp>
+#include "log.hpp"
 #include <algorithm>
 
 ActionManager::ActionManager(const InputDeviceManager& inputDeviceManager)
@@ -276,16 +275,18 @@ std::vector<BindingOriginVisual> ActionManager::GetAnalogActionGamepadOriginVisu
     return visuals;
 }
 
-template<class... Ts>
-struct VisitorOverloads : Ts... { using Ts::operator()...; };
+template <class... Ts>
+struct VisitorOverloads : Ts...
+{
+    using Ts::operator()...;
+};
 
 std::vector<BindingOriginVisual> ActionManager::GetDigitalMouseAndKeyboardOriginVisual(const DigitalAction& action) const
 {
     std::vector<BindingOriginVisual> visuals {};
 
-    const auto visitor = VisitorOverloads
-    {
-        [](GamepadButton){}, // We don't do anything for the gamepad, just ignore it as there is another function that takes care of getting gamepad visuals
+    const auto visitor = VisitorOverloads {
+        [](GamepadButton) {}, // We don't do anything for the gamepad, just ignore it as there is another function that takes care of getting gamepad visuals
         [&](KeyboardCode keyboard)
         {
             BindingOriginVisual& visual = visuals.emplace_back();
@@ -306,22 +307,16 @@ std::vector<BindingOriginVisual> ActionManager::GetDigitalMouseAndKeyboardOrigin
     return visuals;
 }
 
-
-
 std::vector<BindingOriginVisual> ActionManager::GetAnalogMouseAndKeyboardOriginVisual(const AnalogAction& action) const
 {
     std::vector<BindingOriginVisual> visuals {};
 
-    const auto visitor = VisitorOverloads
-    {
-        [](GamepadAnalog){}, // We don't do anything for the gamepad, just ignore it as there is another function that takes care of getting gamepad visuals
+    const auto visitor = VisitorOverloads {
+        [](GamepadAnalog) {}, // We don't do anything for the gamepad, just ignore it as there is another function that takes care of getting gamepad visuals
         [&](KeyboardAnalog keyboard)
         {
             BindingOriginVisual& visual = visuals.emplace_back();
-            visual.bindingInputName = KEYBOARD_KEY_NAMES.at(keyboard.up) +
-                        KEYBOARD_KEY_NAMES.at(keyboard.left) +
-                        KEYBOARD_KEY_NAMES.at(keyboard.down) +
-                        KEYBOARD_KEY_NAMES.at(keyboard.right);
+            visual.bindingInputName = KEYBOARD_KEY_NAMES.at(keyboard.up) + KEYBOARD_KEY_NAMES.at(keyboard.left) + KEYBOARD_KEY_NAMES.at(keyboard.down) + KEYBOARD_KEY_NAMES.at(keyboard.right);
         },
         [&](MouseAnalog)
         {
