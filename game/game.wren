@@ -272,6 +272,8 @@ class Main {
         }
 
         retryButton.OnPress(retryHandler)
+
+        __gamepadConnectedPrevFrame = engine.GetInput().IsGamepadConnected()
     }
 
     static Shutdown(engine) {
@@ -307,6 +309,14 @@ class Main {
             return
         }
 
+        // Pause the game if the controller disconnects
+        var hasGamepadDisconnected = __gamepadConnectedPrevFrame && !engine.GetInput().IsGamepadConnected()
+        __gamepadConnectedPrevFrame = engine.GetInput().IsGamepadConnected()
+
+        if (!__pauseEnabled && hasGamepadDisconnected) {
+            __pauseHandler.call()
+        }
+
         __playerMovement.lookSensitivity = engine.GetGame().GetSettings().aimSensitivity * (2.5 - 0.2) + 0.2
 
         if (__enemyList.count != 0) {
@@ -324,7 +334,7 @@ class Main {
             engine.GetAudio().DisableLowPass()
         }
 
-        
+
 
         var cheats = __playerController.GetCheatsComponent()
         var deltaTime = engine.GetTime().GetDeltatime()
