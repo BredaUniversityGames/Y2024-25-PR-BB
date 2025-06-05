@@ -8,9 +8,9 @@ import "gameplay/flash_system.wren" for FlashSystem
 class BerserkerEnemy {
 
     construct new(engine, spawnPosition) {
-        
+
         // ENEMY CONSTANTS
-        _maxVelocity = 5
+        _maxVelocity = 7.5
         var enemySize = 0.03
         var modelPath = "assets/models/Berserker.glb"
         var colliderShape = ShapeFactory.MakeCapsuleShape(145.0, 40.0) // TODO: Make this engine units
@@ -39,7 +39,7 @@ class BerserkerEnemy {
         _rootEntity.AddNameComponent().name = "BerserkerEnemy"
         _rootEntity.AddEnemyTag()
         _rootEntity.AddAudioEmitterComponent()
-        
+
         _delaySpawnSFX = Random.RandomFloatRange(0, 1500)
         _playedSpawnSFX = false
 
@@ -67,7 +67,7 @@ class BerserkerEnemy {
         body.SetGravityFactor(2.2)
 
         var animations = _meshEntity.GetAnimationControlComponent()
-        animations.Play("Walk", 0.4, true, 1.0, true)
+        animations.Play("Walk", 0.7, true, 1.0, true)
 
         // STATE
 
@@ -78,7 +78,7 @@ class BerserkerEnemy {
         _isAlive = true
 
         _reasonTimer = 2000
-        
+
         _movingState = false
         _attackingState = false
         _recoveryState = false
@@ -132,7 +132,7 @@ class BerserkerEnemy {
             var growlInstance = engine.GetAudio().PlayEventOnce(_growlSFX)
             var audioEmitter = _rootEntity.GetAudioEmitterComponent()
             audioEmitter.AddEvent(eventInstance)
-            audioEmitter.AddEvent(growlInstance)    
+            audioEmitter.AddEvent(growlInstance)
         } else {
             //animations.Play("Hit", 1.0, false, 0.1, false)
             //_rootEntity.GetRigidbodyComponent().SetVelocity(Vec3.new(0.0, 0.0, 0.0))
@@ -259,7 +259,7 @@ class BerserkerEnemy {
                     _attackingState = true
                     _movingState = false
                     body.SetFriction(12.0)
-                    _attackTimer = _attackTiming 
+                    _attackTimer = _attackTiming
                     if (animations.CurrentAnimationName() == "Walk") {
                         _attackTimer = _attackTimer - 100
                     }
@@ -272,7 +272,7 @@ class BerserkerEnemy {
 
                 } else if (_movingState == false) { // Enter attack state
                     body.SetFriction(0.0)
-                    animations.Play("Walk", 0.4, true, 0.5, true)
+                    animations.Play("Walk", 0.7, true, 0.5, true)
                     _movingState = true
                 }
             }
@@ -286,12 +286,12 @@ class BerserkerEnemy {
                     _evaluateState = true
                     _hitState = false
                     body.SetDynamic()
-                    animations.Play("Walk", 0.4, true, 0.5, true)
+                    animations.Play("Walk", 0.7, true, 0.5, true)
                 }
             }
         } else {
             _deathTimer = _deathTimer - dt
-            
+
             var transparencyComponent = _meshEntity.GetTransparencyComponent()
             if(transparencyComponent==null) {
                 transparencyComponent = _meshEntity.AddTransparencyComponent()
@@ -358,7 +358,7 @@ class BerserkerEnemy {
             var forwardVector = (target - pos).normalize()
 
             _rootEntity.GetRigidbodyComponent().SetVelocity(forwardVector.mulScalar(_maxVelocity))
-            
+
             // Set forward rotation
             var endRotation = Math.LookAt(Vec3.new(forwardVector.x, 0, forwardVector.z), Vec3.new(0, 1, 0))
             var startRotation = body.GetRotation()
@@ -384,7 +384,7 @@ class BerserkerEnemy {
     FindNewPath(engine) {
         var startPos = position
         _currentPath = engine.GetPathfinding().FindPath(startPos, engine.GetECS().GetEntityByName("Player").GetTransformComponent().GetWorldTranslation())
-        
+
         _currentPathNodeIdx = 1
     }
 
