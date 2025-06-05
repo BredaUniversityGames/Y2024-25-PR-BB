@@ -10,7 +10,7 @@
 
 std::shared_ptr<ControlsMenu> ControlsMenu::Create(const glm::uvec2& screenResolution, GraphicsContext& graphicsContext, ActionManager& actionManager, std::shared_ptr<UIFont> font)
 {
-    constexpr glm::ivec2 popupResolution(2300.0f, 1300.0f);
+    constexpr glm::ivec2 popupResolution(423.0f * 5, 233.0f * 5);
 
     auto menu = std::make_shared<ControlsMenu>(screenResolution, popupResolution, graphicsContext, actionManager, font);
     menu->anchorPoint = UIElement::AnchorPoint::eMiddle;
@@ -134,7 +134,7 @@ ControlsMenu::ActionControls ControlsMenu::AddActionVisualization(const std::str
     constexpr float actionTextSize = 50.0f;
     constexpr float actionOriginBindingTextSize = 40.0f;
     constexpr float glyphHorizontalMargin = 25.0f;
-    constexpr float originHorizontalMargin = 200.0f;
+    constexpr float originHorizontalMargin = 225.0f;
     constexpr float actionOriginBindingTextMarginMultiplier = 12.0f;
     constexpr float canvasScaleY = actionTextSize + 10.0f;
 
@@ -148,10 +148,10 @@ ControlsMenu::ActionControls ControlsMenu::AddActionVisualization(const std::str
     action.nameText->anchorPoint = UIElement::AnchorPoint::eTopLeft;
     action.nameText->SetLocation({ 0.0f, 0.0f });
 
-    const std::vector<GamepadOriginVisual> gamepadOrigins = isAnalogInput ? _actionManager.GetAnalogActionGamepadOriginVisual(actionName) : _actionManager.GetDigitalActionGamepadOriginVisual(actionName);
+    const std::vector<BindingOriginVisual> blindingOrigins = isAnalogInput ? _actionManager.GetAnalogActionBindingOriginVisual(actionName) : _actionManager.GetDigitalActionBindingOriginVisual(actionName);
     float horizontalOffset = _canvasResolution.x / 6.0f;
 
-    for (const GamepadOriginVisual& origin : gamepadOrigins)
+    for (const BindingOriginVisual& origin : blindingOrigins)
     {
         ActionControls::Binding& binding = action.bindings.emplace_back();
 
@@ -164,14 +164,17 @@ ControlsMenu::ActionControls ControlsMenu::AddActionVisualization(const std::str
         horizontalOffset += binding.originName->GetAbsoluteScale().x * actionOriginBindingTextSize * origin.bindingInputName.length() + glyphHorizontalMargin * actionOriginBindingTextMarginMultiplier;
 
         // Create glyph
-        ResourceHandle<GPUImage> glyphImage = GetGlyphImage(origin.glyphImagePath);
-        const GPUImage* gpuImage = _graphicsContext.Resources()->ImageResourceManager().Access(glyphImage);
+        if (!origin.glyphImagePath.empty())
+        {
+            ResourceHandle<GPUImage> glyphImage = GetGlyphImage(origin.glyphImagePath);
+            const GPUImage* gpuImage = _graphicsContext.Resources()->ImageResourceManager().Access(glyphImage);
 
-        glm::vec2 size = glm::vec2(gpuImage->width, gpuImage->height) * 0.15f;
-        binding.glyph = action.canvas->AddChild<UIImage>(glyphImage, glm::vec2(horizontalOffset, 0.0f), size);
-        binding.glyph->anchorPoint = UIElement::AnchorPoint::eTopLeft;
+            glm::vec2 size = glm::vec2(gpuImage->width, gpuImage->height) * 0.15f;
+            binding.glyph = action.canvas->AddChild<UIImage>(glyphImage, glm::vec2(horizontalOffset, 0.0f), size);
+            binding.glyph->anchorPoint = UIElement::AnchorPoint::eTopLeft;
+        }
 
-        horizontalOffset += size.x + originHorizontalMargin;
+        horizontalOffset += originHorizontalMargin;
     }
 
     return action;
