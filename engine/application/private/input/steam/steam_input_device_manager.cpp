@@ -71,5 +71,6 @@ void SteamInputDeviceManager::UpdateControllerConnectivity()
     if (_inputHandle != handles[0])
     {
         _inputHandle = handles[0];
+        bblog::info("[Input] Steam gamepad device added");
     }
 }
