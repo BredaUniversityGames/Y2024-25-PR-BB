@@ -207,6 +207,7 @@ class BerserkerEnemy {
                                 playerVariables.cameraVariables.shakeIntensity = _shakeIntensity
                                 playerVariables.invincibilityTime = playerVariables.invincibilityMaxTime
 
+                                playerVariables.hud.IndicateDamage(pos)
                                 flashSystem.Flash(Vec3.new(1.0, 0.0, 0.0),0.85)
                                 engine.GetAudio().PlayEventOnce(_hitSFX)
                             }

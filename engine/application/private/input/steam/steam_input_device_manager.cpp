@@ -64,6 +64,11 @@ void SteamInputDeviceManager::UpdateControllerConnectivity()
 
     if (numActive == 0)
     {
+        if (_inputHandle != 0)
+        {
+            bblog::info("[Input] Steam gamepad device removed");
+        }
+
         _inputHandle = 0;
         return;
     }
@@ -71,5 +76,6 @@ void SteamInputDeviceManager::UpdateControllerConnectivity()
     if (_inputHandle != handles[0])
     {
         _inputHandle = handles[0];
+        bblog::info("[Input] Steam gamepad device added");
     }
 }

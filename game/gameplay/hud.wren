@@ -57,6 +57,33 @@ class LinearTween {
         var valFract = (_maxVal-_minVal) * timeFract
         return _minVal + valFract
     }
+    
+    Finished(){
+    var finished = _timerCurrent == _timerMax
+    return finished
+        
+    }
+}
+
+class EnemyDirectionIndicator{
+    construct new(index, enemyLocation){
+        _index = index
+        _enemyLocation = enemyLocation
+        _fadeoutTween = LinearTween.new(1000,1,0)
+        _fadeoutTween.TriggerFromStart()
+    }
+    Location(){
+        return _enemyLocation
+    }
+    
+    Update(dt, hud, angle) {
+        _fadeoutTween.Update(dt)
+        hud.SetDirectionalIndicatorRotationAndOpacity(_index,angle,_fadeoutTween.GetValue())               
+    }
+    
+    FadeOutFinished(){
+    return _fadeoutTween.Finished()
+    }
 }
 
 class WrenHUD {
@@ -66,16 +93,42 @@ class WrenHUD {
         _dashColorRefillTween = PingPongTween.new(75,1,5)
         _soulIndicatorOpacityTween = PingPongTween.new(100,0,1)
 
+        _enemyLocations = []   
+        _rot = 0
         _hud = hud
+        
+        
+        for(i in 0..9){
+            _hud.SetDirectionalIndicatorRotationAndOpacity(i,0,0)               
+        }
+    }
+    
+    IndicateDamage(location){
+        _enemyLocations.add(EnemyDirectionIndicator.new(_enemyLocations.count,location))
     }
     
     Update(engine, dt, playerMovement, playerVariables, currentAmmo, maxAmmo){
         _waveFlashTween.Update(dt)
         _dashColorRefillTween.Update(dt)
         _soulIndicatorOpacityTween.Update(dt)
-
+        
         // Wave transition
         _hud.PlayWaveCounterIncrementAnim(_waveFlashTween.GetValue())
+        var cameraE = engine.GetECS().GetEntityByName("Player")
+        var cameraForward = Math.ToVector(cameraE.GetTransformComponent().rotation)    
+                         
+        var angleCamera = Math.AngleAxis2D(-Vec2.new(0,1),Vec2.new(cameraForward.x,cameraForward.z).normalize())
+        var cameraLoc = cameraE.GetTransformComponent().translation
+              
+        for (item in _enemyLocations) {
+            var toEnemey = (cameraLoc-item.Location()).normalize()
+            var angle = Math.AngleAxis2D(Vec2.new(0,1),Vec2.new(toEnemey.x,toEnemey.z).normalize())      
+            item.Update(dt,_hud,angle-angleCamera)
+                        
+            if(item.FadeOutFinished()){
+                _enemyLocations.remove(item)
+            }
+        }
 
         // Dash charges
         _hud.UpdateDashCharges(playerMovement.currentDashCount)
@@ -83,7 +136,7 @@ class WrenHUD {
         var colorintenity = _dashColorRefillTween.GetValue()
         var color = Vec3.new(colorintenity,colorintenity,colorintenity)
         var opacity = Math.Clamp(timeTillNextCharge,0,1)
-        _hud.SetDashChargeColor(playerMovement.currentDashCount,Vec3.new(1,1,1),opacity)
+        _hud.SetDashChargeColor(playerMovement.currentDashCount,Vec3.new(0.6,0.5,0.5),opacity)
         _hud.SetDashChargeColor(playerMovement.currentDashCount-1,color,1)
 
         _hud.UpdateHealthBar(playerVariables.health / playerVariables.maxHealth)
@@ -94,7 +147,7 @@ class WrenHUD {
     
 
         _hud.SetSoulsIndicatorOpacity(_soulIndicatorOpacityTween.GetValue())
-    }
+    }   
     
     IncrementWaveCounter(CurrentWave){
         _hud.SetWaveCounterText(CurrentWave+1)
