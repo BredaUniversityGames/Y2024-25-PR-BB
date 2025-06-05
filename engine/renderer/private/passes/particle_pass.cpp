@@ -59,8 +59,11 @@ ParticlePass::~ParticlePass()
     resources->BufferResourceManager().Destroy(_emittersBuffer);
     resources->BufferResourceManager().Destroy(_vertexBuffer);
     resources->BufferResourceManager().Destroy(_indexBuffer);
-    util::vmaDestroyBuffer(vkContext->MemoryAllocator(), _emitterStagingBuffer, _emitterStagingBufferAllocation);
-    util::vmaDestroyBuffer(vkContext->MemoryAllocator(), _localEmitterStagingBuffer, _localEmitterStagingBufferAllocation);
+    for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
+    {
+        util::vmaDestroyBuffer(vkContext->MemoryAllocator(), _emitterStagingBuffer[i], _emitterStagingBufferAllocation[i]);
+        util::vmaDestroyBuffer(vkContext->MemoryAllocator(), _localEmitterStagingBuffer[i], _localEmitterStagingBufferAllocation[i]);
+    }
 
     vkContext->Device().destroy(_localEmittersDescriptorSetLayout);
     vkContext->Device().destroy(_particlesBuffersDescriptorSetLayout);
@@ -73,7 +76,7 @@ void ParticlePass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t curr
 {
     TracyVkZone(scene.tracyContext, commandBuffer, "Particle Pass");
 
-    UpdateEmitters(commandBuffer);
+    UpdateEmitters(commandBuffer, currentFrame);
 
     RecordKickOff(commandBuffer);
 
@@ -258,7 +261,7 @@ void ParticlePass::RecordRenderIndexedIndirect(vk::CommandBuffer commandBuffer, 
     util::EndLabel(commandBuffer, vkContext->Dldi());
 }
 
-void ParticlePass::UpdateEmitters(vk::CommandBuffer commandBuffer)
+void ParticlePass::UpdateEmitters(vk::CommandBuffer commandBuffer, uint32_t currentFrame)
 {
     auto vkContext { _context->VulkanContext() };
     auto resources { _context->Resources() };
@@ -329,11 +332,11 @@ void ParticlePass::UpdateEmitters(vk::CommandBuffer commandBuffer)
         vk::DeviceSize bufferSize = glm::min(static_cast<uint32_t>(_localEmitters.size()), MAX_EMITTERS) * sizeof(LocalEmitter);
 
         // copy data to staging buffer
-        vmaCopyMemoryToAllocation(vkContext->MemoryAllocator(), _localEmitters.data(), _localEmitterStagingBufferAllocation, 0, bufferSize);
+        vmaCopyMemoryToAllocation(vkContext->MemoryAllocator(), _localEmitters.data(), _localEmitterStagingBufferAllocation[currentFrame], 0, bufferSize);
 
         // make sure staging buffer data is complete before copybuffer
         vk::BufferMemoryBarrier barrier {};
-        barrier.buffer = _localEmitterStagingBuffer;
+        barrier.buffer = _localEmitterStagingBuffer[currentFrame];
         barrier.size = bufferSize;
         barrier.offset = 0;
         barrier.srcAccessMask = vk::AccessFlagBits::eHostWrite;
@@ -341,7 +344,7 @@ void ParticlePass::UpdateEmitters(vk::CommandBuffer commandBuffer)
         commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eHost, vk::PipelineStageFlagBits::eTransfer, vk::DependencyFlags { 0 }, {}, barrier, {});
 
         // copy staging buffer to buffer
-        util::CopyBuffer(commandBuffer, _localEmitterStagingBuffer, resources->BufferResourceManager().Access(_localEmittersBuffer)->buffer, bufferSize);
+        util::CopyBuffer(commandBuffer, _localEmitterStagingBuffer[currentFrame], resources->BufferResourceManager().Access(_localEmittersBuffer)->buffer, bufferSize);
     }
 
     // copy over emitters
@@ -350,11 +353,11 @@ void ParticlePass::UpdateEmitters(vk::CommandBuffer commandBuffer)
         vk::DeviceSize bufferSize = glm::min(static_cast<uint32_t>(_emitters.size()), MAX_EMITTERS) * sizeof(Emitter);
 
         // copy data to staging buffer
-        vmaCopyMemoryToAllocation(vkContext->MemoryAllocator(), _emitters.data(), _emitterStagingBufferAllocation, 0, bufferSize);
+        vmaCopyMemoryToAllocation(vkContext->MemoryAllocator(), _emitters.data(), _emitterStagingBufferAllocation[currentFrame], 0, bufferSize);
 
         // make sure staging buffer data is complete before copybuffer
         vk::BufferMemoryBarrier barrier {};
-        barrier.buffer = _emitterStagingBuffer;
+        barrier.buffer = _emitterStagingBuffer[currentFrame];
         barrier.size = bufferSize;
         barrier.offset = 0;
         barrier.srcAccessMask = vk::AccessFlagBits::eHostWrite;
@@ -362,7 +365,7 @@ void ParticlePass::UpdateEmitters(vk::CommandBuffer commandBuffer)
         commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eHost, vk::PipelineStageFlagBits::eTransfer, vk::DependencyFlags { 0 }, {}, barrier, {});
 
         // copy staging buffer to buffer
-        util::CopyBuffer(commandBuffer, _emitterStagingBuffer, resources->BufferResourceManager().Access(_emittersBuffer)->buffer, bufferSize);
+        util::CopyBuffer(commandBuffer, _emitterStagingBuffer[currentFrame], resources->BufferResourceManager().Access(_emittersBuffer)->buffer, bufferSize);
     }
 }
 
@@ -1037,7 +1040,10 @@ void ParticlePass::CreateBuffers()
 
     { // Local Emitter Staging buffer
         vk::DeviceSize bufferSize = MAX_EMITTERS * sizeof(LocalEmitter);
-        util::CreateBuffer(vkContext, bufferSize, vk::BufferUsageFlagBits::eTransferSrc, _localEmitterStagingBuffer, true, _localEmitterStagingBufferAllocation, VMA_MEMORY_USAGE_CPU_ONLY, "Local Emitter Staging buffer");
+        for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
+        {
+            util::CreateBuffer(vkContext, bufferSize, vk::BufferUsageFlagBits::eTransferSrc, _localEmitterStagingBuffer[i], true, _localEmitterStagingBufferAllocation[i], VMA_MEMORY_USAGE_CPU_ONLY, "Local Emitter Staging buffer");
+        }
     }
 
     cmdBuffer.Submit();
@@ -1055,6 +1061,9 @@ void ParticlePass::CreateBuffers()
 
     { // Emitter Staging buffer
         vk::DeviceSize bufferSize = MAX_EMITTERS * sizeof(Emitter);
-        util::CreateBuffer(vkContext, bufferSize, vk::BufferUsageFlagBits::eTransferSrc, _emitterStagingBuffer, true, _emitterStagingBufferAllocation, VMA_MEMORY_USAGE_CPU_ONLY, "Emitter Staging buffer");
+        for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
+        {
+            util::CreateBuffer(vkContext, bufferSize, vk::BufferUsageFlagBits::eTransferSrc, _emitterStagingBuffer[i], true, _emitterStagingBufferAllocation[i], VMA_MEMORY_USAGE_CPU_ONLY, "Emitter Staging buffer");
+        }
     }
 }
