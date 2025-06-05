@@ -140,10 +140,10 @@ class MeleeEnemy {
             // Spawn between 1 and 5 coins
             var coinCount = Random.RandomIndex(2, 5)
             for(i in 0...coinCount) {
-                coinManager.SpawnCoin(engine, body.GetTranslation() + Vec3.new(0, 1.0, 0))
+                coinManager.SpawnCoin(engine, body.GetPosition() + Vec3.new(0, 1.0, 0))
             }
             // Spawn a soul
-            soulManager.SpawnSoul(engine, body.GetTranslation(),SoulType.SMALL)
+            soulManager.SpawnSoul(engine, body.GetPosition(),SoulType.SMALL)
 
             _pointLight.intensity = 0
 
@@ -184,7 +184,7 @@ class MeleeEnemy {
 
     Update(playerPos, playerVariables, engine, dt, soulManager, coinManager, flashSystem) {
         var body = _rootEntity.GetRigidbodyComponent()
-        var pos = body.GetTranslation()
+        var pos = body.GetPosition()
         
         var animations = _meshEntity.GetAnimationControlComponent()
         var transparencyComponent = _meshEntity.GetTransparencyComponent()

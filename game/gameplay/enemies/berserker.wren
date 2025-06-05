@@ -129,11 +129,11 @@ class BerserkerEnemy {
             // Spawn between 1 and 5 coins
             var coinCount = Random.RandomIndex(7, 12)
             for(i in 0...coinCount) {
-                coinManager.SpawnCoin(engine, body.GetTranslation() + Vec3.new(0, 1.0, 0))
+                coinManager.SpawnCoin(engine, body.GetPosition() + Vec3.new(0, 1.0, 0))
             }
 
             // Spawn a soul
-            soulManager.SpawnSoul(engine, body.GetTranslation(),SoulType.BIG)
+            soulManager.SpawnSoul(engine, body.GetPosition(),SoulType.BIG)
 
             var eventInstance = engine.GetAudio().PlayEventOnce(_hurtSFX)
             var growlInstance = engine.GetAudio().PlayEventOnce(_growlSFX)
