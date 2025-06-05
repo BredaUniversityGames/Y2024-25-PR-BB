@@ -96,6 +96,11 @@ class WrenHUD {
         _enemyLocations = []   
         _rot = 0
         _hud = hud
+        
+        
+        for(i in 0..9){
+            _hud.SetDirectionalIndicatorRotationAndOpacity(i,0,0)               
+        }
     }
     
     IndicateDamage(location){
