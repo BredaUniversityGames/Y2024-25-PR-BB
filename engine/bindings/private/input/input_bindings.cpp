@@ -94,6 +94,6 @@ void BindInputAPI(wren::ForeignModule& module)
     bindings::BindEnum<KeyboardCode>(module, "Keycode");
 
     auto& bindingOriginVisual = module.klass<BindingOriginVisual>("BindingOriginVisual");
-    bindingOriginVisual.varReadonly<&BindingOriginVisual::bindingInputName>("BindingInputName");
-    bindingOriginVisual.varReadonly<&BindingOriginVisual::glyphImagePath>("GlyphImagePath");
+    bindingOriginVisual.varReadonly<&BindingOriginVisual::bindingInputName>("bindingInputName");
+    bindingOriginVisual.varReadonly<&BindingOriginVisual::glyphImagePath>("glyphImagePath");
 }
