@@ -266,7 +266,7 @@ std::shared_ptr<SettingsMenu> SettingsMenu::Create(
 
             toggle->state = gameModule.GetSettings().vsync;
             toggle->OnToggle(callback);
-            settings->fpsToggle = toggle;
+            settings->vsyncToggle = toggle;
         }
 
         // FRAME COUNTER
@@ -322,9 +322,6 @@ std::shared_ptr<SettingsMenu> SettingsMenu::Create(
         // settings->gammaSlider.lock()->navigationTargets.up = settings->aimAssistToggle;
         // settings->gammaSlider.lock()->navigationTargets.down = settings->vsyncToggle;
 
-        // settings->vsyncToggle.lock()->navigationTargets.up = settings->gammaSlider;
-        // settings->vsyncToggle.lock()->navigationTargets.down = settings->masterVolume;
-
         settings->masterVolume.lock()->navigationTargets.up = settings->aimAssistToggle;
         settings->masterVolume.lock()->navigationTargets.down = settings->musicVolume;
 
@@ -332,9 +329,12 @@ std::shared_ptr<SettingsMenu> SettingsMenu::Create(
         settings->musicVolume.lock()->navigationTargets.down = settings->sfxVolume;
 
         settings->sfxVolume.lock()->navigationTargets.up = settings->musicVolume;
-        settings->sfxVolume.lock()->navigationTargets.down = settings->fpsToggle;
+        settings->sfxVolume.lock()->navigationTargets.down = settings->vsyncToggle;
 
-        settings->fpsToggle.lock()->navigationTargets.up = settings->sfxVolume;
+        settings->vsyncToggle.lock()->navigationTargets.up = settings->sfxVolume;
+        settings->vsyncToggle.lock()->navigationTargets.down = settings->fpsToggle;
+
+        settings->fpsToggle.lock()->navigationTargets.up = settings->vsyncToggle;
         settings->fpsToggle.lock()->navigationTargets.down = settings->backButton;
 
         settings->backButton.lock()->navigationTargets.up = settings->fpsToggle;
