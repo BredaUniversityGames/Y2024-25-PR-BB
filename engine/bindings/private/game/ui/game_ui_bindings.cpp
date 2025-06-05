@@ -4,7 +4,6 @@
 #include "ui_image.hpp"
 #include "ui_progress_bar.hpp"
 #include "ui_text.hpp"
-
 namespace bindings
 {
 void ButtonOnPress(UIButton& self, wren::Variable fn) { self.OnPress(fn); }
@@ -102,6 +101,23 @@ void UpdateDashCharges(HUD& self, int charges)
                 locked->display_color = glm::vec4(1, 1, 1, 0.0);
             }
         }
+    }
+}
+
+void SetDirectionalIndicatorRotationAndOpacity(HUD& self, uint8_t index, float angle,float opacity)
+{
+    index = index %  HUD::DIRECTIONAL_INDICATOR_COUNT;
+    
+    if(auto locked = self.directionalIndicators[index].lock(); locked != nullptr)
+    {
+        glm::mat4 matrix = glm::mat4(1);
+        glm::vec3 translation = glm::vec3(locked->GetAbsoluteLocation() + locked->GetAbsoluteScale()/2.0f,0);
+        matrix = glm::translate(matrix, translation);
+        matrix = glm::rotate(matrix, angle, glm::vec3(0,0,1));
+        matrix = glm::translate(matrix, -translation - glm::vec3(0,200,0) );
+        locked->SetPreTransformationMatrix(matrix);
+
+        locked->display_color = glm::vec4(1,1,1,opacity);
     }
 }
 
@@ -283,7 +299,8 @@ void BindGameUI(wren::ForeignModule& module)
     hud.funcExt<bindings::GetPowerupTextColor>("GetPowerUpTextColor", "Get powerup text color");
     hud.funcExt<bindings::SetPowerupTimerText>("SetPowerUpTimerText", "Set powerup timer text");
     hud.funcExt<bindings::SetPowerupTimerTextColor>("SetPowerUpTimerTextColor", "Set powerup timer text color");
-
+    hud.funcExt<bindings::SetDirectionalIndicatorRotationAndOpacity>("SetDirectionalIndicatorRotationAndOpacity");
+    
     auto& gameOver
         = module.klass<GameOverMenu, Canvas>("GameOverMenu");
 
