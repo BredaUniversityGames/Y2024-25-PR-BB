@@ -53,7 +53,7 @@ class Main {
         __timer = 0
 
         // Load Map
-        engine.LoadModel("assets/models/graveyard_level.glb", false)
+        engine.LoadModel("assets/models/graveyard_level_no_landscape.glb", false)
         engine.LoadCollisions("assets/models/graveyard_collisions.glb")
 
         engine.PreloadModel("assets/models/Skeleton.glb")
@@ -489,7 +489,7 @@ class Main {
 
         __soulManager.Update(engine, __playerVariables,__flashSystem, dt)
         __coinManager.Update(engine, __playerVariables,__flashSystem, dt)
-        __waveSystem.Update(engine, __player, __enemyList, dt,__playerVariables)
+        //__waveSystem.Update(engine, __player, __enemyList, dt,__playerVariables)
 
         __stationManager.Update(engine, __playerVariables, dt)
         __flashSystem.Update(engine, dt)
