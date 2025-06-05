@@ -1,4 +1,4 @@
-import "engine_api.wren" for Engine, ECS, Entity, Vec3, Vec2, Math, AnimationControlComponent, TransformComponent, Input, SpawnEmitterFlagBits, EmitterPresetID
+import "engine_api.wren" for Engine, ECS, Entity, Vec3, Vec2, Math, AnimationControlComponent, TransformComponent, Input, SpawnEmitterFlagBits, EmitterPresetID, PhysicsObjectLayer
 import "gameplay/player.wren" for PlayerVariables
 import "gameplay/flash_system.wren" for FlashSystem
 
@@ -20,6 +20,18 @@ class Soul {
 
         var transform = _rootEntity.AddTransformComponent()
         transform.translation = spawnPosition
+        _targetPosition = spawnPosition
+
+        var rayHitInfo = engine.GetPhysics().ShootRay(spawnPosition, Vec3.new(0, -1.0, 0), 100)
+        if(!rayHitInfo.isEmpty) {
+            for (rayHit in rayHitInfo) {
+                var hitEntity = rayHit.GetEntity(engine.GetECS())
+                if(hitEntity.GetRigidbodyComponent().GetLayer() == PhysicsObjectLayer.eSTATIC()) {
+                    _targetPosition = rayHit.position + Vec3.new(0, 1.0, 0)
+                    break
+                }
+            }
+        }
 
         _lightEntity = engine.GetECS().NewEntity()
         _lightEntity.AddNameComponent().name = "Soul Light"
@@ -64,6 +76,17 @@ class Soul {
 
         if(distance < _maxRange){
             _velocity = (playerPos - soulPos).normalize()
+
+            var rayHitInfo = engine.GetPhysics().ShootRay(soulTransform.GetWorldTranslation(), Vec3.new(0, -1.0, 0), 100)
+            if(!rayHitInfo.isEmpty) {
+                for (rayHit in rayHitInfo) {
+                    var hitEntity = rayHit.GetEntity(engine.GetECS())
+                    if(hitEntity.GetRigidbodyComponent().GetLayer() == PhysicsObjectLayer.eSTATIC()) {
+                        _targetPosition = rayHit.position + Vec3.new(0, 1.0, 0)
+                        break
+                    }
+                }
+            }
 
             var arcHeight = distance * 0.25
             _velocity = _velocity.mulScalar(5.0) + Vec3.new(0.0, arcHeight, 0.0)
@@ -110,8 +133,9 @@ class Soul {
 
             }
         }else {
+            var fall = Math.MixFloat(soulTransform.translation.y, _targetPosition.y, dt * 0.001)
             var bounce = Math.Sin(_time * 0.003) * 0.0008 *dt
-            soulTransform.translation = Vec3.new(soulTransform.translation.x,soulTransform.translation.y + bounce,soulTransform.translation.z)  // Make the soul bounce up and down
+            soulTransform.translation = Vec3.new(soulTransform.translation.x,fall + bounce,soulTransform.translation.z)  // Make the soul bounce up and down
         }
     }
 
