@@ -39,7 +39,7 @@
             "filterRadius": 0.004999999888241291
         },
         "tonemapping": {
-            "cereal_class_version": 8,
+            "cereal_class_version": 9,
             "tonemappingFunction": 2,
             "exposure": 1.0470000505447388,
             "enableVignette": true,
@@ -130,7 +130,13 @@
                 "z": 0.01578565500676632,
                 "w": 1.0
             },
-            "cloudsSpeed": -0.10000000149011612
+            "cloudsSpeed": -0.10000000149011612,
+            "waterColor": {
+                "x": 0.014497019350528717,
+                "y": 0.4663212299346924,
+                "z": 0.12218573689460755,
+                "w": 6.550000190734863
+            }
         },
         "lighting": {
             "cereal_class_version": 0,
