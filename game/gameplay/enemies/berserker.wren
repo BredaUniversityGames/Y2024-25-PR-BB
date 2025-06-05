@@ -123,6 +123,8 @@ class BerserkerEnemy {
             body.SetVelocity(Vec3.new(0,0,0))
             body.SetStatic()
 
+            _pointLight.intensity = 0
+
             // Spawn between 1 and 5 coins
             var coinCount = Random.RandomIndex(7, 12)
             for(i in 0...coinCount) {
