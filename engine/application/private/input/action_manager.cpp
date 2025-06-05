@@ -275,29 +275,29 @@ std::vector<BindingOriginVisual> ActionManager::GetAnalogActionGamepadOriginVisu
     return visuals;
 }
 
-template <class... Ts>
-struct VisitorOverloads : Ts...
+struct DigitalActionVisitor
 {
-    using Ts::operator()...;
+    std::vector<BindingOriginVisual>& out;
+
+    void operator()(KeyboardCode code)
+    {
+        BindingOriginVisual& visual = out.emplace_back();
+        visual.bindingInputName = KEYBOARD_KEY_NAMES.at(code) + " Key";
+    }
+
+    void operator()(MouseButton code)
+    {
+        BindingOriginVisual& visual = out.emplace_back();
+        visual.bindingInputName = MOUSE_BUTTON_NAMES.at(code) + " Button";
+    }
+
+    void operator()(MAYBE_UNUSED GamepadButton notUsed) { }
 };
 
 std::vector<BindingOriginVisual> ActionManager::GetDigitalMouseAndKeyboardOriginVisual(const DigitalAction& action) const
 {
     std::vector<BindingOriginVisual> visuals {};
-
-    const auto visitor = VisitorOverloads {
-        [](GamepadButton) {}, // We don't do anything for the gamepad, just ignore it as there is another function that takes care of getting gamepad visuals
-        [&](KeyboardCode keyboard)
-        {
-            BindingOriginVisual& visual = visuals.emplace_back();
-            visual.bindingInputName = KEYBOARD_KEY_NAMES.at(keyboard) + " Key";
-        },
-        [&](MouseButton mouse)
-        {
-            BindingOriginVisual& visual = visuals.emplace_back();
-            visual.bindingInputName = MOUSE_BUTTON_NAMES.at(mouse) + " Button";
-        },
-    };
+    DigitalActionVisitor visitor { visuals };
 
     for (const DigitalInputBinding& input : action.inputs)
     {
@@ -307,23 +307,29 @@ std::vector<BindingOriginVisual> ActionManager::GetDigitalMouseAndKeyboardOrigin
     return visuals;
 }
 
+struct AnalogActionVisitor
+{
+    std::vector<BindingOriginVisual>& out;
+
+    void operator()(KeyboardAnalog code)
+    {
+        BindingOriginVisual& visual = out.emplace_back();
+        visual.bindingInputName = KEYBOARD_KEY_NAMES.at(code.up) + KEYBOARD_KEY_NAMES.at(code.left) + KEYBOARD_KEY_NAMES.at(code.down) + KEYBOARD_KEY_NAMES.at(code.right);
+    }
+
+    void operator()(MAYBE_UNUSED MouseAnalog notUsed)
+    {
+        BindingOriginVisual& visual = out.emplace_back();
+        visual.bindingInputName = "Mouse";
+    }
+
+    void operator()(MAYBE_UNUSED GamepadAnalog notUsed) { }
+};
+
 std::vector<BindingOriginVisual> ActionManager::GetAnalogMouseAndKeyboardOriginVisual(const AnalogAction& action) const
 {
     std::vector<BindingOriginVisual> visuals {};
-
-    const auto visitor = VisitorOverloads {
-        [](GamepadAnalog) {}, // We don't do anything for the gamepad, just ignore it as there is another function that takes care of getting gamepad visuals
-        [&](KeyboardAnalog keyboard)
-        {
-            BindingOriginVisual& visual = visuals.emplace_back();
-            visual.bindingInputName = KEYBOARD_KEY_NAMES.at(keyboard.up) + KEYBOARD_KEY_NAMES.at(keyboard.left) + KEYBOARD_KEY_NAMES.at(keyboard.down) + KEYBOARD_KEY_NAMES.at(keyboard.right);
-        },
-        [&](MouseAnalog)
-        {
-            BindingOriginVisual& visual = visuals.emplace_back();
-            visual.bindingInputName = "Mouse";
-        },
-    };
+    AnalogActionVisitor visitor { visuals };
 
     for (const AnalogInputBinding& input : action.inputs)
     {
