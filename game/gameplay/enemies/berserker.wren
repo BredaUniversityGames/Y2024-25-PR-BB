@@ -289,6 +289,11 @@ class BerserkerEnemy {
                     animations.Play("Walk", 0.528, true, 0.5, true)
                 }
             }
+            
+            _noiseOffset = _noiseOffset + dt * 0.001 * __flickerSpeed
+            var noise = __perlin.Noise1D(_noiseOffset)
+            var flickerIntensity = __baseIntensity + ((noise - 0.5) * __flickerRange)
+            _pointLight.intensity = flickerIntensity
         } else {
             _deathTimer = _deathTimer - dt
             
@@ -310,11 +315,6 @@ class BerserkerEnemy {
                 }
             }
         }
-
-        _noiseOffset = _noiseOffset + dt * 0.001 * __flickerSpeed
-        var noise = __perlin.Noise1D(_noiseOffset)
-        var flickerIntensity = __baseIntensity + ((noise - 0.5) * __flickerRange)
-        _pointLight.intensity = flickerIntensity
     }
 
     DoPathfinding(playerPos, engine, dt) {

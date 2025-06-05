@@ -402,7 +402,7 @@ class PlayerMovement{
 
             hasDashed = true
 
-            _playerVariables.invincibilityTime = 300
+            _playerVariables.invincibilityTime = 200
 
             flashSystem.Flash(Vec3.new(0.8, 0.8, 0.8), 0.2)
 

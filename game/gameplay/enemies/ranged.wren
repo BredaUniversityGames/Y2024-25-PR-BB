@@ -21,7 +21,7 @@ class RangedEnemy {
         _health = 5
         _deathTimerMax = 1500
         _changeDirectionTimerMax = 2000
-        _hitCount = 0
+        _disruptHitCount = 0
         _maxHeight = 34.0
         _minHeight = 16.0
 
@@ -162,9 +162,9 @@ class RangedEnemy {
             _hasTakenDamage = true
             _hasDashedFromDamage = false
 
-            _hitCount = _hitCount + 1
-            if (_hitCount > 2) {
-                _hitCount = 0
+            _disruptHitCount = _disruptHitCount + 1
+            if (_disruptHitCount > 2) {
+                _disruptHitCount = 0
 
                 if(_chargeSoundEventInstance) {
                     engine.GetAudio().StopEvent(_chargeSoundEventInstance)
@@ -337,7 +337,7 @@ class RangedEnemy {
                     _movingState = false
                     _attackTime = _attackMaxTime
                     _evaluateState = false
-                    _hitCount = 0
+                    _disruptHitCount = 0
                     
                     //play charge sound
                     _chargeSoundEventInstance = engine.GetAudio().PlayEventOnce(_chargeSFX)
