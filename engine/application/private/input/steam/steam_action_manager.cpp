@@ -41,10 +41,7 @@ void SteamActionManager::SetGameActions(const GameActions& gameActions)
     _currentControllerState.clear();
     _prevControllerState.clear();
 
-    if (_inputDeviceManager.IsGamepadAvailable())
-    {
-        CacheSteamInputHandles();
-    }
+    CacheSteamInputHandles();
 
     if (!_gameActions.empty())
     {
@@ -207,6 +204,11 @@ void SteamActionManager::UpdateSteamControllerInputState()
 
 void SteamActionManager::CacheSteamInputHandles()
 {
+    if (!_inputDeviceManager.IsGamepadAvailable())
+    {
+        return;
+    }
+
     _steamGameActionsCache.resize(_gameActions.size());
 
     for (uint32_t i = 0; i < _gameActions.size(); ++i)
