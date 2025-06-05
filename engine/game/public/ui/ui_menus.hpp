@@ -39,17 +39,15 @@ public:
     std::weak_ptr<UITextElement> waveCounterText;
     std::weak_ptr<UITextElement> waveCounterbgText;
 
-    
     static constexpr size_t DIRECTIONAL_INDICATOR_COUNT = 10;
     std::array<std::weak_ptr<UIImage>, DIRECTIONAL_INDICATOR_COUNT> directionalIndicators;
-    
+
     std::weak_ptr<UIImage> hitmarker;
     std::weak_ptr<UIImage> hitmarkerCrit;
     std::weak_ptr<UIImage> soulIndicator;
     std::weak_ptr<UITextElement> ultReadyText;
 
     std::array<std::weak_ptr<UIImage>, MAX_DASH_CHARGE_COUNT> dashCharges;
-
 };
 
 class MainMenu : public Canvas
@@ -239,6 +237,7 @@ public:
     std::weak_ptr<UIToggle> fpsToggle {};
     std::weak_ptr<UISlider> sensitivitySlider {};
     std::weak_ptr<UISlider> fovSlider {};
+    std::weak_ptr<UITextElement> fovText {};
     std::weak_ptr<UIToggle> aimAssistToggle {};
     std::weak_ptr<UISlider> masterVolume {};
     std::weak_ptr<UISlider> musicVolume {};
