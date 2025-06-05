@@ -8,7 +8,6 @@ SteamInputDeviceManager::SteamInputDeviceManager()
     // Update Steam Input to make sure we have the latest controller connectivity.
     // Otherwise, on the first frame, Steam Input doesn't have any data about controller connectivity.
     SteamInput()->RunFrame();
-
     UpdateControllerConnectivity();
 }
 
@@ -65,11 +64,13 @@ void SteamInputDeviceManager::UpdateControllerConnectivity()
     if (numActive == 0)
     {
         _inputHandle = 0;
+        bblog::warn("No controller found!");
         return;
     }
 
     if (_inputHandle != handles[0])
     {
         _inputHandle = handles[0];
+        bblog::warn("Controller found!");
     }
 }
