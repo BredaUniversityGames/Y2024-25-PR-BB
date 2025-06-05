@@ -112,7 +112,7 @@ class WaveSystem {
 
         // Spawn skeletons
         for (v in 0...wave.Spawns[EnemyType.Skeleton]) {
-            var enemy = enemyList.add(MeleeEnemy.new(engine, this.GetSpawnLocation() + Vec3.new(0, 1, 0)))
+            var enemy = enemyList.add(MeleeEnemy.new(engine, this.GetSpawnLocation() + Vec3.new(0, 1, 0), _currentWave))
             enemy.FindNewPath(engine)
         }
 
@@ -124,7 +124,7 @@ class WaveSystem {
 
         // Spawn berserkers
         for (v in 0...wave.Spawns[EnemyType.Berserker]) {
-            var enemy = enemyList.add(BerserkerEnemy.new(engine, this.GetSpawnLocation() + Vec3.new(0, 3, 0)))
+            var enemy = enemyList.add(BerserkerEnemy.new(engine, this.GetSpawnLocation() + Vec3.new(0, 3, 0), _currentWave))
             enemy.FindNewPath(engine)
         }
     }
