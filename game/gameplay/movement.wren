@@ -30,7 +30,7 @@ class PlayerMovement{
         _cameraYaw = 0
 
         dashWishPosition = Vec3.new(0.0,0.0,0.0)
-        dashForce = 6.0
+        dashForce = 12.0
         currentDashCount = 3
         currentDashRefillTime = 3000.0
 
@@ -433,8 +433,8 @@ class PlayerMovement{
 
             }
 
-            var start = translation + forward * Vec3.new(0.1, 0.1, 0.1) //- right * Vec3.new(0.09, 0.09, 0.09) //- up * Vec3.new(0.12, 0.12, 0.12)
-            var end = translation + forward * Vec3.new(dashForce, dashForce,dashForce)
+            var start = translation + moveInputDir * Vec3.new(0.1, 0.1, 0.1) //- right * Vec3.new(0.09, 0.09, 0.09) //- up * Vec3.new(0.12, 0.12, 0.12)
+            var end = translation + moveInputDir * Vec3.new(dashForce, dashForce,dashForce)
             // Calculate the raw dash vector
             var dashVector = end - start
             var dashLength = dashVector.length()
@@ -479,8 +479,8 @@ class PlayerMovement{
             var velocity = playerBody.GetVelocity()
             var currentSpeed = velocity.length()
 
-            if( currentSpeed > 50.0){
-                var clampedVelocity = velocity.normalize().mulScalar(50.0)
+            if( currentSpeed > 80.0){
+                var clampedVelocity = velocity.normalize().mulScalar(80.0)
                 playerBody.SetVelocity(clampedVelocity)
             }
 

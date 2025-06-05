@@ -136,9 +136,13 @@ std::shared_ptr<SettingsMenu> SettingsMenu::Create(
             auto text = node->AddChild<UITextElement>(font, "FOV", glm::vec2(), textSize);
             text->anchorPoint = UIElement::AnchorPoint::eTopLeft;
 
+            auto fovText = node->AddChild<UITextElement>(font, "100", glm::vec2(500, 0), textSize);
+            fovText->anchorPoint = UIElement::AnchorPoint::eTopLeft;
+
             auto slider = node->AddChild<UISlider>(sliderStyle, toggleOffset, sliderSize);
             slider->anchorPoint = UIElement::AnchorPoint::eTopRight;
             settings->fovSlider = slider;
+            settings->fovText = fovText;
 
             auto callback = [&gameModule](float val)
             { gameModule.GetSettings().fov = val; };
@@ -334,9 +338,12 @@ std::shared_ptr<SettingsMenu> SettingsMenu::Create(
     // UI Nav
     {
         settings->sensitivitySlider.lock()->navigationTargets.up = settings->backButton;
-        settings->sensitivitySlider.lock()->navigationTargets.down = settings->aimAssistToggle;
+        settings->sensitivitySlider.lock()->navigationTargets.down = settings->fovSlider;
 
-        settings->aimAssistToggle.lock()->navigationTargets.up = settings->sensitivitySlider;
+        settings->fovSlider.lock()->navigationTargets.up = settings->sensitivitySlider;
+        settings->fovSlider.lock()->navigationTargets.down = settings->aimAssistToggle;
+
+        settings->aimAssistToggle.lock()->navigationTargets.up = settings->fovSlider;
         settings->aimAssistToggle.lock()->navigationTargets.down = settings->masterVolume;
 
         // settings->gammaSlider.lock()->navigationTargets.up = settings->aimAssistToggle;
