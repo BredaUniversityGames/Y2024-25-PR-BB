@@ -94,6 +94,7 @@ const GameActions GAME_ACTIONS {
                 .inputs = {
                     GamepadAnalog::eAXIS_LEFT,
                     GamepadAnalog::eDPAD,
+                    MouseAnalog {},
                 },
             },
         },
