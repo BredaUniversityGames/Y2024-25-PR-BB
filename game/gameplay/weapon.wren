@@ -1,4 +1,4 @@
-import "engine_api.wren" for Engine, Game, ECS, Entity, Vec3, Vec2, Math, AnimationControlComponent, TransformComponent, Input, SpawnEmitterFlagBits, EmitterPresetID, PhysicsObjectLayer
+import "engine_api.wren" for Engine, Game, ECS, Entity, Vec3, Vec2, Math, AnimationControlComponent, TransformComponent, Input, SpawnEmitterFlagBits, PhysicsObjectLayer
 import "camera.wren" for CameraVariables
 import "player.wren" for PlayerVariables, HitmarkerState
 import "station.wren" for PowerUpType, Station, StationManager
@@ -100,7 +100,7 @@ class Pistol {
                 var lifetime = entity.AddLifetimeComponent()
                 lifetime.lifetime = 175.0
                 var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
-                engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eBullets(),emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.1, 7.5, 0.1) + velocity.mulScalar(1.01))
+                engine.GetParticles().SpawnEmitter(entity, "Bullets",emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.1, 7.5, 0.1) + velocity.mulScalar(1.01))
             }else{
                 var eventInstance = engine.GetAudio().PlayEventOnce(_inspectSFX)
                 audioEmitter.AddEvent(eventInstance)
@@ -287,7 +287,7 @@ class Pistol {
                 lifetime.lifetime = 400.0
 
                 var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
-                engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eImpact(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), normal.mulScalar(0.005) + Vec3.new(0.0, 0.4, 0.0))
+                engine.GetParticles().SpawnEmitter(entity, "Impact", emitterFlags, Vec3.new(0.0, 0.0, 0.0), normal.mulScalar(0.005) + Vec3.new(0.0, 0.4, 0.0))
             }
 
             var gunStart = _barrelEndEntity.GetTransformComponent().GetWorldTranslation()
@@ -543,7 +543,7 @@ class Shotgun {
                     var lifetime = entity.AddLifetimeComponent()
                     lifetime.lifetime = 200.0
                     var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
-                    engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eShotgunShoot(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), newDirection * Vec3.new(2, 2, 2))
+                    engine.GetParticles().SpawnEmitter(entity, "ShotgunShoot", emitterFlags, Vec3.new(0.0, 0.0, 0.0), newDirection * Vec3.new(2, 2, 2))
                     j = j + 1.0
                 }
 

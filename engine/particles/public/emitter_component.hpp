@@ -23,7 +23,7 @@ struct ParticleEmitterComponent
     float maxEmitDelay = 1.0f;
     float currentEmitDelay = 0.0f;
     glm::vec3 positionOffset = glm::vec3(0.0f);
-    EmitterPresetID presetID;
+    std::string presetName;
     Emitter emitter;
     std::list<ParticleBurst> bursts = {};
     void Inspect();

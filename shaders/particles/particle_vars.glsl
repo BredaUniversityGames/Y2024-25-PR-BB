@@ -1,5 +1,5 @@
 const uint MAX_PARTICLES = 1024 * 64;
-const uint MAX_EMITTERS = 256;
+const uint MAX_EMITTERS = 512;
 
 // particle rendering flags
 const uint UNLIT = 1 << 0;

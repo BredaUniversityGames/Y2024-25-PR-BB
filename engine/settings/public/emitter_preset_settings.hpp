@@ -30,19 +30,18 @@ struct EmitterPreset
     float frameRate = 0.0f;
     glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f }; // color (3) + color multiplier (1)
     std::list<ParticleBurst> bursts = {};
-    std::string name = "Emitter Preset";
     std::string imageName = "null";
 };
 
 struct EmitterPresetSettings
 {
-    std::vector<EmitterPreset> emitterPresets;
+    std::unordered_map<std::string, EmitterPreset> emitterPresets;
 };
 
 VISITABLE_STRUCT(ParticleBurst, startTime, count, cycles, maxInterval, currentInterval, loop);
 CLASS_SERIALIZE_VERSION(ParticleBurst, 0);
 
-VISITABLE_STRUCT(EmitterPreset, size, mass, rotationVelocity, maxLife, emitDelay, count, materialIndex, spawnRandomness, flags, velocityRandomness, startingVelocity, spriteDimensions, frameCount, frameRate, color, bursts, name, imageName);
+VISITABLE_STRUCT(EmitterPreset, size, mass, rotationVelocity, maxLife, emitDelay, count, materialIndex, spawnRandomness, flags, velocityRandomness, startingVelocity, spriteDimensions, frameCount, frameRate, color, bursts, imageName);
 CLASS_SERIALIZE_VERSION(EmitterPreset, 0);
 
 VISITABLE_STRUCT(EmitterPresetSettings, emitterPresets);
