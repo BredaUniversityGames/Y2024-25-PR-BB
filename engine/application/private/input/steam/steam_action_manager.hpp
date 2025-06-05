@@ -14,12 +14,6 @@ public:
     void SetGameActions(const GameActions& gameActions) final;
     void SetActiveActionSet(std::string_view actionSetName) final;
 
-    // Returns information to be visually displayed for all gamepad bindings for the given digital action.
-    NO_DISCARD std::vector<GamepadOriginVisual> GetDigitalActionGamepadOriginVisual(std::string_view actionName) const final;
-
-    // Returns information to be visually displayed for all gamepad bindings for the given analog action.
-    NO_DISCARD std::vector<GamepadOriginVisual> GetAnalogActionGamepadOriginVisual(std::string_view actionName) const final;
-
 private:
     const SteamInputDeviceManager& _steamInputDeviceManager;
 
@@ -41,5 +35,7 @@ private:
 
     NO_DISCARD DigitalActionType CheckInput(std::string_view actionName, MAYBE_UNUSED GamepadButton button) const;
     NO_DISCARD glm::vec2 CheckInput(std::string_view actionName, MAYBE_UNUSED GamepadAnalog gamepadAnalog) const final;
+    NO_DISCARD std::vector<BindingOriginVisual> GetDigitalActionGamepadOriginVisual(const DigitalAction& action) const final;
+    NO_DISCARD std::vector<BindingOriginVisual> GetAnalogActionGamepadOriginVisual(const AnalogAction& action) const final;
     void UpdateSteamControllerInputState();
 };
