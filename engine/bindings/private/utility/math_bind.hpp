@@ -179,11 +179,10 @@ public:
 
     static float AngleAxis2D(glm::vec2 from, glm::vec2 target)
     {
-        // Rotation from two unit vectors
-        float cos = from.x * target.x + from.y * target.y;
-        float sin = from.x * target.y + from.y * target.x;
+        float cos_theta = from.x * target.x + from.y * target.y;
+        float sin_theta = from.x * target.y - from.y * target.x; 
 
-        return std::atan2(sin, cos);
+        return std::atan2(sin_theta, cos_theta);
     }
 
     static glm::quat RotateTowards(const glm::quat& from, const glm::quat& to, float maxAngle)
