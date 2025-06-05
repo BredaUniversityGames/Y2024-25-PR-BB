@@ -310,6 +310,7 @@ class Main {
 
         // Skip everything if paused
         if (__pauseEnabled || !__alive) {
+            __camera.GetCameraComponent().fov = Math.Radians(50 + 100 * engine.GetGame().GetSettings().fov)
             return
         }
 
