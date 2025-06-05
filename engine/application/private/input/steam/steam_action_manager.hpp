@@ -12,7 +12,6 @@ public:
 
     void Update() final;
     void SetGameActions(const GameActions& gameActions) final;
-    void SetActiveActionSet(std::string_view actionSetName) final;
 
     // Returns information to be visually displayed for all gamepad bindings for the given digital action.
     NO_DISCARD std::vector<GamepadOriginVisual> GetDigitalActionGamepadOriginVisual(std::string_view actionName) const final;

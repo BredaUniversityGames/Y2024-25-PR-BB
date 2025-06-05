@@ -25,6 +25,7 @@ void SteamActionManager::Update()
     }
 
     UpdateSteamControllerInputState();
+    SteamInput()->ActivateActionSet(_steamInputDeviceManager.GetGamepadHandle(), _steamGameActionsCache[_activeActionSet].actionSetHandle);
 }
 
 void SteamActionManager::SetGameActions(const GameActions& gameActions)
@@ -58,14 +59,6 @@ void SteamActionManager::SetGameActions(const GameActions& gameActions)
     {
         SetActiveActionSet(_gameActions[0].name);
     }
-}
-
-void SteamActionManager::SetActiveActionSet(std::string_view actionSetName)
-{
-    ActionManager::SetActiveActionSet(actionSetName);
-
-    SteamInput()->ActivateActionSet(_steamInputDeviceManager.GetGamepadHandle(), _steamGameActionsCache[_activeActionSet].actionSetHandle);
-    SteamInput()->RunFrame(); // Make sure a set is immediately used
 }
 
 std::vector<GamepadOriginVisual> SteamActionManager::GetDigitalActionGamepadOriginVisual(std::string_view actionName) const
