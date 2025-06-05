@@ -72,6 +72,7 @@ private:
     std::weak_ptr<SettingsMenu> _settingsMenu;
     std::weak_ptr<ControlsMenu> _controlsMenu;
     std::weak_ptr<FrameCounter> _framerateCounter {};
+    std::weak_ptr<CreditsMenu> _creditsMenu {};
 
     // Scene
 

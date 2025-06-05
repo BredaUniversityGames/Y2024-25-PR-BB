@@ -27,6 +27,7 @@ class RangedEnemy {
         _shootSFX = "event:/SFX/EyeLaserBlast" 
         _chargeSFX = "event:/SFX/EyeLaserCharge"
         _hitSFX = "event:/SFX/EyeHit"
+        _spawnSFX = "event:/SFX/EnemySpawn"
 
         var enemyModel = "assets/models/eye.glb"
         var enemySize = 3.25
@@ -38,6 +39,9 @@ class RangedEnemy {
         _rootEntity.AddNameComponent().name = "Enemy"
         _rootEntity.AddEnemyTag()
         _rootEntity.AddAudioEmitterComponent()
+        
+        _delaySpawnSFX = Random.RandomFloatRange(0, 1500)
+        _playedSpawnSFX = false
 
         var transform = _rootEntity.AddTransformComponent()
         transform.translation = spawnPosition
@@ -181,6 +185,13 @@ class RangedEnemy {
         if (false) {
             engine.DrawDebugLine(pos, Vec3.new(pos.x, _maxHeight, pos.z))
             engine.DrawDebugLine(pos, Vec3.new(pos.x, _minHeight, pos.z))
+        }
+
+        _delaySpawnSFX = Math.Max(_delaySpawnSFX - dt, 0)
+        if (!_playedSpawnSFX && _delaySpawnSFX <= 0) {
+            var audioEmitter = _rootEntity.GetAudioEmitterComponent()
+            audioEmitter.AddEvent(engine.GetAudio().PlayEventOnce(_spawnSFX))
+            _playedSpawnSFX = true
         }
 
         if (_isAlive) {
