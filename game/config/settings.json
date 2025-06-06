@@ -1,148 +1,148 @@
 {
-    "data": {
-        "cereal_class_version": 1,
-        "fog": {
-            "cereal_class_version": 1,
-            "color": {
-                "x": 0.16190475225448609,
-                "y": 0.060576602816581729,
-                "z": 0.02004534937441349
-            },
-            "density": 0.004999999888241291
+  "data": {
+    "cereal_class_version": 1,
+    "fog": {
+      "cereal_class_version": 1,
+      "color": {
+        "x": 0.16190475225448609,
+        "y": 0.060576602816581729,
+        "z": 0.02004534937441349
+      },
+      "density": 0.004999999888241291
+    },
+    "ssao": {
+      "cereal_class_version": 0,
+      "strength": 16.0,
+      "bias": 0.009999999776482582,
+      "radius": 0.20000000298023225,
+      "minDistance": 1.0,
+      "maxDistance": 3.0
+    },
+    "fxaa": {
+      "cereal_class_version": 0,
+      "enableFXAA": false,
+      "edgeThresholdMin": 0.031199999153614045,
+      "edgeThresholdMax": 0.125,
+      "subPixelQuality": 1.2000000476837159,
+      "iterations": 12
+    },
+    "bloom": {
+      "cereal_class_version": 1,
+      "colorWeights": {
+        "x": 0.2125999927520752,
+        "y": 0.7152000069618225,
+        "z": 0.0722000002861023
+      },
+      "strength": 0.5,
+      "gradientStrength": 0.05000000074505806,
+      "maxBrightnessExtraction": 5.0,
+      "filterRadius": 0.004999999888241291
+    },
+    "tonemapping": {
+      "cereal_class_version": 9,
+      "tonemappingFunction": 2,
+      "exposure": 1.0470000505447388,
+      "enableVignette": true,
+      "vignetteIntensity": 0.04100000113248825,
+      "enableLensDistortion": false,
+      "lensDistortionIntensity": -0.03999999910593033,
+      "lensDistortionCubicIntensity": -0.23399999737739564,
+      "screenScale": 0.9879999756813049,
+      "enableToneAdjustments": true,
+      "brightness": 0.0,
+      "contrast": 1.6950000524520875,
+      "saturation": 1.0950000286102296,
+      "vibrance": 0.9049999713897705,
+      "hue": 0.0,
+      "enablePixelization": true,
+      "minPixelSize": 2.0,
+      "maxPixelSize": 4.0,
+      "pixelizationLevels": 20.0,
+      "pixelizationDepthBias": 400.0,
+      "enablePalette": true,
+      "ditherAmount": 0.15000000596046449,
+      "paletteAmount": 0.800000011920929,
+      "palette": [
+        {
+          "x": 0.10880827903747559,
+          "y": 0.06588554382324219,
+          "z": 0.00394641375169158,
+          "w": 1.0
         },
-        "ssao": {
-            "cereal_class_version": 0,
-            "strength": 16.0,
-            "bias": 0.009999999776482582,
-            "radius": 0.20000000298023225,
-            "minDistance": 1.0,
-            "maxDistance": 3.0
+        {
+          "x": 0.0,
+          "y": 0.04663211107254028,
+          "z": 0.02271200530230999,
+          "w": 1.0
         },
-        "fxaa": {
-            "cereal_class_version": 0,
-            "enableFXAA": false,
-            "edgeThresholdMin": 0.031199999153614045,
-            "edgeThresholdMax": 0.125,
-            "subPixelQuality": 1.2000000476837159,
-            "iterations": 12
+        {
+          "x": 0.2227979302406311,
+          "y": 0.048311058431863788,
+          "z": 0.04271255061030388,
+          "w": 1.0
         },
-        "bloom": {
-            "cereal_class_version": 1,
-            "colorWeights": {
-                "x": 0.2125999927520752,
-                "y": 0.7152000069618225,
-                "z": 0.0722000002861023
-            },
-            "strength": 0.5,
-            "gradientStrength": 0.05000000074505806,
-            "maxBrightnessExtraction": 5.0,
-            "filterRadius": 0.004999999888241291
+        {
+          "x": 0.1709844470024109,
+          "y": 0.07353217154741287,
+          "z": 0.07353217154741287,
+          "w": 1.0
         },
-        "tonemapping": {
-            "cereal_class_version": 9,
-            "tonemappingFunction": 2,
-            "exposure": 1.0470000505447388,
-            "enableVignette": true,
-            "vignetteIntensity": 0.04100000113248825,
-            "enableLensDistortion": false,
-            "lensDistortionIntensity": -0.03999999910593033,
-            "lensDistortionCubicIntensity": -0.23399999737739564,
-            "screenScale": 0.9879999756813049,
-            "enableToneAdjustments": true,
-            "brightness": 0.0,
-            "contrast": 1.6950000524520875,
-            "saturation": 1.0950000286102296,
-            "vibrance": 0.9049999713897705,
-            "hue": 0.0,
-            "enablePixelization": true,
-            "minPixelSize": 2.0,
-            "maxPixelSize": 4.0,
-            "pixelizationLevels": 20.0,
-            "pixelizationDepthBias": 400.0,
-            "enablePalette": true,
-            "ditherAmount": 0.15000000596046449,
-            "paletteAmount": 0.800000011920929,
-            "palette": [
-                {
-                    "x": 0.10880827903747559,
-                    "y": 0.06588554382324219,
-                    "z": 0.00394641375169158,
-                    "w": 1.0
-                },
-                {
-                    "x": 0.0,
-                    "y": 0.04663211107254028,
-                    "z": 0.02271200530230999,
-                    "w": 1.0
-                },
-                {
-                    "x": 0.2227979302406311,
-                    "y": 0.048311058431863788,
-                    "z": 0.04271255061030388,
-                    "w": 1.0
-                },
-                {
-                    "x": 0.1709844470024109,
-                    "y": 0.07353217154741287,
-                    "z": 0.07353217154741287,
-                    "w": 1.0
-                },
-                {
-                    "x": 0.07772022485733032,
-                    "y": 0.021342860534787179,
-                    "z": 0.021342860534787179,
-                    "w": 1.0
-                },
-                {
-                    "x": 0.3834196925163269,
-                    "y": 0.25937363505363467,
-                    "z": 0.15098391473293305,
-                    "w": 1.0
-                },
-                {
-                    "x": 0.1502590775489807,
-                    "y": 0.030363237485289575,
-                    "z": 0.030363237485289575,
-                    "w": 1.0
-                }
-            ],
-            "skyColor": {
-                "x": 0.19170981645584107,
-                "y": 0.05264570191502571,
-                "z": 0.05264570191502571,
-                "w": 1.0
-            },
-            "sunColor": {
-                "x": 0.14013804495334626,
-                "y": 0.6739493012428284,
-                "z": 0.9326424598693848,
-                "w": 1.0
-            },
-            "cloudsColor": {
-                "x": 0.07253885269165039,
-                "y": 0.03645734861493111,
-                "z": 0.03645734861493111,
-                "w": 1.0
-            },
-            "voidColor": {
-                "x": 0.10880827903747559,
-                "y": 0.0418127104640007,
-                "z": 0.01578565500676632,
-                "w": 1.0
-            },
-            "cloudsSpeed": -0.10000000149011612,
-            "waterColor": {
-                "x": 0.014497019350528717,
-                "y": 0.4663212299346924,
-                "z": 0.12218573689460755,
-                "w": 6.550000190734863
-            }
+        {
+          "x": 0.07772022485733032,
+          "y": 0.021342860534787179,
+          "z": 0.021342860534787179,
+          "w": 1.0
         },
-        "lighting": {
-            "cereal_class_version": 0,
-            "ambientStrength": 0.3499999940395355,
-            "ambientShadowStrength": 0.4399999976158142,
-            "decalNormalThreshold": 55.0
+        {
+          "x": 0.3834196925163269,
+          "y": 0.25937363505363467,
+          "z": 0.15098391473293305,
+          "w": 1.0
+        },
+        {
+          "x": 0.1502590775489807,
+          "y": 0.030363237485289575,
+          "z": 0.030363237485289575,
+          "w": 1.0
         }
+      ],
+      "skyColor": {
+        "x": 0.19170981645584107,
+        "y": 0.05264570191502571,
+        "z": 0.05264570191502571,
+        "w": 1.0
+      },
+      "sunColor": {
+        "x": 0.14013804495334626,
+        "y": 0.6739493012428284,
+        "z": 0.9326424598693848,
+        "w": 1.0
+      },
+      "cloudsColor": {
+        "x": 0.07253885269165039,
+        "y": 0.03645734861493111,
+        "z": 0.03645734861493111,
+        "w": 1.0
+      },
+      "voidColor": {
+        "x": 0.10880827903747559,
+        "y": 0.0418127104640007,
+        "z": 0.01578565500676632,
+        "w": 1.0
+      },
+      "cloudsSpeed": -0.10000000149011612,
+      "waterColor": {
+        "x": 0.2436995506286621,
+        "y": 0.2849740982055664,
+        "z": 0.16242046654224397,
+        "w": 6.550000190734863
+      }
+    },
+    "lighting": {
+      "cereal_class_version": 0,
+      "ambientStrength": 0.3499999940395355,
+      "ambientShadowStrength": 0.4399999976158142,
+      "decalNormalThreshold": 55.0
     }
+  }
 }
