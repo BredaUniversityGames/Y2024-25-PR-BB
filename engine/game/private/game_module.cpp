@@ -174,8 +174,13 @@ void GameModule::ApplySettings(Engine& engine)
     engine.GetModule<AudioModule>().SetBusChannelVolume("bus:/BGM", curve(gameSettings.musicVolume));
     engine.GetModule<AudioModule>().SetBusChannelVolume("bus:/SFX", curve(gameSettings.sfxVolume));
 
-    // Frame counter
+    auto& swapchain = engine.GetModule<RendererModule>().GetRenderer()->GetSwapChain();
+    if (swapchain.SetPresentMode(gameSettings.vsync ? vk::PresentModeKHR::eFifo : vk::PresentModeKHR::eImmediate))
+    {
+        swapchain.Resize(swapchain.GetImageSize());
+    }
 
+    // Frame counter
     if (auto counter = _framerateCounter.lock())
     {
 

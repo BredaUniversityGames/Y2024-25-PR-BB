@@ -1,4 +1,5 @@
 #include "input/action_manager.hpp"
+#include "input/input_codes/input_names.hpp"
 #include "log.hpp"
 #include <algorithm>
 
@@ -70,13 +71,8 @@ glm::vec2 ActionManager::GetAnalogAction(std::string_view actionName) const
     return CheckAnalogInput(*itr);
 }
 
-std::vector<GamepadOriginVisual> ActionManager::GetDigitalActionGamepadOriginVisual(std::string_view actionName) const
+std::vector<BindingOriginVisual> ActionManager::GetDigitalActionBindingOriginVisual(std::string_view actionName) const
 {
-    if (!_inputDeviceManager.IsGamepadAvailable())
-    {
-        return {};
-    }
-
     if (_gameActions.empty())
     {
         bblog::error("[Input] No game actions are set while trying to get action: \"{}\"", actionName);
@@ -95,42 +91,14 @@ std::vector<GamepadOriginVisual> ActionManager::GetDigitalActionGamepadOriginVis
         return {};
     }
 
-    const GamepadType gamepadType = _inputDeviceManager.GetGamepadType();
-    const auto customGlyphs = _gamepadGlyphs.find(gamepadType);
-    if (customGlyphs == _gamepadGlyphs.end())
-    {
-        return {};
-    }
-
-    std::vector<GamepadOriginVisual> visuals {};
-
-    for (const auto& inputBinding : actionItr->inputs)
-    {
-        if (!std::holds_alternative<GamepadButton>(inputBinding))
-        {
-            continue;
-        }
-
-        const GamepadButton button = std::get<GamepadButton>(inputBinding);
-        const auto digitalGlyph = customGlyphs->second.digitals.find(button);
-        if (digitalGlyph != customGlyphs->second.digitals.end())
-        {
-            GamepadOriginVisual& visual = visuals.emplace_back();
-            visual.bindingInputName = "bindingInput"; // TODO: Get proper name with magic enum
-            visual.glyphImagePath = digitalGlyph->second;
-        }
-    }
-
-    return visuals;
+    const DigitalAction& action = *actionItr;
+    auto result = GetDigitalActionGamepadOriginVisual(action);
+    std::ranges::move(GetDigitalMouseAndKeyboardOriginVisual(action), std::back_inserter(result));
+    return result;
 }
 
-std::vector<GamepadOriginVisual> ActionManager::GetAnalogActionGamepadOriginVisual(std::string_view actionName) const
+std::vector<BindingOriginVisual> ActionManager::GetAnalogActionBindingOriginVisual(std::string_view actionName) const
 {
-    if (!_inputDeviceManager.IsGamepadAvailable())
-    {
-        return {};
-    }
-
     if (_gameActions.empty())
     {
         bblog::error("[Input] No game actions are set while trying to get action: \"{}\"", actionName);
@@ -149,33 +117,10 @@ std::vector<GamepadOriginVisual> ActionManager::GetAnalogActionGamepadOriginVisu
         return {};
     }
 
-    const GamepadType gamepadType = _inputDeviceManager.GetGamepadType();
-    const auto customGlyphs = _gamepadGlyphs.find(gamepadType);
-    if (customGlyphs == _gamepadGlyphs.end())
-    {
-        return {};
-    }
-
-    std::vector<GamepadOriginVisual> visuals {};
-
-    for (const auto& inputBinding : actionItr->inputs)
-    {
-        if (!std::holds_alternative<GamepadAnalog>(inputBinding))
-        {
-            continue;
-        }
-
-        const GamepadAnalog analog = std::get<GamepadAnalog>(inputBinding);
-        const auto analogGlyph = customGlyphs->second.analogs.find(analog);
-        if (analogGlyph != customGlyphs->second.analogs.end())
-        {
-            GamepadOriginVisual& visual = visuals.emplace_back();
-            visual.bindingInputName = "bindingInput"; // TODO: Get proper name with magic enum
-            visual.glyphImagePath = analogGlyph->second;
-        }
-    }
-
-    return visuals;
+    const AnalogAction& action = *actionItr;
+    auto result = GetAnalogActionGamepadOriginVisual(action);
+    std::ranges::move(GetAnalogMouseAndKeyboardOriginVisual(action), std::back_inserter(result));
+    return result;
 }
 
 DigitalActionType ActionManager::CheckDigitalInput(const DigitalAction& action) const
@@ -251,4 +196,145 @@ glm::vec2 ActionManager::CheckAnalogInput(const AnalogAction& action) const
 glm::vec2 ActionManager::CheckInput(MAYBE_UNUSED std::string_view actionName, const KeyboardAnalog& keyboardAnalog) const
 {
     return { _inputDeviceManager.IsKeyHeld(keyboardAnalog.right) - _inputDeviceManager.IsKeyHeld(keyboardAnalog.left), _inputDeviceManager.IsKeyHeld(keyboardAnalog.up) - _inputDeviceManager.IsKeyHeld(keyboardAnalog.down) };
+}
+
+glm::vec2 ActionManager::CheckInput(MAYBE_UNUSED std::string_view actionName, MAYBE_UNUSED const MouseAnalog& mouseAnalog) const
+{
+    return {}; // TODO: Support mouse movement
+}
+
+std::vector<BindingOriginVisual> ActionManager::GetDigitalActionGamepadOriginVisual(const DigitalAction& action) const
+{
+    if (!_inputDeviceManager.IsGamepadAvailable())
+    {
+        return {};
+    }
+
+    const GamepadType gamepadType = _inputDeviceManager.GetGamepadType();
+    const auto customGlyphs = _gamepadGlyphs.find(gamepadType);
+    if (customGlyphs == _gamepadGlyphs.end())
+    {
+        return {};
+    }
+
+    std::vector<BindingOriginVisual> visuals {};
+
+    for (const auto& inputBinding : action.inputs)
+    {
+        if (!std::holds_alternative<GamepadButton>(inputBinding))
+        {
+            continue;
+        }
+
+        const GamepadButton button = std::get<GamepadButton>(inputBinding);
+        const auto digitalGlyph = customGlyphs->second.digitals.find(button);
+        if (digitalGlyph != customGlyphs->second.digitals.end())
+        {
+            BindingOriginVisual& visual = visuals.emplace_back();
+            visual.bindingInputName = "bindingInput"; // TODO: Get proper name with magic enum
+            visual.glyphImagePath = digitalGlyph->second;
+        }
+    }
+
+    return visuals;
+}
+
+std::vector<BindingOriginVisual> ActionManager::GetAnalogActionGamepadOriginVisual(const AnalogAction& action) const
+{
+    if (!_inputDeviceManager.IsGamepadAvailable())
+    {
+        return {};
+    }
+
+    const GamepadType gamepadType = _inputDeviceManager.GetGamepadType();
+    const auto customGlyphs = _gamepadGlyphs.find(gamepadType);
+    if (customGlyphs == _gamepadGlyphs.end())
+    {
+        return {};
+    }
+
+    std::vector<BindingOriginVisual> visuals {};
+
+    for (const auto& inputBinding : action.inputs)
+    {
+        if (!std::holds_alternative<GamepadAnalog>(inputBinding))
+        {
+            continue;
+        }
+
+        const GamepadAnalog analog = std::get<GamepadAnalog>(inputBinding);
+        const auto analogGlyph = customGlyphs->second.analogs.find(analog);
+        if (analogGlyph != customGlyphs->second.analogs.end())
+        {
+            BindingOriginVisual& visual = visuals.emplace_back();
+            visual.bindingInputName = "bindingInput"; // TODO: Get proper name with magic enum
+            visual.glyphImagePath = analogGlyph->second;
+        }
+    }
+
+    return visuals;
+}
+
+struct DigitalActionVisitor
+{
+    std::vector<BindingOriginVisual>& out;
+
+    void operator()(KeyboardCode code)
+    {
+        BindingOriginVisual& visual = out.emplace_back();
+        visual.bindingInputName = KEYBOARD_KEY_NAMES.at(code) + " Key";
+    }
+
+    void operator()(MouseButton code)
+    {
+        BindingOriginVisual& visual = out.emplace_back();
+        visual.bindingInputName = MOUSE_BUTTON_NAMES.at(code) + " Button";
+    }
+
+    void operator()(MAYBE_UNUSED GamepadButton notUsed) { }
+};
+
+std::vector<BindingOriginVisual> ActionManager::GetDigitalMouseAndKeyboardOriginVisual(const DigitalAction& action) const
+{
+    std::vector<BindingOriginVisual> visuals {};
+    DigitalActionVisitor visitor { visuals };
+
+    for (const DigitalInputBinding& input : action.inputs)
+    {
+        std::visit(visitor, input);
+    }
+
+    return visuals;
+}
+
+struct AnalogActionVisitor
+{
+    std::vector<BindingOriginVisual>& out;
+
+    void operator()(KeyboardAnalog code)
+    {
+        BindingOriginVisual& visual = out.emplace_back();
+        visual.bindingInputName = KEYBOARD_KEY_NAMES.at(code.up) + KEYBOARD_KEY_NAMES.at(code.left) + KEYBOARD_KEY_NAMES.at(code.down) + KEYBOARD_KEY_NAMES.at(code.right);
+    }
+
+    void operator()(MAYBE_UNUSED MouseAnalog notUsed)
+    {
+        BindingOriginVisual& visual = out.emplace_back();
+        visual.bindingInputName = "Mouse";
+    }
+
+    void operator()(MAYBE_UNUSED GamepadAnalog notUsed) { }
+};
+
+std::vector<BindingOriginVisual> ActionManager::GetAnalogMouseAndKeyboardOriginVisual(const AnalogAction& action) const
+{
+    std::vector<BindingOriginVisual> visuals {};
+    AnalogActionVisitor visitor { visuals };
+
+    for (const AnalogInputBinding& input : action.inputs)
+    {
+        std::visit(visitor, input);
+    }
+
+    return visuals;
 }
