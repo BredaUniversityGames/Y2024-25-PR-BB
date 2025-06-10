@@ -29,7 +29,7 @@ public:
     NON_MOVABLE(ModelLoader);
     NON_COPYABLE(ModelLoader);
 
-    std::shared_ptr<ModelData> LoadModel(Engine& engine, std::string_view path);
+    std::shared_ptr<ModelData> LoadModel(Engine& engine, std::string_view path, bool genCollision);
     void Clear() { _models.clear(); }
 
 private:

@@ -27,6 +27,7 @@ class MeleeEnemy {
         _bonesStepsSFX = "event:/SFX/BonesSteps"
         _roar = "event:/SFX/Roar"
         _hitSFX = "event:/SFX/Hit"
+        _spawnSFX = "event:/SFX/EnemySpawn"
 
         var enemySize = 0.0165
         var modelPath = "assets/models/Skeleton.glb"
@@ -43,6 +44,9 @@ class MeleeEnemy {
         _rootEntity.AddNameComponent().name = "Enemy"
         _rootEntity.AddEnemyTag()
         _rootEntity.AddAudioEmitterComponent()
+        
+        _delaySpawnSFX = Random.RandomFloatRange(0, 1500)
+        _playedSpawnSFX = false
 
         var transform = _rootEntity.AddTransformComponent()
         transform.translation = spawnPosition
@@ -180,6 +184,12 @@ class MeleeEnemy {
         var animations = _meshEntity.GetAnimationControlComponent()
         var transparencyComponent = _meshEntity.GetTransparencyComponent()
 
+        _delaySpawnSFX = Math.Max(_delaySpawnSFX - dt, 0)
+        if (!_playedSpawnSFX && _delaySpawnSFX <= 0) {
+            var audioEmitter = _rootEntity.GetAudioEmitterComponent()
+            audioEmitter.AddEvent(engine.GetAudio().PlayEventOnce(_spawnSFX))
+            _playedSpawnSFX = true
+        }
 
         if (_isAlive) {
             if (_getUpState) {
@@ -229,7 +239,8 @@ class MeleeEnemy {
 
                                 //Flash the screen red
                                 flashSystem.Flash(Vec3.new(105 / 255, 13 / 255, 1 / 255),0.75)
-
+                                
+                                playerVariables.hud.IndicateDamage(pos)
                                 engine.GetAudio().PlayEventOnce(_hitSFX)
                                 //animations.Play("Attack", 1.0, false, 0.1, false)
                             }

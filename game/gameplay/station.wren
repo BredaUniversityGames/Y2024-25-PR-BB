@@ -28,6 +28,7 @@ class Station {
         _time = 0.0 // Time since the station was spawned
         _ambientStationSound = "event:/SFX/StationAmbient"
         _ambientSoundEventInstance = null
+        _activateSFX = "event:/SFX/StationActivate" 
         _powerUpType = PowerUpType.NONE
 
 
@@ -107,6 +108,12 @@ class Station {
             var audioEmitter = _rootEntity.GetAudioEmitterComponent()
             audioEmitter.AddEvent(_ambientSoundEventInstance)
         }
+    }
+
+    PlayActivateSound(engine, volume) {
+        var eventInstance = engine.GetAudio().PlayEventOnce(_activateSFX)
+        engine.GetAudio().SetEventVolume(eventInstance, volume)
+        _rootEntity.GetAudioEmitterComponent().AddEvent(eventInstance)
     }
 
     StopSound(engine){
@@ -282,6 +289,7 @@ class StationManager {
             
             _stationList[randomIndex].SetPowerUpType(randomPowerUp) // Set the power up type to quad damage
             _stationList[randomIndex].time = 0.0 // Reset the time for the station
+            _stationList[randomIndex].PlayActivateSound(engine, 2.5)
             _quadDamageTransparency.transparency = 0.0 // Reset the transparency to 0.0
             _dualGunTransparency.transparency = 0.0 // Reset the transparency to 0.0
 

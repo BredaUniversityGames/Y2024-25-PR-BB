@@ -30,6 +30,7 @@ class BerserkerEnemy {
         _attackSFX = "event:/SFX/DemonAttack"
         _attackHitSFX = "event:/SFX/DemonAttackHit"
         _hitSFX = "event:/SFX/Hit"
+        _spawnSFX = "event:/SFX/EnemySpawn"
 
         // ENTITY SETUP
 
@@ -38,6 +39,10 @@ class BerserkerEnemy {
         _rootEntity.AddNameComponent().name = "BerserkerEnemy"
         _rootEntity.AddEnemyTag()
         _rootEntity.AddAudioEmitterComponent()
+        
+        _delaySpawnSFX = Random.RandomFloatRange(0, 1500)
+        _playedSpawnSFX = false
+
         var transform = _rootEntity.AddTransformComponent()
         transform.translation = spawnPosition
         transform.scale = Vec3.new(enemySize, enemySize, enemySize)
@@ -154,6 +159,12 @@ class BerserkerEnemy {
         var pos = body.GetPosition()
         var animations = _meshEntity.GetAnimationControlComponent()
 
+    	_delaySpawnSFX = Math.Max(_delaySpawnSFX - dt, 0)
+        if (!_playedSpawnSFX && _delaySpawnSFX <= 0) {
+            var audioEmitter = _rootEntity.GetAudioEmitterComponent()
+            audioEmitter.AddEvent(engine.GetAudio().PlayEventOnce(_spawnSFX))
+            _playedSpawnSFX = true
+        }
 
         if (_isAlive) {
             if (_attackingState) {
@@ -188,6 +199,7 @@ class BerserkerEnemy {
                                 playerVariables.cameraVariables.shakeIntensity = _shakeIntensity
                                 playerVariables.invincibilityTime = playerVariables.invincibilityMaxTime
 
+                                playerVariables.hud.IndicateDamage(pos)
                                 flashSystem.Flash(Vec3.new(1.0, 0.0, 0.0),0.85)
                                 engine.GetAudio().PlayEventOnce(_hitSFX)
                             }
