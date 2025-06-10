@@ -58,6 +58,11 @@ bool IsInputEnabled(ApplicationModule& self)
     return self.GetMouseHidden();
 }
 
+bool IsGamepadConnected(ApplicationModule& self)
+{
+    return self.GetInputDeviceManager().IsGamepadAvailable();
+}
+
 bool GetRawKeyOnce(ApplicationModule& self, KeyboardCode code)
 {
     return self.GetInputDeviceManager().IsKeyPressed(code);
@@ -84,8 +89,12 @@ void BindInputAPI(wren::ForeignModule& module)
     wrenClass.funcExt<bindings::GetMousePosition>("GetMousePosition");
     wrenClass.funcExt<bindings::IsInputEnabled>("DebugIsInputEnabled");
 
+
+    wrenClass.funcExt<bindings::IsGamepadConnected>("IsGamepadConnected");
+
     wrenClass.funcExt<bindings::GetDigitalActionBindingOriginVisual>("GetDigitalActionBindingOriginVisual");
     wrenClass.funcExt<bindings::GetAnalogActionBindingOriginVisual>("GetAnalogActionBindingOriginVisual");
+
 
     auto& digitalActionResult = module.klass<DigitalActionResult>("DigitalActionResult");
     digitalActionResult.funcExt<bindings::GetDigitalActionIsPressed>("IsPressed");
