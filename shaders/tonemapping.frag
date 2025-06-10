@@ -250,7 +250,7 @@ vec3 rayDirection(float fieldOfView, vec2 size, vec2 fragCoord)
 {
     vec2 xy = fragCoord - size / 2.0;
     xy.y = -xy.y; // Invert Y coordinate to match OpenGL's coordinate system
-    float z = (size.y / 2.0) / tan(radians(fieldOfView) / 2.0);
+    float z = (size.y / 2.0) / tan((fieldOfView) / 2.0);
     return normalize(vec3(xy, -z));
 }
 
@@ -305,7 +305,7 @@ void main()
         {//water
          ivec2 pixelCoords = ivec2(newTexCoords * vec2(texSize));
 
-         vec3 ray = normalize(transpose(mat3(camera.view)) * rayDirection(50, vec2(texSize), vec2(pixelCoords)));
+         vec3 ray = normalize(transpose(mat3(camera.view)) * rayDirection(camera.fov, vec2(texSize), vec2(pixelCoords)));
 
          if (ray.y < 0)
          {
@@ -353,9 +353,6 @@ void main()
         }
         vec2 uv = newTexCoords;
         uv -= 0.5;
-        uv.x *= (16.0 / 9.0);
-        // we can control the horizon by altering the aspect ration
-        // uv.y -= 0.4 * (1.0 / (16.0 / 9.0));
         uv.y = -uv.y;
 
 

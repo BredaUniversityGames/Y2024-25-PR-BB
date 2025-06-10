@@ -17,8 +17,8 @@ class Main {
         engine.GetUI().SetSelectedElement(engine.GetGame().GetMainMenu().playButton)
 
         var helmet = engine.LoadModel("assets/models/plague_helmet.glb", false)
-        helmet.GetTransformComponent().translation = Vec3.new(8.6, 1.2, -19.8)
-        helmet.GetTransformComponent().rotation = Math.ToQuat(Vec3.new(0.0, -0.471239, 0.0))
+        helmet.GetTransformComponent().translation = Vec3.new(16.1, -3.8, -9.8)
+        helmet.GetTransformComponent().rotation = Quat.new(0.921,-0.014,-0.389,-0.006)
         helmet.GetTransformComponent().scale = Vec3.new(1.5, 1.5, 1.5)
 
         var light = engine.GetECS().NewEntity()
@@ -34,13 +34,13 @@ class Main {
         ambientLight.AddNameComponent().name = "Helmet point ambientLight"
         var ambientLightComponent = ambientLight.AddPointLightComponent()
         ambientLightComponent.color = Vec3.new(220 / 255, 50 / 255, 50 / 255)
-        ambientLightComponent.range = 35
-        ambientLightComponent.intensity = 39
+        ambientLightComponent.range = 41
+        ambientLightComponent.intensity = 10
 
-        ambientLight.AddTransformComponent().translation = Vec3.new(4.8, 4.7, -10.6) // range: 91, intensity: 20
+        ambientLight.AddTransformComponent().translation = Vec3.new(10.250, -0.30, -2.9) // range: 91, intensity: 20
 
 
-        light.AddTransformComponent().translation = Vec3.new(4.8, 4.7, -10.6) // range: 91, intensity: 20
+        light.AddTransformComponent().translation = Vec3.new(10.250, -0.30, -2.9) // range: 91, intensity: 20
 
         // __background = engine.LoadModel("assets/models/main_menu.glb")
 
@@ -52,7 +52,7 @@ class Main {
         __cameraVariables = CameraVariables.new()
 
         var cameraProperties = __camera.AddCameraComponent()
-        cameraProperties.fov = Math.Radians(28.0)
+        cameraProperties.fov = Math.Radians(40.0)
         cameraProperties.nearPlane = 0.5
         cameraProperties.farPlane = 600.0
         cameraProperties.reversedZ = true
@@ -63,8 +63,8 @@ class Main {
         __camera.AddAudioListenerTag()
 
         var camTrans = __camera.GetTransformComponent()
-        camTrans.translation = Vec3.new(5.3, -8, 29.1)
-        camTrans.rotation = Quat.new(0.982,0.145,0.117,-0.017)
+        camTrans.translation = Vec3.new(5.3, -3.3, 29.1)
+        camTrans.rotation = Quat.new(0.990,0.079,0.115,-0.009)
 
         __directionalLight = engine.GetECS().NewEntity()
         __directionalLight.AddNameComponent().name = "Directional Light"
@@ -75,7 +75,7 @@ class Main {
         directionalLightComp.orthographicSize = 30.0
 
         var transform = __directionalLight.AddTransformComponent()
-        transform.rotation = Math.ToQuat(Vec3.new(Math.Radians(144), Math.Radians(63), Math.Radians(-178)))
+        transform.rotation = Math.ToQuat(Vec3.new(Math.Radians(163.1), Math.Radians(76), Math.Radians(-178)))
 
         var play = engine.GetGame().GetMainMenu().playButton
         play.OnPress(Fn.new {
@@ -95,8 +95,8 @@ class Main {
             0.1)
 
         __perlin = Perlin.new(0)
-        __baseIntensity = 20.0
-        __flickerRange = 46.0
+        __baseIntensity = 30.0
+        __flickerRange = 56.0
         __flickerSpeed = 1.0
         __noiseOffset = 0.0
     }
