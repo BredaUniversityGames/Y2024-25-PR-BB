@@ -43,38 +43,39 @@ struct Settings
         TonemappingFunctions tonemappingFunction { TonemappingFunctions::eAces };
         float exposure { 1.0f };
 
-        bool enableVignette;
+        bool enableVignette { true };
         float vignetteIntensity { 0.2f };
 
-        bool enableLensDistortion;
-        float lensDistortionIntensity;
-        float lensDistortionCubicIntensity;
-        float screenScale;
+        bool enableLensDistortion { true };
+        float lensDistortionIntensity { 1.0f };
+        float lensDistortionCubicIntensity { 1.0f };
+        float screenScale { 1.0f };
 
-        bool enableToneAdjustments;
-        float brightness;
-        float contrast;
-        float saturation;
-        float vibrance;
-        float hue;
+        bool enableToneAdjustments { false };
+        float brightness {};
+        float contrast {};
+        float saturation {};
+        float vibrance {};
+        float hue {};
 
         // pixelization
-        bool enablePixelization;
-        float minPixelSize;
-        float maxPixelSize;
-        float pixelizationLevels;
-        float pixelizationDepthBias;
+        bool enablePixelization { false };
+        float minPixelSize {};
+        float maxPixelSize {};
+        float pixelizationLevels {};
+        float pixelizationDepthBias {};
 
         // fixed palette
-        bool enablePalette;
+        bool enablePalette { false };
         float ditherAmount = 0.15f;
         float paletteAmount = 0.8f;
-        std::vector<glm::vec4> palette;
+        std::vector<glm::vec4> palette {};
 
         glm::vec4 skyColor { 0.0f, 0.0f, 0.0f, 1.0f };
         glm::vec4 sunColor { 0.0f, 0.0f, 0.0f, 1.0f };
         glm::vec4 cloudsColor { 0.0f, 0.0f, 0.0f, 1.0f };
         glm::vec4 voidColor { 0.0f, 0.0f, 0.0f, 1.0f };
+        glm::vec4 waterColor { 5.5f, 13.0f, 22.0f, 1.0f };
 
         float cloudsSpeed = 0.1f;
 
@@ -100,8 +101,8 @@ CLASS_SERIALIZE_VERSION(Settings::FXAA, 0);
 VISITABLE_STRUCT(Settings::Bloom, colorWeights, strength, gradientStrength, maxBrightnessExtraction, filterRadius);
 CLASS_SERIALIZE_VERSION(Settings::Bloom, 1);
 
-VISITABLE_STRUCT(Settings::Tonemapping, tonemappingFunction, exposure, enableVignette, vignetteIntensity, enableLensDistortion, lensDistortionIntensity, lensDistortionCubicIntensity, screenScale, enableToneAdjustments, brightness, contrast, saturation, vibrance, hue, enablePixelization, minPixelSize, maxPixelSize, pixelizationLevels, pixelizationDepthBias, enablePalette, ditherAmount, paletteAmount, palette, skyColor, sunColor, cloudsColor, voidColor, cloudsSpeed);
-CLASS_SERIALIZE_VERSION(Settings::Tonemapping, 8);
+VISITABLE_STRUCT(Settings::Tonemapping, tonemappingFunction, exposure, enableVignette, vignetteIntensity, enableLensDistortion, lensDistortionIntensity, lensDistortionCubicIntensity, screenScale, enableToneAdjustments, brightness, contrast, saturation, vibrance, hue, enablePixelization, minPixelSize, maxPixelSize, pixelizationLevels, pixelizationDepthBias, enablePalette, ditherAmount, paletteAmount, palette, skyColor, sunColor, cloudsColor, voidColor, cloudsSpeed, waterColor);
+CLASS_SERIALIZE_VERSION(Settings::Tonemapping, 9);
 
 VISITABLE_STRUCT(Settings::Lighting, ambientStrength, ambientShadowStrength, decalNormalThreshold);
 CLASS_SERIALIZE_VERSION(Settings::Lighting, 0);

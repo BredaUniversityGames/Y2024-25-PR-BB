@@ -114,6 +114,11 @@ JPH::ObjectLayer GetLayer(WrenComponent<RigidbodyComponent>& self)
     return self.component->GetLayer();
 }
 
+void SetLayer(WrenComponent<RigidbodyComponent>& self, int layer)
+{
+    self.component->SetLayer(layer);
+}
+
 RigidbodyComponent RigidbodyNew(PhysicsModule& physics, JPH::ShapeRefC shape, JPH::ObjectLayer layer, bool allowRotation)
 {
     JPH::EAllowedDOFs dofs = allowRotation ? JPH::EAllowedDOFs::All : JPH::EAllowedDOFs::TranslationX | JPH::EAllowedDOFs::TranslationY | JPH::EAllowedDOFs::TranslationZ;
@@ -186,6 +191,7 @@ void BindPhysicsAPI(wren::ForeignModule& module)
     rigidBodyComponent.funcExt<bindings::SetDynamic>("SetDynamic");
     rigidBodyComponent.funcExt<bindings::SetKinematic>("SetDynamic");
     rigidBodyComponent.funcExt<bindings::SetStatic>("SetStatic");
+    rigidBodyComponent.funcExt<bindings::SetLayer>("SetLayer");
     rigidBodyComponent.funcExt<bindings::SetOnCollisionEnter>("OnCollisionEnter", "void callback(WrenEntity self, WrenEntity other) -> void");
     rigidBodyComponent.funcExt<bindings::SetOnCollisionStay>("OnCollisionStay", "void callback(WrenEntity self, WrenEntity other) -> void");
 }

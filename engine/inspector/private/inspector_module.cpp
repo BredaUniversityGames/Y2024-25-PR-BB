@@ -466,6 +466,8 @@ void DrawTonemappingSettings(Settings& settings)
     ImGui::ColorEdit3("Clouds Color", &tonemapping.cloudsColor.x);
     ImGui::ColorEdit3("Void Color", &tonemapping.voidColor.x);
     ImGui::DragFloat("Clouds Speed", &tonemapping.cloudsSpeed);
+    ImGui::ColorEdit3("Water Color", &tonemapping.waterColor.x);
+    ImGui::DragFloat("Water Color intensity", &tonemapping.waterColor.w, 0.01f, 0.0f, 100.0f);
 
     ImGui::End();
 }
