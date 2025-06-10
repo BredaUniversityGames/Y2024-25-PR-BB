@@ -1,4 +1,4 @@
-import "engine_api.wren" for Engine, Input, Vec3, Vec2, Quat, Math, Keycode, Random, Perlin
+import "engine_api.wren" for Engine, Input, Vec3, Vec2, Quat, Math, Keycode, Random, Perlin, ShapeFactory, Rigidbody, RigidbodyComponent, PhysicsObjectLayer
 import "gameplay/camera.wren" for CameraVariables
 import "gameplay/music_player.wren" for BGMPlayer
 
@@ -41,12 +41,6 @@ class Main {
 
 
         light.AddTransformComponent().translation = Vec3.new(11.900, 5.70, -2.4) // range: 91, intensity: 20
-
-        // __background = engine.LoadModel("assets/models/main_menu.glb")
-
-        // __transform = __background.GetTransformComponent()
-        // __transform.translation = Vec3.new(15.4,-20,-203)
-        // __transform.rotation = Quat.new(0,0,-0.2,0.1)
 
         __camera = engine.GetECS().NewEntity()
         __cameraVariables = CameraVariables.new()
