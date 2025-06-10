@@ -2,7 +2,7 @@
 #include "wren_common.hpp"
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
-#include <glm/gtx/rotate_vector.inl>
+#include <glm/gtx/rotate_vector.hpp>
 
 namespace bindings
 {

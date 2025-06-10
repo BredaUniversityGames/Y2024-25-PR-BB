@@ -168,7 +168,7 @@ void InspectorModule::Tick(MAYBE_UNUSED Engine& engine)
                 if(ImGui::Checkbox("Clear per frame", &physicsModule._clearDrawnRaysPerFrame))
                 {
                     if(physicsModule._clearDrawnRaysPerFrame)
-                        physicsModule.ResetPersistentDebugLines(); // we have to do this to remove all liens
+                        physicsModule.ResetPersistentDebugLines(); // we have to do this to remove all lines
                 }
 
                 if (!physicsModule._drawRays)
