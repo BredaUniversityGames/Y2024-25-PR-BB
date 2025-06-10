@@ -89,7 +89,7 @@ class Main {
         __playerVariables.cameraVariables = __cameraVariables
         var cameraProperties = __camera.AddCameraComponent()
         cameraProperties.fov = engine.GetGame().GetSettings().fov // Get from where we manage fov
-        
+
         cameraProperties.nearPlane = 0.1
         cameraProperties.farPlane = 600.0
         cameraProperties.reversedZ = true
@@ -273,6 +273,8 @@ class Main {
         }
 
         retryButton.OnPress(retryHandler)
+
+        __gamepadConnectedPrevFrame = engine.GetInput().IsGamepadConnected()
     }
 
     static Shutdown(engine) {
@@ -282,9 +284,17 @@ class Main {
 
     static Update(engine, dt) {
 
-        // Check if pause key was pressed
-
+        // Pausing functionality
         if(__alive) {
+            // Pause the game if the controller disconnects
+            var hasGamepadDisconnected = __gamepadConnectedPrevFrame && !engine.GetInput().IsGamepadConnected()
+            __gamepadConnectedPrevFrame = engine.GetInput().IsGamepadConnected()
+
+            if (!__pauseEnabled && hasGamepadDisconnected) {
+                __pauseHandler.call()
+            }
+
+            // Check if pause key was pressed
             var pausePressed = false
             if (!__pauseEnabled) {
                 pausePressed = engine.GetInput().GetDigitalAction("Pause").IsReleased()
@@ -331,7 +341,7 @@ class Main {
             engine.GetAudio().DisableLowPass()
         }
 
-        
+
 
         var cheats = __playerController.GetCheatsComponent()
         var deltaTime = engine.GetTime().GetDeltatime()

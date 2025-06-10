@@ -12,7 +12,6 @@ public:
 
     void Update() final;
     void SetGameActions(const GameActions& gameActions) final;
-    void SetActiveActionSet(std::string_view actionSetName) final;
 
 private:
     const SteamInputDeviceManager& _steamInputDeviceManager;
@@ -38,4 +37,5 @@ private:
     NO_DISCARD std::vector<BindingOriginVisual> GetDigitalActionGamepadOriginVisual(const DigitalAction& action) const final;
     NO_DISCARD std::vector<BindingOriginVisual> GetAnalogActionGamepadOriginVisual(const AnalogAction& action) const final;
     void UpdateSteamControllerInputState();
+    void CacheSteamInputHandles();
 };
