@@ -202,9 +202,18 @@ class Main {
 
         var waveConfigs = []
 
-        for (v in 0...30) {
+        for (v in 0...10) {
             waveConfigs.add(WaveGenerator.GenerateWave(v))
         }
+
+        waveConfigs[0].spawns[EnemyType.Skeleton] = 2
+        waveConfigs[1].spawns[EnemyType.Skeleton] = 4
+        waveConfigs[2].spawns[EnemyType.Skeleton] = 5
+        waveConfigs[3].spawns[EnemyType.Skeleton] = 7
+        waveConfigs[4].spawns[EnemyType.Skeleton] = 4
+
+        //waveConfigs[1] = wave2
+        //waveConfigs[3] = wave4
 
         __waveSystem = WaveSystem.new(waveConfigs, spawnLocations)
 

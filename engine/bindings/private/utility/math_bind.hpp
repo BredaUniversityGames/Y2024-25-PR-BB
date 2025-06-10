@@ -201,6 +201,11 @@ public:
         float t = maxAngle / angle;
         return glm::slerp(from, to, t);
     }
+
+    static float Pow(float x, float e)
+    {
+        return std::powf(x, e);
+    }
 };
 
 template <typename T>
@@ -288,6 +293,7 @@ inline void BindMath(wren::ForeignModule& module)
         mathUtilClass.funcStatic<&MathUtil::Sqrt>("Sqrt");
         mathUtilClass.funcStatic<&MathUtil::Abs>("Abs");
         mathUtilClass.funcStatic<&MathUtil::PI>("PI");
+        mathUtilClass.funcStatic<&MathUtil::Pow>("Pow");
         mathUtilClass.funcStatic<&MathUtil::TwoPI>("TwoPI");
         mathUtilClass.funcStatic<&MathUtil::HalfPI>("HalfPI");
         mathUtilClass.funcStatic<&MathUtil::Distance>("Distance");
