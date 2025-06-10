@@ -284,6 +284,14 @@ class Main {
 
     static Update(engine, dt) {
 
+        // Pause the game if the controller disconnects
+        var hasGamepadDisconnected = __gamepadConnectedPrevFrame && !engine.GetInput().IsGamepadConnected()
+        __gamepadConnectedPrevFrame = engine.GetInput().IsGamepadConnected()
+
+        if (!__pauseEnabled && hasGamepadDisconnected) {
+            __pauseHandler.call()
+        }
+
         // Check if pause key was pressed
 
         if(__alive) {
@@ -314,14 +322,6 @@ class Main {
         if (__pauseEnabled || !__alive) {
             __camera.GetCameraComponent().fov = Math.Radians(50 + 100 * engine.GetGame().GetSettings().fov)
             return
-        }
-
-        // Pause the game if the controller disconnects
-        var hasGamepadDisconnected = __gamepadConnectedPrevFrame && !engine.GetInput().IsGamepadConnected()
-        __gamepadConnectedPrevFrame = engine.GetInput().IsGamepadConnected()
-
-        if (!__pauseEnabled && hasGamepadDisconnected) {
-            __pauseHandler.call()
         }
 
         __playerMovement.lookSensitivity = engine.GetGame().GetSettings().aimSensitivity * (2.5 - 0.2) + 0.2
