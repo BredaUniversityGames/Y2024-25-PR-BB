@@ -17,9 +17,9 @@ class Main {
         engine.GetUI().SetSelectedElement(engine.GetGame().GetMainMenu().playButton)
 
         var helmet = engine.LoadModel("assets/models/plague_helmet.glb", false)
-        helmet.GetTransformComponent().translation = Vec3.new(16.1, -3.8, -9.8)
-        helmet.GetTransformComponent().rotation = Quat.new(0.921,-0.014,-0.389,-0.006)
-        helmet.GetTransformComponent().scale = Vec3.new(1.5, 1.5, 1.5)
+        helmet.GetTransformComponent().translation = Vec3.new(17.60, 1.4, -9.8)
+        helmet.GetTransformComponent().rotation = Quat.new(0.926,-0.041,-0.376,-0.017)
+        helmet.GetTransformComponent().scale = Vec3.new(1.6, 1.6, 1.6)
 
         var light = engine.GetECS().NewEntity()
         light.AddNameComponent().name = "Helmet point light"
@@ -37,10 +37,10 @@ class Main {
         ambientLightComponent.range = 41
         ambientLightComponent.intensity = 10
 
-        ambientLight.AddTransformComponent().translation = Vec3.new(10.250, -0.30, -2.9) // range: 91, intensity: 20
+        ambientLight.AddTransformComponent().translation = Vec3.new(11.900, 5.70, -2.4) // range: 91, intensity: 20
 
 
-        light.AddTransformComponent().translation = Vec3.new(10.250, -0.30, -2.9) // range: 91, intensity: 20
+        light.AddTransformComponent().translation = Vec3.new(11.900, 5.70, -2.4) // range: 91, intensity: 20
 
         // __background = engine.LoadModel("assets/models/main_menu.glb")
 
@@ -63,7 +63,7 @@ class Main {
         __camera.AddAudioListenerTag()
 
         var camTrans = __camera.GetTransformComponent()
-        camTrans.translation = Vec3.new(5.3, -3.3, 29.1)
+        camTrans.translation = Vec3.new(5.3, -0.3, 29.1)
         camTrans.rotation = Quat.new(0.990,0.079,0.115,-0.009)
 
         __directionalLight = engine.GetECS().NewEntity()
@@ -75,7 +75,7 @@ class Main {
         directionalLightComp.orthographicSize = 30.0
 
         var transform = __directionalLight.AddTransformComponent()
-        transform.rotation = Math.ToQuat(Vec3.new(Math.Radians(163.1), Math.Radians(76), Math.Radians(-178)))
+        transform.rotation = Math.ToQuat(Vec3.new(Math.Radians(161.1), Math.Radians(77), Math.Radians(-178)))
 
         var play = engine.GetGame().GetMainMenu().playButton
         play.OnPress(Fn.new {

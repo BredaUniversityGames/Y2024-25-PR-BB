@@ -124,7 +124,7 @@ float linearize_depth(float d, float zNear, float zFar)
 
 #define DRAG_MULT 0.38 // changes how much waves pull on the water
 #define WATER_DEPTH 1.5 // how deep is the water
-#define CAMERA_HEIGHT 4.8 // how high the camera should be
+#define CAMERA_HEIGHT 2.8 // how high the camera should be
 #define ITERATIONS_RAYMARCH 12 // waves iterations of raymarching
 #define ITERATIONS_NORMAL 32 // waves iterations when calculating normals
 
@@ -142,7 +142,7 @@ float getwaves(vec2 position, int iterations) {
     float wavePhaseShift = length(position) * 0.1; // this is to avoid every octave having exactly the same phase everywhere
     float iter = 0.0; // this will help generating well distributed wave directions
     float frequency = 1.0; // frequency of the wave, this will change every iteration
-    float timeMultiplier = 1.3; // time multiplier for the wave, this will change every iteration
+    float timeMultiplier = 2.0; // time multiplier for the wave, this will change every iteration
     float weight = 1.0;// weight in final sum for the wave, this will change every iteration
     float sumOfValues = 0.0; // will store final sum of values
     float sumOfWeights = 0.0; // will store final sum of weights
@@ -318,7 +318,7 @@ void main()
              vec3 waterPlaneLow = vec3(0.0, -WATER_DEPTH, 0.0);
 
              // define ray origin, moving around
-             vec3 origin = vec3(pc.time * 0.2, CAMERA_HEIGHT, 1);
+             vec3 origin = vec3((pc.time * 0.2) + camera.cameraPosition.x * 0.275, CAMERA_HEIGHT + camera.cameraPosition.y * 0.275, 1 + camera.cameraPosition.z * 0.275);
 
              // calculate intersections and reconstruct positions
              float highPlaneHit = intersectPlane(origin, ray, waterPlaneHigh, vec3(0.0, 1.0, 0.0));
@@ -361,7 +361,7 @@ void main()
         vec2 fragCoords = newTexCoords * vec2(texSize);
         vec3 earlyRay = rayDirection(camera.fov, texSize, fragCoords);
         const vec3 rayDir = normalize(transpose(mat3(camera.view)) * earlyRay);
-        const vec3 ro = vec3(0.0, 0.0, 0.0);
+        const vec3 ro = vec3(camera.cameraPosition.x, 0.0, camera.cameraPosition.z);
         color = Sky(ro, rayDir, waterColor);
 
         if (paletteEnabled)
@@ -481,7 +481,7 @@ vec3 Sky(in vec3 ro, in vec3 rd, in vec3 waterColor)
 
     // HORIZON FOG — applies to everything equally
     vec3 fogColor = pc.voidColor.rgb; // or your choice
-    float horizonFogAmount = 1.0 - smoothstep(0.0, 0.05, abs(rd.y));
+    float horizonFogAmount = 1.0 - smoothstep(0.0, 0.2, abs(rd.y));
     skyCol = mix(skyCol, fogColor, horizonFogAmount);
 
     return skyCol;
