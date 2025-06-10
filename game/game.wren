@@ -301,7 +301,7 @@ class Main {
                 }
             }
         }
-     
+        
         // Skip everything if paused
         if (__pauseEnabled || !__alive) {
         
