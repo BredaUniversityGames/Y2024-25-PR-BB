@@ -577,7 +577,6 @@ class PlayerMovement{
     CheckBounds(engine, playerController, camera){
         var currentPos = playerController.GetRigidbodyComponent().GetPosition()
         if(currentPos.y < -10.0){
-
             var playerBody = playerController.GetRigidbodyComponent()
             playerBody.SetVelocity(Vec3.new(0.0, 0.0, 0.0))
             playerBody.SetTranslation(_playerStartPos)
