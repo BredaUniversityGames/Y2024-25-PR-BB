@@ -1,5 +1,5 @@
 import "gameplay/hud.wren" for WrenHUD, HitmarkerState
-import "engine_api.wren" for Math, EmitterPresetID, Stat, Stats
+import "engine_api.wren" for Math, Stat, Stats
 import "gameplay/station.wren" for PowerUpType
 
 class PlayerVariables {
@@ -45,8 +45,8 @@ class PlayerVariables {
         _damageMultiplier = 1.0
         _currentPowerUp = PowerUpType.NONE  
         // Let's change this based on which PowerUp we have
-        _gunSmokeRay = EmitterPresetID.eRay() 
-        _muzzleFlashRay = EmitterPresetID.eMuzzle() 
+        _gunSmokeRay = "Ray"
+        _muzzleFlashRay = "Muzzle"
     }
 
     godMode=(v) { _godMode = v }
