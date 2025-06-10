@@ -358,15 +358,14 @@ void main()
         // uv.y -= 0.4 * (1.0 / (16.0 / 9.0));
         uv.y = -uv.y;
 
+
         const float smoothCurve = mix(0.0, 0.45, smoothstep(-0.5, 0.5, uv.y));
         const float curve = -(1.0 - dot(uv, uv) * smoothCurve);
         vec2 fragCoords = newTexCoords * vec2(texSize);
-        vec3 earlyRay = rayDirection(50, texSize, fragCoords);
+        vec3 earlyRay = rayDirection(camera.fov, texSize, fragCoords);
         const vec3 rayDir = normalize(transpose(mat3(camera.view)) * earlyRay);
         const vec3 ro = vec3(0.0, 0.0, 0.0);
         color = Sky(ro, rayDir, waterColor);
-
-        //color = waterColor;
 
         if (paletteEnabled)
         {
@@ -374,9 +373,6 @@ void main()
         }
 
         color += bloom;
-    } else
-    {
-
     }
 
     switch (pc.tonemappingFunction)
@@ -492,7 +488,6 @@ vec3 Sky(in vec3 ro, in vec3 rd, in vec3 waterColor)
     skyCol = mix(skyCol, fogColor, horizonFogAmount);
 
     return skyCol;
-
 }
 
 vec3 SaturateColor(vec3 color, float saturationFactor)
