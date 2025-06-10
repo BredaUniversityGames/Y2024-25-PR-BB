@@ -1,6 +1,8 @@
 ﻿#include "achievements.hpp"
 #include "log.hpp"
 
+#include <magic_enum.hpp>
+
 SteamAchievements::SteamAchievements(std::span<Achievement> achievements)
     : _appID(0)
     , _initialized(false)
@@ -64,9 +66,7 @@ void SteamAchievements::OnUserStatsReceived(UserStatsReceived_t* pCallback)
         }
         else
         {
-            char buffer[128];
-            _snprintf(buffer, 128, "RequestStats - failed, %d\n", pCallback->m_eResult);
-            bblog::error(buffer);
+            bblog::error("RequestStats - failed, {}", magic_enum::enum_name(pCallback->m_eResult));
         }
     }
 }
@@ -78,9 +78,7 @@ void SteamAchievements::OnUserStatsStored(UserStatsStored_t* pCallback)
     {
         if (k_EResultOK != pCallback->m_eResult)
         {
-            char buffer[128];
-            _snprintf(buffer, 128, "StatsStored - failed, %d\n", pCallback->m_eResult);
-            bblog::error(buffer);
+            bblog::error("StatsStored - failed, {}", magic_enum::enum_name(pCallback->m_eResult));
         }
     }
 }

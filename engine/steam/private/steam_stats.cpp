@@ -110,9 +110,7 @@ void SteamStats::OnUserStatsReceived(UserStatsReceived_t* pCallback)
         }
         else
         {
-            char buffer[128];
-            _snprintf(buffer, 128, "RequestStats - failed, %d\n", pCallback->m_eResult);
-            bblog::error(buffer);
+            bblog::error("RequestStats - failed, {}", magic_enum::enum_name(pCallback->m_eResult));
         }
     }
 }
@@ -137,9 +135,7 @@ void SteamStats::OnUserStatsStored(UserStatsStored_t* pCallback)
             }
             else
             {
-                char buffer[128];
-                _snprintf(buffer, 128, "StoreStats - failed, %d", pCallback->m_eResult);
-                bblog::error(buffer);
+                bblog::error("StoreStats - failed, {}", magic_enum::enum_name(pCallback->m_eResult));
             }
         }
     }
