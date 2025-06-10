@@ -37,7 +37,7 @@ public:
     void SetStatic() { bodyInterface->SetMotionType(bodyID, JPH::EMotionType::Static, JPH::EActivation::Activate); }
     void SetLayer(const JPH::ObjectLayer myLayer)
     {
-        bodyInterface->SetObjectLayer(bodyID, layer);
+        bodyInterface->SetObjectLayer(bodyID, myLayer);
         layer = myLayer;
     }
 
