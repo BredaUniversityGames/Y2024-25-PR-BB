@@ -56,7 +56,7 @@ class Coin {
         var body = _rootEntity.AddRigidbodyComponent(rb).OnCollisionEnter(onEnterCoinSound)
 
         body.SetGravityFactor(2.5)
-        body.SetFriction(0.5)
+        body.SetFriction(6.5)
 
         var newVelocity = Vec3.new(0.0, 0.0, 0.0)
         newVelocity.x = Random.RandomFloatRange(-7.0, 7.0)
@@ -73,7 +73,7 @@ class Coin {
         _hasStartedFollowing = false
         _velocity = Vec3.new(0.0,0.0,0.0)
         _gravity = Vec3.new(0, -0.098, 0) // gravity for arc
-        _coinSpeed = 0.005
+        _coinSpeed = 2000.0
 
         _collectSoundEvent = "event:/SFX/Coin"
         this.PlaySound(engine,0.65)
@@ -82,8 +82,8 @@ class Coin {
 
     CheckRange(engine, playerPos, playerVariables, flashSystem, coinManager, dt){
         
-        var coinTransform = _rootEntity.GetRigidbodyComponent()
-        var coinPos = coinTransform.GetPosition()
+        var coinBody = _rootEntity.GetRigidbodyComponent()
+        var coinPos = coinBody.GetPosition()
         var distance = Math.Distance(coinPos, playerPos)
 
         var lightTransform = _lightEntity.GetTransformComponent()
@@ -95,14 +95,13 @@ class Coin {
             coinManager.ResetPurseTimer() // Reset the purse timer
             _velocity = (playerPos - coinPos).normalize()
 
-            var arcHeight = distance * 256.0
-            _velocity = _velocity.mulScalar(1024.0) + Vec3.new(0.0, arcHeight, 0.0)
-
+            var arcHeight = distance
+            _velocity = _velocity.mulScalar(4.0) + Vec3.new(0.0, arcHeight, 0.0)
 
             var progress = 1.0 - (distance / _maxRange)
             var easing = progress * progress // ease-out
 
-            coinTransform.SetVelocity(_velocity.mulScalar(dt * _coinSpeed* easing)) // Move the coin towards the player
+            coinBody.AddForce(_velocity.mulScalar(dt * _coinSpeed * easing)) // Move the coin towards the player
 
             if(distance <= _minRange){
                 playerVariables.IncreaseScore(100) // Increase player health
