@@ -85,6 +85,7 @@ private:
         glm::vec4 voidColor;
 
         glm::vec4 flashColor;
+        glm::vec4 waterColor;
     } _pushConstants;
 
     std::shared_ptr<GraphicsContext> _context;

@@ -148,6 +148,8 @@ class MeleeEnemy {
 
             _pointLight.intensity = 0
 
+            _pointLight.intensity = 0
+
             var eventInstance = engine.GetAudio().PlayEventOnce(_bonesSFX)
             
             var hitmarkerSFX = engine.GetAudio().PlayEventOnce(_hitMarkerSFX)

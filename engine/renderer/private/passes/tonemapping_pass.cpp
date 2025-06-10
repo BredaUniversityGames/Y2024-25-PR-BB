@@ -103,6 +103,7 @@ void TonemappingPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t c
     _pushConstants.cloudsColor = _settings.cloudsColor;
     _pushConstants.voidColor = _settings.voidColor;
     _pushConstants.cloudsSpeed = _settings.cloudsSpeed;
+    _pushConstants.waterColor = _settings.waterColor;
 
     _pushConstants.paletteSize = static_cast<int>(_settings.palette.size());
     UpdatePaletteBuffer(_settings.palette);
