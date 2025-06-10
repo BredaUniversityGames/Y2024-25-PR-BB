@@ -92,15 +92,15 @@ private:
     vk::DescriptorSet _emittersDescriptorSet;
     vk::DescriptorSetLayout _emittersBufferDescriptorSetLayout;
     // emitter staging buffer
-    vk::Buffer _emitterStagingBuffer;
-    VmaAllocation _emitterStagingBufferAllocation;
+    std::array<vk::Buffer, MAX_FRAMES_IN_FLIGHT> _emitterStagingBuffer;
+    std::array<VmaAllocation, MAX_FRAMES_IN_FLIGHT> _emitterStagingBufferAllocation;
     // local emitter uniform buffer
     ResourceHandle<Buffer> _localEmittersBuffer;
     vk::DescriptorSet _localEmittersDescriptorSet;
     vk::DescriptorSetLayout _localEmittersDescriptorSetLayout;
     // local emitter staging buffer
-    vk::Buffer _localEmitterStagingBuffer;
-    VmaAllocation _localEmitterStagingBufferAllocation;
+    std::array<vk::Buffer, MAX_FRAMES_IN_FLIGHT> _localEmitterStagingBuffer;
+    std::array<VmaAllocation, MAX_FRAMES_IN_FLIGHT> _localEmitterStagingBufferAllocation;
     // buffers for rendering
     ResourceHandle<Buffer> _vertexBuffer;
     ResourceHandle<Buffer> _indexBuffer;
@@ -110,7 +110,7 @@ private:
     void RecordSimulate(vk::CommandBuffer commandBuffer, const CameraResource& camera, float deltaTime, uint32_t currentFrame);
     void RecordRenderIndexedIndirect(vk::CommandBuffer commandBuffer, const RenderSceneDescription& scene, uint32_t currentFrame);
 
-    void UpdateEmitters(vk::CommandBuffer commandBuffer);
+    void UpdateEmitters(vk::CommandBuffer commandBuffer, uint32_t currentFrame);
 
     void CreatePipelines();
     void CreateDescriptorSetLayouts();

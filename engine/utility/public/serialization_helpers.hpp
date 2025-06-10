@@ -3,6 +3,7 @@
 #include "log.hpp"
 #include <cereal/cereal.hpp>
 #include <cereal/types/list.hpp>
+#include <cereal/types/unordered_map.hpp>
 #include <cereal/types/vector.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/vec2.hpp>

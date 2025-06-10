@@ -1,5 +1,7 @@
 #include "components/transform_helpers.hpp"
+#include "components/name_component.hpp"
 #include "components/relationship_component.hpp"
+#include "components/rigidbody_component.hpp"
 #include "components/transform_component.hpp"
 #include "components/wants_shadows_updated.hpp"
 #include "components/world_matrix_component.hpp"
@@ -9,9 +11,22 @@
 #include <glm/gtx/matrix_decompose.hpp>
 #include <glm/gtx/quaternion.hpp>
 
+bool CheckPhysicsAssert(entt::registry& reg, entt::entity entity)
+{
+    if (reg.all_of<RigidbodyComponent>(entity))
+    {
+        auto* name = reg.try_get<NameComponent>(entity);
+        bblog::warn("{} already has a RigidbodyComponent", name != nullptr ? name->name : "Unnamed entity");
+        return false;
+    }
+    return true;
+}
+
 void TransformHelpers::SetLocalPosition(entt::registry& reg, entt::entity entity, const glm::vec3& position)
 {
     assert(reg.valid(entity));
+    assert(CheckPhysicsAssert(reg, entity));
+
     TransformComponent* transform = reg.try_get<TransformComponent>(entity);
     if (transform == nullptr || transform->_localPosition == position)
     {
@@ -24,6 +39,8 @@ void TransformHelpers::SetLocalPosition(entt::registry& reg, entt::entity entity
 void TransformHelpers::SetLocalRotation(entt::registry& reg, entt::entity entity, const glm::quat& rotation)
 {
     assert(reg.valid(entity));
+    assert(CheckPhysicsAssert(reg, entity));
+
     TransformComponent* transform = reg.try_get<TransformComponent>(entity);
     if (transform == nullptr || transform->_localRotation == rotation)
     {
@@ -36,6 +53,8 @@ void TransformHelpers::SetLocalRotation(entt::registry& reg, entt::entity entity
 void TransformHelpers::SetLocalScale(entt::registry& reg, entt::entity entity, const glm::vec3& scale)
 {
     assert(reg.valid(entity));
+    assert(CheckPhysicsAssert(reg, entity));
+
     TransformComponent* transform = reg.try_get<TransformComponent>(entity);
     if (transform == nullptr || transform->_localScale == scale)
     {
@@ -47,6 +66,7 @@ void TransformHelpers::SetLocalScale(entt::registry& reg, entt::entity entity, c
 }
 void TransformHelpers::SetLocalTransform(entt::registry& reg, entt::entity entity, const glm::vec3& position, const glm::quat& rotation, const glm::vec3& scale)
 {
+    assert(CheckPhysicsAssert(reg, entity));
     TransformComponent* transform = reg.try_get<TransformComponent>(entity);
 
     if (!transform)
@@ -277,7 +297,6 @@ glm::mat4 TransformHelpers::ToMatrix(const glm::vec3& position, const glm::quat&
 void TransformHelpers::OnConstructTransform(entt::registry& reg, entt::entity entity)
 {
     reg.emplace<WorldMatrixComponent>(entity);
-
     UpdateWorldMatrix(reg, entity);
 }
 void TransformHelpers::OnDestroyTransform(entt::registry& reg, entt::entity entity)
@@ -294,17 +313,11 @@ void TransformHelpers::UnsubscribeToEvents(entt::registry& reg)
     reg.on_construct<TransformComponent>().disconnect<&OnConstructTransform>();
     reg.on_destroy<TransformComponent>().disconnect<&OnDestroyTransform>();
 }
-void TransformHelpers::ResetAllUpdateTags(entt::registry& reg)
-{
-    auto view = reg.view<ToBeUpdated>();
-    for (auto entity : view)
-    {
-        reg.remove<ToBeUpdated>(entity);
-    }
-}
+
 void TransformHelpers::UpdateWorldMatrix(entt::registry& reg, entt::entity entity)
 {
     assert(reg.valid(entity));
+
     const RelationshipComponent* relationship = reg.try_get<RelationshipComponent>(entity);
     WorldMatrixComponent& worldMatrix = reg.get_or_emplace<WorldMatrixComponent>(entity);
 
@@ -335,6 +348,6 @@ void TransformHelpers::UpdateWorldMatrix(entt::registry& reg, entt::entity entit
             current = reg.get<RelationshipComponent>(current).next;
         }
     }
-    reg.emplace_or_replace<ToBeUpdated>(entity);
+
     reg.emplace_or_replace<WantsShadowsUpdated>(entity);
 }
