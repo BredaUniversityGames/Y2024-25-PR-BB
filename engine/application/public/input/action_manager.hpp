@@ -102,7 +102,7 @@ public:
     // Sets the actions in the game, the first set in the game actions is assumed to be the used set.
     virtual void SetGameActions(const GameActions& gameActions) { _gameActions = gameActions; }
     // Change the currently used action set in the game actions.
-    virtual void SetActiveActionSet(std::string_view actionSetName);
+    void SetActiveActionSet(std::string_view actionSetName);
     // Sets custom gamepad glyph paths to be taken into account
     void SetCustomInputGlyphs(const GamepadGlyphs& gamepadGlyphs) { _gamepadGlyphs = gamepadGlyphs; }
 

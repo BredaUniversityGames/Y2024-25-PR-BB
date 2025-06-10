@@ -50,6 +50,7 @@ ModuleTickOrder SteamModule::Init(MAYBE_UNUSED Engine& engine)
     }
 
     _steamInputAvailable = true;
+    SteamAPI_RunCallbacks();
 
     return ModuleTickOrder::ePreTick;
 }
