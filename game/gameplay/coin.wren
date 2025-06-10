@@ -6,8 +6,7 @@ import "gameplay/flash_system.wren" for FlashSystem
 class Coin {
     construct new(engine, spawnPosition) {
 
-        _minRange = 0.5 // Range for the coin to be picked up by the player
-        _mediumRange = 3.0
+        _minRange = 1.5 // Range for the coin to be picked up by the player
         _maxRange = 5.0 // Range for the coin to start following the player
 
         _rootEntity = engine.GetECS().NewEntity()
@@ -18,20 +17,24 @@ class Coin {
         transform.translation = spawnPosition
         transform.scale = Vec3.new(0.95, 0.95, 0.95)
 
-
-        // Coin mesh
         _meshEntity = engine.LoadModel("assets/models/nug.glb", false)
         _rootEntity.AttachChild(_meshEntity)
+
+        // Coin mesh
+
+        _coinOffset = Vec3.new(0.0, 0.22, 0.0)
 
         _lightEntity = engine.GetECS().NewEntity()
         _lightEntity.AddNameComponent().name = "Coin Light"
         var lightTransform = _lightEntity.AddTransformComponent()
-        lightTransform.translation = Vec3.new(0.001, 0.22, 0.001)
+        lightTransform.translation = Vec3.new(0.0, 0.22, 0.0)
         var pointLight = _lightEntity.AddPointLightComponent()
         pointLight.intensity = 10
         pointLight.range = 0.5
         pointLight.color = Vec3.new(0.9, 0.9, 0.08)
-        _rootEntity.AttachChild(_lightEntity)
+        
+        //_rootEntity.AttachChild(_lightEntity)
+        
         var transparencyComponent = _meshEntity.AddTransparencyComponent()
         transparencyComponent.transparency = 1.0
         
@@ -53,7 +56,7 @@ class Coin {
         var body = _rootEntity.AddRigidbodyComponent(rb).OnCollisionEnter(onEnterCoinSound)
 
         body.SetGravityFactor(2.5)
-        body.SetFriction(9.0)
+        body.SetFriction(0.5)
 
         var newVelocity = Vec3.new(0.0, 0.0, 0.0)
         newVelocity.x = Random.RandomFloatRange(-7.0, 7.0)
@@ -61,17 +64,7 @@ class Coin {
         newVelocity.z = Random.RandomFloatRange(-7.0, 7.0)
         body.SetVelocity(newVelocity)
 
-        // var newAngularVelocity = Vec3.new(0.0, 0.0, 0.0)
-        // newAngularVelocity.x = Random.RandomFloatRange(-10.0, 10.0)
-        // newAngularVelocity.y =  Random.RandomFloatRange(8.0, 15.0)
-        // newAngularVelocity.z = Random.RandomFloatRange(-10.0, 10.0)
-        // body.SetAngularVelocity(newAngularVelocity)
-
         body.SetAngularVelocity(Random.RandomVec3Range(-50.0, 50.0))
-
-
-
-
 
         _time = 0.0 // Time since the coin was spawned
         _collisionSoundTimer = 0.0 // Timer for the collision sound
@@ -85,7 +78,6 @@ class Coin {
         _collectSoundEvent = "event:/SFX/Coin"
         this.PlaySound(engine,0.65)
 
-
     }
 
     CheckRange(engine, playerPos, playerVariables, flashSystem, coinManager, dt){
@@ -94,6 +86,8 @@ class Coin {
         var coinPos = coinTransform.GetPosition()
         var distance = Math.Distance(coinPos, playerPos)
 
+        var lightTransform = _lightEntity.GetTransformComponent()
+        lightTransform.translation = coinPos + _coinOffset
 
         if(distance < _maxRange){
 
@@ -101,8 +95,8 @@ class Coin {
             coinManager.ResetPurseTimer() // Reset the purse timer
             _velocity = (playerPos - coinPos).normalize()
 
-            var arcHeight = distance * 2.0
-            _velocity = _velocity.mulScalar(8.0) + Vec3.new(0.0, arcHeight, 0.0)
+            var arcHeight = distance * 256.0
+            _velocity = _velocity.mulScalar(1024.0) + Vec3.new(0.0, arcHeight, 0.0)
 
 
             var progress = 1.0 - (distance / _maxRange)
