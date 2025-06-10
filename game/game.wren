@@ -23,7 +23,6 @@ class Main {
         engine.GetInput().SetActiveActionSet("Shooter")
         engine.GetGame().SetUIMenu(engine.GetGame().GetHUD())
 
-
         engine.Fog = 0.005
         engine.AmbientStrength = 0.35
 
@@ -71,10 +70,12 @@ class Main {
 
         var playerTransform = __playerController.AddTransformComponent()
         var playerStart = engine.GetECS().GetEntityByName("PlayerStart")
+        var playerStartPos = Vec3.new(0.0, 0.0, 0.0)
 
         if(playerStart) {
             playerTransform.translation = playerStart.GetTransformComponent().translation
             playerTransform.rotation = playerStart.GetTransformComponent().rotation
+            playerStartPos = playerStart.GetTransformComponent().translation
         }
 
         __playerController.AddPlayerTag()
@@ -163,7 +164,7 @@ class Main {
         __secondaryWeapon = __armory[Weapons.pistol2]
 
         // create the player movement
-        __playerMovement = PlayerMovement.new(false,0.0,__activeWeapon,__player, __playerVariables)
+        __playerMovement = PlayerMovement.new(false,0.0,__activeWeapon,__player, playerStartPos, __playerVariables)
         var mousePosition = engine.GetInput().GetMousePosition()
         __playerMovement.lastMousePosition = mousePosition
 

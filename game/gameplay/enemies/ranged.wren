@@ -37,7 +37,7 @@ class RangedEnemy {
         // ENTITY SETUP
 
         _rootEntity = engine.GetECS().NewEntity()
-        _rootEntity.AddNameComponent().name = "Enemy"
+        _rootEntity.AddNameComponent().name = "RangedEnemy"
         _rootEntity.AddEnemyTag()
         _rootEntity.AddAudioEmitterComponent()
         
@@ -121,12 +121,12 @@ class RangedEnemy {
         var eventInstance = engine.GetAudio().PlayEventOnce(_hitSFX)
         engine.GetAudio().SetEventVolume(eventInstance, 20.0)
         _rootEntity.GetAudioEmitterComponent().AddEvent(eventInstance)
+
         // Fly some worms out of him
         var entity = engine.GetECS().NewEntity()
-        var transform = entity.AddTransformComponent()
-        transform.translation = body.GetPosition()
         var lifetime = entity.AddLifetimeComponent()
         lifetime.lifetime = 170.0
+
         var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
         engine.GetParticles().SpawnEmitter(entity, "Worms",emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(1,3.5, 1))
 
@@ -189,14 +189,10 @@ class RangedEnemy {
         return _rootEntity.GetTransformComponent().translation
     }
 
-    position=(newPos) {
-        _rootEntity.GetTransformComponent().translation = newPos
-    }
-
     Update(playerPos, playerVariables, engine, dt, soulManager, coinManager, flashSystem) {
+
         var body = _rootEntity.GetRigidbodyComponent()
         var pos = body.GetPosition()
-        _rootEntity.GetTransformComponent().translation = pos
 
         // Debug lines for checking enemy height limit
         if (false) {
@@ -222,7 +218,7 @@ class RangedEnemy {
                     var startRotation = body.GetRotation()
 
                     // TODO: Not framerate independent
-                    body.SetRotation(Math.Slerp(startRotation, endRotation, 0.03 *dt))
+                    body.SetRotation(Math.Slerp(startRotation, endRotation, 0.03 * dt))
 
                     // Spawning white charging particles
                     _chargeTimer = _chargeTimer - dt
