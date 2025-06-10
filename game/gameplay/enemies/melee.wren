@@ -367,6 +367,7 @@ class MeleeEnemy {
 
         var distToPlayer = Math.Distance(pos, playerPos)
         var altitudeToPlayer = Math.Distance(Vec3.new(0.0, pos.y, 0.0), Vec3.new(0.0, playerPos.y, 0.0))
+        var forwardVector = Vec3.new(0.0, 0.0, 0.0)
 
         if(distToPlayer > _honeInRadius || altitudeToPlayer > _honeInMaxAltitude) {
             _reasonTimer = _reasonTimer + dt
@@ -402,99 +403,22 @@ class MeleeEnemy {
 
             var dst = Math.Distance(pos, p1.center)
             var target = Math.MixVec3(p1.center, p2.center, dst * bias)
-            var forwardVector = (target - pos).normalize()
-
-            _rootEntity.GetRigidbodyComponent().SetVelocity(forwardVector.mulScalar(_maxVelocity))
-            
-            // Set forward rotation
-            var endRotation = Math.LookAt(Vec3.new(forwardVector.x, 0, forwardVector.z), Vec3.new(0, 1, 0))
-            var startRotation = body.GetRotation()
-            body.SetRotation(Math.Slerp(startRotation, endRotation, 0.01 *dt))
+            forwardVector = target - pos
         }else{
-            var forwardVector = playerPos - position
-            //forwardVector.y = 0
-            forwardVector = forwardVector.normalize()
-
-            // Local avoidance
-            var seekDepth = 3.0
-            var rayCount = 6
-            var rayAngle = 20 // degrees
-
-            var forwardNoYVector = Vec3.new(forwardVector.x, 0.0, forwardVector.z)
-            var offsetToKnees = Vec3.new(0.0, -0.25, 0.0)
-            var offsetToFeet = Vec3.new(0.0, -0.75, 0.0)
-
-            //var rayHitInfos = engine.GetPhysics().ShootMultipleRays(pos + offsetToFeet, forwardNoYVector, seekDepth, rayCount, rayAngle)
-
-            var angleStep = Math.Radians(rayAngle) / (rayCount / 2)
-            var lowestHitFractions = []
-
-            var offsetDirection = Vec3.new(0, 0, 0)
-
-            for(i in 0...rayCount) {
-                var angleOffset = (i-(rayCount - 1) / 2.0) * angleStep
-                var rotatedDirection = Math.RotateY(forwardVector, angleOffset)
-
-                var hitInfos = engine.GetPhysics().ShootRay(pos + offsetToKnees, rotatedDirection, seekDepth)
-                var lowestHitFraction = 1.0
-                var lowestHitFractionIndex = 0
-                for(j in 0...hitInfos.count) {
-
-                    var ray = hitInfos[j]
-
-                    if(ray.GetEntity(engine.GetECS()).GetEnttEntity() == _rootEntity.GetEnttEntity()) {
-                        continue
-                    }
-
-                    if(ray.hitFraction < lowestHitFraction) {
-                        lowestHitFraction = ray.hitFraction
-                        lowestHitFractionIndex = j
-                    }
-                }
-
-                offsetDirection = offsetDirection + (pos - hitInfos[lowestHitFractionIndex].position)
+            forwardVector = (playerPos - position).normalize()
+            var localSteerForward = this.LocalSteer(engine, pos, forwardVector)
+            if(localSteerForward) {
+                forwardVector = localSteerForward
             }
-
-            offsetDirection = offsetDirection.normalize()
-            var absDot = Math.Abs(Math.Dot(forwardVector, offsetDirection))
-
-            if(absDot > 0.9) {
-                // if all ray checks have nearly the same result
-
-                var angle = 0.0
-
-                var index = Random.RandomIndex(0, 1)
-                if(index == 0) {
-                    angle = -90.0
-                } else {
-                    angle = 90.0
-                }
-
-                forwardVector = Math.RotateY(forwardVector, angle)
-            } else {
-                if(absDot < 0.001) {
-                    // if no hits keep same forward vector
-                } else {
-                    // regular steering behavior
-                    forwardVector = forwardVector - offsetDirection
-                }
-            }
-
-
-            forwardVector = (forwardVector.normalize() + _rootEntity.GetRigidbodyComponent().GetVelocity())
-            var maxVelocityScalar = 1.0
-            if(forwardVector.length() >= _maxVelocity) {
-                maxVelocityScalar = _maxVelocity / forwardVector.length()
-            }
-
-            var factor = Vec3.new(maxVelocityScalar, 1.0, maxVelocityScalar)
-            _rootEntity.GetRigidbodyComponent().SetVelocity(forwardVector * factor)
-
-            var endRotation = Math.LookAt(Vec3.new(forwardVector.x, 0, forwardVector.z), Vec3.new(0, 1, 0))
-                        var startRotation = body.GetRotation()
-
-            body.SetRotation(Math.Slerp(startRotation, endRotation, 0.01 *dt))
         }
+
+        forwardVector = forwardVector.normalize()
+        forwardVector = (_rootEntity.GetRigidbodyComponent().GetVelocity() + forwardVector).normalize()
+        _rootEntity.GetRigidbodyComponent().SetVelocity(forwardVector.mulScalar(_maxVelocity))
+
+        var endRotation = Math.LookAt(Vec3.new(forwardVector.x, 0, forwardVector.z), Vec3.new(0, 1, 0))
+        var startRotation = body.GetRotation()
+        body.SetRotation(Math.Slerp(startRotation, endRotation, 0.01 *dt))
     }
 
     FindNewPath(engine) {
@@ -502,6 +426,77 @@ class MeleeEnemy {
         _currentPath = engine.GetPathfinding().FindPath(startPos, engine.GetECS().GetEntityByName("Player").GetTransformComponent().GetWorldTranslation())
         
         _currentPathNodeIdx = 1
+    }
+
+    // Returns a corrected vector or null if no objects were found
+    LocalSteer(engine, position, forwardVector) {
+        var seekDepth = 3.0
+        var rayCount = 6
+        var rayAngle = 20 // degrees
+
+        var offsetToKnees = Vec3.new(0.0, -0.25, 0.0)
+
+        var angleStep = Math.Radians(rayAngle) / (rayCount / 2)
+
+        var offsetDirection = Vec3.new(0, 0, 0)
+
+        // Find closest ray hit and add this to the offsetDirection vector
+        for(i in 0...rayCount) {
+            var angleOffset = (i-(rayCount - 1) / 2.0) * angleStep
+            var rotatedDirection = Math.RotateY(forwardVector, angleOffset)
+
+            var hitInfos = engine.GetPhysics().ShootRay(position + offsetToKnees, rotatedDirection, seekDepth)
+            var lowestHitFraction = 1.0
+            var lowestHitFractionIndex = 0
+            for(j in 0...hitInfos.count) {
+
+                var ray = hitInfos[j]
+
+                if(ray.GetEntity(engine.GetECS()).GetEnttEntity() == _rootEntity.GetEnttEntity()) {
+                    continue
+                }
+
+                if(ray.hitFraction < lowestHitFraction) {
+                    lowestHitFraction = ray.hitFraction
+                    lowestHitFractionIndex = j
+                }
+            }
+
+            offsetDirection = offsetDirection + (position - hitInfos[lowestHitFractionIndex].position)
+        }
+
+        // If we hit nothing
+        if(offsetDirection.length() < 0.001) {
+            return null
+        }
+
+        offsetDirection = offsetDirection.normalize()
+        var absDot = Math.Abs(Math.Dot(forwardVector, offsetDirection))
+
+        if(absDot > 0.9) {
+            // if the raycast results is a vector that is nearly a negated forward vector
+            // steer either hard left or right (random chance for either)
+
+            var angle = 0.0
+
+            var index = Random.RandomIndex(0, 1)
+            if(index == 0) {
+                angle = -90.0
+            } else {
+                angle = 90.0
+            }
+
+            forwardVector = Math.RotateY(forwardVector, angle)
+        } else {
+            if(absDot < 0.001) {
+                // if no hits (or too subtle) keep same forward vector
+            } else {
+                // regular steering behavior
+                forwardVector = forwardVector - offsetDirection
+            }
+        }
+
+        return forwardVector
     }
 
     Destroy(engine) {
