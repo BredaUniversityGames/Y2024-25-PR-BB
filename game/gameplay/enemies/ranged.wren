@@ -21,6 +21,7 @@ class RangedEnemy {
         _health = 5
         _deathTimerMax = 1500
         _changeDirectionTimerMax = 2000
+        _disruptHitCount = 0
         _maxHeight = 34.0
         _minHeight = 16.0
 
@@ -149,6 +150,7 @@ class RangedEnemy {
 
             body.SetDynamic()
             body.SetGravityFactor(2.0)
+            body.SetLayer(PhysicsObjectLayer.eDEAD())
 
         } else {
             _rootEntity.GetRigidbodyComponent().SetVelocity(Vec3.new(0.0, 0.0, 0.0))
@@ -159,6 +161,21 @@ class RangedEnemy {
             //_recoveryState = false
             _hasTakenDamage = true
             _hasDashedFromDamage = false
+
+            _disruptHitCount = _disruptHitCount + 1
+            if (_disruptHitCount > 2) {
+                _disruptHitCount = 0
+
+                if(_chargeSoundEventInstance) {
+                    engine.GetAudio().StopEvent(_chargeSoundEventInstance)
+                    _chargeSoundEventInstance = null
+                }
+
+                _attackingState = false
+                _recoveryState = true
+                _recoveryTime = _recoveryMaxTime
+                _attackCooldown = _attackMaxCooldown * 0.5
+            }
         }
     }
 
@@ -316,6 +333,7 @@ class RangedEnemy {
                     _movingState = false
                     _attackTime = _attackMaxTime
                     _evaluateState = false
+                    _disruptHitCount = 0
                     
                     //play charge sound
                     _chargeSoundEventInstance = engine.GetAudio().PlayEventOnce(_chargeSFX)

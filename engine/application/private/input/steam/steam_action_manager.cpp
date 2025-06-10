@@ -24,6 +24,13 @@ void SteamActionManager::Update()
         return;
     }
 
+    // Make sure we have the steam handles cached (could not be cached in case of the controller being connected after the game startup)
+    if (_steamGameActionsCache.empty())
+    {
+        CacheSteamInputHandles();
+    }
+
+    SteamInput()->ActivateActionSet(_steamInputDeviceManager.GetGamepadHandle(), _steamGameActionsCache[_activeActionSet].actionSetHandle);
     UpdateSteamControllerInputState();
 }
 
@@ -34,38 +41,12 @@ void SteamActionManager::SetGameActions(const GameActions& gameActions)
     _currentControllerState.clear();
     _prevControllerState.clear();
 
-    // Caching Steam Input API handles
-    _steamGameActionsCache.resize(_gameActions.size());
-
-    for (uint32_t i = 0; i < _gameActions.size(); ++i)
-    {
-        SteamActionSetCache& cache = _steamGameActionsCache[i];
-
-        cache.actionSetHandle = SteamInput()->GetActionSetHandle(_gameActions[i].name.c_str());
-
-        for (const DigitalAction& action : _gameActions[i].digitalActions)
-        {
-            cache.gamepadDigitalActionsCache.emplace(action.name, SteamInput()->GetDigitalActionHandle(action.name.c_str()));
-        }
-
-        for (const AnalogAction& action : _gameActions[i].analogActions)
-        {
-            cache.gamepadAnalogActionsCache.emplace(action.name, SteamInput()->GetAnalogActionHandle(action.name.c_str()));
-        }
-    }
+    CacheSteamInputHandles();
 
     if (!_gameActions.empty())
     {
         SetActiveActionSet(_gameActions[0].name);
     }
-}
-
-void SteamActionManager::SetActiveActionSet(std::string_view actionSetName)
-{
-    ActionManager::SetActiveActionSet(actionSetName);
-
-    SteamInput()->ActivateActionSet(_steamInputDeviceManager.GetGamepadHandle(), _steamGameActionsCache[_activeActionSet].actionSetHandle);
-    SteamInput()->RunFrame(); // Make sure a set is immediately used
 }
 
 DigitalActionType SteamActionManager::CheckInput(std::string_view actionName, MAYBE_UNUSED GamepadButton button) const
@@ -218,5 +199,32 @@ void SteamActionManager::UpdateSteamControllerInputState()
     {
         ControllerDigitalActionData_t digitalData = SteamInput()->GetDigitalActionData(_steamInputDeviceManager.GetGamepadHandle(), actionHandle);
         _currentControllerState[actionName] = digitalData.bState;
+    }
+}
+
+void SteamActionManager::CacheSteamInputHandles()
+{
+    if (!_inputDeviceManager.IsGamepadAvailable())
+    {
+        return;
+    }
+
+    _steamGameActionsCache.resize(_gameActions.size());
+
+    for (uint32_t i = 0; i < _gameActions.size(); ++i)
+    {
+        SteamActionSetCache& cache = _steamGameActionsCache[i];
+
+        cache.actionSetHandle = SteamInput()->GetActionSetHandle(_gameActions[i].name.c_str());
+
+        for (const DigitalAction& action : _gameActions[i].digitalActions)
+        {
+            cache.gamepadDigitalActionsCache.emplace(action.name, SteamInput()->GetDigitalActionHandle(action.name.c_str()));
+        }
+
+        for (const AnalogAction& action : _gameActions[i].analogActions)
+        {
+            cache.gamepadAnalogActionsCache.emplace(action.name, SteamInput()->GetAnalogActionHandle(action.name.c_str()));
+        }
     }
 }

@@ -8,7 +8,7 @@
         "y": 0.060576602816581729,
         "z": 0.02004534937441349
       },
-      "density": 0.009999999776482582
+      "density": -0.019999999552965165
     },
     "ssao": {
       "cereal_class_version": 0,
@@ -39,7 +39,7 @@
       "filterRadius": 0.004999999888241291
     },
     "tonemapping": {
-      "cereal_class_version": 8,
+      "cereal_class_version": 9,
       "tonemappingFunction": 2,
       "exposure": 1.0470000505447388,
       "enableVignette": true,
@@ -130,11 +130,17 @@
         "z": 0.01578565500676632,
         "w": 1.0
       },
-      "cloudsSpeed": -0.10000000149011612
+      "cloudsSpeed": -0.10000000149011612,
+      "waterColor": {
+        "x": 0.2436995506286621,
+        "y": 0.2849740982055664,
+        "z": 0.16242046654224397,
+        "w": 6.550000190734863
+      }
     },
     "lighting": {
       "cereal_class_version": 0,
-      "ambientStrength": 0.17000000178813935,
+      "ambientStrength": 1.25,
       "ambientShadowStrength": 0.4399999976158142,
       "decalNormalThreshold": 55.0
     }

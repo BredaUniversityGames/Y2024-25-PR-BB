@@ -127,6 +127,10 @@ public:
     {
         return glm::radians(a);
     }
+    static float Degrees(const float a)
+    {
+        return glm::degrees(a);
+    }
     static glm::quat AngleAxis(const float a, glm::vec3 vec)
     {
         return glm::angleAxis(a, vec);
@@ -282,6 +286,7 @@ inline void BindMath(wren::ForeignModule& module)
         mathUtilClass.funcStatic<&MathUtil::Sin>("Sin");
         mathUtilClass.funcStatic<&MathUtil::Cos>("Cos");
         mathUtilClass.funcStatic<&MathUtil::Radians>("Radians");
+        mathUtilClass.funcStatic<&MathUtil::Degrees>("Degrees");
         mathUtilClass.funcStatic<&MathUtil::AngleAxis>("AngleAxis");
         mathUtilClass.funcStatic<&MathUtil::LookAt>("LookAt");
         mathUtilClass.funcStatic<&MathUtil::RotateForwardVector>("RotateForwardVector");
