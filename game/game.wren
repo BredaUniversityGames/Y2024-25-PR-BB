@@ -36,12 +36,12 @@ class Main {
 
         var comp = __directionalLight.AddDirectionalLightComponent()
         comp.color = Vec3.new(4.0, 3.2, 1.2).mulScalar(0.15)
-        comp.planes = Vec2.new(-50.0, 500.0)
+        comp.planes = Vec2.new(-50.0, 1000.0)
         comp.orthographicSize = 120.0
 
         var transform = __directionalLight.AddTransformComponent()
-        transform.translation = Vec3.new(-94.000, 174.800, 156.900)
-        transform.rotation = Quat.new(0.544, -0.136, -0.800,-0.214)
+        transform.translation = Vec3.new(-74.000, 134.800, 156.900)
+        transform.rotation = Quat.new(0.559, -0.060, -0.821,-0.101)
 
         // Player Setup
 
