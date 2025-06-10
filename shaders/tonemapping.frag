@@ -125,8 +125,8 @@ float linearize_depth(float d, float zNear, float zFar)
 #define DRAG_MULT 0.38 // changes how much waves pull on the water
 #define WATER_DEPTH 1.5 // how deep is the water
 #define CAMERA_HEIGHT 2.8 // how high the camera should be
-#define ITERATIONS_RAYMARCH 12 // waves iterations of raymarching
-#define ITERATIONS_NORMAL 32 // waves iterations when calculating normals
+#define ITERATIONS_RAYMARCH 8 // waves iterations of raymarching
+#define ITERATIONS_NORMAL 24 // waves iterations when calculating normals
 
 // Calculates wave value and its derivative,
 // for the wave direction, position in space, wave frequency and time
