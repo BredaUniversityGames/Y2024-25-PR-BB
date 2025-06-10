@@ -41,59 +41,21 @@ PhysicsSystem::PhysicsSystem(Engine& engine, ECSModule& ecs, PhysicsModule& phys
 
 void PhysicsSystem::Update(MAYBE_UNUSED ECSModule& ecs, MAYBE_UNUSED float deltaTime)
 {
-    // let's check priority first between transforms and physics
-    // Here we update jolt transforms based on our transform system since they are static objects and we want hierarchy
-    const auto transformsView = ecs.GetRegistry().view<TransformComponent, RigidbodyComponent, ToBeUpdated /*, StaticMeshComponent*/>();
-    for (auto entity : transformsView)
-    {
-        const RigidbodyComponent& rb = transformsView.get<RigidbodyComponent>(entity);
-
-        glm::mat4 worldMatrix = TransformHelpers::GetWorldMatrix(_ecs.GetRegistry(), entity);
-        glm::vec3 scale, translation, skew;
-        glm::quat rotationQuat;
-        glm::vec4 perspective;
-
-        // Decompose the matrix
-        glm::decompose(worldMatrix, scale, rotationQuat, translation, skew, perspective);
-
-        _physicsModule.GetBodyInterface().SetPosition(rb.bodyID, JPH::Vec3(translation.x, translation.y, translation.z), JPH::EActivation::Activate);
-        _physicsModule.GetBodyInterface().SetRotation(rb.bodyID, JPH::Quat(rotationQuat.x, rotationQuat.y, rotationQuat.z, rotationQuat.w), JPH::EActivation::Activate);
-
-        auto result = rb.shape->ScaleShape(JPH::Vec3Arg(scale.x, scale.y, scale.z));
-        if (result.HasError())
-            bblog::error(result.GetError().c_str());
-        _physicsModule.GetBodyInterface().SetShape(rb.bodyID, result.Get(), false, JPH::EActivation::Activate);
-    }
-
-    // this part should be fast because it returns a vector of just ids not whole rigidbodies
+    // This part should be fast because it returns a vector of just ids not whole rigidbodies
     JPH::BodyIDVector activeBodies;
     _physicsModule._physicsSystem->GetActiveBodies(JPH::EBodyType::RigidBody, activeBodies);
 
-    // mark all active bodies to have their mesh updated
+    // Update transform for all active bodies
     for (auto active_body : activeBodies)
     {
-        const entt::entity entity = static_cast<entt::entity>(_physicsModule.GetBodyInterface().GetUserData(active_body));
-        if (_ecs.GetRegistry().valid(entity) && _physicsModule.GetBodyInterface().GetMotionType(active_body) != JPH::EMotionType::Static)
+        if (_physicsModule.GetBodyInterface().GetMotionType(active_body) == JPH::EMotionType::Static)
         {
-            _ecs.GetRegistry().emplace_or_replace<UpdateMeshAndPhysics>(entity);
+            bblog::trace("Skipping static body");
+            return;
         }
-    }
 
-    // We now update our transform system to match jolt's since the loop below us handles the dynamic objects that are being simulated by physics
-    const auto view = _ecs.GetRegistry().view<RigidbodyComponent, TransformComponent, UpdateMeshAndPhysics>();
-    for (const auto entity : view)
-    {
-
-        if (_ecs.GetRegistry().all_of<SkinnedMeshComponent>(entity))
-            continue;
-
-        const RigidbodyComponent& rb = view.get<RigidbodyComponent>(entity);
-
-        // if somehow is now not active or is static lets remove the update component
-        if (!_physicsModule.GetBodyInterface().IsActive(rb.bodyID))
-            _ecs.GetRegistry().remove<UpdateMeshAndPhysics>(entity);
-        if (_physicsModule.GetBodyInterface().GetMotionType(rb.bodyID) == JPH::EMotionType::Static)
-            _ecs.GetRegistry().remove<UpdateMeshAndPhysics>(entity);
+        const entt::entity entity = static_cast<entt::entity>(_physicsModule.GetBodyInterface().GetUserData(active_body));
+        const RigidbodyComponent& rb = ecs.GetRegistry().get<RigidbodyComponent>(entity);
 
         auto joltMatrix = _physicsModule.GetBodyInterface().GetWorldTransform(rb.bodyID);
 
@@ -103,28 +65,23 @@ void PhysicsSystem::Update(MAYBE_UNUSED ECSModule& ecs, MAYBE_UNUSED float delta
         if (relationship && relationship->parent != entt::null)
             RelationshipHelpers::DetachChild(_ecs.GetRegistry(), relationship->parent, entity);
 
-        // Crazy jolt stuff that I dont like but it works to set the proper scale
-        JPH::BodyLockWrite lock(_physicsModule._physicsSystem->GetBodyLockInterface(), rb.bodyID);
-        if (lock.Succeeded())
-        {
-            JPH::Body& body = lock.GetBody();
-            const JPH::ScaledShape* scaled_shape = static_cast<const JPH::ScaledShape*>(body.GetShape());
+        auto shape = _physicsModule._physicsSystem->GetBodyInterface().GetShape(active_body);
 
+        if (auto scaled_shape = dynamic_cast<const JPH::ScaledShape*>(shape.GetPtr()))
+        {
             const auto joltScale = scaled_shape->GetScale();
             joltMatrix = joltMatrix.PreScaled(joltScale);
         }
 
         const auto joltToGlm = ToGLMMat4(joltMatrix);
-
         TransformHelpers::SetWorldTransform(ecs.GetRegistry(), entity, joltToGlm);
     }
-
-    // Clear the tags, if needed the system will add them back again
-    TransformHelpers::ResetAllUpdateTags(ecs.GetRegistry());
 }
+
 void PhysicsSystem::Render(MAYBE_UNUSED const ECSModule& ecs) const
 {
 }
+
 void PhysicsSystem::Inspect()
 {
     ZoneScoped;

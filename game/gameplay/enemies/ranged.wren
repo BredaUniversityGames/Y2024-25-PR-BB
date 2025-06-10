@@ -21,6 +21,7 @@ class RangedEnemy {
         _health = 5
         _deathTimerMax = 1500
         _changeDirectionTimerMax = 2000
+        _disruptHitCount = 0
         _maxHeight = 34.0
         _minHeight = 16.0
 
@@ -36,7 +37,7 @@ class RangedEnemy {
         // ENTITY SETUP
 
         _rootEntity = engine.GetECS().NewEntity()
-        _rootEntity.AddNameComponent().name = "Enemy"
+        _rootEntity.AddNameComponent().name = "RangedEnemy"
         _rootEntity.AddEnemyTag()
         _rootEntity.AddAudioEmitterComponent()
         
@@ -120,12 +121,12 @@ class RangedEnemy {
         var eventInstance = engine.GetAudio().PlayEventOnce(_hitSFX)
         engine.GetAudio().SetEventVolume(eventInstance, 20.0)
         _rootEntity.GetAudioEmitterComponent().AddEvent(eventInstance)
+
         // Fly some worms out of him
         var entity = engine.GetECS().NewEntity()
-        var transform = entity.AddTransformComponent()
-        transform.translation = body.GetPosition()
         var lifetime = entity.AddLifetimeComponent()
         lifetime.lifetime = 170.0
+
         var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
         engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eWorms(),emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(1,3.5, 1))
 
@@ -149,6 +150,7 @@ class RangedEnemy {
 
             body.SetDynamic()
             body.SetGravityFactor(2.0)
+            body.SetLayer(PhysicsObjectLayer.eDEAD())
 
         } else {
             _rootEntity.GetRigidbodyComponent().SetVelocity(Vec3.new(0.0, 0.0, 0.0))
@@ -159,6 +161,21 @@ class RangedEnemy {
             //_recoveryState = false
             _hasTakenDamage = true
             _hasDashedFromDamage = false
+
+            _disruptHitCount = _disruptHitCount + 1
+            if (_disruptHitCount > 2) {
+                _disruptHitCount = 0
+
+                if(_chargeSoundEventInstance) {
+                    engine.GetAudio().StopEvent(_chargeSoundEventInstance)
+                    _chargeSoundEventInstance = null
+                }
+
+                _attackingState = false
+                _recoveryState = true
+                _recoveryTime = _recoveryMaxTime
+                _attackCooldown = _attackMaxCooldown * 0.5
+            }
         }
     }
 
@@ -172,14 +189,10 @@ class RangedEnemy {
         return _rootEntity.GetTransformComponent().translation
     }
 
-    position=(newPos) {
-        _rootEntity.GetTransformComponent().translation = newPos
-    }
-
     Update(playerPos, playerVariables, engine, dt, soulManager, coinManager, flashSystem) {
+
         var body = _rootEntity.GetRigidbodyComponent()
         var pos = body.GetPosition()
-        _rootEntity.GetTransformComponent().translation = pos
 
         // Debug lines for checking enemy height limit
         if (false) {
@@ -205,7 +218,7 @@ class RangedEnemy {
                     var startRotation = body.GetRotation()
 
                     // TODO: Not framerate independent
-                    body.SetRotation(Math.Slerp(startRotation, endRotation, 0.03 *dt))
+                    body.SetRotation(Math.Slerp(startRotation, endRotation, 0.03 * dt))
 
                     // Spawning white charging particles
                     _chargeTimer = _chargeTimer - dt
@@ -320,6 +333,7 @@ class RangedEnemy {
                     _movingState = false
                     _attackTime = _attackMaxTime
                     _evaluateState = false
+                    _disruptHitCount = 0
                     
                     //play charge sound
                     _chargeSoundEventInstance = engine.GetAudio().PlayEventOnce(_chargeSFX)
