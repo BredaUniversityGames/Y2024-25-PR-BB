@@ -10,10 +10,6 @@
 #include <Jolt/Physics/Body/BodyInterface.h>
 #include <Jolt/Physics/Collision/Shape/Shape.h>
 
-struct UpdateMeshAndPhysics
-{
-};
-
 class RigidbodyComponent
 {
 public:
@@ -41,15 +37,13 @@ public:
     void SetStatic() { bodyInterface->SetMotionType(bodyID, JPH::EMotionType::Static, JPH::EActivation::Activate); }
     void SetLayer(const JPH::ObjectLayer myLayer)
     {
-        bodyInterface->SetObjectLayer(bodyID, layer);
+        bodyInterface->SetObjectLayer(bodyID, myLayer);
         layer = myLayer;
     }
 
     // Adders
     void AddForce(const glm::vec3& force) { bodyInterface->AddForce(bodyID, ToJoltVec3(force)); }
     void AddImpulse(const glm::vec3& force) { bodyInterface->AddImpulse(bodyID, ToJoltVec3(force)); }
-
-    void SetColliderShape(JPH::ShapeRefC newShape);
 
     JPH::BodyID bodyID;
     JPH::ShapeRefC shape;
