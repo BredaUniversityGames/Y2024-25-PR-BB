@@ -32,7 +32,7 @@ class FlashSystem {
             )
         }
 
-        if(_flashTimer > 200){
+        if(_flashTimer > 175){
             _isGoingTowardsTarget = false
             _flashTimer = 0.0
         }    

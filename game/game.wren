@@ -36,12 +36,12 @@ class Main {
 
         var comp = __directionalLight.AddDirectionalLightComponent()
         comp.color = Vec3.new(4.0, 3.2, 1.2).mulScalar(0.15)
-        comp.planes = Vec2.new(-50.0, 500.0)
+        comp.planes = Vec2.new(-50.0, 1000.0)
         comp.orthographicSize = 120.0
 
         var transform = __directionalLight.AddTransformComponent()
-        transform.translation = Vec3.new(-94.000, 174.800, 156.900)
-        transform.rotation = Quat.new(0.544, -0.136, -0.800,-0.214)
+        transform.translation = Vec3.new(-74.000, 134.800, 156.900)
+        transform.rotation = Quat.new(0.559, -0.060, -0.821,-0.101)
 
         // Player Setup
 
@@ -88,7 +88,8 @@ class Main {
         __cameraVariables = CameraVariables.new()
         __playerVariables.cameraVariables = __cameraVariables
         var cameraProperties = __camera.AddCameraComponent()
-        cameraProperties.fov = Math.Radians(45.0)
+        cameraProperties.fov = engine.GetGame().GetSettings().fov // Get from where we manage fov
+
         cameraProperties.nearPlane = 0.1
         cameraProperties.farPlane = 600.0
         cameraProperties.reversedZ = true
@@ -162,7 +163,7 @@ class Main {
         __secondaryWeapon = __armory[Weapons.pistol2]
 
         // create the player movement
-        __playerMovement = PlayerMovement.new(false,0.0,__activeWeapon,__player)
+        __playerMovement = PlayerMovement.new(false,0.0,__activeWeapon,__player, __playerVariables)
         var mousePosition = engine.GetInput().GetMousePosition()
         __playerMovement.lastMousePosition = mousePosition
 
@@ -272,6 +273,8 @@ class Main {
         }
 
         retryButton.OnPress(retryHandler)
+
+        __gamepadConnectedPrevFrame = engine.GetInput().IsGamepadConnected()
     }
 
     static Shutdown(engine) {
@@ -281,9 +284,17 @@ class Main {
 
     static Update(engine, dt) {
 
-        // Check if pause key was pressed
-
+        // Pausing functionality
         if(__alive) {
+            // Pause the game if the controller disconnects
+            var hasGamepadDisconnected = __gamepadConnectedPrevFrame && !engine.GetInput().IsGamepadConnected()
+            __gamepadConnectedPrevFrame = engine.GetInput().IsGamepadConnected()
+
+            if (!__pauseEnabled && hasGamepadDisconnected) {
+                __pauseHandler.call()
+            }
+
+            // Check if pause key was pressed
             var pausePressed = false
             if (!__pauseEnabled) {
                 pausePressed = engine.GetInput().GetDigitalAction("Pause").IsReleased()
@@ -302,8 +313,14 @@ class Main {
             }
         }
 
+
+        // Update fov
+        __playerMovement.UpdateFOV(50 + 100 * engine.GetGame().GetSettings().fov)
+        __camera.GetCameraComponent().fov = Math.Radians(__playerMovement.cameraFovCurrent)
+
         // Skip everything if paused
         if (__pauseEnabled || !__alive) {
+            __camera.GetCameraComponent().fov = Math.Radians(50 + 100 * engine.GetGame().GetSettings().fov)
             return
         }
 
@@ -324,7 +341,7 @@ class Main {
             engine.GetAudio().DisableLowPass()
         }
 
-        
+
 
         var cheats = __playerController.GetCheatsComponent()
         var deltaTime = engine.GetTime().GetDeltatime()
@@ -360,7 +377,7 @@ class Main {
         }
 
         if (engine.GetInput().DebugIsInputEnabled()) {
-            __playerMovement.Update(engine, dt, __playerController, __camera,__playerVariables.hud)
+            __playerMovement.Update(engine, dt, __playerController, __camera,__playerVariables.hud, __flashSystem)
         }
 
         for (weapon in __armory) {
@@ -432,7 +449,7 @@ class Main {
         }
 
         if (engine.GetInput().GetDigitalAction("Shoot").IsHeld()  && __activeWeapon.isUnequiping(engine) == false ) {
-            __activeWeapon.attack(engine, dt, __playerVariables, __enemyList, __coinManager)
+            __activeWeapon.attack(engine, dt, __playerVariables, __enemyList, __coinManager, __playerMovement.cameraFovCurrent)
             if (__activeWeapon.ammo <= 0) {
                 __activeWeapon.reload(engine)
             }
@@ -445,7 +462,7 @@ class Main {
         if (engine.GetInput().GetDigitalAction("ShootSecondary").IsHeld()  && __activeWeapon.isUnequiping(engine) == false ) {
 
             if (__playerVariables.GetCurrentPowerUp() == PowerUpType.DOUBLE_GUNS){
-                __secondaryWeapon.attack(engine, dt, __playerVariables, __enemyList, __coinManager)
+                __secondaryWeapon.attack(engine, dt, __playerVariables, __enemyList, __coinManager, __playerMovement.cameraFovCurrent)
                 if (__secondaryWeapon.ammo <= 0) {
                     __secondaryWeapon.reload(engine)
                 }

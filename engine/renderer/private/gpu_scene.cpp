@@ -46,6 +46,7 @@ GPUScene::GPUScene(const GPUSceneCreation& creation, const Settings::Fog& settin
     , _settings(settings)
     , _ecs(creation.ecs)
     , _mainCamera(creation.context, true)
+    , _foregroundCamera(creation.context, true)
     , _directionalLightShadowCamera(creation.context, false)
 {
     InitializeSceneBuffers();
@@ -427,11 +428,26 @@ void GPUScene::UpdateCameraData(uint32_t frameIndex)
         auto view = CameraResource::CalculateViewMatrix(TransformHelpers::GetWorldRotation(_ecs.GetRegistry(), entity), TransformHelpers::GetWorldPosition(_ecs.GetRegistry(), entity));
         auto proj = CameraResource::CalculateProjectionMatrix(cameraComponent);
 
+        glm::mat4 foregroundProj;
+        if (cameraComponent.reversedZ)
+        {
+            // Swapped far and near plane, since reverse Z is used.
+            foregroundProj = glm::perspective(glm::radians(50.0f), cameraComponent.aspectRatio, cameraComponent.farPlane, cameraComponent.nearPlane);
+        }
+        else
+        {
+            foregroundProj = glm::perspective(glm::radians(50.0f), cameraComponent.aspectRatio, cameraComponent.nearPlane, cameraComponent.farPlane);
+        }
+
+        foregroundProj[1][1] *= -1;
+
         auto position = TransformHelpers::GetWorldPosition(_ecs.GetRegistry(), entity);
 
         _mainCamera.Update(frameIndex, cameraComponent, view, proj, position);
+        _foregroundCamera.Update(frameIndex, cameraComponent, view, foregroundProj, position);
 
-        mainCameraIsSet = true;
+        mainCameraIsSet
+            = true;
     }
 }
 
