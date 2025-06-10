@@ -115,7 +115,13 @@ float linearize_depth(float d, float zNear, float zFar)
 {
     return zNear * zFar / (zFar + d * (zNear - zFar));
 }
-
+vec3 rayDirection(float fieldOfView, vec2 size, vec2 fragCoord)
+{
+    vec2 xy = fragCoord - size / 2.0;
+    xy.y = -xy.y; // Invert y-axis for correct orientation
+    float z = (size.y / 2.0) / tan((fieldOfView) / 2.0);
+    return normalize(vec3(xy, -z));
+}
 
 void main()
 {
@@ -164,16 +170,17 @@ void main()
     float pixelatedDepthSample = texelFetch(bindless_color_textures[nonuniformEXT (pc.depthIndex)], pixelCoords, 0).r;
     if (pixelatedDepthSample <= 0.0f)
     {
+
         vec2 uv = newTexCoords;
         uv -= 0.5;
-        uv.x *= (16.0 / 9.0);
-        // we can control the horizon by altering the aspect ration
-        // uv.y -= 0.4 * (1.0 / (16.0 / 9.0));
         uv.y = -uv.y;
 
         const float smoothCurve = mix(0.0, 0.45, smoothstep(-0.5, 0.5, uv.y));
-        const float curve = -(1.0 - dot(uv, uv) * smoothCurve);
-        const vec3 rayDir = normalize(transpose(mat3(camera.view)) * vec3(uv.x, uv.y, curve));
+        float curve = -(1.0 - dot(uv, uv) * smoothCurve);
+        vec2 fragCoords = newTexCoords * vec2(texSize);
+        vec3 earlyRay = rayDirection(camera.fov, texSize, fragCoords);
+
+        const vec3 rayDir = normalize(transpose(mat3(camera.view)) * earlyRay);
         const vec3 ro = vec3(0.0, 0.0, 0.0);
         color = Sky(ro, rayDir);
 
