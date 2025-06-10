@@ -8,9 +8,15 @@ class Main {
         engine.GetInput().SetActiveActionSet("UserInterface")
 
         var textOptions = [
-            "\"I'm not certain what's happening to me\nWhy shouldn't I join them?\nWhy must I remain here?\"",
-            "\"I wish I could go back\nMake different choices\"",
-            "Poverty drives a man to discoveries he wished he hadn't made"
+            "\"Time to make easy money.\"",
+            "Poverty always drives someone to the end of the world.",
+            "Ever since the plague,\nthe church has stood silent watching the dead rise.",
+            "\"Let's hope the abyss doesn't stare back this time.\"",
+            "\"Digging up the dead was never quiet work.\"",
+            "Don't forget your offerings!",
+            "\"Coins and souls are all I need.\"",
+            "Every bullet fired is a prayer to a god long dead.",
+            "The plague was only the beginning,\nnow the dead claw for more than life.",
         ]
 
         var index = Random.RandomIndex(0, textOptions.count)
