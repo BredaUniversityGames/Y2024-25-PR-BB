@@ -30,6 +30,8 @@
 #include "ui/ui_menus.hpp"
 #include "ui_module.hpp"
 
+#include <ui_text.hpp>
+
 ModuleTickOrder GameModule::Init(Engine& engine)
 {
     engine.GetModule<ApplicationModule>().GetActionManager().SetGameActions(GAME_ACTIONS);
@@ -173,6 +175,20 @@ void GameModule::ApplySettings(Engine& engine)
     engine.GetModule<AudioModule>().SetBusChannelVolume("bus:/", curve(gameSettings.masterVolume));
     engine.GetModule<AudioModule>().SetBusChannelVolume("bus:/BGM", curve(gameSettings.musicVolume));
     engine.GetModule<AudioModule>().SetBusChannelVolume("bus:/SFX", curve(gameSettings.sfxVolume));
+
+    if (auto locked = _settingsMenu.lock(); locked != nullptr)
+    {
+        if (auto lockedFovText = locked->fovText.lock(); lockedFovText != nullptr)
+        {
+            lockedFovText->SetText(std::to_string(static_cast<int>(50.0f + gameSettings.fov * 100.0f)));
+        }
+    }
+
+    auto& swapchain = engine.GetModule<RendererModule>().GetRenderer()->GetSwapChain();
+    if (swapchain.SetPresentMode(gameSettings.vsync ? vk::PresentModeKHR::eFifo : vk::PresentModeKHR::eImmediate))
+    {
+        swapchain.Resize(swapchain.GetImageSize());
+    }
 
     // Frame counter
 

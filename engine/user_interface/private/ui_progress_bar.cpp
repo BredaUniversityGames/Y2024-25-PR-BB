@@ -6,7 +6,7 @@ void UIProgressBar::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
 {
     if (visibility == VisibilityState::eUpdatedAndVisible || visibility == VisibilityState::eNotUpdatedAndVisible)
     {
-        glm::mat4 matrixFull;
+        glm::mat4 matrixFull = GetPreTransformationMatrix();
         glm::vec2 uv0 = glm::vec2(0, 0);
         glm::vec2 uv1 = glm::vec2(1, 1);
 
@@ -17,7 +17,7 @@ void UIProgressBar::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
             float localLocation1x = GetAbsoluteLocation().x + (GetAbsoluteScale() * (0.5f - (_fractionFilled * 0.5f))).x;
             float localLocation2x = GetAbsoluteLocation().x + (GetAbsoluteScale() * (0.5f + (_fractionFilled * 0.5f))).x;
             float scaleX = localLocation2x - localLocation1x;
-            matrixFull = glm::translate(glm::mat4(1), glm::vec3(localLocation1x, GetAbsoluteLocation().y, 0));
+            matrixFull = glm::translate(matrixFull, glm::vec3(localLocation1x, GetAbsoluteLocation().y, 0));
             matrixFull = glm::scale(matrixFull, glm::vec3(scaleX, GetAbsoluteScale().y, 0));
 
             if (style.fillStyle == BarStyle::FillStyle::eMask)
@@ -31,7 +31,8 @@ void UIProgressBar::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
         case BarStyle::FillDirection::eFromBottom:
         {
 
-            matrixFull = glm::translate(glm::mat4(1), glm::vec3(GetAbsoluteLocation() + glm::vec2(0, GetAbsoluteScale().y * (1 - _fractionFilled)), 0));
+            
+            matrixFull = glm::translate(matrixFull, glm::vec3(GetAbsoluteLocation() + glm::vec2(0, GetAbsoluteScale().y * (1 - _fractionFilled)), 0));
             matrixFull = glm::scale(matrixFull, glm::vec3(GetAbsoluteScale().x, GetAbsoluteScale().y * _fractionFilled, 0));
 
             if (style.fillStyle == BarStyle::FillStyle::eMask)
@@ -43,7 +44,7 @@ void UIProgressBar::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
         }
         case BarStyle::FillDirection::eLeftToRight:
         {
-            matrixFull = glm::translate(glm::mat4(1), glm::vec3(GetAbsoluteLocation(), 0));
+            matrixFull = glm::translate(matrixFull, glm::vec3(GetAbsoluteLocation(), 0));
             matrixFull = glm::scale(matrixFull, glm::vec3(GetAbsoluteScale().x * _fractionFilled, GetAbsoluteScale().y, 0));
 
             if (style.fillStyle == BarStyle::FillStyle::eMask)
@@ -59,7 +60,8 @@ void UIProgressBar::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
             break;
         }
 
-        glm::mat4 matrixEmpty = glm::translate(glm::mat4(1), glm::vec3(GetAbsoluteLocation(), 0));
+        glm::mat4 matrixEmpty = GetPreTransformationMatrix();
+        matrixEmpty = glm::translate(matrixEmpty, glm::vec3(GetAbsoluteLocation(), 0));
         matrixEmpty = glm::scale(matrixEmpty, glm::vec3(GetAbsoluteScale(), 0));
 
         QuadDrawInfo infoEmpty {

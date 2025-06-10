@@ -79,6 +79,7 @@ std::shared_ptr<HUD> HUD::Create(GraphicsContext& graphicsContext, const glm::uv
     hud->hitmarkerCrit = hud->AddChild<UIImage>(hitmarkerCritImage, glm::vec2(0, 7), glm::vec2(25, 42) * 2.0f);
     hud->hitmarkerCrit.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
 
+    
     // dashes
     ResourceHandle<GPUImage>
         dashChargeImage
@@ -106,6 +107,14 @@ std::shared_ptr<HUD> HUD::Create(GraphicsContext& graphicsContext, const glm::uv
     ResourceHandle<GPUImage> coinImage = imageManager.Create(commonImageData.FromPNG("assets/textures/ui/coin.png"), HUDSampler);
     hud->AddChild<UIImage>(coinImage, glm::vec2(49, 20) * 8.0f + glm::vec2(300.f, 0), glm::vec2(4 * 8))->anchorPoint = UIElement::AnchorPoint::eBottomLeft;
 
+    ResourceHandle<GPUImage> directionalImage = imageManager.Create(commonImageData.FromPNG("assets/textures/ui/direction.png"), HUDSampler);
+    for(auto& i : hud->directionalIndicators)
+    {
+        i =  hud->AddChild<UIImage>(directionalImage, glm::vec2(0,0), glm::vec2(21, 6) * 8.0f);
+        i.lock()->display_color = glm::vec4(0);
+    }
+  
+    
     // wave counter
 
     hud->waveCounterText = hud->AddChild<UITextElement>(font, "0", glm::vec2(140, 26), 20 * 8.0);
