@@ -45,15 +45,21 @@ void SteamAchievements::OnUserStatsReceived(UserStatsReceived_t* pCallback)
             _initialized = true;
 
             // load achievements
-            for (size_t i = 0; i < _achievements.size(); ++i)
+            for (int32_t i = _achievements.size() - 1; i >= 0; --i)
             {
                 Achievement& ach = _achievements[i];
 
-                SteamUserStats()->GetAchievement(ach.apiId.c_str(), &ach.achieved);
-                std::memcpy(ach.name, SteamUserStats()->GetAchievementDisplayAttribute(ach.apiId.c_str(), "name"), sizeof(ach.name));
-                std::memcpy(ach.description, SteamUserStats()->GetAchievementDisplayAttribute(ach.apiId.c_str(), "desc"), sizeof(ach.description));
+                if (SteamUserStats()->GetAchievement(ach.apiId.c_str(), &ach.achieved))
+                {
+                    std::memcpy(ach.name, SteamUserStats()->GetAchievementDisplayAttribute(ach.apiId.c_str(), "name"), sizeof(ach.name));
+                    std::memcpy(ach.description, SteamUserStats()->GetAchievementDisplayAttribute(ach.apiId.c_str(), "desc"), sizeof(ach.description));
 
-                bblog::info("{}: {}", ach.name, ach.description);
+                    bblog::info("{}: {}", ach.name, ach.description);
+                }
+                else
+                {
+                    _achievements.erase(std::next(_achievements.begin(), i));
+                }
             }
         }
         else
@@ -70,11 +76,7 @@ void SteamAchievements::OnUserStatsStored(UserStatsStored_t* pCallback)
     // we may get callbacks for other games' stats arriving, ignore them
     if (_appID == pCallback->m_nGameID)
     {
-        if (k_EResultOK == pCallback->m_eResult)
-        {
-            bblog::info("Stored stats for Steam");
-        }
-        else
+        if (k_EResultOK != pCallback->m_eResult)
         {
             char buffer[128];
             _snprintf(buffer, 128, "StatsStored - failed, %d\n", pCallback->m_eResult);

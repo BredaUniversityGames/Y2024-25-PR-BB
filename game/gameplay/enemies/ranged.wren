@@ -154,7 +154,7 @@ class RangedEnemy {
             var playerPowerUp = playerVariables.GetCurrentPowerUp()
             if(playerPowerUp != PowerUpType.NONE) {
                 var powerUpStat = engine.GetSteam().GetStat(Stats.ENEMIES_KILLED_WITH_RELIC())
-                powerUpStat.intValue = stat.intValue + 1
+                powerUpStat.intValue = powerUpStat.intValue + 1
             }
 
             body.SetDynamic()

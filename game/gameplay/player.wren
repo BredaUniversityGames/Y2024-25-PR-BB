@@ -112,7 +112,7 @@ class PlayerVariables {
         _score = _score + value
 
         var stat = _engine.GetSteam().GetStat(Stats.GOLD_CURRENCY_COLLECTED())
-        stat.intValue = stat.intValue + 1
+        stat.intValue = stat.intValue + value
     }
 
     GetScore() {

@@ -51,7 +51,13 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     _engine = &engine;
 
     _achievements = {
-        CreateAchievement(Achievements::SKELETONS_KILLED_10),
+        CreateAchievement(Achievements::FIRST_SKELETON_KILLED),
+        CreateAchievement(Achievements::FIRST_EYE_KILLED),
+        CreateAchievement(Achievements::FIRST_BERSERKER_KILLED),
+        CreateAchievement(Achievements::FIRST_SOUL_COLLECTED),
+        CreateAchievement(Achievements::FIRST_GOLD_NUGGET_COLLECTED),
+        CreateAchievement(Achievements::FIRST_DEATH),
+        CreateAchievement(Achievements::FIRST_RELIC_USED),
     };
 
     _stats = {
