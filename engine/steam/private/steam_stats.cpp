@@ -1,6 +1,8 @@
 ﻿#include "steam_stats.hpp"
 #include "log.hpp"
 
+#include <magic_enum.hpp>
+
 SteamStats::SteamStats(std::span<Stat> stats)
     : _appID(0)
     , _initialized(false)
