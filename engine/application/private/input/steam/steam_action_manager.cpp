@@ -190,6 +190,104 @@ glm::vec2 SteamActionManager::CheckInput(std::string_view actionName, MAYBE_UNUS
     return { _inputDeviceManager.ClampGamepadAxisDeadzone(analogActionData.x), _inputDeviceManager.ClampGamepadAxisDeadzone(analogActionData.y) };
 }
 
+std::vector<BindingOriginVisual> SteamActionManager::GetDigitalActionGamepadOriginVisual(const DigitalAction& action) const
+{
+    if (!_steamInputDeviceManager.IsGamepadAvailable())
+    {
+        return {};
+    }
+
+    if (_gameActions.empty())
+    {
+        bblog::error("[Input] No game actions are set while trying to get action: \"{}\"", action.name);
+        return {};
+    }
+
+    std::vector<BindingOriginVisual> visuals = ActionManager::GetDigitalActionGamepadOriginVisual(action);
+
+    // We found custom visuals, so we use those
+    if (!visuals.empty())
+    {
+        return visuals;
+    }
+
+    const SteamActionSetCache& actionSetCache = _steamGameActionsCache[_activeActionSet];
+
+    auto itr = actionSetCache.gamepadDigitalActionsCache.find(action.name.data());
+    if (itr == actionSetCache.gamepadDigitalActionsCache.end())
+    {
+        bblog::error("[Input] Failed to find digital action cache \"{}\" in the current active action set \"{}\"", action.name, _gameActions[_activeActionSet].name);
+        return {};
+    }
+
+    std::array<EInputActionOrigin, STEAM_INPUT_MAX_ORIGINS> origins {};
+    uint32_t originsNum = SteamInput()->GetDigitalActionOrigins(_steamInputDeviceManager.GetGamepadHandle(), actionSetCache.actionSetHandle, itr->second, origins.data());
+
+    // Action not bound to any input
+    if (originsNum == 0)
+    {
+        return {};
+    }
+
+    for (uint32_t i = 0; i < originsNum; ++i)
+    {
+        BindingOriginVisual& visual = visuals.emplace_back();
+        visual.bindingInputName = SteamInput()->GetStringForActionOrigin(origins[i]);
+        visual.glyphImagePath = SteamInput()->GetGlyphPNGForActionOrigin(origins[i], k_ESteamInputGlyphSize_Large, 0);
+    }
+
+    return visuals;
+}
+
+std::vector<BindingOriginVisual> SteamActionManager::GetAnalogActionGamepadOriginVisual(const AnalogAction& action) const
+{
+    if (!_steamInputDeviceManager.IsGamepadAvailable())
+    {
+        return {};
+    }
+
+    if (_gameActions.empty())
+    {
+        bblog::error("[Input] No game actions are set while trying to get action: \"{}\"", action.name);
+        return {};
+    }
+
+    std::vector<BindingOriginVisual> visuals = ActionManager::GetAnalogActionGamepadOriginVisual(action);
+
+    // We found custom visuals, so we use those
+    if (!visuals.empty())
+    {
+        return visuals;
+    }
+
+    const SteamActionSetCache& actionSetCache = _steamGameActionsCache[_activeActionSet];
+
+    auto itr = actionSetCache.gamepadAnalogActionsCache.find(action.name.data());
+    if (itr == actionSetCache.gamepadAnalogActionsCache.end())
+    {
+        bblog::error("[Input] Failed to find analog action cache \"{}\" in the current active action set \"{}\"", action.name, _gameActions[_activeActionSet].name);
+        return {};
+    }
+
+    std::array<EInputActionOrigin, STEAM_INPUT_MAX_ORIGINS> origins {};
+    uint32_t originsNum = SteamInput()->GetAnalogActionOrigins(_steamInputDeviceManager.GetGamepadHandle(), actionSetCache.actionSetHandle, itr->second, origins.data());
+
+    // Action not bound to any input
+    if (originsNum == 0)
+    {
+        return {};
+    }
+
+    for (uint32_t i = 0; i < originsNum; ++i)
+    {
+        BindingOriginVisual& visual = visuals.emplace_back();
+        visual.bindingInputName = SteamInput()->GetStringForActionOrigin(origins[i]);
+        visual.glyphImagePath = SteamInput()->GetGlyphPNGForActionOrigin(origins[i], k_ESteamInputGlyphSize_Large, 0);
+    }
+
+    return visuals;
+}
+
 void SteamActionManager::UpdateSteamControllerInputState()
 {
     _prevControllerState = _currentControllerState;
