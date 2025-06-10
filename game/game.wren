@@ -301,9 +301,13 @@ class Main {
                 }
             }
         }
-
+     
         // Skip everything if paused
         if (__pauseEnabled || !__alive) {
+        
+            var mousePosition = engine.GetInput().GetMousePosition()
+            __playerMovement.lastMousePosition = mousePosition
+
             return
         }
 
@@ -362,6 +366,9 @@ class Main {
         if (engine.GetInput().DebugIsInputEnabled()) {
             __playerMovement.Update(engine, dt, __playerController, __camera,__playerVariables.hud)
         }
+        var mousePosition = engine.GetInput().GetMousePosition()
+        __playerMovement.lastMousePosition = mousePosition
+
 
         for (weapon in __armory) {
             weapon.cooldown = Math.Max(weapon.cooldown - dt, 0)
@@ -472,8 +479,6 @@ class Main {
             engine.GetUI().SetSelectedElement(engine.GetGame().GetGameOverMenu().retryButton)
         }
 
-       var mousePosition = engine.GetInput().GetMousePosition()
-        __playerMovement.lastMousePosition = mousePosition
 
         var playerPos = __playerController.GetRigidbodyComponent().GetPosition()
         for (enemy in __enemyList) {
