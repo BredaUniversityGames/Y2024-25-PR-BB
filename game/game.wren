@@ -4,7 +4,7 @@ import "gameplay/weapon.wren" for Pistol, Shotgun, Weapons
 import "gameplay/camera.wren" for CameraVariables
 import "gameplay/player.wren" for PlayerVariables, HitmarkerState
 import "gameplay/music_player.wren" for MusicPlayer, BGMPlayer
-import "gameplay/wave_system.wren" for WaveSystem, WaveConfig, EnemyType, WaveGenerator
+import "gameplay/wave_system.wren" for WaveSystem, Wave, EnemyType, WaveGenerator
 import "analytics/analytics.wren" for AnalyticsManager
 
 import "gameplay/hud.wren" for WrenHUD
