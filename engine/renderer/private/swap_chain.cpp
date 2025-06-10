@@ -23,7 +23,6 @@ void SwapChain::CreateSwapChain(const glm::uvec2& screenSize)
     SupportDetails swapChainSupport = QuerySupport(vkContext->PhysicalDevice(), vkContext->Surface());
 
     auto surfaceFormat = ChooseSwapSurfaceFormat(swapChainSupport.formats);
-    auto presentMode = ChoosePresentMode(swapChainSupport.presentModes);
     auto extent = ChooseSwapExtent(swapChainSupport.capabilities, screenSize);
 
     uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
@@ -59,7 +58,7 @@ void SwapChain::CreateSwapChain(const glm::uvec2& screenSize)
 
     createInfo.preTransform = swapChainSupport.capabilities.currentTransform;
     createInfo.compositeAlpha = vk::CompositeAlphaFlagBitsKHR::eOpaque;
-    createInfo.presentMode = presentMode;
+    createInfo.presentMode = _presentMode;
     createInfo.clipped = vk::True;
     createInfo.oldSwapchain = nullptr;
 
@@ -113,6 +112,28 @@ void SwapChain::CreateSwapChainImageViews()
     }
 }
 
+bool SwapChain::SetPresentMode(vk::PresentModeKHR presentMode)
+{
+    SupportDetails swapChainSupport = QuerySupport(_context->VulkanContext()->PhysicalDevice(), _context->VulkanContext()->Surface());
+    const auto it = std::find(swapChainSupport.presentModes.begin(), swapChainSupport.presentModes.end(), presentMode);
+
+    if (_presentMode == *it)
+    {
+        return false;
+    }
+
+    if (it != swapChainSupport.presentModes.end())
+    {
+        _presentMode = *it;
+    }
+    else
+    {
+        _presentMode = vk::PresentModeKHR::eFifo;
+    }
+
+    return true;
+}
+
 SwapChain::SupportDetails SwapChain::QuerySupport(vk::PhysicalDevice device, vk::SurfaceKHR surface)
 {
     SupportDetails details {};
@@ -134,23 +155,6 @@ vk::SurfaceFormatKHR SwapChain::ChooseSwapSurfaceFormat(const std::vector<vk::Su
     }
 
     return availableFormats[0];
-}
-
-vk::PresentModeKHR SwapChain::ChoosePresentMode(const std::vector<vk::PresentModeKHR>& availablePresentModes)
-{
-    auto it = std::find_if(availablePresentModes.begin(), availablePresentModes.end(),
-        [](const auto& mode)
-        { return mode == vk::PresentModeKHR::eMailbox; });
-    if (it != availablePresentModes.end())
-        return *it;
-
-    it = std::find_if(availablePresentModes.begin(), availablePresentModes.end(),
-        [](const auto& mode)
-        { return mode == vk::PresentModeKHR::eFifo; });
-    if (it != availablePresentModes.end())
-        return *it;
-
-    return availablePresentModes[0];
 }
 
 vk::Extent2D SwapChain::ChooseSwapExtent(const vk::SurfaceCapabilitiesKHR& capabilities, const glm::uvec2& screenSize)

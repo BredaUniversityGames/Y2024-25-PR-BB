@@ -69,7 +69,8 @@ void UIToggle::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
         constexpr glm::vec4 SELECTED = { 0.7f, 0.7f, 0.7f, 1.0f };
         constexpr glm::vec4 NORMAL = { 1.0f, 1.0f, 1.0f, 1.0f };
 
-        glm::mat4 matrix = glm::translate(glm::mat4(1), glm::vec3(GetAbsoluteLocation(), 0));
+        glm::mat4 matrix = GetPreTransformationMatrix();
+        matrix = glm::translate(matrix, glm::vec3(GetAbsoluteLocation(), 0));
         matrix = glm::scale(matrix, glm::vec3(GetAbsoluteScale(), 0));
 
         QuadDrawInfo info {

@@ -2,7 +2,7 @@ import "engine_api.wren" for Engine, Game, ECS, Entity, Vec3, Vec2, Quat, Math, 
 
 class PlayerMovement{
 
-    construct new(newHasDashed, newDashTimer, gun, playerController){
+    construct new(newHasDashed, newDashTimer, gun, playerController, playerVariables){
         hasDashed = newHasDashed
         hasDoubleJumped = false
         dashTimer = newDashTimer
@@ -13,8 +13,10 @@ class PlayerMovement{
         gravityFactor = 2.4
         playerHeight = 1.7
         _cameraFovNormal = 50
+        _cameraFovDash = _cameraFovNormal + Math.Min(_cameraFovNormal * 0.17, 15)
         _cameraFovSlide = 65
         _cameraFovCurrent = _cameraFovNormal
+        _playerVariables = playerVariables
         // Used for interpolation between crouching and standing
         currentPlayerHeight = playerHeight
         isGrounded = false
@@ -28,7 +30,7 @@ class PlayerMovement{
         _cameraYaw = 0
 
         dashWishPosition = Vec3.new(0.0,0.0,0.0)
-        dashForce = 6.0
+        dashForce = 12.0
         currentDashCount = 3
         currentDashRefillTime = 3000.0
 
@@ -62,6 +64,7 @@ class PlayerMovement{
     dashWishPosition {_dashWishPosition}
     currentDashCount {_currentDashCount}
     currentDashRefillTime {_currentDashRefillTime}
+    cameraFovCurrent {_cameraFovCurrent}
 
     //Base movement
     maxSpeed {_maxSpeed}
@@ -106,6 +109,11 @@ class PlayerMovement{
     // Input
     lastMousePosition=(value) {_lastMousePosition = value}
     lookSensitivity=(value) {_lookSensitivity = value}
+
+    UpdateFOV(fov) {
+        _cameraFovNormal = fov
+        _cameraFovDash = fov + Math.Min(fov * 0.17, 15)
+    }
 
     Rotation(engine, player) {
 
@@ -218,6 +226,26 @@ class PlayerMovement{
                 groundHitNormal = hit.normal
                 groundNormal = hit.normal // to be used outside the main movement function
                 break
+            }
+        }
+
+        // Check around player for enemies too
+        if (!isGrounded) {
+            for (i in 0..7) {
+                var dir = Vec3.new(Math.Cos(i / 8 * Math.PI() * 2), -1, Math.Sin(i / 8 * Math.PI() * 2)).normalize()
+                var ray = engine.GetPhysics().ShootRay(playerControllerPos - Vec3.new(0, 1, 0), dir, 1)
+
+                for(hit in ray) {
+                    if(hit.GetEntity(engine.GetECS()).HasEnemyTag()) {
+                        isGrounded = true
+                        groundHitNormal = hit.normal
+                        groundNormal = hit.normal // to be used outside the main movement function
+                        break
+                    }
+                }
+                if (isGrounded) {
+                    break
+                }
             }
         }
 
@@ -358,7 +386,7 @@ class PlayerMovement{
 
     }
 
-    Dash(engine, dt, playerController, camera, hud){
+    Dash(engine, dt, playerController, camera, hud, flashSystem){
         //refill dashes
         if(currentDashCount < 3){
             currentDashRefillTime = currentDashRefillTime - dt
@@ -373,6 +401,10 @@ class PlayerMovement{
         if(engine.GetInput().GetDigitalAction("Dash").IsPressed() &&  currentDashCount > 0 ){
 
             hasDashed = true
+
+            _playerVariables.invincibilityTime = 200
+
+            flashSystem.Flash(Vec3.new(0.8, 0.8, 0.8), 0.2)
 
             //play dash sound
             var eventInstance = engine.GetAudio().PlayEventOnce(_dashSFX)
@@ -401,8 +433,8 @@ class PlayerMovement{
 
             }
 
-            var start = translation + forward * Vec3.new(0.1, 0.1, 0.1) //- right * Vec3.new(0.09, 0.09, 0.09) //- up * Vec3.new(0.12, 0.12, 0.12)
-            var end = translation + forward * Vec3.new(dashForce, dashForce,dashForce)
+            var start = translation + moveInputDir * Vec3.new(0.1, 0.1, 0.1) //- right * Vec3.new(0.09, 0.09, 0.09) //- up * Vec3.new(0.12, 0.12, 0.12)
+            var end = translation + moveInputDir * Vec3.new(dashForce, dashForce,dashForce)
             // Calculate the raw dash vector
             var dashVector = end - start
             var dashLength = dashVector.length()
@@ -441,13 +473,14 @@ class PlayerMovement{
             }
         }
 
-         if(hasDashed){
+        if(hasDashed){
+            _cameraFovCurrent = Math.MixFloat(_cameraFovCurrent,_cameraFovDash,0.2)
             dashTimer = dashTimer + dt
             var velocity = playerBody.GetVelocity()
             var currentSpeed = velocity.length()
 
-            if( currentSpeed > 50.0){
-                var clampedVelocity = velocity.normalize().mulScalar(50.0)
+            if( currentSpeed > 80.0){
+                var clampedVelocity = velocity.normalize().mulScalar(80.0)
                 playerBody.SetVelocity(clampedVelocity)
             }
 
@@ -476,7 +509,10 @@ class PlayerMovement{
                     playerBody.SetVelocity(clampedVelocity)
                 }
             }
-         }
+        } else {
+            _cameraFovCurrent = Math.MixFloat(_cameraFovCurrent,_cameraFovNormal,0.2)
+        }
+
     }
 
     Slide(engine, dt, playerController, camera){
@@ -559,9 +595,9 @@ class PlayerMovement{
         }
     }
 
-    Update(engine, dt, playerController, camera,hud){
+    Update(engine, dt, playerController, camera,hud, flashSystem){
         this.Movement(engine, playerController, camera)
-        this.Dash(engine, dt, playerController, camera,hud)
+        this.Dash(engine, dt, playerController, camera,hud, flashSystem)
         // this.Slide(engine, dt, playerController, camera)
         this.CheckBounds(engine, playerController, camera)
     }
