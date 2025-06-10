@@ -162,11 +162,19 @@ void InspectorModule::Tick(MAYBE_UNUSED Engine& engine)
             displayLayerToggle(PhysicsObjectLayer::ePROJECTILE, "Projectiles");
             displayLayerToggle(PhysicsObjectLayer::eSTATIC, "Static Geometry (SLOW)");
 
+            if(ImGui::TreeNodeEx("Raycasts", 0))
             {
-                ImGui::Checkbox("Raycasts", &physicsModule._drawRays);
+                ImGui::Checkbox("Enable", &physicsModule._drawRays);
+                if(ImGui::Checkbox("Clear per frame", &physicsModule._clearDrawnRaysPerFrame))
+                {
+                    if(physicsModule._clearDrawnRaysPerFrame)
+                        physicsModule.ResetPersistentDebugLines(); // we have to do this to remove all liens
+                }
 
                 if (!physicsModule._drawRays)
                     physicsModule.ResetPersistentDebugLines();
+
+                ImGui::TreePop();
             }
 
             ImGui::SeparatorText("Pathfinding");
