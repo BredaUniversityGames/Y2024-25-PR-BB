@@ -117,6 +117,128 @@ float linearize_depth(float d, float zNear, float zFar)
     return zNear * zFar / (zFar + d * (zNear - zFar));
 }
 
+// adding volumetric fog? god please help me
+
+// --- Custom Uniforms for Hole Parameters ---
+// These uniforms allow external control over the hole's properties.
+// In a typical application, these would be set from the CPU (e.g., JavaScript in WebGL).
+vec3 iHoleRayOrigin = vec3(0.0, 0.1, -1.1); // Start slightly outside the sphere (sphere.w = 1.0)
+vec3 iHoleRayDirection = vec3(0.0, 0.0, 1.0); // Point along the Z-axis
+float iHoleRadius = 0.1; // Radius of the hole
+float iHoleFeather = 0.1; // Smoothness of the hole edges (blends from iHoleRadius to iHoleRadius + iHoleFeather)
+// ---- Constants ----
+#define MAX_STEPS 64
+#define MAX_DIST 128.0
+
+// ---- Noise / Hash as in your code ----
+float hash(vec3 p) {
+    return fract(sin(dot(p, vec3(12.9898, 78.233, 37.719))) * 43758.5453123);
+}
+float noise(vec3 x) {
+    vec3 i = floor(x);
+    vec3 f = fract(x);
+    f = f * f * (3.0 - 2.0 * f);
+    float n000 = hash(i + vec3(0, 0, 0));
+    float n100 = hash(i + vec3(1, 0, 0));
+    float n010 = hash(i + vec3(0, 1, 0));
+    float n110 = hash(i + vec3(1, 1, 0));
+    float n001 = hash(i + vec3(0, 0, 1));
+    float n101 = hash(i + vec3(1, 0, 1));
+    float n011 = hash(i + vec3(0, 1, 1));
+    float n111 = hash(i + vec3(1, 1, 1));
+    float res = mix(
+        mix(mix(n000, n100, f.x), mix(n010, n110, f.x), f.y),
+        mix(mix(n001, n101, f.x), mix(n011, n111, f.x), f.y),
+        f.z
+    );
+    return res;
+}
+float fractal_noise(vec3 p) {
+    float f = 0.0;
+    p = p - vec3(1.0, 1.0, 0.0) * pc.time * 0.1;
+    p = p * 3.0;
+    f += 0.50000 * noise(p); p = 2.0 * p;
+    f += 0.25000 * noise(p); p = 2.0 * p;
+    f += 0.12500 * noise(p); p = 2.0 * p;
+    f += 0.06250 * noise(p); p = 2.0 * p;
+    f += 0.03125 * noise(p);
+    return f;
+}
+
+// ---- Hole logic ----
+float distPointToRay(vec3 p, vec3 rayOrigin, vec3 rayDir) {
+    vec3 op = p - rayOrigin;
+    float t = dot(op, rayDir);
+    vec3 closestPoint = rayOrigin + t * rayDir;
+    return length(p - closestPoint);
+}
+
+// ---- Infinite Density Field ----
+float density(vec3 pos)
+{
+    // Just noise-based, optionally bias for "height" (e.g., less dense at y>2 or y<-2)
+    float base = fractal_noise(pos);
+    float den = base * 1.4 - 0.2 - smoothstep(2.0, 4.0, abs(pos.y));
+    den = clamp(den, 0.0, 1.0);
+
+    // Hole (as before)
+    float dpr = distPointToRay(pos, iHoleRayOrigin, normalize(iHoleRayDirection));
+    float holeInfluence = smoothstep(iHoleRadius + iHoleFeather, iHoleRadius, dpr);
+    den *= (1.0 - holeInfluence);
+
+    return den;
+}
+vec3 color(float den, float y)
+{
+    vec3 result = mix(vec3(1.0, 0.9, 0.8 + sin(pc.time) * 0.1),
+                      vec3(0.5, 0.15, 0.1 + sin(pc.time) * 0.1), den * den);
+    // Apply a vertical (y) gradient, can be subtle for infinite volume
+    vec3 colBot = 3.0 * vec3(1.0, 0.9, 0.5);
+    vec3 colTop = 2.0 * vec3(0.5, 0.55, 0.55);
+    result *= mix(colBot, colTop, smoothstep(-3.0, 3.0, y));
+    return result;
+}
+
+// ---- Camera ----
+mat3 setCamera(vec3 ro, vec3 ta, float cr) {
+    vec3 cw = normalize(ta - ro);
+    vec3 cp = vec3(sin(cr), cos(cr), 0.0);
+    vec3 cu = normalize(cross(cw, cp));
+    vec3 cv = normalize(cross(cu, cw));
+    return mat3(cu, cv, cw);
+}
+
+// ---- Raymarching through infinite volume ----
+vec3 raymarching(vec3 ro, vec3 rd, float tmin, float tmax, vec3 backCol)
+{
+    vec4 sum = vec4(0.0);
+    float t = tmin;
+    for (int i = 0; i < MAX_STEPS; i++)
+    {
+        // Stop if we've accumulated enough opacity or gone too far
+        if (sum.a > 0.99 || t > tmax) break;
+
+    /**
+        // Stop if we hit an opaque object before reaching the current raymarching distance
+        if (t < sceneDepth) {
+            break; // Stop raymarching smoke; an opaque object is in front
+        }
+*/
+
+        vec3 pos = ro + rd * t;
+        float den = density(pos);
+        vec4 col = vec4(vec3(0.2), den);
+        col.rgb *= col.a;
+        sum = sum + col * (1.0 - sum.a);
+        t += 0.07 + 0.02 * float(i); // uniform or progressive steps
+    }
+    sum = clamp(sum, 0.0, 1.0);
+    return mix(backCol, sum.rgb, sum.a);
+}
+
+
+//
+
 // ADDING WATER
 // Based on: https://www.shadertoy.com/view/MdXyzX
 
@@ -370,6 +492,30 @@ void main()
         }
 
         color += bloom;
+    }
+
+    //if (pixelatedDepthSample >= 0.0f)
+    {
+
+        vec2 p = vec2(newTexCoords * vec2(texSize));
+
+        // Rotate the camera position around the origin
+        vec3 ro = camera.cameraPosition; // Initial camera position
+        ro.y -= 10.0;
+
+
+
+        vec3 earlyRay = rayDirection(camera.fov, texSize, p);
+        const vec3 rd = normalize(transpose(mat3(camera.view)) * earlyRay);
+        // Compute the ray direction from camera to pixel
+
+
+
+        vec3 col = raymarching(ro, rd, 0.0, MAX_DIST, color);
+
+        color = mix(color, col, 0.5);
+
+        //color = col;
     }
 
     switch (pc.tonemappingFunction)
