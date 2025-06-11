@@ -57,7 +57,7 @@ class WaveGenerator {
 
 class WaveSystem {
 
-    construct new(waveConfigs, spawnLocations) {
+    construct new(engine, waveConfigs, spawnLocations) {
     
         _waveConfigs = waveConfigs
         _spawnLocations = spawnLocations
@@ -67,6 +67,10 @@ class WaveSystem {
         _waveDelay = 4.0
         _waveSlowdown = 0.2
         _enemyCount = 0
+
+        var entity = engine.GetECS().NewEntity()
+        entity.AddTransformComponent().translation = Vec3.new(-80, 111, 44)
+        _audioEmitter = entity.AddAudioEmitterComponent()
 
         if(_spawnLocations.count == 0) {
             System.print("Should pass at least one spawn location to the wave system!")
@@ -143,6 +147,10 @@ class WaveSystem {
 
         // Start the next wave
         _currentWave = _currentWave + 1
+
+        var eventInstance = engine.GetAudio().PlayEventOnce("event:/SFX/WaveStart")
+        engine.GetAudio().SetEventVolume(eventInstance, 1.5)
+        _audioEmitter.AddEvent(eventInstance)
 
         if (_currentWave < _waveConfigs.count) {
             _enemyCount = 0
