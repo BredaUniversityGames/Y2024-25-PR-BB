@@ -1,4 +1,4 @@
-import "engine_api.wren" for Engine, Game, ECS, Entity, Vec3, Vec2, Quat, Math, TransformComponent, Input, SpawnEmitterFlagBits, EmitterPresetID
+import "engine_api.wren" for Engine, Game, ECS, Entity, Vec3, Vec2, Quat, Math, TransformComponent, Input, SpawnEmitterFlagBits
 
 class PlayerMovement{
 
@@ -593,7 +593,7 @@ class PlayerMovement{
             var lifetime = entity.AddLifetimeComponent()
             lifetime.lifetime = 2000.0
             var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
-            engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eFeathers(),emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.0, 0.0, 0.0))
+            engine.GetParticles().SpawnEmitter(entity, "Feathers",emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.0, 0.0, 0.0))
 
         }
     }

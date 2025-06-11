@@ -1,4 +1,4 @@
-import "engine_api.wren" for Engine, TimeModule, ECS, ShapeFactory, PhysicsObjectLayer, Rigidbody, RigidbodyComponent, CollisionShape, Entity, Vec3, Vec2, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, EmitterPresetID, Random
+import "engine_api.wren" for Engine, TimeModule, ECS, ShapeFactory, PhysicsObjectLayer, Rigidbody, RigidbodyComponent, CollisionShape, Entity, Vec3, Vec2, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, Random
 import "gameplay/movement.wren" for PlayerMovement
 import "gameplay/weapon.wren" for Pistol, Shotgun, Weapons
 import "gameplay/camera.wren" for CameraVariables
@@ -322,6 +322,10 @@ class Main {
         // Skip everything if paused
         if (__pauseEnabled || !__alive) {
             __camera.GetCameraComponent().fov = Math.Radians(50 + 100 * engine.GetGame().GetSettings().fov)
+
+            var mousePosition = engine.GetInput().GetMousePosition()
+            __playerMovement.lastMousePosition = mousePosition
+
             return
         }
 
@@ -380,6 +384,9 @@ class Main {
         if (engine.GetInput().DebugIsInputEnabled()) {
             __playerMovement.Update(engine, dt, __playerController, __camera,__playerVariables.hud, __flashSystem)
         }
+        var mousePosition = engine.GetInput().GetMousePosition()
+        __playerMovement.lastMousePosition = mousePosition
+
 
         for (weapon in __armory) {
             weapon.cooldown = Math.Max(weapon.cooldown - dt, 0)
@@ -413,7 +420,7 @@ class Main {
             //         var lifetime = particleEntity.AddLifetimeComponent()
             //         lifetime.lifetime = 400.0
             //         var emitterFlags = SpawnEmitterFlagBits.eIsActive()
-            //         engine.GetParticles().SpawnEmitter(particleEntity, EmitterPresetID.eHealth(), emitterFlags, Vec3.new(0.0, 0.0, 0.0), Vec3.new(0.0, 0.0, 0.0))
+            //         engine.GetParticles().SpawnEmitter(particleEntity, "Health", emitterFlags, Vec3.new(0.0, 0.0, 0.0), Vec3.new(0.0, 0.0, 0.0))
             //     }
             // }
 
@@ -490,8 +497,6 @@ class Main {
             engine.GetUI().SetSelectedElement(engine.GetGame().GetGameOverMenu().retryButton)
         }
 
-       var mousePosition = engine.GetInput().GetMousePosition()
-        __playerMovement.lastMousePosition = mousePosition
 
         var playerPos = __playerController.GetRigidbodyComponent().GetPosition()
         for (enemy in __enemyList) {

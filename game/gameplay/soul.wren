@@ -1,4 +1,4 @@
-import "engine_api.wren" for Engine, ECS, Entity, Vec3, Vec2, Math, AnimationControlComponent, TransformComponent, Input, SpawnEmitterFlagBits, EmitterPresetID, PhysicsObjectLayer
+import "engine_api.wren" for Engine, ECS, Entity, Vec3, Vec2, Math, AnimationControlComponent, TransformComponent, Input, SpawnEmitterFlagBits, PhysicsObjectLayer
 import "gameplay/player.wren" for PlayerVariables
 import "gameplay/flash_system.wren" for FlashSystem
 
@@ -46,14 +46,14 @@ class Soul {
             _pointLight.intensity = 10
             _pointLight.range = 3.0
             _pointLight.color = Vec3.new(0.23, 0.71, 0.36)
-            engine.GetParticles().SpawnEmitter(_rootEntity, EmitterPresetID.eSoulSheet(),emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.0, 0.0, 0.0))
+            engine.GetParticles().SpawnEmitter(_rootEntity, "SoulSheet",emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.0, 0.0, 0.0))
         }
 
         if(_soulType == SoulType.BIG){
             _pointLight.intensity = 15
             _pointLight.range = 5.0
             _pointLight.color = Vec3.new(1,1,1)
-            engine.GetParticles().SpawnEmitter(_rootEntity, EmitterPresetID.eSoulSheetBig(),emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.0, 0.0, 0.0))
+            engine.GetParticles().SpawnEmitter(_rootEntity, "SoulSheetBig",emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.0, 0.0, 0.0))
         }
 
 

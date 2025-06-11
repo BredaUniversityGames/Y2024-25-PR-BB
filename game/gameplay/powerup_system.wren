@@ -1,4 +1,4 @@
-import "engine_api.wren" for Engine, ECS, Entity, Vec4, Vec3, Vec2, Math, AnimationControlComponent, TransformComponent, Input, SpawnEmitterFlagBits, EmitterPresetID, Random
+import "engine_api.wren" for Engine, ECS, Entity, Vec4, Vec3, Vec2, Math, AnimationControlComponent, TransformComponent, Input, Random
 import "gameplay/player.wren" for PlayerVariables
 import "gameplay/station.wren" for PowerUpType, Station, StationManager
 import "gameplay/flash_system.wren" for FlashSystem
@@ -67,8 +67,8 @@ class PowerUpSystem {
             _timerTextOpacity = Math.Clamp(_timerTextOpacity, 0.0, 1.0)
 
             //default the rest of the effects to normal
-            playerVariables.SetGunSmokeRay(EmitterPresetID.eRay())
-            playerVariables.SetMuzzleFlashRay(EmitterPresetID.eMuzzle())
+            playerVariables.SetGunSmokeRay("Ray")
+            playerVariables.SetMuzzleFlashRay("Muzzle")
 
             // reset stats
             playerVariables.SetDamageMultiplier(1.0)
@@ -81,8 +81,8 @@ class PowerUpSystem {
             _colorTarget = _quadDamageColor
 
             playerVariables.SetDamageMultiplier(4.0)
-            playerVariables.SetGunSmokeRay(EmitterPresetID.eRayQuadDamage())
-            playerVariables.SetMuzzleFlashRay(EmitterPresetID.eMuzzleQuad())
+            playerVariables.SetGunSmokeRay("RayQuadDamage")
+            playerVariables.SetMuzzleFlashRay("MuzzleQuad")
 
         }
         
@@ -91,7 +91,7 @@ class PowerUpSystem {
             _secondGunTransformComponent.scale = Vec3.new(1,1,-1)
             _intensityTarget = 0.2
             _colorTarget = _dualGunColor
-            playerVariables.SetGunSmokeRay(EmitterPresetID.eRayDualGun())
+            playerVariables.SetGunSmokeRay("RayDualGun")
         }
     }
 }
