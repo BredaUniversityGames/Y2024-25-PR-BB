@@ -79,7 +79,7 @@ std::shared_ptr<HUD> HUD::Create(GraphicsContext& graphicsContext, const glm::uv
     hud->hitmarkerCrit = hud->AddChild<UIImage>(hitmarkerCritImage, glm::vec2(0, 7), glm::vec2(25, 42) * 2.0f);
     hud->hitmarkerCrit.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
 
-    
+
     // dashes
     ResourceHandle<GPUImage>
         dashChargeImage
@@ -113,8 +113,8 @@ std::shared_ptr<HUD> HUD::Create(GraphicsContext& graphicsContext, const glm::uv
         i =  hud->AddChild<UIImage>(directionalImage, glm::vec2(0,0), glm::vec2(21, 6) * 8.0f);
         i.lock()->display_color = glm::vec4(0);
     }
-  
-    
+
+
     // wave counter
 
     hud->waveCounterText = hud->AddChild<UITextElement>(font, "0", glm::vec2(140, 26), 20 * 8.0);
@@ -124,13 +124,19 @@ std::shared_ptr<HUD> HUD::Create(GraphicsContext& graphicsContext, const glm::uv
     hud->scoreText
         = hud->AddChild<UITextElement>(font, "220", glm::vec2(445 + 300, 142), 10 * 8.0);
     hud->scoreText.lock()->anchorPoint = UIElement::AnchorPoint::eBottomLeft;
-  
+
+    // Power up
+
     hud->powerupText = hud->AddChild<UITextElement>(font, "220", glm::vec2(0, -320), 10 * 12.0);
     hud->powerupText.lock()->anchorPoint = UIElement::AnchorPoint::eMiddle;
 
     hud->powerUpTimer = hud->AddChild<UITextElement>(font, "Timer", glm::vec2(0, -520), 10 * 16.0);
     hud->powerUpTimer.lock()->anchorPoint = UIElement::AnchorPoint::eMiddle;
 
+    // Action binding visual
+
+    hud->actionBindingText = hud->AddChild<UITextElement>(font, "Binding", glm::vec2(0, 100), 70);
+    hud->actionBindingText.lock()->anchorPoint = UIElement::AnchorPoint::eMiddle;
 
     hud->UpdateAllChildrenAbsoluteTransform();
     graphicsContext.UpdateBindlessSet();

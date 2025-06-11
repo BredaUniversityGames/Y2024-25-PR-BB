@@ -34,6 +34,9 @@ public:
     std::weak_ptr<UITextElement> powerupText;
     std::weak_ptr<UITextElement> powerUpTimer;
 
+    std::weak_ptr<UITextElement> actionBindingText;
+    std::weak_ptr<UIImage> actionBindingGlyph;
+
     std::weak_ptr<UITextElement> multiplierText;
 
     std::weak_ptr<UITextElement> waveCounterText;

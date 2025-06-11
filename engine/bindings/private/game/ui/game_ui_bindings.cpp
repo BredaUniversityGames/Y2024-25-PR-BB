@@ -107,7 +107,7 @@ void UpdateDashCharges(HUD& self, int charges)
 void SetDirectionalIndicatorRotationAndOpacity(HUD& self, uint8_t index, float angle,float opacity)
 {
     index = index %  HUD::DIRECTIONAL_INDICATOR_COUNT;
-    
+
     if(auto locked = self.directionalIndicators[index].lock(); locked != nullptr)
     {
         glm::mat4 matrix = glm::mat4(1);
@@ -253,6 +253,15 @@ void SetPowerupTimerTextColor(HUD& self, glm::vec4 color)
     powerupTimer->display_color = color;
 }
 
+void SetActionBindingText(HUD& self, const std::string& text)
+{
+    std::shared_ptr<UITextElement> bindingText = self.actionBindingText.lock();
+    if (bindingText)
+    {
+        bindingText->SetText(text);
+    }
+}
+
 }
 
 void BindGameUI(wren::ForeignModule& module)
@@ -300,7 +309,8 @@ void BindGameUI(wren::ForeignModule& module)
     hud.funcExt<bindings::SetPowerupTimerText>("SetPowerUpTimerText", "Set powerup timer text");
     hud.funcExt<bindings::SetPowerupTimerTextColor>("SetPowerUpTimerTextColor", "Set powerup timer text color");
     hud.funcExt<bindings::SetDirectionalIndicatorRotationAndOpacity>("SetDirectionalIndicatorRotationAndOpacity");
-    
+    hud.funcExt<bindings::SetActionBindingText>("SetActionBindingText", "Sets the text visual for the current action binding");
+
     auto& gameOver
         = module.klass<GameOverMenu, Canvas>("GameOverMenu");
 
