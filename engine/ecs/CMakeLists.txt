@@ -7,5 +7,6 @@ target_link_libraries(ECS
         PUBLIC cereal
         PUBLIC ImGui
         PUBLIC Scripting
+        
         PRIVATE Physics
 )

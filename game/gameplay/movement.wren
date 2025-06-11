@@ -1,8 +1,10 @@
-import "engine_api.wren" for Engine, Game, ECS, Entity, Vec3, Vec2, Quat, Math, TransformComponent, Input, SpawnEmitterFlagBits, EmitterPresetID
+import "engine_api.wren" for Engine, Game, ECS, Entity, Vec3, Vec2, Quat, Math, TransformComponent, Input, SpawnEmitterFlagBits
 
 class PlayerMovement{
 
-    construct new(newHasDashed, newDashTimer, gun, playerController, playerVariables){
+    construct new(newHasDashed, newDashTimer, gun, playerController, playerStartPos, playerVariables) {
+        _playerStartPos = playerStartPos
+
         hasDashed = newHasDashed
         hasDoubleJumped = false
         dashTimer = newDashTimer
@@ -577,7 +579,7 @@ class PlayerMovement{
         if(currentPos.y < -10.0){
             var playerBody = playerController.GetRigidbodyComponent()
             playerBody.SetVelocity(Vec3.new(0.0, 0.0, 0.0))
-            playerBody.SetTranslation(Vec3.new(-27.0, 30.5, 7.0))
+            playerBody.SetTranslation(_playerStartPos)
 
             //play a sound effect
             _crowsSoundInstance = engine.GetAudio().PlayEventOnce(_outofBounds)
@@ -586,11 +588,12 @@ class PlayerMovement{
             //play a particle effect
             var entity = engine.GetECS().NewEntity()
             var transform = entity.AddTransformComponent()
+
             transform.translation = Vec3.new(-27.0, 27.5, 7.0)
             var lifetime = entity.AddLifetimeComponent()
             lifetime.lifetime = 2000.0
             var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
-            engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eFeathers(),emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.0, 0.0, 0.0))
+            engine.GetParticles().SpawnEmitter(entity, "Feathers",emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.0, 0.0, 0.0))
 
         }
     }
