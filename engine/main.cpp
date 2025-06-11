@@ -16,6 +16,8 @@
 #include "time_module.hpp"
 #include "ui_module.hpp"
 
+#include <physfs.h>
+
 int Main()
 {
 #ifdef DISTRIBUTION

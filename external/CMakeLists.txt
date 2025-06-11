@@ -236,6 +236,34 @@ FetchContent_MakeAvailable(GameAnalytics)
 
 target_compile_options(GameAnalytics PRIVATE -w PRIVATE -Wno-error=implicit-function-declaration)
 
+# (Packaging) PhysFS
+FetchContent_Declare(
+        PhysFS
+        GIT_REPOSITORY https://github.com/icculus/physfs.git
+        GIT_TAG main
+        GIT_SHALLOW TRUE
+        GIT_PROGRESS TRUE
+)
+
+override_option(PHYSFS_ARCHIVE_ZIP ON)
+override_option(PHYSFS_ARCHIVE_7Z OFF)
+override_option(PHYSFS_ARCHIVE_GRP OFF)
+override_option(PHYSFS_ARCHIVE_WAD OFF)
+override_option(PHYSFS_ARCHIVE_CSM OFF)
+override_option(PHYSFS_ARCHIVE_HOG OFF)
+override_option(PHYSFS_ARCHIVE_MVL OFF)
+override_option(PHYSFS_ARCHIVE_QPAK OFF)
+override_option(PHYSFS_ARCHIVE_SLB OFF)
+override_option(PHYSFS_ARCHIVE_VDF OFF)
+override_option(PHYSFS_ARCHIVE_ISO9660 OFF)
+override_option(PHYSFS_ARCHIVE_LECARCHIVES OFF)
+
+override_option(PHYSFS_BUILD_DOCS OFF)
+override_option(PHYSFS_BUILD_SHARED OFF)
+override_option(PHYSFS_BUILD_TEST OFF)
+
+FetchContent_MakeAvailable(PhysFS)
+
 if (ENABLE_UNITY)
     target_enable_unity(Jolt)
 endif ()

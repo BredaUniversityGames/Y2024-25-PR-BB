@@ -7,8 +7,10 @@ target_link_libraries(Utility
         PUBLIC spdlog::spdlog
         PUBLIC glm::glm
         PUBLIC cereal::cereal
+        PUBLIC physfs-static
 )
 
 target_include_directories(Utility
         PUBLIC "${PROJECT_SOURCE_DIR}/external/visit_struct/include"
+        PUBLIC "${physfs_SOURCE_DIR}/src"
 )
