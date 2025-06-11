@@ -288,7 +288,7 @@ class StationManager {
 
             _stationList[randomIndex].SetPowerUpType(randomPowerUp) // Set the power up type to quad damage
             _stationList[randomIndex].time = 0.0 // Reset the time for the station
-            _stationList[randomIndex].PlayActivateSound(engine, 2.5)
+            _stationList[randomIndex].PlayActivateSound(engine, 1.5)
             _quadDamageTransparency.transparency = 0.0 // Reset the transparency to 0.0
             _dualGunTransparency.transparency = 0.0 // Reset the transparency to 0.0
 
