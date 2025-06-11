@@ -83,6 +83,9 @@ void AudioModule::Reset()
         if (event == nullptr)
             continue;
 
+        if (!FMOD_Studio_EventInstance_IsValid(event))
+            continue;
+
         FMOD_CHECKRESULT(FMOD_Studio_EventInstance_Stop(event, FMOD_STUDIO_STOP_IMMEDIATE));
         FMOD_CHECKRESULT(FMOD_Studio_EventInstance_Release(event));
     }
