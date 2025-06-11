@@ -1,7 +1,10 @@
 ﻿#pragma once
 #include "steam_include.hpp"
 #include <cstdint>
+#include <span>
+#include <string>
 #include <string_view>
+#include <vector>
 
 #define _STAT_ID(id, type, name) { id, type, name, 0, 0, 0, 0 }
 

@@ -4,6 +4,7 @@
 #include "game_module.hpp"
 #include "steam_module.hpp"
 #include "steam_stats.hpp"
+#include "utility/enum_bind.hpp"
 
 #include <magic_enum.hpp>
 
