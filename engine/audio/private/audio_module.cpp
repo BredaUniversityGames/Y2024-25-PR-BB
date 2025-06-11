@@ -255,6 +255,10 @@ void AudioModule::SetLowpassBypass(bool state)
 {
     FMOD_CHECKRESULT(FMOD_DSP_SetBypass(_lowPassDSP, state));
 }
+void AudioModule::SetMasterChannelGroupPitch(float pitch)
+{
+    FMOD_CHECKRESULT(FMOD_ChannelGroup_SetPitch(_masterGroup, pitch));
+}
 
 void AudioModule::UnloadBank(const BankInfo& bankInfo)
 {
