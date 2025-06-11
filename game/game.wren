@@ -208,7 +208,7 @@ class Main {
             waveConfigs.add(WaveGenerator.GenerateWave(v))
         }
 
-        __waveSystem = WaveSystem.new(waveConfigs, spawnLocations)
+        __waveSystem = WaveSystem.new(engine, waveConfigs, spawnLocations)
 
         // Souls
         __soulManager = SoulManager.new(engine, __player)

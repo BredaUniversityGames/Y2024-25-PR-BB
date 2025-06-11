@@ -153,6 +153,10 @@ class WrenHUD {
         _hud.SetWaveCounterText(CurrentWave+1)
         _waveFlashTween.TriggerFromStart()
     }
+
+    SetWaveCounter(wave) {
+        _hud.SetWaveCounterText(wave)
+    }
     
     TriggerDashChargeRefillAnimation(){
        _dashColorRefillTween.TriggerFromStart()
