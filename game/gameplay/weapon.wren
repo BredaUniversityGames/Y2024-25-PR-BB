@@ -248,9 +248,6 @@ class Pistol {
                 for (rayHit in rayHitInfo) {
                     var hitEntity = rayHit.GetEntity(engine.GetECS())
                     if (!hitEntity.HasPlayerTag()) {
-                        if (System.print(hitEntity.GetRigidbodyComponent().GetLayer()) == PhysicsObjectLayer.eDEAD()) {
-                            continue
-                        }
                         end = rayHit.position
                         normal = rayHit.normal
                         if (hitEntity.HasEnemyTag()) {
