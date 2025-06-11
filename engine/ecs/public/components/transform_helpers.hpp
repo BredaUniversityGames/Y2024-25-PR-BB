@@ -47,8 +47,6 @@ public:
     static void SubscribeToEvents(entt::registry& reg);
     static void UnsubscribeToEvents(entt::registry& reg);
 
-    static void ResetAllUpdateTags(entt::registry& reg);
-
     // User should not need to call this function
     // It is called automatically when a transform or the parent is updated
     static void UpdateWorldMatrix(entt::registry& reg, entt::entity entity);
