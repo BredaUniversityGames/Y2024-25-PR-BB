@@ -65,8 +65,11 @@ class WaveSystem {
         _currentWave = -1
         _waveTimer = 0.0
         _waveDelay = 4.0
-        _waveSlowdown = 0.2
+        _waveSlowdown = 0.3
         _enemyCount = 0
+
+        _timeSpeed = 1.0
+        _slowTime = 0.1
 
         var entity = engine.GetECS().NewEntity()
         entity.AddTransformComponent().translation = Vec3.new(-80, 111, 44)
@@ -92,14 +95,26 @@ class WaveSystem {
             return
         }
 
+        var realDeltatime = engine.GetTime().GetRealDeltatime() / 1000 * 60
+
         // Waiting period
         if (_waveTimer < _waveDelay) {
-            engine.GetTime().SetScale(0.4 - _waveTimer)
             if (_waveTimer > _waveSlowdown) {
-                engine.GetTime().SetScale(1)
+                _timeSpeed = Math.MixFloat(_timeSpeed, 1.0, 0.12 * realDeltatime)
+            } else {
+                if (_currentWave > -1) {
+                    _timeSpeed = Math.MixFloat(_timeSpeed, _slowTime, 0.10 * realDeltatime)
+                }
             }
+            engine.GetTime().SetScale(_timeSpeed)
+            engine.GetAudio().SetPlaybackSpeed(_timeSpeed)
             return
         }
+
+        _timeSpeed = Math.MixFloat(_timeSpeed, 1.0, 0.12  * realDeltatime)
+
+        engine.GetTime().SetScale(_timeSpeed)
+        engine.GetAudio().SetPlaybackSpeed(_timeSpeed)
 
         // Inside a wave
         if (_ongoingWave) {
