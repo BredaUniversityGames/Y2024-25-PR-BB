@@ -13,7 +13,7 @@ void ScriptingModule::ResetVM()
 
 void ScriptingModule::GenerateEngineBindingsFile()
 {
-    if (auto stream = fileIO::OpenWriteStream(_engineBindingsPath, fileIO::TEXT_WRITE_FLAGS))
+    if (auto stream = fileIO::OpenWriteStream(_engineBindingsPath))
     {
         auto& output = stream.value();
 
@@ -36,7 +36,7 @@ ModuleTickOrder ScriptingModule::Init(MAYBE_UNUSED Engine& engine)
     config.includePaths.emplace_back("./game/");
 
     _context = std::make_unique<ScriptingContext>(config);
-    _engineBindingsPath = fileIO::CanonicalizePath("game/engine_api.wren");
+    _engineBindingsPath = "game/engine_api.wren";
 
     _context->SetScriptingOutputStream(bblog::default_logger());
 

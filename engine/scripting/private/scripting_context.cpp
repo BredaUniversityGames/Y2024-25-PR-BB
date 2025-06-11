@@ -15,29 +15,28 @@ std::string ResolveImport(
     using Filepath = std::filesystem::path;
 
     auto parent = Filepath(importer).parent_path();
-    auto relative = (Filepath(parent) / Filepath(name)).lexically_normal().make_preferred();
+    auto relative = (Filepath(parent) / Filepath(name)).lexically_normal().generic_string();
 
-    if (std::filesystem::exists(relative))
+    if (fileIO::Exists(relative))
     {
-        return relative.string();
+        return relative;
     }
 
     for (const auto& path : paths)
     {
-
-        auto composed = (Filepath(path) / Filepath(name).lexically_normal().make_preferred());
-        if (std::filesystem::exists(composed))
+        auto composed = (Filepath(path) / Filepath(name)).lexically_normal().generic_string();
+        if (fileIO::Exists(composed))
         {
-            return composed.string();
+            return composed;
         }
     }
 
-    return fileIO::CanonicalizePath(name);
+    return name;
 }
 
 std::string LoadFile(const std::string& path)
 {
-    if (auto stream = fileIO::OpenReadStream(path, fileIO::TEXT_READ_FLAGS))
+    if (auto stream = fileIO::OpenReadStream(path))
     {
         return fileIO::DumpStreamIntoString(stream.value());
     }
@@ -65,11 +64,6 @@ void* ReallocFn(void* prev, size_t size, MAYBE_UNUSED void* user)
 ScriptingContext::ScriptingContext(const VMInitConfig& info)
 {
     _vmInitConfig = info;
-
-    for (auto& include_dir : _vmInitConfig.includePaths)
-    {
-        include_dir = fileIO::CanonicalizePath(include_dir);
-    }
 
     Reset();
 }
@@ -103,12 +97,10 @@ void ScriptingContext::Reset()
 
 std::optional<std::string> ScriptingContext::RunScript(const std::string& path)
 {
-    auto correctedPath = fileIO::CanonicalizePath(path);
-
     try
     {
-        _vm->runFromModule(correctedPath);
-        return detail::ResolveImport(_vmInitConfig.includePaths, "", correctedPath);
+        _vm->runFromModule(path);
+        return detail::ResolveImport(_vmInitConfig.includePaths, "", path);
     }
     catch (const wren::Exception& e)
     {

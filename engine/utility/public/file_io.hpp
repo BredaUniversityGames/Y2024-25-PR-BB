@@ -1,5 +1,6 @@
 #pragma once
 
+#include "physfs.hpp"
 #include <chrono>
 #include <fstream>
 #include <optional>
@@ -20,14 +21,12 @@ using FileTime = std::chrono::time_point<std::chrono::file_clock>;
 /// <summary>
 /// Open a file stream for reading. Specify 0 or std::ios::flags
 /// </summary>
-std::optional<std::ifstream> OpenReadStream(const std::string& path,
-    std::ios::openmode flags = DEFAULT_READ_FLAGS);
+std::optional<PhysFS::ifstream> OpenReadStream(const std::string& path);
 
 /// <summary>
 /// Open a file stream for writing. Specify 0 or std::ios::flags
 /// </summary>
-std::optional<std::ofstream> OpenWriteStream(const std::string& path,
-    std::ios::openmode flags = DEFAULT_WRITE_FLAGS);
+std::optional<PhysFS::ofstream> OpenWriteStream(const std::string& path);
 
 /// <summary>
 /// Dumps all bytes of a stream into a vector
@@ -53,10 +52,5 @@ bool MakeDirectory(const std::string& path);
 /// Check the last time a file was modified. Nullopt if file doesn't exist
 /// </summary>
 std::optional<FileTime> GetLastModifiedTime(const std::string& path);
-
-/// <summary>
-/// Simplifies and Transforms the path into OS preference
-/// </summary>
-std::string CanonicalizePath(const std::string& path);
 
 };

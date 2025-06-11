@@ -1,30 +1,36 @@
+#include "file_io.hpp"
 #include <bit>
-#include <file_io.hpp>
 #include <filesystem>
 
-std::optional<std::ifstream> fileIO::OpenReadStream(const std::string& path,
-    std::ios::openmode flags)
+std::optional<PhysFS::ifstream> fileIO::OpenReadStream(const std::string& path)
 {
-    std::ifstream stream(path, flags);
-    if (stream)
+    if (!PhysFS::exists(path))
     {
-        return stream;
+        return std::nullopt;
     }
-    else
+
+    try
+    {
+        return std::optional<PhysFS::ifstream> { path };
+    }
+    catch (...)
     {
         return std::nullopt;
     }
 }
 
-std::optional<std::ofstream> fileIO::OpenWriteStream(const std::string& path,
-    std::ios::openmode flags)
+std::optional<PhysFS::ofstream> fileIO::OpenWriteStream(const std::string& path)
 {
-    std::ofstream stream(path, flags);
-    if (stream.is_open())
+    if (!PhysFS::exists(path))
     {
-        return stream;
+        return std::nullopt;
     }
-    else
+
+    try
+    {
+        return std::optional<PhysFS::ofstream> { path };
+    }
+    catch (...)
     {
         return std::nullopt;
     }
@@ -32,24 +38,21 @@ std::optional<std::ofstream> fileIO::OpenWriteStream(const std::string& path,
 
 bool fileIO::Exists(const std::string& path)
 {
-    return std::filesystem::exists(path);
+    return PhysFS::exists(path);
 }
 
 bool fileIO::MakeDirectory(const std::string& path)
 {
-    std::error_code e {};
-    std::filesystem::create_directory(path, e);
-    if (e == std::error_code {})
-        return true;
-    else
-        return false;
+    return PhysFS::mkdir(path);
 }
 
 std::optional<fileIO::FileTime> fileIO::GetLastModifiedTime(const std::string& path)
 {
+
     if (Exists(path))
     {
-        return std::filesystem::last_write_time(path);
+        // auto lastModTime = PhysFS::getLastModTime(path); // TODO: Figure out what unit this is and convert to chronos
+        return fileIO::FileTime {};
     }
     else
     {
@@ -75,9 +78,4 @@ std::string fileIO::DumpStreamIntoString(std::istream& stream)
     stream.seekg(0);
     stream.read(std::bit_cast<char*>(out.data()), size);
     return out;
-}
-
-std::string fileIO::CanonicalizePath(const std::string& path)
-{
-    return std::filesystem::path(path).make_preferred().lexically_normal().string();
 }

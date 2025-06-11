@@ -16,13 +16,25 @@
 #include "time_module.hpp"
 #include "ui_module.hpp"
 
-#include <physfs.h>
+#include "physfs.hpp"
 
 int Main()
 {
 #ifdef DISTRIBUTION
     bblog::StartWritingToFile();
 #endif
+
+    if (!PhysFS::init(""))
+    {
+        bblog::error("Failed initializing PhysFS!\n{}", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
+        return 1;
+    }
+
+    if (!PhysFS::mount("./", "/", true))
+    {
+        bblog::error("Failed mounting PhysFS!\n{}", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
+        return 1;
+    }
 
     MainEngine instance;
     Stopwatch startupTimer {};
