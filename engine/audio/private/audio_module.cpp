@@ -67,6 +67,23 @@ void AudioModule::Shutdown(MAYBE_UNUSED Engine& engine)
 {
     if (_studioSystem)
     {
+        Reset();
+        // 4. Release DSPs
+
+        if (_masterGroup && _lowPassDSP)
+        {
+            FMOD_CHECKRESULT(FMOD_ChannelGroup_RemoveDSP(_masterGroup, _lowPassDSP));
+            FMOD_CHECKRESULT(FMOD_DSP_Release(_lowPassDSP));
+            _lowPassDSP = nullptr;
+        }
+
+        if (_masterGroup && _fftDSP)
+        {
+            FMOD_CHECKRESULT(FMOD_ChannelGroup_RemoveDSP(_masterGroup, _fftDSP));
+            FMOD_CHECKRESULT(FMOD_DSP_Release(_fftDSP));
+            _fftDSP = nullptr;
+        }
+
         FMOD_CHECKRESULT(FMOD_Studio_System_Release(_studioSystem));
     }
 
