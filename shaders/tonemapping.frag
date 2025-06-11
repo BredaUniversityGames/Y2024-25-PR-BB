@@ -193,7 +193,7 @@ float noise(in vec3 x)
 // Fractional Brownian motion
 float fbm(vec3 p)
 {
-    p = p - vec3(1.0, 1.0, 0.0) * pc.time * 0.1;
+    p = p - vec3(1.5, 0.2, 0.0) * pc.time * 0.1;
 
     float f = 0.5000 * noise(p);
     p = m * p;
@@ -217,7 +217,7 @@ float distPointToRay(vec3 p, vec3 rayOrigin, vec3 rayDir) {
 float density(vec3 pos)
 {
     // Just noise-based, optionally bias for "height" (e.g., less dense at y>2 or y<-2)
-    float base = smoothstep(0.5, 1.0, fbm(pos * 0.25));
+    float base = smoothstep(0.5, 1.0, fbm(vec3(pos.x * 0.13, pos.y * 0.25, pos.z * 0.13)));
     float den = base * 1.4 - 0.2 - smoothstep(2.0, 4.0, abs(pos.y));
     den = clamp(den, 0.0, 1.0);
 
@@ -482,10 +482,10 @@ void main()
         hdrColor = texelFetch(bindless_color_textures[nonuniformEXT (pc.hdrTargetIndex)], pixelCoords, 0).rgb;
     }
 
-    if (paletteEnabled)
+/**    if (paletteEnabled)
     {
         hdrColor = ComputeQuantizedColor(hdrColor, pc.ditherAmount, pc.paletteAmount);
-    }
+    }*/
 
     vec3 bloom = bloomColor * bloomSettings.strength;
     hdrColor += bloom;
@@ -494,15 +494,17 @@ void main()
     //sample the depth again, maybe we now need to use pixelization
     ivec2 pixelCoords = ivec2(newTexCoords * vec2(texSize));
     float pixelatedDepthSample = texelFetch(bindless_color_textures[nonuniformEXT (pc.depthIndex)], pixelCoords, 0).r;
+
+    const vec3 earlyRay = rayDirection(camera.fov, texSize, vec2(pixelCoords));
+    const vec3 rayDirection = normalize(transpose(mat3(camera.view)) * earlyRay);
+
     if (pixelatedDepthSample <= 0.0f)
     {
         vec3 waterColor = pc.voidColor.rgb;
         {//water
          ivec2 pixelCoords = ivec2(newTexCoords * vec2(texSize));
 
-         vec3 ray = normalize(transpose(mat3(camera.view)) * rayDirection(camera.fov, vec2(texSize), vec2(pixelCoords)));
-
-         if (ray.y < 0)
+         if (rayDirection.y < 0)
          {
 
 
@@ -516,14 +518,14 @@ void main()
              vec3 origin = vec3((pc.time * 0.2) + camera.cameraPosition.x * 0.275, CAMERA_HEIGHT + camera.cameraPosition.y * 0.275, 1 + camera.cameraPosition.z * 0.275);
 
              // calculate intersections and reconstruct positions
-             float highPlaneHit = intersectPlane(origin, ray, waterPlaneHigh, vec3(0.0, 1.0, 0.0));
-             float lowPlaneHit = intersectPlane(origin, ray, waterPlaneLow, vec3(0.0, 1.0, 0.0));
-             vec3 highHitPos = origin + ray * highPlaneHit;
-             vec3 lowHitPos = origin + ray * lowPlaneHit;
+             float highPlaneHit = intersectPlane(origin, rayDirection, waterPlaneHigh, vec3(0.0, 1.0, 0.0));
+             float lowPlaneHit = intersectPlane(origin, rayDirection, waterPlaneLow, vec3(0.0, 1.0, 0.0));
+             vec3 highHitPos = origin + rayDirection * highPlaneHit;
+             vec3 lowHitPos = origin + rayDirection * lowPlaneHit;
 
              // raymatch water and reconstruct the hit pos
              float dist = raymarchwater(origin, highHitPos, lowHitPos, WATER_DEPTH);
-             vec3 waterHitPos = origin + ray * dist;
+             vec3 waterHitPos = origin + rayDirection * dist;
 
              // calculate normal at the hit position
              vec3 N = normal(waterHitPos.xz, 0.01, WATER_DEPTH);
@@ -532,10 +534,10 @@ void main()
              N = mix(N, vec3(0.0, 1.0, 0.0), 0.8 * min(1.0, sqrt(dist * 0.01) * 1.1));
 
              // calculate fresnel coefficient
-             float fresnel = (0.04 + (1.0 - 0.04) * (pow(1.0 - max(0.0, dot(-N, ray)), 5.0)));
+             float fresnel = (0.04 + (1.0 - 0.04) * (pow(1.0 - max(0.0, dot(-N, rayDirection)), 5.0)));
 
              // reflect the ray and make sure it bounces up
-             vec3 R = normalize(reflect(ray, N));
+             vec3 R = normalize(reflect(rayDirection, N));
              R.y = abs(R.y);
 
              // calculate the reflection and approximate subsurface scattering
@@ -554,15 +556,8 @@ void main()
         const float smoothCurve = mix(0.0, 0.45, smoothstep(-0.5, 0.5, uv.y));
         const float curve = -(1.0 - dot(uv, uv) * smoothCurve);
         vec2 fragCoords = newTexCoords * vec2(texSize);
-        vec3 earlyRay = rayDirection(camera.fov, texSize, fragCoords);
-        const vec3 rayDir = normalize(transpose(mat3(camera.view)) * earlyRay);
         const vec3 ro = vec3(camera.cameraPosition.x, 0.0, camera.cameraPosition.z);
-        color = Sky(ro, rayDir, waterColor);
-
-        if (paletteEnabled)
-        {
-            color = ComputeQuantizedColor(color, pc.ditherAmount, pc.paletteAmount);
-        }
+        color = Sky(ro, rayDirection, waterColor);
 
         color += bloom;
     }
@@ -575,12 +570,8 @@ void main()
         // Rotate the camera position around the origin
         vec3 ro = camera.cameraPosition; // Initial camera position
         ro.y -= VOLUMETRIC_HEIGHT_OFFSET;
-    /**ro.y -= 10.0;*/
 
 
-
-        vec3 earlyRay = rayDirection(camera.fov, texSize, p);
-        const vec3 rd = normalize(transpose(mat3(camera.view)) * earlyRay);
         // Compute the ray direction from camera to pixel
 
         float linearizedSceneDepth = getLinearSceneDepth(pixelatedDepthSample, camera.zNear, camera.zFar);
@@ -590,11 +581,16 @@ void main()
         float dynamicMaxDist = MAX_DIST;
         dynamicMaxDist += max(0.0, ro.y) * 1.1f;
 
-        vec3 col = raymarching(ro, rd, 0.0, dynamicMaxDist, color, pixelWorldPos);
+        vec3 col = raymarching(ro, rayDirection, 0.0, dynamicMaxDist, color, pixelWorldPos);
 
         color = mix(color, col, 0.5);
 
         //color = col;
+    }
+
+    if (paletteEnabled)
+    {
+        color = ComputeQuantizedColor(color, pc.ditherAmount, pc.paletteAmount);
     }
 
     switch (pc.tonemappingFunction)
