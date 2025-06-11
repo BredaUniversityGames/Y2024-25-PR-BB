@@ -29,12 +29,13 @@
 #include "time_module.hpp"
 #include "ui/ui_menus.hpp"
 #include "ui_module.hpp"
-
-#include <ui_text.hpp>
+#include "graphics_resources.hpp"
+#include "ui_text.hpp"
 
 ModuleTickOrder GameModule::Init(Engine& engine)
 {
-    engine.GetModule<ApplicationModule>().GetActionManager().SetGameActions(GAME_ACTIONS);
+    ActionManager& actionManager = engine.GetModule<ApplicationModule>().GetActionManager();
+    actionManager.SetGameActions(GAME_ACTIONS);
 
     // Audio Setup
     auto& audio = engine.GetModule<AudioModule>();
@@ -50,6 +51,7 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     ECS.AddSystem<LifetimeSystem>();
 
     GraphicsContext& graphicsContext = *engine.GetModule<RendererModule>().GetGraphicsContext();
+    _bindingsVisualizationCache = std::make_unique<InputBindingsVisualizationCache>(actionManager, graphicsContext.Resources()->ImageResourceManager());
 
     auto& viewport = engine.GetModule<UIModule>().GetViewport();
     const glm::uvec2 viewportSize = viewport.GetExtend();

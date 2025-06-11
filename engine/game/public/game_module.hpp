@@ -5,6 +5,7 @@
 #include "game_settings.hpp"
 #include "scene/model_loader.hpp"
 #include "ui/ui_menus.hpp"
+#include "InputBindingsVisualizationCache.hpp"
 
 #include <stack>
 
@@ -48,6 +49,8 @@ public:
     std::optional<std::shared_ptr<GameOverMenu>> GetGameOver();
     std::optional<std::shared_ptr<LoadingScreen>> GetLoadingScreen();
 
+    InputBindingsVisualizationCache& GetInputVisualiztionsCache() { return *_bindingsVisualizationCache; }
+
     NON_COPYABLE(GameModule);
     NON_MOVABLE(GameModule);
 
@@ -73,6 +76,7 @@ private:
     std::weak_ptr<ControlsMenu> _controlsMenu;
     std::weak_ptr<FrameCounter> _framerateCounter {};
     std::weak_ptr<CreditsMenu> _creditsMenu {};
+    std::unique_ptr<InputBindingsVisualizationCache> _bindingsVisualizationCache;
 
     // Scene
 

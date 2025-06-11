@@ -138,6 +138,9 @@ std::shared_ptr<HUD> HUD::Create(GraphicsContext& graphicsContext, const glm::uv
     hud->actionBindingText = hud->AddChild<UITextElement>(font, "Binding", glm::vec2(0, 100), 70);
     hud->actionBindingText.lock()->anchorPoint = UIElement::AnchorPoint::eMiddle;
 
+    hud->actionBindingGlyph = hud->AddChild<UIImage>(gunImage, glm::vec2(-170 ,100), glm::vec2(50, 50));
+    hud->actionBindingGlyph.lock()->anchorPoint = UIElement::AnchorPoint::eMiddle;
+
     hud->UpdateAllChildrenAbsoluteTransform();
     graphicsContext.UpdateBindlessSet();
     return hud;

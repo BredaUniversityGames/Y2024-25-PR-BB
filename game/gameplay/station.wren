@@ -62,8 +62,8 @@ class Station {
 
             engine.GetGame().GetHUD().SetPowerUpTextColor(Vec4.new(_textColor.x,_textColor.y,_textColor.z,_textOpacity) )
 
-            var visual = engine.GetInput().GetDigitalActionBindingOriginVisual("Interact")
-            engine.GetGame().GetHUD().SetActionBindingText(visual[0].bindingInputName)
+            var visual = engine.GetGame().GetDigitalActionBindingOriginVisual("Interact")
+            engine.GetGame().GetHUD().ShowActionBinding(visual[0])
 
             if(engine.GetInput().GetDigitalAction("Interact").IsPressed()){
 
@@ -100,7 +100,7 @@ class Station {
             _textOpacity = Math.Clamp(_textOpacity, 0.0, 1.0)
             engine.GetGame().GetHUD().SetPowerUpTextColor(Vec4.new(1.0,1.0,1.0,_textOpacity) )
 
-            engine.GetGame().GetHUD().SetActionBindingText("")
+            engine.GetGame().GetHUD().HideActionBinding()
         }
     }
 
