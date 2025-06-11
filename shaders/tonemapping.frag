@@ -60,6 +60,10 @@ layout (push_constant) uniform PushConstants
     vec4 flashColor;
     vec4 waterColor;
 
+    vec4 rayOrigin;
+
+    vec4 rayDirection;
+
 
 } pc;
 
@@ -122,16 +126,15 @@ float linearize_depth(float d, float zNear, float zFar)
 // --- Custom Uniforms for Hole Parameters ---
 // These uniforms allow external control over the hole's properties.
 // In a typical application, these would be set from the CPU (e.g., JavaScript in WebGL).
-vec3 iHoleRayOrigin = vec3(0.0, 0.1, -1.1); // Start slightly outside the sphere (sphere.w = 1.0)
-vec3 iHoleRayDirection = vec3(0.0, 0.0, 1.0); // Point along the Z-axis
+#define VOLUMETRIC_HEIGHT_OFFSET 10.0
 float iHoleRadius = 0.1; // Radius of the hole
 float iHoleFeather = 0.1; // Smoothness of the hole edges (blends from iHoleRadius to iHoleRadius + iHoleFeather)
 // ---- Constants ----
-#define MAX_STEPS 64
-#define MAX_DIST 128.0
+#define MAX_STEPS 80
+#define MAX_DIST 32.0
 
 // ---- Noise / Hash as in your code ----
-float hash(vec3 p) {
+/**float hash(vec3 p) {
     return fract(sin(dot(p, vec3(12.9898, 78.233, 37.719))) * 43758.5453123);
 }
 float noise(vec3 x) {
@@ -163,6 +166,43 @@ float fractal_noise(vec3 p) {
     f += 0.06250 * noise(p); p = 2.0 * p;
     f += 0.03125 * noise(p);
     return f;
+}*/
+
+mat3 m = mat3(0.00, 1.60, 1.20, -1.60, 0.72, -0.96, -1.20, -0.96, 1.28);
+// hash function
+float hash(float n)
+{
+    return fract(cos(n) * 114514.1919);
+}
+
+// 3d noise function
+float noise(in vec3 x)
+{
+    vec3 p = floor(x);
+    vec3 f = smoothstep(0.0, 1.0, fract(x));
+
+    float n = p.x + p.y * 10.0 + p.z * 100.0;
+
+    return mix(
+        mix(mix(hash(n + 0.0), hash(n + 1.0), f.x),
+            mix(hash(n + 10.0), hash(n + 11.0), f.x), f.y),
+        mix(mix(hash(n + 100.0), hash(n + 101.0), f.x),
+            mix(hash(n + 110.0), hash(n + 111.0), f.x), f.y), f.z);
+}
+
+// Fractional Brownian motion
+float fbm(vec3 p)
+{
+    p = p - vec3(1.0, 1.0, 0.0) * pc.time * 0.1;
+
+    float f = 0.5000 * noise(p);
+    p = m * p;
+    f += 0.2500 * noise(p);
+    p = m * p;
+    f += 0.1666 * noise(p);
+    p = m * p;
+    f += 0.0834 * noise(p);
+    return f;
 }
 
 // ---- Hole logic ----
@@ -177,13 +217,18 @@ float distPointToRay(vec3 p, vec3 rayOrigin, vec3 rayDir) {
 float density(vec3 pos)
 {
     // Just noise-based, optionally bias for "height" (e.g., less dense at y>2 or y<-2)
-    float base = fractal_noise(pos);
+    float base = smoothstep(0.5, 1.0, fbm(pos * 0.25));
     float den = base * 1.4 - 0.2 - smoothstep(2.0, 4.0, abs(pos.y));
     den = clamp(den, 0.0, 1.0);
 
     // Hole (as before)
-    float dpr = distPointToRay(pos, iHoleRayOrigin, normalize(iHoleRayDirection));
-    float holeInfluence = smoothstep(iHoleRadius + iHoleFeather, iHoleRadius, dpr);
+    vec3 origin = pc.rayOrigin.xyz;
+    origin.y -= VOLUMETRIC_HEIGHT_OFFSET; // Offset the origin to match the hole height
+    vec3 rayDir = normalize(pc.rayDirection.xyz);
+    //rayDir.y -= VOLUMETRIC_HEIGHT_OFFSET; // Offset the ray direction to match the hole height
+
+    float dpr = distPointToRay(pos, origin, rayDir);
+    float holeInfluence = smoothstep(pc.rayOrigin.a + iHoleFeather, pc.rayOrigin.a, dpr);
     den *= (1.0 - holeInfluence);
 
     return den;
@@ -196,6 +241,7 @@ vec3 color(float den, float y)
     vec3 colBot = 3.0 * vec3(1.0, 0.9, 0.5);
     vec3 colTop = 2.0 * vec3(0.5, 0.55, 0.55);
     result *= mix(colBot, colTop, smoothstep(-3.0, 3.0, y));
+    result *= vec3(0.1, 0.05, 0.05);
     return result;
 }
 
@@ -209,28 +255,48 @@ mat3 setCamera(vec3 ro, vec3 ta, float cr) {
 }
 
 // ---- Raymarching through infinite volume ----
-vec3 raymarching(vec3 ro, vec3 rd, float tmin, float tmax, vec3 backCol)
+vec3 raymarching(vec3 ro, vec3 rd, float tmin, float tmax, vec3 backCol, vec3 sceneDepthPosition)
 {
     vec4 sum = vec4(0.0);
     float t = tmin;
+
+    // Calculate the distance from the ray origin to the opaque object's position
+    // This value represents how far we need to march along 'rd' to hit the opaque object.
+    float distToOpaqueObject = distance(ro, sceneDepthPosition);
+
     for (int i = 0; i < MAX_STEPS; i++)
     {
         // Stop if we've accumulated enough opacity or gone too far
         if (sum.a > 0.99 || t > tmax) break;
 
-    /**
-        // Stop if we hit an opaque object before reaching the current raymarching distance
-        if (t < sceneDepth) {
-            break; // Stop raymarching smoke; an opaque object is in front
+        // Early out if the current raymarching distance 't' has exceeded
+        // the distance to the opaque object.
+        // Also check sum.a to ensure we don't prematurely clip a dense cloud
+        // that starts before the opaque object but extends slightly past its depth.
+        if (t > distToOpaqueObject) {
+            break;
         }
-*/
 
         vec3 pos = ro + rd * t;
+        if (pos.y > 25.0 || pos.y < -3.0) {
+            break; // outside volume
+        }
         float den = density(pos);
-        vec4 col = vec4(vec3(0.2), den);
+        vec4 col = vec4(color(den, pos.y), den);
         col.rgb *= col.a;
         sum = sum + col * (1.0 - sum.a);
-        t += 0.07 + 0.02 * float(i); // uniform or progressive steps
+        //t += 0.07 + 0.01 * float(i); // uniform or progressive steps
+
+
+        float stepSize = 0.07; // Minimum step size
+        if (den < 0.005) { // If very low density, step faster
+                           stepSize = 0.8;
+        } else if (den > 0.8) { // If very high density, step slower for detail
+                                stepSize = 0.07;
+        } else {
+            stepSize = mix(0.07, 0.8, den); // Interpolate
+        }
+        t += stepSize + 0.01 * float(i);;
     }
     sum = clamp(sum, 0.0, 1.0);
     return mix(backCol, sum.rgb, sum.a);
@@ -376,6 +442,13 @@ vec3 rayDirection(float fieldOfView, vec2 size, vec2 fragCoord)
     return normalize(vec3(xy, -z));
 }
 
+float getLinearSceneDepth(float rawDepthValue, float near, float far) {
+    // This formula inverts the common perspective projection depth buffer mapping
+    // where 1.0 is near and 0.0 is far.
+    // It correctly converts the non-linear, inverted depth to a linear world-space distance.
+    return 1.0 / (rawDepthValue * (1.0 / near - 1.0 / far) + 1.0 / far);
+}
+
 void main()
 {
     vec2 newTexCoords = texCoords;
@@ -501,7 +574,8 @@ void main()
 
         // Rotate the camera position around the origin
         vec3 ro = camera.cameraPosition; // Initial camera position
-        ro.y -= 10.0;
+        ro.y -= VOLUMETRIC_HEIGHT_OFFSET;
+    /**ro.y -= 10.0;*/
 
 
 
@@ -509,9 +583,14 @@ void main()
         const vec3 rd = normalize(transpose(mat3(camera.view)) * earlyRay);
         // Compute the ray direction from camera to pixel
 
+        float linearizedSceneDepth = getLinearSceneDepth(pixelatedDepthSample, camera.zNear, camera.zFar);
 
+        vec3 pixelWorldPos = ReconstructWorldPosition(pixelatedDepthSample, newTexCoords, camera.inverseVP);
 
-        vec3 col = raymarching(ro, rd, 0.0, MAX_DIST, color);
+        float dynamicMaxDist = MAX_DIST;
+        dynamicMaxDist += max(0.0, ro.y) * 1.1f;
+
+        vec3 col = raymarching(ro, rd, 0.0, dynamicMaxDist, color, pixelWorldPos);
 
         color = mix(color, col, 0.5);
 

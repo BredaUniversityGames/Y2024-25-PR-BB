@@ -50,6 +50,7 @@ void TonemappingPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t c
     timePassed += scene.deltaTime / 1000.0f;
     _pushConstants.exposure = _settings.exposure;
     _pushConstants.tonemappingFunction = static_cast<uint32_t>(_settings.tonemappingFunction);
+    _pushConstants.rayOrigin.a -= (0.2 * (scene.deltaTime / 1000.0f));
 
     _pushConstants.enableFlags = 0;
 

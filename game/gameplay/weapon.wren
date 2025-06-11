@@ -216,6 +216,8 @@ class Pistol {
             var start = translation + forward * Vec3.new(1, 1, 1) - right * Vec3.new(0.09, 0.09, 0.09) - up * Vec3.new(0.12, 0.12, 0.12)
             var end = translation + forward * _rangeVector
 
+
+
             var direction = (end - start).normalize()
             var rayHitInfo = engine.GetPhysics().ShootRay(start, direction, _range)
 
@@ -297,6 +299,9 @@ class Pistol {
             }
 
             var gunStart = _barrelEndEntity.GetTransformComponent().GetWorldTranslation()
+
+            var cloudDirection = (end - (gunStart - right.mulScalar(0.5) + up.mulScalar(0.2)))
+            engine.SetGunDirectionAndOrigin(gunStart - right.mulScalar(0.5) + up.mulScalar(0.2), cloudDirection)
 
             var length = (end - gunStart).length()
             var i = 1.0

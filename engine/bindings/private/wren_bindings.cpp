@@ -28,6 +28,8 @@
 #include "wren_engine.hpp"
 #include "wren_entity.hpp"
 
+#include <passes/tonemapping_pass.hpp>
+
 namespace bindings
 {
 
@@ -83,6 +85,12 @@ void ResetDecals(WrenEngine& engine)
 void SetFog(WrenEngine& engine, float density)
 {
     engine.instance->GetModule<RendererModule>().GetRenderer()->GetSettings().data.fog.density = density;
+}
+
+void SetGunDirectionAndOrigin(WrenEngine& engine, const glm::vec3& pos, const glm::vec3& dir)
+{
+    engine.instance->GetModule<RendererModule>().GetRenderer()->GetTonemappingPipeline().SetShotRayDirection(dir);
+    engine.instance->GetModule<RendererModule>().GetRenderer()->GetTonemappingPipeline().SetShotRayOrigin(pos);
 }
 
 float GetFog(WrenEngine& engine)
@@ -142,6 +150,7 @@ void BindEngineAPI(wren::ForeignModule& module)
         engineAPI.funcExt<bindings::SpawnDecal>("SpawnDecal");
         engineAPI.funcExt<bindings::ResetDecals>("ResetDecals");
         engineAPI.propExt<bindings::GetFog, bindings::SetFog>("Fog");
+        engineAPI.funcExt<bindings::SetGunDirectionAndOrigin>("SetGunDirectionAndOrigin");
         engineAPI.propExt<bindings::GetAmbientStrength, bindings::SetAmbientStrength>("AmbientStrength");
         engineAPI.funcExt<bindings::IsDistribution>("IsDistribution");
         engineAPI.funcExt<bindings::DrawDebugLine>("DrawDebugLine");

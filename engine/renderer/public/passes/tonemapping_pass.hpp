@@ -21,6 +21,9 @@ public:
 
     void SetFlashColor(const glm::vec4& color) { _pushConstants.flashColor = color; }
 
+    void SetShotRayOrigin(const glm::vec3& origin) { _pushConstants.rayOrigin = glm::vec4(origin, 0.3f); }
+    void SetShotRayDirection(const glm::vec3& direction) { _pushConstants.rayDirection = glm::vec4(direction, 0.3f); }
+
     NON_COPYABLE(TonemappingPass);
     NON_MOVABLE(TonemappingPass);
 
@@ -86,6 +89,9 @@ private:
 
         glm::vec4 flashColor;
         glm::vec4 waterColor;
+
+        glm::vec4 rayOrigin;
+        glm::vec4 rayDirection;
     } _pushConstants;
 
     std::shared_ptr<GraphicsContext> _context;
