@@ -8,7 +8,6 @@ class Main {
         engine.GetInput().SetActiveActionSet("UserInterface")
 
         var textOptions = [
-            "\"Time to make easy money.\"",
             "Poverty always drives someone to the end of the world.",
             "Ever since the plague,\nthe church has stood silent watching the dead rise.",
             "\"Let's hope the abyss doesn't stare back this time.\"",
