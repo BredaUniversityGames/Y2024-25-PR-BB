@@ -69,7 +69,7 @@ class WaveSystem {
         _enemyCount = 0
 
         _timeSpeed = 1.0
-        _slowTime = 0.1
+        _slowTime = 0.15
 
         var entity = engine.GetECS().NewEntity()
         entity.AddTransformComponent().translation = Vec3.new(-80, 111, 44)
