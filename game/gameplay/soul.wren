@@ -17,6 +17,7 @@ class Soul {
         _rootEntity = engine.GetECS().NewEntity()
         _rootEntity.AddNameComponent().name = "Soul"
         _rootEntity.AddAudioEmitterComponent()
+        _rootEntity.AddTransparencyComponent()
 
         var transform = _rootEntity.AddTransformComponent()
         transform.translation = spawnPosition
@@ -64,9 +65,18 @@ class Soul {
         _velocity = Vec3.new(0.0,0.0,0.0)
         _gravity = Vec3.new(0, -0.098, 0) // gravity for arc
         _soulSpeed = 0.005
+        _maxLightIntensity = _pointLight.intensity
 
         _collectSoundEvent = "event:/SFX/Soul"
     }
+
+    SetTransparency(value){
+            _rootEntity.GetTransparencyComponent().transparency = value // Set the transparency of the soul particles
+        }
+
+    SetLightIntensity(value){
+            _pointLight.intensity = value // Set the intensity of the soul light
+        }
 
     CheckRange(engine, playerPos, playerVariables,flashSystem, dt){
         var soulTransform = _rootEntity.GetTransformComponent()
@@ -153,6 +163,7 @@ class Soul {
 
     time {_time}
     time=(value) { _time  = value}
+    maxLightIntensity {_maxLightIntensity}
 }
 
 class SoulManager {
@@ -160,6 +171,8 @@ class SoulManager {
         _soulList = [] // List of souls
         _playerEntity = player // Reference to the player entity
         _maxLifeTimeOfSoul = 20000.0 // Maximum lifetime of a soul
+        _maxAppearTimeSoul = 1000.0
+        _maxDisappearTimeSoul = 2000.0
     }
 
     SpawnSoul(engine, spawnPosition,type){
@@ -175,6 +188,25 @@ class SoulManager {
             if(soul.entity.IsValid()){
                 soul.CheckRange(engine, playerPos, playerVariables, flashSystem, dt) // Check if the soul is within range of the player
                 soul.time = soul.time + dt
+
+                soul.SetTransparency(1.0)
+
+                // fade in the souls
+                if(soul.time < _maxAppearTimeSoul) {
+                    soul.SetTransparency(soul.time / _maxAppearTimeSoul)
+                }
+
+                // fade out the souls
+                var fadeStart = _maxLifeTimeOfSoul * (2.0 / 3.0)
+                var fadeDuration = _maxLifeTimeOfSoul * (1.0 / 3.0)
+                if(soul.time > fadeStart){
+                    var t = (soul.time - fadeStart) / fadeDuration
+                    t = Math.Min(Math.Max(t, 0), 1) // Clamp between 0 and 1
+                    var transparency = 1.0 - t
+                    var lightIntensity = (1.0 - t) * soul.maxLightIntensity
+                    soul.SetTransparency(transparency) // Set the transparency of the soul particles
+                    soul.SetLightIntensity(lightIntensity) // Set the intensity of the soul light
+                }
 
                 if(soul.time > _maxLifeTimeOfSoul && !soul.entity.GetLifetimeComponent()){
                     soul.Destroy() // Destroy the soul if it has been around for too long

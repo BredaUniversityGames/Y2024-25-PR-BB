@@ -2,6 +2,7 @@
 
 #include "bloom_settings.hpp"
 #include "camera.hpp"
+#include "components/transparency_component.hpp"
 #include "ecs_module.hpp"
 #include "emitter_component.hpp"
 #include "glm/glm.hpp"
@@ -320,6 +321,10 @@ void ParticlePass::UpdateEmitters(vk::CommandBuffer commandBuffer, uint32_t curr
         {
             LocalEmitter localEmitter;
             localEmitter.position = component.emitter.position;
+            if (auto transparency = _ecs.GetRegistry().try_get<TransparencyComponent>(entity))
+            {
+                localEmitter.alpha = transparency->transparency;
+            }
             localEmitter.id = component.emitter.id;
 
             _localEmitters.emplace_back(localEmitter);
