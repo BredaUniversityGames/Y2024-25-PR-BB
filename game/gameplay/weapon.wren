@@ -247,7 +247,7 @@ class Pistol {
                 var normal = Vec3.new(0, 1, 0)
                 for (rayHit in rayHitInfo) {
                     var hitEntity = rayHit.GetEntity(engine.GetECS())
-                    if (!hitEntity.HasPlayerTag()) {
+                    if (!hitEntity.HasPlayerTag() && hitEntity.GetRigidbodyComponent().GetLayer() != PhysicsObjectLayer.eDEAD()) {
                         end = rayHit.position
                         normal = rayHit.normal
                         if (hitEntity.HasEnemyTag()) {
