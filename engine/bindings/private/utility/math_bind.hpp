@@ -2,6 +2,7 @@
 #include "wren_common.hpp"
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/rotate_vector.hpp>
 
 namespace bindings
 {
@@ -210,6 +211,11 @@ public:
     {
         return std::powf(x, e);
     }
+  
+    static glm::vec3 RotateY(const glm::vec3& v, float angle)
+    {
+        return glm::rotateY(v, angle);
+    }
 };
 
 template <typename T>
@@ -305,6 +311,7 @@ inline void BindMath(wren::ForeignModule& module)
         mathUtilClass.funcStatic<&MathUtil::AngleAxis2D>("AngleAxis2D");
         mathUtilClass.funcStatic<&MathUtil::Floor>("Floor");
         mathUtilClass.funcStatic<&MathUtil::RotateTowards>("RotateTowards");
+        mathUtilClass.funcStatic<&MathUtil::RotateY>("RotateY");
     }
 }
 
