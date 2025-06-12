@@ -4,12 +4,13 @@ import "enemies/ranged.wren" for RangedEnemy
 import "enemies/berserker.wren" for BerserkerEnemy
 
 class EnemyType {
-    static Skeleton { "Skeleton" }
-    static Eye { "Eye" }
-    static Berserker { "Berserker" }
+    static Skeleton { 0 }
+    static Eye { 1 }
+    static Berserker { 2 }
+    static SIZE { 3 }
 }
 
-class WaveConfig {
+class Wave {
     construct new() {
 
         _spawns = {
@@ -19,37 +20,28 @@ class WaveConfig {
         }
     }
 
-    Spawns{ _spawns }
-
-    SetEnemySpawnCount(enemyType, count) {
-        _spawns[enemyType] = count
-        return this
+    isOver() {
+        return _spawns[EnemyType.Eye] == 0 && _spawns[EnemyType.Skeleton] == 0 && _spawns[EnemyType.Berserker] == 0
     }
+
+    spawns { _spawns }
 }
 
 class WaveGenerator {
 
     static GenerateWave(waveNumber) {
 
-        var wave = WaveConfig.new()
-        
-        var difficultyScore = (waveNumber + 2) * (waveNumber + 2) + 20
-        var heavyEnemyBias = Math.Clamp(waveNumber / 30, 0.0, 1.0)
+        var wave = Wave.new()
 
-        var skeletonPoints = Math.Floor(difficultyScore * (0.20 + (1.0 - heavyEnemyBias) * 0.55))
-        var eyePoints = Math.Floor(difficultyScore * (0.15 + heavyEnemyBias * 0.05))
-        var berserkerPoints = Math.Floor(difficultyScore * (0.10 + heavyEnemyBias * 0.40))
+        var skeletonFormula = (0.8 * waveNumber * waveNumber + 25) * (0.08 + (1 - waveNumber / 30) * 0.1) 
+        var eyeFormula = Math.Pow(waveNumber, 1.25) * 0.2
+        var berserkerFormula = (0.7 * waveNumber * waveNumber + 50) * (0.005 + (waveNumber / 20) * 0.03)   
+     
+        wave.spawns[EnemyType.Skeleton] = Math.Floor(skeletonFormula)
+        wave.spawns[EnemyType.Eye] = Math.Floor(eyeFormula)
+        wave.spawns[EnemyType.Berserker] =  Math.Floor(berserkerFormula)
 
-        var skeletonCount = Math.Floor(skeletonPoints / 3)
-        var eyeCount = Math.Floor(eyePoints / 4)
-        var berserkerCount = Math.Floor(berserkerPoints / 7)
-
-        wave.SetEnemySpawnCount(EnemyType.Skeleton, skeletonCount)
-            .SetEnemySpawnCount(EnemyType.Eye, eyeCount)
-            .SetEnemySpawnCount(EnemyType.Berserker, berserkerCount)
-
-        //System.print("Points %(difficultyScore) / %(heavyEnemyBias) - Skeletons: %(skeletonPoints), Eyes: %(eyePoints), Berserkers: %(berserkerPoints)")
-        System.print("Wave %(waveNumber) - Skeletons: %(skeletonCount), Eyes: %(eyeCount), Berserkers: %(berserkerCount)")
+        System.print("Wave %(waveNumber + 1) - Skeletons: %(wave.spawns[EnemyType.Skeleton]), Eyes: %(wave.spawns[EnemyType.Eye]), Berserkers: %(wave.spawns[EnemyType.Berserker])")
         return wave
     }
 }
@@ -58,33 +50,28 @@ class WaveSystem {
 
     construct new(waveConfigs, spawnLocations) {
     
+        _waveIndex = -1
         _waveConfigs = waveConfigs
         _spawnLocations = spawnLocations
+
         _ongoingWave = false
-        _currentWave = -1
+
+        _currentWave = Wave.new()
         _waveTimer = 0.0
         _waveDelay = 4.0
+
+        _waveSpawnTimer = 0.0
+        _waveSpawnInterval = 0.1
 
         if(_spawnLocations.count == 0) {
             System.print("Should pass at least one spawn location to the wave system!")
         }
     }
 
-
-
     Update(engine, player, enemyList, dt, playerVariables) {
 
         _waveTimer = _waveTimer + dt / 1000.0
-
-        // Finished all waves
-        if (_currentWave >= _waveConfigs.count) {
-
-            if (_currentWave == _waveConfigs.count) {
-                _currentWave = _currentWave + 1
-                System.print("Completed all waves!")
-            }
-            return
-        }
+        _waveSpawnTimer = _waveSpawnTimer + dt / 1000.0
 
         // Waiting period
         if (_waveTimer < _waveDelay) {
@@ -94,58 +81,78 @@ class WaveSystem {
         // Inside a wave
         if (_ongoingWave) {
 
-            if (enemyList.count == 0) {
-            
+            if (_waveSpawnTimer > _waveSpawnInterval) {
+                this.SpawnEnemy(engine, enemyList)
+                _waveSpawnTimer = 0.0
+            }
+
+            if (enemyList.count == 0 && _currentWave.isOver()) {
+
                 _ongoingWave = false
                 _waveTimer = 0.0
-                System.print("Completed wave %(_currentWave)")
+
+                System.print("Completed wave %(_waveIndex)")
             }
 
         } else {
           
-            this.NextWave(engine, enemyList)
-            playerVariables.hud.IncrementWaveCounter(_currentWave)
+            this.NextWave(engine, playerVariables)
         }
     }
 
-    SpawnWave(engine, enemyList, wave) {
+    SpawnEnemy(engine, enemyList) {
 
-        // Spawn skeletons
-        for (v in 0...wave.Spawns[EnemyType.Skeleton]) {
-            var enemy = enemyList.add(MeleeEnemy.new(engine, this.GetSpawnLocation() + Vec3.new(0, 1, 0), _currentWave))
-            enemy.FindNewPath(engine)
-        }
+        var enemyType = Random.RandomIndex(0, EnemyType.SIZE)
 
-        // Spawn eyes
-        for (v in 0...wave.Spawns[EnemyType.Eye]) {
-            var enemy = enemyList.add(RangedEnemy.new(engine, this.GetSpawnLocation() + Vec3.new(0, 6, 0)))
-            enemy.FindNewPath(engine)
-        }
+        if (enemyType == EnemyType.Skeleton) {
 
-        // Spawn berserkers
-        for (v in 0...wave.Spawns[EnemyType.Berserker]) {
-            var enemy = enemyList.add(BerserkerEnemy.new(engine, this.GetSpawnLocation() + Vec3.new(0, 3, 0), _currentWave))
-            enemy.FindNewPath(engine)
+            if (_currentWave.spawns[enemyType] > 0) {
+                var enemy = enemyList.add(MeleeEnemy.new(engine, this.GetSpawnLocation() + Vec3.new(0, 1, 0), _waveIndex))
+                _currentWave.spawns[enemyType] = _currentWave.spawns[enemyType] - 1
+                enemy.FindNewPath(engine)
+                return
+            } else {
+                enemyType = EnemyType.Eye
+            }
+
+        } else if (enemyType == EnemyType.Eye) {
+
+            if (_currentWave.spawns[enemyType] > 0) {
+                var enemy = enemyList.add(RangedEnemy.new(engine, this.GetSpawnLocation() + Vec3.new(0, 6, 0)))
+                _currentWave.spawns[enemyType] = _currentWave.spawns[enemyType] - 1
+                enemy.FindNewPath(engine)
+                return
+            } else {
+                enemyType = EnemyType.Berserker
+            }
+
+        } else if (enemyType == EnemyType.Berserker) {
+
+            if (_currentWave.spawns[enemyType] > 0) {
+                var enemy = enemyList.add(BerserkerEnemy.new(engine, this.GetSpawnLocation() + Vec3.new(0, 3, 0), _waveIndex))
+                _currentWave.spawns[enemyType] = _currentWave.spawns[enemyType] - 1
+                enemy.FindNewPath(engine)
+                return
+            }
         }
     }
 
-    NextWave(engine, enemyList) {
+    NextWave(engine, playerVariables) {
 
         // Start the next wave
-        _currentWave = _currentWave + 1
+        _waveIndex = _waveIndex + 1
+
+        if (_waveIndex == _waveConfigs.count) {
+            _waveConfigs.add(WaveGenerator.GenerateWave(_waveIndex))
 
         var stat = engine.GetSteam().GetStat(Stats.WAVES_REACHED())
         stat.intValue = _currentWave
 
-        if (_currentWave < _waveConfigs.count) {
-
-            var activeWave = _waveConfigs[_currentWave]
-            this.SpawnWave(engine, enemyList, activeWave)
-
-            System.print("Starting wave %(_currentWave + 1)")
-        }
+        _currentWave = _waveConfigs[_waveIndex]
+        System.print("Starting wave %(_waveIndex + 1)")
 
         _ongoingWave = true
+        playerVariables.hud.IncrementWaveCounter(_waveIndex)
     }
 
     GetSpawnLocation() {
