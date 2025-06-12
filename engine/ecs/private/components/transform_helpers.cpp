@@ -270,9 +270,21 @@ glm::vec3 TransformHelpers::GetWorldPosition(entt::registry& reg, entt::entity e
 glm::quat TransformHelpers::GetWorldRotation(entt::registry& reg, entt::entity entity)
 {
     assert(reg.valid(entity));
+
     auto& m = TransformHelpers::GetWorldMatrix(reg, entity);
 
-    return glm::normalize(glm::quat_cast(m));
+    // Extract rotation matrix (upper-left 3x3 part), remove scaling by normalizing
+    glm::mat3 rotationMatrix = glm::mat3(m);
+
+    // Normalize each column to remove scaling
+    rotationMatrix[0] = glm::normalize(rotationMatrix[0]);
+    rotationMatrix[1] = glm::normalize(rotationMatrix[1]);
+    rotationMatrix[2] = glm::normalize(rotationMatrix[2]);
+
+    // Convert to quaternion
+    glm::quat rotationQuat = glm::quat_cast(rotationMatrix);
+
+    return glm::normalize(rotationQuat);
 }
 glm::vec3 TransformHelpers::GetWorldScale(entt::registry& reg, entt::entity entity)
 {
