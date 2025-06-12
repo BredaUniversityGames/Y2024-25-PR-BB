@@ -69,7 +69,6 @@ void SteamInputDeviceManager::UpdateControllerConnectivity()
         }
 
         _inputHandle = 0;
-        // bblog::warn("No controller found!");
         return;
     }
 

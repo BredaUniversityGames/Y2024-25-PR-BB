@@ -168,6 +168,7 @@ ModuleTickOrder GameModule::Init(Engine& engine)
 
     auto openControlsMenu = [this, &engine]()
     {
+        this->_controlsMenu.lock()->UpdateBindings();
         this->PushUIMenu(this->_controlsMenu);
         this->PushPreviousFocusedElement(_mainMenu.lock()->controlsButton);
         engine.GetModule<UIModule>().uiInputContext.focusedUIElement = this->_controlsMenu.lock()->backButton;
