@@ -80,6 +80,7 @@ class Station {
                     playerVariables.DecreaseScore(_powerUpCost)
 
                     _stationManagerReference.ResetStations()
+                    _stationManagerReference.timer = 0.0
 
                     System.print("Picked up power up ")
 
@@ -274,6 +275,16 @@ class StationManager {
         newOpacity = Math.Clamp(newOpacity, 0.0, 1.0)
 
         engine.GetGame().GetHUD().SetPowerUpTextColor(Vec4.new(currentPowerUpColor.x,currentPowerUpColor.y,currentPowerUpColor.z,newOpacity) )
+
+        if(!_anyActiveStation){
+            // hide all the pickups meshes and effects under the map
+            _quadDamageMeshEntity.GetTransformComponent().translation = Vec3.new(0.0, -100.0, 0.0) // Move the mesh out of bounds
+            _quadDamageEmitter.GetTransformComponent().translation = Vec3.new(0.0, -200.0, 0.0) // Move the emitter out of bounds
+
+            _dualGunMeshEntity.GetTransformComponent().translation = Vec3.new(0.0, -100.0, 0.0) // Move the mesh out of bounds
+            _dualGunEmitter.GetTransformComponent().translation = Vec3.new(0.0, -200.0, 0.0) // Move the emitter out of bounds
+        }
+
         // Timer to set a random station active
         _timer = _timer + dt
         if(!_anyActiveStation && (_timer > _intervalBetweenStations)){
@@ -346,15 +357,6 @@ class StationManager {
                 }
 
             }
-        }
-
-        if(!_anyActiveStation){
-            // hide all the pickups meshes and effects under the map
-            _quadDamageMeshEntity.GetTransformComponent().translation = Vec3.new(0.0, -100.0, 0.0) // Move the mesh out of bounds
-            _quadDamageEmitter.GetTransformComponent().translation = Vec3.new(0.0, -200.0, 0.0) // Move the emitter out of bounds
-
-            _dualGunMeshEntity.GetTransformComponent().translation = Vec3.new(0.0, -100.0, 0.0) // Move the mesh out of bounds
-            _dualGunEmitter.GetTransformComponent().translation = Vec3.new(0.0, -200.0, 0.0) // Move the emitter out of bounds
         }
 
         // Update quad damage mesh
