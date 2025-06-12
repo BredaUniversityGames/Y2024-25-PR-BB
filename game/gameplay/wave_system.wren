@@ -107,7 +107,7 @@ class WaveSystem {
         if (enemyType == EnemyType.Skeleton) {
 
             if (_currentWave.spawns[enemyType] > 0) {
-                var enemy = enemyList.add(MeleeEnemy.new(engine, this.GetSpawnLocation() + Vec3.new(0, 1, 0)))
+                var enemy = enemyList.add(MeleeEnemy.new(engine, this.GetSpawnLocation() + Vec3.new(0, 1, 0), _waveIndex))
                 _currentWave.spawns[enemyType] = _currentWave.spawns[enemyType] - 1
                 enemy.FindNewPath(engine)
                 return
@@ -129,7 +129,7 @@ class WaveSystem {
         } else if (enemyType == EnemyType.Berserker) {
 
             if (_currentWave.spawns[enemyType] > 0) {
-                var enemy = enemyList.add(BerserkerEnemy.new(engine, this.GetSpawnLocation() + Vec3.new(0, 3, 0)))
+                var enemy = enemyList.add(BerserkerEnemy.new(engine, this.GetSpawnLocation() + Vec3.new(0, 3, 0), _waveIndex))
                 _currentWave.spawns[enemyType] = _currentWave.spawns[enemyType] - 1
                 enemy.FindNewPath(engine)
                 return
