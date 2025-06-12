@@ -188,7 +188,6 @@ class Main {
 
         __heartBeatSFX = "event:/SFX/HeartBeat"
         __heartBeatEvent = engine.GetAudio().PlayEventLoop(__heartBeatSFX)
-        engine.GetAudio().SetEventVolume(__heartBeatEvent, 4)
 
         __camera.GetAudioEmitterComponent().AddEvent(__heartBeatEvent)
 
@@ -340,7 +339,7 @@ class Main {
         var healthFraction = __playerVariables.health / __playerVariables.maxHealth
         engine.GetAudio().SetEventFloatAttribute(__heartBeatEvent, "Health", healthFraction)
         if (healthFraction < 0.3) {
-            __flashSystem.SetBaseColor(Vec3.new(105 / 255, 13 / 255, 1 / 255),2 - healthFraction*4)
+            __flashSystem.SetBaseColor(Vec3.new(105 / 255, 13 / 255, 1 / 255),1 - healthFraction*4)
             engine.GetAudio().EnableLowPass()
         } else {
             engine.GetAudio().DisableLowPass()

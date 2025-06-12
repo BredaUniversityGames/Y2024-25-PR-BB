@@ -256,7 +256,6 @@ class BerserkerEnemy {
 
                 if(_walkEventInstance == null || engine.GetAudio().IsEventPlaying(_walkEventInstance) == false) {
                     _walkEventInstance = engine.GetAudio().PlayEventLoop(_stepSFX)
-                    engine.GetAudio().SetEventVolume(_walkEventInstance, 1.0)
                     var audioEmitter = _rootEntity.GetAudioEmitterComponent()
                     audioEmitter.AddEvent(_walkEventInstance)
                 }

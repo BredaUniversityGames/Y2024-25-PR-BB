@@ -240,7 +240,7 @@ class StationManager {
         var player = engine.GetECS().GetEntityByName("Camera")
         var audioEmitter = player.GetAudioEmitterComponent()
         var quadEventInstance = engine.GetAudio().PlayEventOnce(_quadHumEvent)
-        engine.GetAudio().SetEventVolume(quadEventInstance, 2.4)
+        engine.GetAudio().SetEventVolume(quadEventInstance, 1.0)
         audioEmitter.AddEvent(quadEventInstance)
     }
 
@@ -248,7 +248,7 @@ class StationManager {
         var player = engine.GetECS().GetEntityByName("Camera")
         var audioEmitter = player.GetAudioEmitterComponent()
         var dualGunEventInstance = engine.GetAudio().PlayEventOnce(_dualGunHumEvent)
-        engine.GetAudio().SetEventVolume(dualGunEventInstance, 2.4)
+        engine.GetAudio().SetEventVolume(dualGunEventInstance, 1.0)
         audioEmitter.AddEvent(dualGunEventInstance)
     }
 
