@@ -8,7 +8,7 @@
 #include "resource_management/image_resource_manager.hpp"
 #include "resource_management/sampler_resource_manager.hpp"
 
-std::shared_ptr<ControlsMenu> ControlsMenu::Create(const glm::uvec2& screenResolution, GraphicsContext& graphicsContext, InputBindingsVisualizationCache& inputVisualizationsCache, ActionManager& actionManager, std::shared_ptr<UIFont> font)
+std::shared_ptr<ControlsMenu> ControlsMenu::Create(const glm::uvec2& screenResolution, GraphicsContext& graphicsContext, input_bindings_visualization_cache& inputVisualizationsCache, ActionManager& actionManager, std::shared_ptr<UIFont> font)
 {
     constexpr glm::ivec2 popupResolution(423.0f * 5, 233.0f * 5);
 

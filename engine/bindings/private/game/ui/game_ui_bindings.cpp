@@ -7,7 +7,7 @@
 #include "renderer_module.hpp"
 #include "graphics_context.hpp"
 #include "wren_engine.hpp"
-#include "InputBindingsVisualizationCache.hpp"
+#include "input_bindings_visualization_cache.hpp"
 
 namespace bindings
 {
