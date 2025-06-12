@@ -5,12 +5,12 @@
 
 void UIImage::SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const
 {
-    if (visibility == VisibilityState::eUpdatedAndVisible || visibility == VisibilityState::eNotUpdatedAndVisible)
+    if (visibility == VisibilityState::eUpdatedAndVisible || visibility == VisibilityState::eNotUpdatedAndVisible && !_image.IsNull())
     {
         glm::mat4 matrix = GetPreTransformationMatrix();
         matrix = glm::translate(glm::mat4(matrix), glm::vec3(GetAbsoluteLocation(), 0));
         matrix = glm::scale(matrix, glm::vec3(GetAbsoluteScale(), 0));;
-        
+
         QuadDrawInfo info {
             .matrix = matrix,
             .color = display_color,
