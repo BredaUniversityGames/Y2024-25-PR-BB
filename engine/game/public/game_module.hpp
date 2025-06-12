@@ -7,6 +7,8 @@
 #include "scene/model_loader.hpp"
 #include "ui/ui_menus.hpp"
 
+#include "achievements.hpp"
+#include "steam_stats.hpp"
 #include <stack>
 
 constexpr const char* DISCORD_URL = "https://discord.gg/8RmgD2sz9M";
@@ -17,6 +19,29 @@ struct PlayerTag
 
 struct EnemyTag
 {
+};
+
+enum class SteamAchievementEnum : int32_t
+{
+    FIRST_SKELETON_KILLED,
+    FIRST_EYE_KILLED,
+    FIRST_BERSERKER_KILLED,
+    FIRST_DEATH,
+    FIRST_SOUL_COLLECTED,
+    FIRST_GOLD_NUGGET_COLLECTED,
+    FIRST_RELIC_USED
+};
+
+enum class SteamStatEnum : int32_t
+{
+    SKELETONS_KILLED = 3,
+    EYES_KILLED = 6,
+    BERSERKERS_KILLED = 7,
+    WAVES_REACHED = 8,
+    SOULS_COLLECTED = 9,
+    GOLD_NUGGETS_COLLECTED = 10,
+    GOLD_CURRENCY_COLLECTED = 11,
+    ENEMIES_KILLED_WITH_RELIC = 12,
 };
 
 class GameModule : public ModuleInterface
@@ -59,6 +84,9 @@ public:
 
     ModelLoader _modelsLoaded {};
     std::weak_ptr<MainMenu> _mainMenu;
+
+    std::vector<Achievement> _achievements;
+    std::vector<Stat> _stats;
 
 private:
     void TransitionScene(Engine& engine);
