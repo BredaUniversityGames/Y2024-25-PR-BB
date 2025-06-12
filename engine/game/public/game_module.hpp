@@ -72,6 +72,7 @@ public:
     std::optional<std::shared_ptr<HUD>> GetHUD();
     std::optional<std::shared_ptr<GameOverMenu>> GetGameOver();
     std::optional<std::shared_ptr<LoadingScreen>> GetLoadingScreen();
+    std::optional<std::shared_ptr<GameVersionVisualization>> GetGameVersionVisual();
 
     NON_COPYABLE(GameModule);
     NON_MOVABLE(GameModule);
@@ -101,6 +102,7 @@ private:
     std::weak_ptr<ControlsMenu> _controlsMenu;
     std::weak_ptr<FrameCounter> _framerateCounter {};
     std::weak_ptr<CreditsMenu> _creditsMenu {};
+    std::weak_ptr<GameVersionVisualization> _gameVersionVisual {};
 
     // Scene
 

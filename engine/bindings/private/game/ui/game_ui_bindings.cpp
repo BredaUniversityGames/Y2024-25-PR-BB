@@ -107,7 +107,7 @@ void UpdateDashCharges(HUD& self, int charges)
 void SetDirectionalIndicatorRotationAndOpacity(HUD& self, uint8_t index, float angle,float opacity)
 {
     index = index %  HUD::DIRECTIONAL_INDICATOR_COUNT;
-    
+
     if(auto locked = self.directionalIndicators[index].lock(); locked != nullptr)
     {
         glm::mat4 matrix = glm::mat4(1);
@@ -253,6 +253,11 @@ void SetPowerupTimerTextColor(HUD& self, glm::vec4 color)
     powerupTimer->display_color = color;
 }
 
+void ShowGameVersionVisual(GameVersionVisualization& self, bool value)
+{
+    self.visibility = value ? UIElement::VisibilityState::eNotUpdatedAndVisible : UIElement::VisibilityState::eNotUpdatedAndInvisible;
+}
+
 }
 
 void BindGameUI(wren::ForeignModule& module)
@@ -300,7 +305,7 @@ void BindGameUI(wren::ForeignModule& module)
     hud.funcExt<bindings::SetPowerupTimerText>("SetPowerUpTimerText", "Set powerup timer text");
     hud.funcExt<bindings::SetPowerupTimerTextColor>("SetPowerUpTimerTextColor", "Set powerup timer text color");
     hud.funcExt<bindings::SetDirectionalIndicatorRotationAndOpacity>("SetDirectionalIndicatorRotationAndOpacity");
-    
+
     auto& gameOver
         = module.klass<GameOverMenu, Canvas>("GameOverMenu");
 
@@ -312,4 +317,8 @@ void BindGameUI(wren::ForeignModule& module)
     loadingScreen.func<&LoadingScreen::SetDisplayTextColor>("SetDisplayTextColor");
     loadingScreen.func<&LoadingScreen::HideContinuePrompt>("HideContinuePrompt");
     loadingScreen.func<&LoadingScreen::ShowContinuePrompt>("ShowContinuePrompt");
+
+    // Register to push onto UI stack
+    auto& gameVersionVisual = module.klass<GameVersionVisualization, Canvas>("GameVersionVisual");
+    gameVersionVisual.funcExt<bindings::ShowGameVersionVisual>("Show");
 }
