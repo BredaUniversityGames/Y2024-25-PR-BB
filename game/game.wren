@@ -498,7 +498,7 @@ class Main {
 
             var stat = engine.GetSteam().GetStat(Stats.TIMES_DIED())
             stat.intValue = stat.intValue + 1
-            _engine.GetSteam().Unlock(Achievements.DIE_1())
+            engine.GetSteam().Unlock(Achievements.DIE_1())
         }
 
 
