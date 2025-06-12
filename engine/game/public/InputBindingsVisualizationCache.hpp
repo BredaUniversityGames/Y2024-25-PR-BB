@@ -1,7 +1,7 @@
 #pragma once
 
 #include "input/action_manager.hpp"
-#include "resource_management/image_resource_manager.hpp"
+#include "graphics_context.hpp"
 
 struct GPUImage;
 
@@ -15,7 +15,7 @@ struct CachedBindingOriginVisual
 class InputBindingsVisualizationCache
 {
 public:
-    InputBindingsVisualizationCache(const ActionManager& actionManager, ImageResourceManager& imageResourceManager);
+    InputBindingsVisualizationCache(const ActionManager& actionManager, GraphicsContext& graphicsContext);
 
     NO_DISCARD std::vector<CachedBindingOriginVisual> GetDigital(std::string_view actionName);
     NO_DISCARD std::vector<CachedBindingOriginVisual> GetAnalog(std::string_view actionName);
@@ -24,6 +24,6 @@ private:
     NO_DISCARD ResourceHandle<GPUImage> GetGlyph(const std::string& path);
 
     const ActionManager& _actionManager;
-    ImageResourceManager& _imageResourceManager;
+    GraphicsContext& _graphicsContext;
     std::unordered_map<std::string, ResourceHandle<GPUImage>> _glyphCache {};
 };

@@ -1,8 +1,10 @@
 #include "InputBindingsVisualizationCache.hpp"
+#include "resource_management/image_resource_manager.hpp"
+#include "graphics_resources.hpp"
 
-InputBindingsVisualizationCache::InputBindingsVisualizationCache(const ActionManager& actionManager, ImageResourceManager& imageResourceManager)
+InputBindingsVisualizationCache::InputBindingsVisualizationCache(const ActionManager& actionManager, GraphicsContext& graphicsContext)
     : _actionManager(actionManager)
-    , _imageResourceManager(imageResourceManager)
+    , _graphicsContext(graphicsContext)
 {
 }
 
@@ -54,7 +56,10 @@ ResourceHandle<GPUImage> InputBindingsVisualizationCache::GetGlyph(const std::st
     commonImageData.SetFlags(vk::ImageUsageFlagBits::eSampled);
     commonImageData.isHDR = false;
 
-    auto image = _imageResourceManager.Create(commonImageData.FromPNG(path));
+    auto& imageResourceManager = _graphicsContext.Resources()->ImageResourceManager();
+    auto image = imageResourceManager.Create(commonImageData.FromPNG(path));
+    _graphicsContext.UpdateBindlessSet();
+
     _glyphCache.emplace(path, image);
     return image;
 }

@@ -51,7 +51,7 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     ECS.AddSystem<LifetimeSystem>();
 
     GraphicsContext& graphicsContext = *engine.GetModule<RendererModule>().GetGraphicsContext();
-    _bindingsVisualizationCache = std::make_unique<InputBindingsVisualizationCache>(actionManager, graphicsContext.Resources()->ImageResourceManager());
+    _bindingsVisualizationCache = std::make_unique<InputBindingsVisualizationCache>(actionManager, graphicsContext);
 
     auto& viewport = engine.GetModule<UIModule>().GetViewport();
     const glm::uvec2 viewportSize = viewport.GetExtend();
