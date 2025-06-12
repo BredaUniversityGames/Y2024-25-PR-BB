@@ -123,7 +123,9 @@ private:
 
     InputBindingsVisualizationCache& _inputVisualizationsCache;
     std::array<std::weak_ptr<UITextElement>, MAX_LINE_BREAKS> _displayTexts;
-    std::weak_ptr<UITextElement> _continueText;
+    std::weak_ptr<UITextElement> _continueTextLeft;
+    std::weak_ptr<UITextElement> _continueTextRight;
+    std::weak_ptr<UIImage> _continueGlyph;
     std::weak_ptr<UIFont> _font;
     glm::vec4 _displayTextColor = glm::vec4(1.0, 1.0f, 1.0f, 1.0f);
 };
