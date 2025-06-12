@@ -157,7 +157,7 @@ std::shared_ptr<SettingsMenu> SettingsMenu::Create(
             node->SetLocation(elemPos);
             elemPos += increment;
 
-            auto text = node->AddChild<UITextElement>(font, "Aim Assist", glm::vec2(), textSize);
+            auto text = node->AddChild<UITextElement>(font, "Auto-Aim Assist", glm::vec2(), textSize);
             text->anchorPoint = UIElement::AnchorPoint::eTopLeft;
 
             auto toggle = node->AddChild<UIToggle>(toggleStyle, toggleOffset + glm::vec2(sliderSize.x - toggleSize.x, 0), toggleSize);
