@@ -115,6 +115,17 @@ class BerserkerEnemy {
 
         _health = Math.Max(_health - amount, 0)
 
+        var entity = engine.GetECS().NewEntity()
+        var transform = entity.AddTransformComponent()
+
+        var forward = Math.ToVector(body.GetRotation()).mulScalar(-1.8)
+
+        transform.translation = body.GetPosition() + Vec3.new(forward.x, 2.0, forward.z)
+        var lifetime = entity.AddLifetimeComponent()
+        lifetime.lifetime = 170.0
+        var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomPosition()// |
+        engine.GetParticles().SpawnEmitter(entity, "Blood",emitterFlags,Vec3.new(0.0, 1000.0, 0.0), Vec3.new(0.0, 0.0, 0.0))
+
         if (_health <= 0 && _isAlive) {
             _isAlive = false
             waveSystem.DecreaseEnemyCount()
