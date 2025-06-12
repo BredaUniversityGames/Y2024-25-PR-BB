@@ -2,13 +2,13 @@
 #include "resource_management/image_resource_manager.hpp"
 #include "graphics_resources.hpp"
 
-input_bindings_visualization_cache::input_bindings_visualization_cache(const ActionManager& actionManager, GraphicsContext& graphicsContext)
+InputBindingsVisualizationCache::InputBindingsVisualizationCache(const ActionManager& actionManager, GraphicsContext& graphicsContext)
     : _actionManager(actionManager)
     , _graphicsContext(graphicsContext)
 {
 }
 
-std::vector<CachedBindingOriginVisual> input_bindings_visualization_cache::GetDigital(std::string_view actionName)
+std::vector<CachedBindingOriginVisual> InputBindingsVisualizationCache::GetDigital(std::string_view actionName)
 {
     auto visualizations = _actionManager.GetDigitalActionBindingOriginVisual(actionName);
     std::vector<CachedBindingOriginVisual> out {};
@@ -23,7 +23,7 @@ std::vector<CachedBindingOriginVisual> input_bindings_visualization_cache::GetDi
     return out;
 }
 
-std::vector<CachedBindingOriginVisual> input_bindings_visualization_cache::GetAnalog(std::string_view actionName)
+std::vector<CachedBindingOriginVisual> InputBindingsVisualizationCache::GetAnalog(std::string_view actionName)
 {
     auto visualizations = _actionManager.GetAnalogActionBindingOriginVisual(actionName);
     std::vector<CachedBindingOriginVisual> out {};
@@ -38,7 +38,7 @@ std::vector<CachedBindingOriginVisual> input_bindings_visualization_cache::GetAn
     return out;
 }
 
-ResourceHandle<GPUImage> input_bindings_visualization_cache::GetGlyph(const std::string& path)
+ResourceHandle<GPUImage> InputBindingsVisualizationCache::GetGlyph(const std::string& path)
 {
     if (path.empty())
     {

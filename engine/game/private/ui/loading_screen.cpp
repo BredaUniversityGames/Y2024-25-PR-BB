@@ -6,7 +6,7 @@
 #include "ui_image.hpp"
 #include "ui_text.hpp"
 
-std::shared_ptr<LoadingScreen> LoadingScreen::Create(GraphicsContext& graphicsContext, input_bindings_visualization_cache& inputVisualizationsCache, const glm::uvec2& screenResolution, std::shared_ptr<UIFont> font)
+std::shared_ptr<LoadingScreen> LoadingScreen::Create(GraphicsContext& graphicsContext, InputBindingsVisualizationCache& inputVisualizationsCache, const glm::uvec2& screenResolution, std::shared_ptr<UIFont> font)
 {
     auto loading = std::make_shared<LoadingScreen>(screenResolution, inputVisualizationsCache);
 

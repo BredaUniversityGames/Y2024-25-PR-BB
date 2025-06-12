@@ -12,10 +12,10 @@ struct CachedBindingOriginVisual
     ResourceHandle<GPUImage> glyphImage {};
 };
 
-class input_bindings_visualization_cache
+class InputBindingsVisualizationCache
 {
 public:
-    input_bindings_visualization_cache(const ActionManager& actionManager, GraphicsContext& graphicsContext);
+    InputBindingsVisualizationCache(const ActionManager& actionManager, GraphicsContext& graphicsContext);
 
     NO_DISCARD std::vector<CachedBindingOriginVisual> GetDigital(std::string_view actionName);
     NO_DISCARD std::vector<CachedBindingOriginVisual> GetAnalog(std::string_view actionName);

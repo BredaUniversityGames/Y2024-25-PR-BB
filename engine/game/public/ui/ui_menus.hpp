@@ -105,9 +105,9 @@ class LoadingScreen : public Canvas
     static constexpr uint32_t MAX_LINE_BREAKS = 5;
 
 public:
-    static std::shared_ptr<LoadingScreen> Create(GraphicsContext& graphicsContext, input_bindings_visualization_cache& inputVisualizationsCache, const glm::uvec2& screenResolution, std::shared_ptr<UIFont> font);
+    static std::shared_ptr<LoadingScreen> Create(GraphicsContext& graphicsContext, InputBindingsVisualizationCache& inputVisualizationsCache, const glm::uvec2& screenResolution, std::shared_ptr<UIFont> font);
 
-    LoadingScreen(const glm::uvec2& screenResolution, input_bindings_visualization_cache& inputVisualizationsCache)
+    LoadingScreen(const glm::uvec2& screenResolution, InputBindingsVisualizationCache& inputVisualizationsCache)
         : Canvas(screenResolution)
         , _inputVisualizationsCache(inputVisualizationsCache)
     {
@@ -121,7 +121,7 @@ public:
 private:
     constexpr static float _textSize = 100.0f;
 
-    input_bindings_visualization_cache& _inputVisualizationsCache;
+    InputBindingsVisualizationCache& _inputVisualizationsCache;
     std::array<std::weak_ptr<UITextElement>, MAX_LINE_BREAKS> _displayTexts;
     std::weak_ptr<UITextElement> _continueTextLeft;
     std::weak_ptr<UITextElement> _continueTextRight;
@@ -165,9 +165,9 @@ class Engine;
 class ControlsMenu : public Canvas
 {
 public:
-    static std::shared_ptr<ControlsMenu> Create(const glm::uvec2& screenResolution, GraphicsContext& graphicsContext, input_bindings_visualization_cache& inputVisualizationsCache, ActionManager& actionManager, std::shared_ptr<UIFont> font);
+    static std::shared_ptr<ControlsMenu> Create(const glm::uvec2& screenResolution, GraphicsContext& graphicsContext, InputBindingsVisualizationCache& inputVisualizationsCache, ActionManager& actionManager, std::shared_ptr<UIFont> font);
 
-    ControlsMenu(const glm::uvec2& screenResolution, const glm::ivec2 canvasResolution, GraphicsContext& graphicsContext, input_bindings_visualization_cache& inputVisualizationsCache, ActionManager& actionManager, std::shared_ptr<UIFont> font)
+    ControlsMenu(const glm::uvec2& screenResolution, const glm::ivec2 canvasResolution, GraphicsContext& graphicsContext, InputBindingsVisualizationCache& inputVisualizationsCache, ActionManager& actionManager, std::shared_ptr<UIFont> font)
         : Canvas(screenResolution)
         , _graphicsContext(graphicsContext)
         , _inputVisualizationsCache(inputVisualizationsCache)
@@ -208,7 +208,7 @@ public:
 
 private:
     GraphicsContext& _graphicsContext;
-    input_bindings_visualization_cache& _inputVisualizationsCache;
+    InputBindingsVisualizationCache& _inputVisualizationsCache;
     ActionManager& _actionManager;
     std::shared_ptr<UIFont> _font;
     const glm::uvec2 _canvasResolution;
