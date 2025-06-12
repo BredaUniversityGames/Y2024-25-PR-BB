@@ -11,6 +11,7 @@
 #include "game_actions.hpp"
 #include "gpu_scene.hpp"
 #include "graphics_context.hpp"
+#include "graphics_resources.hpp"
 #include "input/action_manager.hpp"
 #include "input/input_device_manager.hpp"
 #include "particle_module.hpp"
@@ -29,7 +30,6 @@
 #include "time_module.hpp"
 #include "ui/ui_menus.hpp"
 #include "ui_module.hpp"
-#include "graphics_resources.hpp"
 #include "ui_text.hpp"
 
 ModuleTickOrder GameModule::Init(Engine& engine)

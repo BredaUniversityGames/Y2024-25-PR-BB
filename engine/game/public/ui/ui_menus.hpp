@@ -1,10 +1,10 @@
 #pragma once
+#include "InputBindingsVisualizationCache.hpp"
 #include "canvas.hpp"
 #include "fonts.hpp"
+#include "ui_button.hpp"
 #include "ui_slider.hpp"
 #include "ui_toggle.hpp"
-#include "InputBindingsVisualizationCache.hpp"
-#include "ui_button.hpp"
 #include <array>
 
 class UIImage;

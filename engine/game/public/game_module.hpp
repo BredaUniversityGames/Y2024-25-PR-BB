@@ -1,11 +1,11 @@
 #pragma once
 
+#include "InputBindingsVisualizationCache.hpp"
 #include "common.hpp"
 #include "engine.hpp"
 #include "game_settings.hpp"
 #include "scene/model_loader.hpp"
 #include "ui/ui_menus.hpp"
-#include "InputBindingsVisualizationCache.hpp"
 
 #include <stack>
 
