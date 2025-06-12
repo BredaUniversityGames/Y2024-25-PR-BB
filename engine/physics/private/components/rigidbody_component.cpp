@@ -1,5 +1,6 @@
 ﻿#include "components/rigidbody_component.hpp"
 
+#include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
 #include "physics/collision.hpp"
 
@@ -44,12 +45,6 @@ void RigidbodyComponent::OnConstructCallback(entt::registry& registry, entt::ent
 
     rb.bodyID = rb.bodyInterface->CreateAndAddBody(creation, activation);
     rb.bodyInterface->SetUserData(rb.bodyID, static_cast<uint64_t>(entity));
-}
-
-void RigidbodyComponent::SetColliderShape(JPH::ShapeRefC newShape)
-{
-    bodyInterface->SetShape(bodyID, shape, true, JPH::EActivation::Activate);
-    shape = newShape;
 }
 
 void RigidbodyComponent::OnDestroyCallback(entt::registry& registry, entt::entity entity)

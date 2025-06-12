@@ -1,4 +1,4 @@
-import "engine_api.wren" for Engine, ECS, Entity, Vec4, Vec3, Vec2, Math, AnimationControlComponent, TransformComponent, Input, SpawnEmitterFlagBits, EmitterPresetID, Random
+import "engine_api.wren" for Engine, ECS, Entity, Vec4, Vec3, Vec2, Math, AnimationControlComponent, TransformComponent, Input, SpawnEmitterFlagBits, Random
 import "gameplay/player.wren" for PlayerVariables
 
 
@@ -23,8 +23,7 @@ class Station {
         transform.translation = spawnPosition
 
         // var emitterFlags = SpawnEmitterFlagBits.eIsActive()
-        // engine.GetParticles().SpawnEmitter(_rootEntity, EmitterPresetID.eSoulSheet(),emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.0, 0.0, 0.0))
-
+        // engine.GetParticles().SpawnEmitter(_rootEntity, "SoulSheet", emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.0, 0.0, 0.0))
 
         _time = 0.0 // Time since the station was spawned
         _ambientStationSound = "event:/SFX/StationAmbient"
@@ -188,7 +187,7 @@ class StationManager {
         var transform = _quadDamageEmitter.AddTransformComponent()
         transform.translation = Vec3.new(0.0, -200.0, 0.0)
         var emitterFlags = SpawnEmitterFlagBits.eIsActive()
-        engine.GetParticles().SpawnEmitter(_quadDamageEmitter, EmitterPresetID.eQuadStation(),emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.0, 0.0, 0.0))
+        engine.GetParticles().SpawnEmitter(_quadDamageEmitter, "QuadStation",emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.0, 0.0, 0.0))
 
         //
 
@@ -213,11 +212,7 @@ class StationManager {
         _dualGunEmitter.AddNameComponent().name = "Dual Gun Emitter"
         var transformDualGunEmitter = _dualGunEmitter.AddTransformComponent()
         transformDualGunEmitter.translation = Vec3.new(0.0, -200.0, 0.0)
-        engine.GetParticles().SpawnEmitter(_dualGunEmitter, EmitterPresetID.eDualGunStation(),emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.0, 0.0, 0.0))
-
-        //
-
-
+        engine.GetParticles().SpawnEmitter(_dualGunEmitter, "DualGunStation",emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.0, 0.0, 0.0))
 
         // Load the stations
         for(i in 0..3) {
