@@ -32,11 +32,11 @@ std::shared_ptr<LoadingScreen> LoadingScreen::Create(GraphicsContext& graphicsCo
         image->anchorPoint = UIElement::AnchorPoint::eFill;
     }
 
-    loading->_continueTextLeft = loading->AddChild<UITextElement>(loading->_font.lock(), "Press", glm::vec2(), _textSize / 2.0f);
+    loading->_continueTextLeft = loading->AddChild<UITextElement>(loading->_font.lock(), "Press", glm::vec2(380.0f, 30.0f), _textSize / 2.0f);
     std::shared_ptr<UITextElement> contLeftText = loading->_continueTextLeft.lock();
     contLeftText->anchorPoint = UIElement::AnchorPoint::eBottomRight;
 
-    loading->_continueTextRight = loading->AddChild<UITextElement>(loading->_font.lock(), "to continue", glm::vec2(), _textSize / 2.0f);
+    loading->_continueTextRight = loading->AddChild<UITextElement>(loading->_font.lock(), "to continue", glm::vec2(20.0f, 30.0f), _textSize / 2.0f);
     std::shared_ptr<UITextElement> contRightText = loading->_continueTextRight.lock();
     contRightText->anchorPoint = UIElement::AnchorPoint::eBottomRight;
 
@@ -113,19 +113,22 @@ void LoadingScreen::ShowContinuePrompt()
 
     auto visualizations = _inputVisualizationsCache.GetDigital("Interact");
 
-    textLeft->SetText("Press ");
-    textRight->SetText(visualizations[0].bindingInputName +  " to continue");
+    if (!visualizations[0].glyphImage.IsNull()) // Controller with glyphs
+    {
+        textLeft->SetText("Press ");
+        textRight->SetText(visualizations[0].bindingInputName +  " to continue");
 
-    textLeft->display_color = { 1.0f, 1.0f, 1.0f, 1.0f };
-    textRight->display_color = { 1.0f, 1.0f, 1.0f, 1.0f };
+        textLeft->display_color = { 1.0f, 1.0f, 1.0f, 1.0f };
+        textRight->display_color = { 1.0f, 1.0f, 1.0f, 1.0f };
 
-    textLeft->SetLocation(glm::vec2(380.0f, 30.0f));
-    textRight->SetLocation(glm::vec2(20.0f, 30.0f));
-
-    glyph->SetImage(visualizations[0].glyphImage);
-    glyph->visibility = VisibilityState::eNotUpdatedAndVisible;
-
-    UpdateAllChildrenAbsoluteTransform();
+        glyph->SetImage(visualizations[0].glyphImage);
+        glyph->visibility = VisibilityState::eNotUpdatedAndVisible;
+    }
+    else // Controller without glyphs or mouse and keyboard
+    {
+        textRight->SetText("Press " + visualizations[0].bindingInputName + " to continue");
+        textRight->display_color = { 1.0f, 1.0f, 1.0f, 1.0f };
+    }
 }
 
 void LoadingScreen::HideContinuePrompt()
