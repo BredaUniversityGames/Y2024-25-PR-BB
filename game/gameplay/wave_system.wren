@@ -144,9 +144,10 @@ class WaveSystem {
 
         if (_waveIndex == _waveConfigs.count) {
             _waveConfigs.add(WaveGenerator.GenerateWave(_waveIndex))
+        }
 
         var stat = engine.GetSteam().GetStat(Stats.WAVES_REACHED())
-        stat.intValue = _currentWave
+        stat.intValue = _waveIndex
 
         _currentWave = _waveConfigs[_waveIndex]
         System.print("Starting wave %(_waveIndex + 1)")
