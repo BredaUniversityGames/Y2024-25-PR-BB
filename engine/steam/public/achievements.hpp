@@ -28,7 +28,7 @@ struct Achievement
     int32_t iconImage = 0;
 };
 
-class SteamAchievements
+class SteamAchievementManager
 {
 private:
     uint64_t _appID; // Our current AppID
@@ -36,17 +36,17 @@ private:
     bool _initialized; // Have we called Request stats and received the callback?
 
 public:
-    SteamAchievements(std::span<Achievement> achievements);
-    ~SteamAchievements() = default;
+    SteamAchievementManager(std::span<Achievement> achievements);
+    ~SteamAchievementManager() = default;
 
     Achievement* GetAchievement(std::string_view name);
 
     bool SetAchievement(const char* ID);
 
-    STEAM_CALLBACK(SteamAchievements, OnUserStatsReceived, UserStatsReceived_t,
+    STEAM_CALLBACK(SteamAchievementManager, OnUserStatsReceived, UserStatsReceived_t,
         _callbackUserStatsReceived);
-    STEAM_CALLBACK(SteamAchievements, OnUserStatsStored, UserStatsStored_t,
+    STEAM_CALLBACK(SteamAchievementManager, OnUserStatsStored, UserStatsStored_t,
         _callbackUserStatsStored);
-    STEAM_CALLBACK(SteamAchievements, OnAchievementStored,
+    STEAM_CALLBACK(SteamAchievementManager, OnAchievementStored,
         UserAchievementStored_t, _callbackAchievementStored);
 };

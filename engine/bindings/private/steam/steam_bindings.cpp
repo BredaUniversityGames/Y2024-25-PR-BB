@@ -10,11 +10,11 @@
 
 namespace bindings
 {
-Stat* GetStat(SteamModule& self, Stats stats)
+Stat* GetStat(SteamModule& self, SteamStatEnum stats)
 {
     return self.GetStats().GetStat(magic_enum::enum_name(stats));
 }
-Achievement* GetAchievement(SteamModule& self, Achievements achievements)
+Achievement* GetAchievement(SteamModule& self, SteamAchievementEnum achievements)
 {
     return self.GetAchievements().GetAchievement(magic_enum::enum_name(achievements));
 }
@@ -46,6 +46,6 @@ void BindSteamAPI(wren::ForeignModule& module)
     achievementClass.propReadonlyExt<bindings::GetAchievementDescription>("description");
     achievementClass.propReadonlyExt<bindings::GetAchievementName>("name");
 
-    bindings::BindEnum<Stats>(module, "Stats");
-    bindings::BindEnum<Achievements>(module, "Achievements");
+    bindings::BindEnum<SteamStatEnum>(module, "Stats");
+    bindings::BindEnum<SteamAchievementEnum>(module, "Achievements");
 }

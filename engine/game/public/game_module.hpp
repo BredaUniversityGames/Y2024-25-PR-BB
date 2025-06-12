@@ -20,7 +20,7 @@ struct EnemyTag
 {
 };
 
-enum class Achievements : int32_t
+enum class SteamAchievementEnum : int32_t
 {
     FIRST_SKELETON_KILLED,
     FIRST_EYE_KILLED,
@@ -31,7 +31,7 @@ enum class Achievements : int32_t
     FIRST_RELIC_USED
 };
 
-enum class Stats : int32_t
+enum class SteamStatEnum : int32_t
 {
     SKELETONS_KILLED = 3,
     EYES_KILLED = 6,
@@ -51,8 +51,6 @@ class GameModule : public ModuleInterface
     std::string_view GetName() override { return "Game Module"; }
 
     glm::ivec2 _lastMousePos {};
-
-    Engine* _engine;
 
 public:
     GameModule() = default;
@@ -74,9 +72,6 @@ public:
     std::optional<std::shared_ptr<HUD>> GetHUD();
     std::optional<std::shared_ptr<GameOverMenu>> GetGameOver();
     std::optional<std::shared_ptr<LoadingScreen>> GetLoadingScreen();
-
-    Stat* GetStat(Stats stats);
-    Achievement* GetAchievement(Achievements achievements);
 
     NON_COPYABLE(GameModule);
     NON_MOVABLE(GameModule);

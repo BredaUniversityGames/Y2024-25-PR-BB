@@ -82,11 +82,11 @@ void SteamModule::Shutdown(MAYBE_UNUSED Engine& engine)
 }
 void SteamModule::InitSteamAchievements(std::span<Achievement> achievements)
 {
-    _steamAchievements = std::make_unique<SteamAchievements>(achievements);
+    _steamAchievements = std::make_unique<SteamAchievementManager>(achievements);
 }
 void SteamModule::InitSteamStats(std::span<Stat> stats)
 {
-    _steamStats = std::make_unique<SteamStats>(stats);
+    _steamStats = std::make_unique<SteamStatManager>(stats);
 }
 
 bool SteamModule::RequestCurrentStats()

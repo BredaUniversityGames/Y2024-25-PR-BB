@@ -35,7 +35,7 @@ struct Stat
     float floatAvgDenominator = 0.0f;
 };
 
-class SteamStats
+class SteamStatManager
 {
 private:
     uint64 _appID; // Our current AppID
@@ -44,14 +44,14 @@ private:
     bool _initialized; // Have we called Request stats and received the callback?
 
 public:
-    SteamStats(std::span<Stat> stats);
-    ~SteamStats() = default;
+    SteamStatManager(std::span<Stat> stats);
+    ~SteamStatManager() = default;
 
     bool StoreStats();
     Stat* GetStat(std::string_view name);
 
-    STEAM_CALLBACK(SteamStats, OnUserStatsReceived, UserStatsReceived_t,
+    STEAM_CALLBACK(SteamStatManager, OnUserStatsReceived, UserStatsReceived_t,
         _callbackUserStatsReceived);
-    STEAM_CALLBACK(SteamStats, OnUserStatsStored, UserStatsStored_t,
+    STEAM_CALLBACK(SteamStatManager, OnUserStatsStored, UserStatsStored_t,
         _callbackUserStatsStored);
 };

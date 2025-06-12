@@ -3,11 +3,11 @@
 
 #include <magic_enum.hpp>
 
-SteamStats::SteamStats(std::span<Stat> stats)
+SteamStatManager::SteamStatManager(std::span<Stat> stats)
     : _appID(0)
     , _initialized(false)
-    , _callbackUserStatsReceived(this, &SteamStats::OnUserStatsReceived)
-    , _callbackUserStatsStored(this, &SteamStats::OnUserStatsStored)
+    , _callbackUserStatsReceived(this, &SteamStatManager::OnUserStatsReceived)
+    , _callbackUserStatsStored(this, &SteamStatManager::OnUserStatsStored)
 {
     _appID = SteamUtils()->GetAppID();
 
@@ -18,7 +18,7 @@ SteamStats::SteamStats(std::span<Stat> stats)
     std::copy(stats.begin(), stats.end(), _oldStats.begin());
 }
 
-bool SteamStats::StoreStats()
+bool SteamStatManager::StoreStats()
 {
     if (_initialized)
     {
@@ -69,7 +69,7 @@ bool SteamStats::StoreStats()
     return false;
 }
 
-Stat* SteamStats::GetStat(std::string_view name)
+Stat* SteamStatManager::GetStat(std::string_view name)
 {
     auto result = std::find_if(_stats.begin(), _stats.end(), [&name](const auto& val)
         { return val.name == name; });
@@ -79,7 +79,7 @@ Stat* SteamStats::GetStat(std::string_view name)
     return &*result;
 }
 
-void SteamStats::OnUserStatsReceived(UserStatsReceived_t* pCallback)
+void SteamStatManager::OnUserStatsReceived(UserStatsReceived_t* pCallback)
 {
     // we may get callbacks for other games' stats arriving, ignore them
     if (_appID == pCallback->m_nGameID)
@@ -117,7 +117,7 @@ void SteamStats::OnUserStatsReceived(UserStatsReceived_t* pCallback)
     }
 }
 
-void SteamStats::OnUserStatsStored(UserStatsStored_t* pCallback)
+void SteamStatManager::OnUserStatsStored(UserStatsStored_t* pCallback)
 {
     // we may get callbacks for other games' stats arriving, ignore them
     if (_appID == pCallback->m_nGameID)

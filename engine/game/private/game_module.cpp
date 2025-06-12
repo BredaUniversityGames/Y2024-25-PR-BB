@@ -34,12 +34,12 @@
 
 #include <magic_enum.hpp>
 
-Achievement CreateAchievement(Achievements achievements)
+Achievement CreateAchievement(SteamAchievementEnum achievements)
 {
     return Achievement { static_cast<int32_t>(achievements), magic_enum::enum_name(achievements) };
 }
 
-Stat CreateStat(Stats stats, EStatTypes type)
+Stat CreateStat(SteamStatEnum stats, EStatTypes type)
 {
     return Stat {
         static_cast<int32_t>(stats),
@@ -50,27 +50,25 @@ Stat CreateStat(Stats stats, EStatTypes type)
 
 ModuleTickOrder GameModule::Init(Engine& engine)
 {
-    _engine = &engine;
-
     _achievements = {
-        CreateAchievement(Achievements::FIRST_SKELETON_KILLED),
-        CreateAchievement(Achievements::FIRST_EYE_KILLED),
-        CreateAchievement(Achievements::FIRST_BERSERKER_KILLED),
-        CreateAchievement(Achievements::FIRST_SOUL_COLLECTED),
-        CreateAchievement(Achievements::FIRST_GOLD_NUGGET_COLLECTED),
-        CreateAchievement(Achievements::FIRST_DEATH),
-        CreateAchievement(Achievements::FIRST_RELIC_USED),
+        CreateAchievement(SteamAchievementEnum::FIRST_SKELETON_KILLED),
+        CreateAchievement(SteamAchievementEnum::FIRST_EYE_KILLED),
+        CreateAchievement(SteamAchievementEnum::FIRST_BERSERKER_KILLED),
+        CreateAchievement(SteamAchievementEnum::FIRST_SOUL_COLLECTED),
+        CreateAchievement(SteamAchievementEnum::FIRST_GOLD_NUGGET_COLLECTED),
+        CreateAchievement(SteamAchievementEnum::FIRST_DEATH),
+        CreateAchievement(SteamAchievementEnum::FIRST_RELIC_USED),
     };
 
     _stats = {
-        CreateStat(Stats::SKELETONS_KILLED, EStatTypes::STAT_INT),
-        CreateStat(Stats::EYES_KILLED, EStatTypes::STAT_INT),
-        CreateStat(Stats::BERSERKERS_KILLED, EStatTypes::STAT_INT),
-        CreateStat(Stats::WAVES_REACHED, EStatTypes::STAT_INT),
-        CreateStat(Stats::SOULS_COLLECTED, EStatTypes::STAT_INT),
-        CreateStat(Stats::GOLD_NUGGETS_COLLECTED, EStatTypes::STAT_INT),
-        CreateStat(Stats::GOLD_CURRENCY_COLLECTED, EStatTypes::STAT_INT),
-        CreateStat(Stats::ENEMIES_KILLED_WITH_RELIC, EStatTypes::STAT_INT),
+        CreateStat(SteamStatEnum::SKELETONS_KILLED, EStatTypes::STAT_INT),
+        CreateStat(SteamStatEnum::EYES_KILLED, EStatTypes::STAT_INT),
+        CreateStat(SteamStatEnum::BERSERKERS_KILLED, EStatTypes::STAT_INT),
+        CreateStat(SteamStatEnum::WAVES_REACHED, EStatTypes::STAT_INT),
+        CreateStat(SteamStatEnum::SOULS_COLLECTED, EStatTypes::STAT_INT),
+        CreateStat(SteamStatEnum::GOLD_NUGGETS_COLLECTED, EStatTypes::STAT_INT),
+        CreateStat(SteamStatEnum::GOLD_CURRENCY_COLLECTED, EStatTypes::STAT_INT),
+        CreateStat(SteamStatEnum::ENEMIES_KILLED_WITH_RELIC, EStatTypes::STAT_INT),
     };
 
     engine.GetModule<ApplicationModule>().GetActionManager().SetGameActions(GAME_ACTIONS);
@@ -303,14 +301,6 @@ std::optional<std::shared_ptr<LoadingScreen>> GameModule::GetLoadingScreen()
     }
     return std::nullopt;
 }
-Stat* GameModule::GetStat(Stats stats)
-{
-    return _engine->GetModule<SteamModule>().GetStats().GetStat(magic_enum::enum_name(stats));
-}
-Achievement* GameModule::GetAchievement(Achievements achievements)
-{
-    return _engine->GetModule<SteamModule>().GetAchievements().GetAchievement(magic_enum::enum_name(achievements));
-}
 
 void GameModule::SetUIMenu(std::weak_ptr<Canvas> menu)
 {
@@ -361,7 +351,7 @@ void GameModule::TransitionScene(Engine& engine)
     engine.GetModule<TimeModule>().ResetTimer();
 }
 
-void GameModule::Tick(MAYBE_UNUSED Engine& engine)
+void GameModule::Tick(Engine& engine)
 {
     ApplySettings(engine);
 
@@ -411,8 +401,7 @@ void GameModule::Tick(MAYBE_UNUSED Engine& engine)
     if (inputDeviceManager.IsKeyPressed(KeyboardCode::eH))
     {
         applicationModule.SetMouseHidden(!applicationModule.GetMouseHidden());
-
-        _engine->GetModule<SteamModule>().GetStats().GetStat(magic_enum::enum_name(Stats::SKELETONS_KILLED))->value += 1;
+        engine.GetModule<SteamModule>().GetStats().GetStat(magic_enum::enum_name(SteamStatEnum::SKELETONS_KILLED))->value += 1;
     }
 #endif
 

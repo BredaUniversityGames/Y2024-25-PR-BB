@@ -3,19 +3,19 @@
 
 #include <magic_enum.hpp>
 
-SteamAchievements::SteamAchievements(std::span<Achievement> achievements)
+SteamAchievementManager::SteamAchievementManager(std::span<Achievement> achievements)
     : _appID(0)
     , _initialized(false)
-    , _callbackUserStatsReceived(this, &SteamAchievements::OnUserStatsReceived)
-    , _callbackUserStatsStored(this, &SteamAchievements::OnUserStatsStored)
-    , _callbackAchievementStored(this, &SteamAchievements::OnAchievementStored)
+    , _callbackUserStatsReceived(this, &SteamAchievementManager::OnUserStatsReceived)
+    , _callbackUserStatsStored(this, &SteamAchievementManager::OnUserStatsStored)
+    , _callbackAchievementStored(this, &SteamAchievementManager::OnAchievementStored)
 {
     _appID = SteamUtils()->GetAppID();
     _achievements.resize(achievements.size());
     std::copy(achievements.begin(), achievements.end(), _achievements.begin());
 }
 
-Achievement* SteamAchievements::GetAchievement(std::string_view name)
+Achievement* SteamAchievementManager::GetAchievement(std::string_view name)
 {
     auto result = std::find_if(_achievements.begin(), _achievements.end(), [&name](const auto& val)
         { return val.name == name; });
@@ -24,7 +24,7 @@ Achievement* SteamAchievements::GetAchievement(std::string_view name)
 
     return &*result;
 }
-bool SteamAchievements::SetAchievement(const char* ID)
+bool SteamAchievementManager::SetAchievement(const char* ID)
 {
     // Have we received a call back from Steam yet?
     if (_initialized)
@@ -36,7 +36,7 @@ bool SteamAchievements::SetAchievement(const char* ID)
     return false;
 }
 
-void SteamAchievements::OnUserStatsReceived(UserStatsReceived_t* pCallback)
+void SteamAchievementManager::OnUserStatsReceived(UserStatsReceived_t* pCallback)
 {
     // we may get callbacks for other games' stats arriving, ignore them
     if (_appID == pCallback->m_nGameID)
@@ -71,7 +71,7 @@ void SteamAchievements::OnUserStatsReceived(UserStatsReceived_t* pCallback)
     }
 }
 
-void SteamAchievements::OnUserStatsStored(UserStatsStored_t* pCallback)
+void SteamAchievementManager::OnUserStatsStored(UserStatsStored_t* pCallback)
 {
     // we may get callbacks for other games' stats arriving, ignore them
     if (_appID == pCallback->m_nGameID)
@@ -83,7 +83,7 @@ void SteamAchievements::OnUserStatsStored(UserStatsStored_t* pCallback)
     }
 }
 
-void SteamAchievements::OnAchievementStored(UserAchievementStored_t* pCallback)
+void SteamAchievementManager::OnAchievementStored(UserAchievementStored_t* pCallback)
 {
     // we may get callbacks for other games' stats arriving, ignore them
     if (_appID == pCallback->m_nGameID)
