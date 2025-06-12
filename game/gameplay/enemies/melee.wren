@@ -29,7 +29,7 @@ class MeleeEnemy {
         _hitMarkerSFX = "event:/SFX/Hitmarker"
         _bonesStepsSFX = "event:/SFX/BonesSteps"
         _roar = "event:/SFX/Roar"
-        _hitSFX = "event:/SFX/Hit"
+        _hitSFX = "event:/SFX/Hurt"
         _spawnSFX = "event:/SFX/EnemySpawn"
 
         var enemySize = 0.0165
@@ -252,7 +252,8 @@ class MeleeEnemy {
                                 flashSystem.Flash(Vec3.new(105 / 255, 13 / 255, 1 / 255),0.75)
                                 
                                 playerVariables.hud.IndicateDamage(pos)
-                                engine.GetAudio().PlayEventOnce(_hitSFX)
+                                var eventInstance = engine.GetAudio().PlayEventOnce(_hitSFX)
+                                engine.GetAudio().SetEventVolume(eventInstance, 2)
                                 //animations.Play("Attack", 1.0, false, 0.1, false)
                             }
                         }

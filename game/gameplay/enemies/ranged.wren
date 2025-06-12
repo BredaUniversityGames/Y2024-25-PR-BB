@@ -27,8 +27,9 @@ class RangedEnemy {
 
         _shootSFX = "event:/SFX/EyeLaserBlast" 
         _chargeSFX = "event:/SFX/EyeLaserCharge"
-        _hitSFX = "event:/SFX/EyeHit"
+        _hurtSFX = "event:/SFX/EyeHit"
         _spawnSFX = "event:/SFX/EnemySpawn"
+        _hitSFX = "event:/SFX/Hurt"
 
         var enemyModel = "assets/models/eye.glb"
         var enemySize = 3.25
@@ -118,7 +119,7 @@ class RangedEnemy {
         var body = _rootEntity.GetRigidbodyComponent()
         _health = Math.Max(_health - amount, 0)
 
-        var eventInstance = engine.GetAudio().PlayEventOnce(_hitSFX)
+        var eventInstance = engine.GetAudio().PlayEventOnce(_hurtSFX)
         engine.GetAudio().SetEventVolume(eventInstance, 20.0)
         _rootEntity.GetAudioEmitterComponent().AddEvent(eventInstance)
 
@@ -275,6 +276,8 @@ class RangedEnemy {
                             playerVariables.cameraVariables.shakeIntensity = _shakeIntensity
                             playerVariables.invincibilityTime = playerVariables.invincibilityMaxTime
                             playerVariables.hud.IndicateDamage(pos)
+                            var eventInstance = engine.GetAudio().PlayEventOnce(_hitSFX)
+                            engine.GetAudio().SetEventVolume(eventInstance, 2)
                             flashSystem.Flash(Vec3.new(1.0, 0.0, 0.0),0.75)
                         }
                     }

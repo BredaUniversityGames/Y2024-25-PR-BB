@@ -29,7 +29,7 @@ class BerserkerEnemy {
         _stepSFX = "event:/SFX/DemonStep"
         _attackSFX = "event:/SFX/DemonAttack"
         _attackHitSFX = "event:/SFX/DemonAttackHit"
-        _hitSFX = "event:/SFX/Hit"
+        _hitSFX = "event:/SFX/Hurt"
         _spawnSFX = "event:/SFX/EnemySpawn"
 
         // ENTITY SETUP
@@ -209,7 +209,8 @@ class BerserkerEnemy {
 
                                 playerVariables.hud.IndicateDamage(pos)
                                 flashSystem.Flash(Vec3.new(1.0, 0.0, 0.0),0.85)
-                                engine.GetAudio().PlayEventOnce(_hitSFX)
+                                var eventInstance = engine.GetAudio().PlayEventOnce(_hitSFX)
+                                engine.GetAudio().SetEventVolume(eventInstance, 2)
                             }
                         }
                     }
