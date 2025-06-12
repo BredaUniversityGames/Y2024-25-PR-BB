@@ -95,7 +95,7 @@ class Soul {
 
                 var stat = engine.GetSteam().GetStat(Stats.SOULS_COLLECTED())
                 stat.intValue = stat.intValue + 1
-                engine.GetSteam().Unlock(Achievements.FIRST_SOUL_COLLECTED())
+                engine.GetSteam().Unlock(Achievements.SOULS_1())
 
                 // Play flash effect
 

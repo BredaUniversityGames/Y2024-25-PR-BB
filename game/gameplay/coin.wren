@@ -107,7 +107,7 @@ class Coin {
                 
                 var stat = engine.GetSteam().GetStat(Stats.GOLD_NUGGETS_COLLECTED())
                 stat.intValue = stat.intValue + 1
-                engine.GetSteam().Unlock(Achievements.FIRST_GOLD_NUGGET_COLLECTED())
+                engine.GetSteam().Unlock(Achievements.NUGGET_1())
 
                 // Play flash effect
                 //flashSystem.Flash(Vec3.new(0.89, 0.77, 0.06),0.1)
