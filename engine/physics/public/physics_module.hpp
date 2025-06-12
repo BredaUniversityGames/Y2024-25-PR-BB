@@ -46,6 +46,7 @@ public:
 
     std::unordered_set<JPH::ObjectLayer> _debugLayersToRender {};
     bool _drawRays = false;
+    bool _clearDrawnRaysPerFrame = false;
 
     std::unique_ptr<JPH::PhysicsSystem> _physicsSystem {};
 

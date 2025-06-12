@@ -316,7 +316,7 @@ float PathfindingModule::DirectedHeuristic(glm::vec3 startPos, glm::vec3 endPos,
 
     float dot = std::max(glm::dot(towardsEnd, towardsFinal), 0.001f);
 
-    return (1.0f - dot) * towardsEndLength;
+    return powf((1.0f - dot), 3.0f) * towardsEndLength;
 }
 
 
