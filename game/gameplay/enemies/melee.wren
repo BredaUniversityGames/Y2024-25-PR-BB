@@ -6,7 +6,7 @@ import "gameplay/flash_system.wren" for FlashSystem
 
 class MeleeEnemy {
 
-    construct new(engine, spawnPosition, waveNumber) {
+    construct new(engine, spawnPosition) {
         
         // ENEMY CONSTANTS
         _maxVelocity = 13
@@ -73,7 +73,7 @@ class MeleeEnemy {
 
         _pointLight.intensity = 10
         _pointLight.range = 2
-        _pointLight.color = Vec3.new(Math.Min(waveNumber, 10) / 10, 1.0 - Math.Min(waveNumber, 10) / 10, 0.0)
+        _pointLight.color = Vec3.new(0.0, 1.0, 0.0)
 
         var rb = Rigidbody.new(engine.GetPhysics(), colliderShape, PhysicsObjectLayer.eENEMY(), false)
         var body = _rootEntity.AddRigidbodyComponent(rb)

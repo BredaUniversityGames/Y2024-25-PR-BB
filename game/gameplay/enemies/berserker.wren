@@ -7,7 +7,7 @@ import "gameplay/flash_system.wren" for FlashSystem
 
 class BerserkerEnemy {
 
-    construct new(engine, spawnPosition, waveNumber) {
+    construct new(engine, spawnPosition) {
         
         // ENEMY CONSTANTS
         _maxVelocity = 6.8
@@ -59,8 +59,8 @@ class BerserkerEnemy {
         _rootEntity.AttachChild(_lightEntity)
 
         _pointLight.intensity = 10
-        _pointLight.range = 2
-        _pointLight.color = Vec3.new(0.0, 1.0 - Math.Clamp(waveNumber - 3, 0, 7) / 7, Math.Min(waveNumber - 3, 7) / 7)
+        _pointLight.range = 6
+        _pointLight.color = Vec3.new(0.0, 1.0, 1.0)
 
         var rb = Rigidbody.new(engine.GetPhysics(), colliderShape, PhysicsObjectLayer.eENEMY(), false)
         var body = _rootEntity.AddRigidbodyComponent(rb)
