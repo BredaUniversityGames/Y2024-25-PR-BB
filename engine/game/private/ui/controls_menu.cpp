@@ -137,6 +137,7 @@ ControlsMenu::ActionControls ControlsMenu::AddActionVisualization(const std::str
     constexpr float originHorizontalMargin = 225.0f;
     constexpr float actionOriginBindingTextMarginMultiplier = 12.0f;
     constexpr float canvasScaleY = actionTextSize + 10.0f;
+    constexpr uint32_t maxBindingsShown = 3;
 
     ActionControls action {};
     action.canvas = parent.AddChild<Canvas>(glm::vec2 { _canvasResolution.x, canvasScaleY });
@@ -151,8 +152,10 @@ ControlsMenu::ActionControls ControlsMenu::AddActionVisualization(const std::str
     const std::vector<BindingOriginVisual> blindingOrigins = isAnalogInput ? _actionManager.GetAnalogActionBindingOriginVisual(actionName) : _actionManager.GetDigitalActionBindingOriginVisual(actionName);
     float horizontalOffset = _canvasResolution.x / 6.0f;
 
-    for (const BindingOriginVisual& origin : blindingOrigins)
+    const uint32_t numBindingsToShow = glm::min(maxBindingsShown, static_cast<uint32_t>(blindingOrigins.size()));
+    for (uint32_t i = 0; i < numBindingsToShow; ++i)
     {
+        const BindingOriginVisual& origin = blindingOrigins[i];
         ActionControls::Binding& binding = action.bindings.emplace_back();
 
         // Create binding text

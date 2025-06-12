@@ -1,4 +1,4 @@
-import "engine_api.wren" for Engine, ECS, Entity, Vec3, Vec2, Quat, Math, TransformComponent, Input, Random, ShapeFactory
+import "engine_api.wren" for Engine, ECS, Entity, Vec3, Vec2, Quat, Math, TransformComponent, Input, Random, ShapeFactory, Stat, Stats
 import "enemies/melee.wren" for MeleeEnemy
 import "enemies/ranged.wren" for RangedEnemy
 import "enemies/berserker.wren" for BerserkerEnemy
@@ -144,7 +144,9 @@ class WaveSystem {
 
         if (_waveIndex == _waveConfigs.count) {
             _waveConfigs.add(WaveGenerator.GenerateWave(_waveIndex))
-        }
+
+        var stat = engine.GetSteam().GetStat(Stats.WAVES_REACHED())
+        stat.intValue = _currentWave
 
         _currentWave = _waveConfigs[_waveIndex]
         System.print("Starting wave %(_waveIndex + 1)")
