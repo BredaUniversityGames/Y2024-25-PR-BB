@@ -192,15 +192,11 @@ class Pistol {
             // Play quad damage audio if needed
             if(playerVariables.GetCurrentPowerUp() == PowerUpType.QUAD_DAMAGE){
                 var quadEventInstance = engine.GetAudio().PlayEventOnce(_quadHit)
-                engine.GetAudio().SetEventVolume(quadEventInstance, 3.0)
-
                 audioEmitter.AddEvent(quadEventInstance)
             }
 
             if(playerVariables.GetCurrentPowerUp() == PowerUpType.DOUBLE_GUNS){
                 var dualEventInstance = engine.GetAudio().PlayEventOnce(_dualGunHit)
-                engine.GetAudio().SetEventVolume(dualEventInstance, 2.0)
-
                 audioEmitter.AddEvent(dualEventInstance)
             }   
 
