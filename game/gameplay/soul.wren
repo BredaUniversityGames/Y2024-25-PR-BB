@@ -89,7 +89,6 @@ class Soul {
                  // Play audio
                 var player = engine.GetECS().GetEntityByName("Camera")
                 var eventInstance = engine.GetAudio().PlayEventOnce(_collectSoundEvent)
-                engine.GetAudio().SetEventVolume(eventInstance, 5.0)
                 var audioEmitter = player.GetAudioEmitterComponent()
                 audioEmitter.AddEvent(eventInstance)
 

@@ -120,7 +120,6 @@ class RangedEnemy {
         _health = Math.Max(_health - amount, 0)
 
         var eventInstance = engine.GetAudio().PlayEventOnce(_hitSFX)
-        engine.GetAudio().SetEventVolume(eventInstance, 20.0)
         _rootEntity.GetAudioEmitterComponent().AddEvent(eventInstance)
 
         // Fly some worms out of him
@@ -302,7 +301,6 @@ class RangedEnemy {
                     }
 
                     var eventInstance = engine.GetAudio().PlayEventOnce(_shootSFX)
-                    engine.GetAudio().SetEventVolume(eventInstance, 0.8)
                     _rootEntity.GetAudioEmitterComponent().AddEvent(eventInstance)
 
 
@@ -349,7 +347,6 @@ class RangedEnemy {
                     
                     //play charge sound
                     _chargeSoundEventInstance = engine.GetAudio().PlayEventOnce(_chargeSFX)
-                    engine.GetAudio().SetEventVolume(_chargeSoundEventInstance, 0.8)
                     _rootEntity.GetAudioEmitterComponent().AddEvent(_chargeSoundEventInstance)
 
                 } else if (_movingState == false) { // Enter attack state
