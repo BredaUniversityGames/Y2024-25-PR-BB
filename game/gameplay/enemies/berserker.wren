@@ -210,7 +210,6 @@ class BerserkerEnemy {
                                 playerVariables.hud.IndicateDamage(pos)
                                 flashSystem.Flash(Vec3.new(1.0, 0.0, 0.0),0.85)
                                 var eventInstance = engine.GetAudio().PlayEventOnce(_hitSFX)
-                                engine.GetAudio().SetEventVolume(eventInstance, 2)
                             }
                         }
                     }

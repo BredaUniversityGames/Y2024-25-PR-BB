@@ -277,7 +277,6 @@ class RangedEnemy {
                             playerVariables.invincibilityTime = playerVariables.invincibilityMaxTime
                             playerVariables.hud.IndicateDamage(pos)
                             var eventInstance = engine.GetAudio().PlayEventOnce(_hitSFX)
-                            engine.GetAudio().SetEventVolume(eventInstance, 2)
                             flashSystem.Flash(Vec3.new(1.0, 0.0, 0.0),0.75)
                         }
                     }

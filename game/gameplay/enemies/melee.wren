@@ -253,7 +253,6 @@ class MeleeEnemy {
                                 
                                 playerVariables.hud.IndicateDamage(pos)
                                 var eventInstance = engine.GetAudio().PlayEventOnce(_hitSFX)
-                                engine.GetAudio().SetEventVolume(eventInstance, 2)
                                 //animations.Play("Attack", 1.0, false, 0.1, false)
                             }
                         }
