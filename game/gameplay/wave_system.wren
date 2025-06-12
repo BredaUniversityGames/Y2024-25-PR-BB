@@ -135,7 +135,9 @@ class WaveSystem {
         _currentWave = _currentWave + 1
 
         var stat = engine.GetSteam().GetStat(Stats.WAVES_REACHED())
-        stat.intValue = _currentWave
+        if(_currentWave > stat.intValue) {
+            stat.intValue = _currentWave
+        }
 
         if (_currentWave < _waveConfigs.count) {
 

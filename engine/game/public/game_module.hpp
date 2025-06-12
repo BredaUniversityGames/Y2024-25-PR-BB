@@ -41,6 +41,7 @@ enum class SteamStatEnum : int32_t
     GOLD_NUGGETS_COLLECTED = 10,
     GOLD_CURRENCY_COLLECTED = 11,
     ENEMIES_KILLED_WITH_RELIC = 12,
+    TIMES_DIED = 14,
 };
 
 class GameModule : public ModuleInterface

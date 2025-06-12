@@ -47,7 +47,6 @@ Stat CreateStat(SteamStatEnum stats, EStatTypes type)
     };
 }
 
-
 ModuleTickOrder GameModule::Init(Engine& engine)
 {
     _achievements = {
@@ -69,6 +68,7 @@ ModuleTickOrder GameModule::Init(Engine& engine)
         CreateStat(SteamStatEnum::GOLD_NUGGETS_COLLECTED, EStatTypes::STAT_INT),
         CreateStat(SteamStatEnum::GOLD_CURRENCY_COLLECTED, EStatTypes::STAT_INT),
         CreateStat(SteamStatEnum::ENEMIES_KILLED_WITH_RELIC, EStatTypes::STAT_INT),
+        CreateStat(SteamStatEnum::TIMES_DIED, EStatTypes::STAT_INT),
     };
 
     engine.GetModule<ApplicationModule>().GetActionManager().SetGameActions(GAME_ACTIONS);

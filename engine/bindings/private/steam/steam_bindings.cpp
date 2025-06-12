@@ -28,6 +28,11 @@ std::string_view GetAchievementDescription(Achievement& achievement)
     return std::string_view(achievement.description);
 }
 
+void Unlock(SteamModule& self, SteamAchievementEnum achievements)
+{
+    self.GetAchievements().SetAchievement(magic_enum::enum_name(achievements).data());
+}
+
 }
 
 void BindSteamAPI(wren::ForeignModule& module)
@@ -35,6 +40,7 @@ void BindSteamAPI(wren::ForeignModule& module)
     auto& steamClass = module.klass<SteamModule>("Steam");
     steamClass.funcExt<bindings::GetAchievement>("GetAchievement");
     steamClass.funcExt<bindings::GetStat>("GetStat");
+    steamClass.funcExt<bindings::Unlock>("Unlock");
 
     auto& statClass = module.klass<Stat>("Stat");
     statClass.var<&Stat::value>("intValue");
