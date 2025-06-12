@@ -255,6 +255,7 @@ class Main {
         var backToMain = Fn.new {
             engine.TransitionToScript("game/main_menu.wren")
             engine.GetTime().SetScale(1.0)
+            engine.GetAudio().SetPlaybackSpeed(1.0)
         }
 
         var menuButton = engine.GetGame().GetPauseMenu().backButton

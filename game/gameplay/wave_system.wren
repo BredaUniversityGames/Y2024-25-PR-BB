@@ -65,7 +65,8 @@ class WaveSystem {
         _currentWave = -1
         _waveTimer = 0.0
         _waveDelay = 4.0
-        _waveSlowdown = 0.25
+        _realWaveTimer = 0.0
+        _waveSlowdown = 0.8
         _enemyCount = 0
 
         _timeSpeed = 1.0
@@ -84,6 +85,7 @@ class WaveSystem {
     Update(engine, player, enemyList, dt, playerVariables, stationManager) {
 
         _waveTimer = _waveTimer + dt / 1000.0
+        _realWaveTimer = _realWaveTimer + engine.GetTime().GetRealDeltatime() / 1000.0
 
         // Finished all waves
         if (_currentWave >= _waveConfigs.count) {
@@ -98,12 +100,12 @@ class WaveSystem {
         var realDeltatime = engine.GetTime().GetRealDeltatime() / 1000 * 60
 
         // Waiting period
-        if (_waveTimer < _waveDelay) {
-            if (_waveTimer > _waveSlowdown) {
-                _timeSpeed = Math.MixFloat(_timeSpeed, 1.0, 0.12 * realDeltatime)
+        if (_realWaveTimer < _waveDelay) {
+            if (_realWaveTimer > _waveSlowdown) {
+                _timeSpeed = Math.MixFloat(_timeSpeed, 1.0, 0.09 * realDeltatime)
             } else {
                 if (_currentWave > -1) {
-                    _timeSpeed = Math.MixFloat(_timeSpeed, _slowTime, 0.10 * realDeltatime)
+                    _timeSpeed = Math.MixFloat(_timeSpeed, _slowTime, 0.09 * realDeltatime)
                 }
             }
             engine.GetTime().SetScale(_timeSpeed)
@@ -111,7 +113,11 @@ class WaveSystem {
             return
         }
 
-        _timeSpeed = Math.MixFloat(_timeSpeed, 1.0, 0.12  * realDeltatime)
+        if (1 - _timeSpeed < 0.001) {
+            _timeSpeed = 1
+        } else {
+            _timeSpeed = Math.MixFloat(_timeSpeed, 1.0, 0.09 * realDeltatime)
+        }
 
         engine.GetTime().SetScale(_timeSpeed)
         engine.GetAudio().SetPlaybackSpeed(_timeSpeed)
@@ -123,6 +129,7 @@ class WaveSystem {
 
                 _ongoingWave = false
                 _waveTimer = 0.0
+                _realWaveTimer = 0.0
                 System.print("Completed wave %(_currentWave)")
             }
 
