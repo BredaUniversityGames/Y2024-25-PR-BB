@@ -17,6 +17,7 @@ class Soul {
         _rootEntity = engine.GetECS().NewEntity()
         _rootEntity.AddNameComponent().name = "Soul"
         _rootEntity.AddAudioEmitterComponent()
+        _rootEntity.AddTransparencyComponent()
 
         var transform = _rootEntity.AddTransformComponent()
         transform.translation = spawnPosition
@@ -67,6 +68,10 @@ class Soul {
 
         _collectSoundEvent = "event:/SFX/Soul"
     }
+
+    SetTransparency(value){
+            _rootEntity.GetTransparencyComponent().transparency = value // Set the transparency of the soul
+        }
 
     CheckRange(engine, playerPos, playerVariables,flashSystem, dt){
         var soulTransform = _rootEntity.GetTransformComponent()
@@ -160,6 +165,8 @@ class SoulManager {
         _soulList = [] // List of souls
         _playerEntity = player // Reference to the player entity
         _maxLifeTimeOfSoul = 20000.0 // Maximum lifetime of a soul
+        _maxAppearTimeSoul = 1000.0
+        _maxDisappearTimeSoul = 2000.0
     }
 
     SpawnSoul(engine, spawnPosition,type){
@@ -175,6 +182,15 @@ class SoulManager {
             if(soul.entity.IsValid()){
                 soul.CheckRange(engine, playerPos, playerVariables, flashSystem, dt) // Check if the soul is within range of the player
                 soul.time = soul.time + dt
+
+                // do appear and disappearing effect
+                soul.SetTransparency(1.0)
+                if(soul.time < _maxAppearTimeSoul) {
+                    soul.SetTransparency(soul.time / _maxAppearTimeSoul)
+                }
+                if(soul.time > (_maxLifeTimeOfSoul - _maxDisappearTimeSoul)) {
+                    soul.SetTransparency((_maxLifeTimeOfSoul - soul.time) / _maxDisappearTimeSoul)
+                }
 
                 if(soul.time > _maxLifeTimeOfSoul && !soul.entity.GetLifetimeComponent()){
                     soul.Destroy() // Destroy the soul if it has been around for too long
