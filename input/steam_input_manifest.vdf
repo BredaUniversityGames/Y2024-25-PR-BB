@@ -1,0 +1,84 @@
+"Action Manifest"
+{
+	"configurations"
+	{
+		"controller_generic"
+		{
+			"0"
+			{
+				"path" "steam_controller_generic.vdf"
+			}
+		}
+	}
+	"actions"
+	{
+		"Shooter"
+		{
+			"title"					"#Set_Shooter"
+			"StickPadGyro"
+			{
+				"Move"
+				{
+					"title"			"#Action_Move"
+					"input_mode"	"joystick_move"
+				}
+				"Look"
+				{
+					"title"			"#Action_Look"
+					"input_mode"	"joystick_move"
+				}
+			}
+			"Button"
+			{
+				"Pause"				"#Action_Pause"
+				"Interact"			"#Action_Shooter_Interact"
+				"Dash"				"#Action_Dash"
+				"Shoot"				"#Action_Shoot"
+				"ShootSecondary"	"#Action_ShootSecondary"
+				"Reload"			"#Action_Reload"
+				"Jump"				"#Action_Jump"
+			}
+		}
+		
+		"UserInterface"
+		{
+			"title"					"#Set_UserInterface"
+			"StickPadGyro"
+			{
+				"Navigate"
+				{
+					"title"			"#Action_Navigate"
+					"input_mode"	"joystick_move"
+				}
+			}
+			"Button"
+			{
+				"Interact"			"#Action_UI_Interact"
+				"Back"				"#Action_Back"
+				"Unpause"			"#Action_Unpause"
+			}
+		}
+	}
+	"localization"
+	{
+		"english"
+		{
+			"Set_Shooter"				"Shooter Controls Set"
+			"Action_Move"				"Movement"
+			"Action_Look"				"Looking Around"
+			"Action_Pause"				"Pause"
+			"Action_Shooter_Interact"	"Interact"
+			"Action_Dash"				"Dash"
+			"Action_Shoot"				"Shoot Weapon"
+			"Action_ShootSecondary"		"Shoot Secondary Weapon"
+			"Action_Reload"				"Reload Weapon"
+			"Action_Jump"				"Jump"
+			
+			"Set_UserInterface"			"User Interface Controls Set"
+			"Action_Navigate"			"Navigate"
+			"Action_UI_Interact"		"Interact"
+			"Action_Back"				"Go Back"
+			"Action_Unpause"			"Unpause"
+		}
+	}
+}

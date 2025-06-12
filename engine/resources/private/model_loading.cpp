@@ -3,6 +3,7 @@
 #include "animation.hpp"
 #include "batch_buffer.hpp"
 #include "ecs_module.hpp"
+#include "file_io.hpp"
 #include "lib/include_fastgltf.hpp"
 #include "log.hpp"
 #include "math_util.hpp"
@@ -10,7 +11,6 @@
 #include "profile_macros.hpp"
 #include "resource_management/image_resource_manager.hpp"
 #include "resource_management/mesh_resource_manager.hpp"
-#include "file_io.hpp"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
