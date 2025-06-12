@@ -430,3 +430,4 @@ memory-vis/
 scripts/build_system/steam/*
 !scripts/build_system/steam/builder/steamcmd.exe
 !scripts/build_system/steam/config
+/content/

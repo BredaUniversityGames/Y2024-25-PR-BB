@@ -246,7 +246,7 @@ FetchContent_Declare(
 )
 
 override_option(PHYSFS_ARCHIVE_ZIP ON)
-override_option(PHYSFS_ARCHIVE_7Z OFF)
+override_option(PHYSFS_ARCHIVE_7Z ON)
 override_option(PHYSFS_ARCHIVE_GRP OFF)
 override_option(PHYSFS_ARCHIVE_WAD OFF)
 override_option(PHYSFS_ARCHIVE_CSM OFF)

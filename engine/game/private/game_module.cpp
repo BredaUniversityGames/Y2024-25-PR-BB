@@ -39,8 +39,8 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     // Audio Setup
     auto& audio = engine.GetModule<AudioModule>();
 
-    audio.LoadBank("assets/music/Master.strings.bank");
-    audio.LoadBank("assets/music/Master.bank");
+    audio.LoadBank("content/music/Master.strings.bank");
+    audio.LoadBank("content/music/Master.bank");
 
     audio.RegisterChannelBus("bus:/");
     audio.RegisterChannelBus("bus:/SFX");
