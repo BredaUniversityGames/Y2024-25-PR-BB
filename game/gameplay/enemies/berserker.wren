@@ -1,9 +1,10 @@
-import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, Perlin, Random
+import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, Perlin, Random, Stat, Stats
 import "../player.wren" for PlayerVariables
 
 import "../soul.wren" for Soul, SoulManager, SoulType
 import "../coin.wren" for Coin, CoinManager
 import "gameplay/flash_system.wren" for FlashSystem
+import "../station.wren" for PowerUpType
 
 class BerserkerEnemy {
 
@@ -109,7 +110,7 @@ class BerserkerEnemy {
         return false
     }
 
-    DecreaseHealth(amount, engine, coinManager, soulManager, waveSystem) {
+    DecreaseHealth(amount, engine, coinManager, soulManager, waveSystem, playerVariables) {
         var animations = _meshEntity.GetAnimationControlComponent()
         var body = _rootEntity.GetRigidbodyComponent()
 
@@ -146,6 +147,15 @@ class BerserkerEnemy {
 
             // Spawn a soul
             soulManager.SpawnSoul(engine, body.GetPosition(),SoulType.BIG)
+
+            var stat = engine.GetSteam().GetStat(Stats.BERSERKERS_KILLED())
+            stat.intValue = stat.intValue + 1
+
+            var playerPowerUp = playerVariables.GetCurrentPowerUp()
+            if(playerPowerUp != PowerUpType.NONE) {
+                var powerUpStat = engine.GetSteam().GetStat(Stats.ENEMIES_KILLED_WITH_RELIC())
+                powerUpStat.intValue = powerUpStat.intValue + 1
+            }
 
             var eventInstance = engine.GetAudio().PlayEventOnce(_hurtSFX)
             var growlInstance = engine.GetAudio().PlayEventOnce(_growlSFX)
@@ -220,7 +230,7 @@ class BerserkerEnemy {
 
                                 playerVariables.hud.IndicateDamage(pos)
                                 flashSystem.Flash(Vec3.new(1.0, 0.0, 0.0),0.85)
-                                var eventInstance = engine.GetAudio().PlayEventOnce(_hitSFX)
+                                engine.GetAudio().PlayEventOnce(_hitSFX)
                             }
                         }
                     }
@@ -262,7 +272,6 @@ class BerserkerEnemy {
 
                 if(_walkEventInstance == null || engine.GetAudio().IsEventPlaying(_walkEventInstance) == false) {
                     _walkEventInstance = engine.GetAudio().PlayEventLoop(_stepSFX)
-                    engine.GetAudio().SetEventVolume(_walkEventInstance, 1.0)
                     var audioEmitter = _rootEntity.GetAudioEmitterComponent()
                     audioEmitter.AddEvent(_walkEventInstance)
                 }

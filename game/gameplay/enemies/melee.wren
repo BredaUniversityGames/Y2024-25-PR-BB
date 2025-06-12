@@ -1,8 +1,9 @@
-import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, Perlin, Random
+import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, Perlin, Random, Stat, Stats
 import "../player.wren" for PlayerVariables
 import "../soul.wren" for Soul, SoulManager, SoulType
 import "../coin.wren" for Coin, CoinManager
 import "gameplay/flash_system.wren" for FlashSystem
+import "../station.wren" for PowerUpType
 
 class MeleeEnemy {
 
@@ -117,7 +118,7 @@ class MeleeEnemy {
         return false
     }
 
-    DecreaseHealth(amount, engine, coinManager, soulManager, waveSystem) {
+    DecreaseHealth(amount, engine, coinManager, soulManager, waveSystem, playerVariables) {
         var animations = _meshEntity.GetAnimationControlComponent()
         var body = _rootEntity.GetRigidbodyComponent()
 
@@ -151,7 +152,14 @@ class MeleeEnemy {
 
             _pointLight.intensity = 0
 
-            _pointLight.intensity = 0
+            var stat = engine.GetSteam().GetStat(Stats.SKELETONS_KILLED())
+            stat.intValue = stat.intValue + 1
+
+            var playerPowerUp = playerVariables.GetCurrentPowerUp()
+            if(playerPowerUp != PowerUpType.NONE) {
+                var powerUpStat = engine.GetSteam().GetStat(Stats.ENEMIES_KILLED_WITH_RELIC())
+                powerUpStat.intValue = powerUpStat.intValue + 1
+            }
 
             var eventInstance = engine.GetAudio().PlayEventOnce(_bonesSFX)
             
@@ -250,9 +258,9 @@ class MeleeEnemy {
 
                                 //Flash the screen red
                                 flashSystem.Flash(Vec3.new(105 / 255, 13 / 255, 1 / 255),0.75)
-                                
+
                                 playerVariables.hud.IndicateDamage(pos)
-                                var eventInstance = engine.GetAudio().PlayEventOnce(_hitSFX)
+                                engine.GetAudio().PlayEventOnce(_hitSFX)
                                 //animations.Play("Attack", 1.0, false, 0.1, false)
                             }
                         }
@@ -292,7 +300,6 @@ class MeleeEnemy {
 
                 if(_walkEventInstance == null || engine.GetAudio().IsEventPlaying(_walkEventInstance) == false) {
                     _walkEventInstance = engine.GetAudio().PlayEventLoop(_bonesStepsSFX)
-                    engine.GetAudio().SetEventVolume(_walkEventInstance, 8.0)
                     var audioEmitter = _rootEntity.GetAudioEmitterComponent()
                     audioEmitter.AddEvent(_walkEventInstance)
                 }

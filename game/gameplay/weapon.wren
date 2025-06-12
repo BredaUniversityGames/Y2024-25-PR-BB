@@ -192,15 +192,11 @@ class Pistol {
             // Play quad damage audio if needed
             if(playerVariables.GetCurrentPowerUp() == PowerUpType.QUAD_DAMAGE){
                 var quadEventInstance = engine.GetAudio().PlayEventOnce(_quadHit)
-                engine.GetAudio().SetEventVolume(quadEventInstance, 3.0)
-
                 audioEmitter.AddEvent(quadEventInstance)
             }
 
             if(playerVariables.GetCurrentPowerUp() == PowerUpType.DOUBLE_GUNS){
                 var dualEventInstance = engine.GetAudio().PlayEventOnce(_dualGunHit)
-                engine.GetAudio().SetEventVolume(dualEventInstance, 2.0)
-
                 audioEmitter.AddEvent(dualEventInstance)
             }   
 
@@ -267,7 +263,7 @@ class Pistol {
                                         playerVariables.hitmarkerState = HitmarkerState.normal
                                     }
                                     playerVariables.UpdateMultiplier()
-                                    enemy.DecreaseHealth(_damage * multiplier * playerVariables.GetDamageMultiplier(),engine,coinManager,soulManager,waveSystem)
+                                    enemy.DecreaseHealth(_damage * multiplier * playerVariables.GetDamageMultiplier(),engine,coinManager,soulManager,waveSystem, playerVariables)
                                     if (enemy.health <= 0) {
                                         playerVariables.IncreaseScore(5 * multiplier * playerVariables.multiplier)
                                         //playerVariables.UpdateUltCharge(1.0)
@@ -520,7 +516,7 @@ class Shotgun {
                                         hitAnEnemy = true
 
                                         playerVariables.hitmarkTimer = 200 //ms
-                                        enemy.DecreaseHealth(_damage,engine,coinManager,soulManager)
+                                        enemy.DecreaseHealth(_damage,engine,coinManager,soulManager, playerVariables)
 
                                         playerVariables.multiplierTimer = playerVariables.multiplierMaxTime
                                         playerVariables.IncreaseHealth(0.1 * _damage)

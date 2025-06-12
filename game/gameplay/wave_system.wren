@@ -1,4 +1,4 @@
-import "engine_api.wren" for Engine, ECS, Entity, Vec3, Vec2, Quat, Math, TransformComponent, Input, Random, ShapeFactory
+import "engine_api.wren" for Engine, ECS, Entity, Vec3, Vec2, Quat, Math, TransformComponent, Input, Random, ShapeFactory, Stat, Stats
 import "enemies/melee.wren" for MeleeEnemy
 import "enemies/ranged.wren" for RangedEnemy
 import "enemies/berserker.wren" for BerserkerEnemy
@@ -171,8 +171,10 @@ class WaveSystem {
         _currentWave = _currentWave + 1
 
         var eventInstance = engine.GetAudio().PlayEventOnce("event:/SFX/WaveStart")
-        engine.GetAudio().SetEventVolume(eventInstance, 1.5)
         _audioEmitter.AddEvent(eventInstance)
+
+        var stat = engine.GetSteam().GetStat(Stats.WAVES_REACHED())
+        stat.intValue = _currentWave
 
         if (_currentWave < _waveConfigs.count) {
             _enemyCount = 0

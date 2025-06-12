@@ -284,7 +284,6 @@ class PlayerMovement{
 
             //Jump sound
             var eventInstance = engine.GetAudio().PlayEventOnce(_jumpSFX)
-            engine.GetAudio().SetEventVolume(eventInstance, 1.8)
             var audioEmitter = camera.GetAudioEmitterComponent()
             audioEmitter.AddEvent(eventInstance)
         }else {
@@ -293,7 +292,6 @@ class PlayerMovement{
                 velocity = velocity + Vec3.new(0.0, jumpForce*1.5, 0.0)
                 //Jump sound
                 var eventInstance = engine.GetAudio().PlayEventOnce(_jumpSFX)
-                engine.GetAudio().SetEventVolume(eventInstance, 1.8)
                 var audioEmitter = camera.GetAudioEmitterComponent()
                 audioEmitter.AddEvent(eventInstance)
                 if(moveInputDir.length() > 0.01){
@@ -410,7 +408,6 @@ class PlayerMovement{
 
             //play dash sound
             var eventInstance = engine.GetAudio().PlayEventOnce(_dashSFX)
-            engine.GetAudio().SetEventVolume(eventInstance, 2.8)
             var audioEmitter = camera.GetAudioEmitterComponent()
             audioEmitter.AddEvent(eventInstance)
 

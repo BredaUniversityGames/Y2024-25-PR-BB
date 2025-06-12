@@ -42,7 +42,8 @@ ModuleTickOrder AudioModule::Init(MAYBE_UNUSED Engine& engine)
 
         // Lowpass DSP
         FMOD_CHECKRESULT(FMOD_System_CreateDSPByType(_coreSystem, FMOD_DSP_TYPE_LOWPASS, &_lowPassDSP));
-        FMOD_CHECKRESULT(FMOD_DSP_SetParameterFloat(_lowPassDSP, FMOD_DSP_LOWPASS_CUTOFF, 5000.f));
+        FMOD_CHECKRESULT(FMOD_DSP_SetParameterFloat(_lowPassDSP, FMOD_DSP_LOWPASS_CUTOFF, 8000.f));
+
         FMOD_CHECKRESULT(FMOD_DSP_SetActive(_lowPassDSP, true));
         FMOD_CHECKRESULT(FMOD_DSP_SetBypass(_lowPassDSP, true));
         FMOD_CHECKRESULT(FMOD_ChannelGroup_AddDSP(_masterGroup, FMOD_CHANNELCONTROL_DSP_TAIL, _lowPassDSP));
