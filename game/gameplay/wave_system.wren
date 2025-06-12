@@ -65,7 +65,7 @@ class WaveSystem {
         _currentWave = -1
         _waveTimer = 0.0
         _waveDelay = 4.0
-        _waveSlowdown = 0.3
+        _waveSlowdown = 0.25
         _enemyCount = 0
 
         _timeSpeed = 1.0
