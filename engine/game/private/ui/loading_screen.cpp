@@ -108,11 +108,12 @@ void LoadingScreen::SetDisplayTextColor(glm::vec4 color)
 void LoadingScreen::ShowContinuePrompt()
 {
     std::shared_ptr<UITextElement> textLeft = _continueTextLeft.lock();
+    std::shared_ptr<UITextElement> textRight = _continueTextRight.lock();
+    
     auto visualizations = _inputVisualizationsCache.GetDigital("Interact");
 
     if (!visualizations[0].glyphImage.IsNull()) // Controller with glyphs
     {
-        std::shared_ptr<UITextElement> textRight = _continueTextRight.lock();
         std::shared_ptr<UIImage> glyph = _continueGlyph.lock();
 
         textLeft->SetText("Press ");
