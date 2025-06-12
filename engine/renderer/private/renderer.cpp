@@ -11,6 +11,7 @@
 #include "camera_batch.hpp"
 #include "colors.hpp"
 #include "ecs_module.hpp"
+#include "file_io.hpp"
 #include "fonts.hpp"
 #include "frame_graph.hpp"
 #include "gbuffers.hpp"
@@ -553,7 +554,8 @@ void Renderer::InitializeSSAOTarget()
 void Renderer::LoadEnvironmentMap()
 {
     int32_t width, height, numChannels;
-    float* stbiData = stbi_loadf("assets/hdri/kloofendal_misty_morning_puresky_2k copy.hdr", &width, &height, &numChannels, 4);
+    auto stream = fileIO::OpenReadStream("assets/hdri/kloofendal_misty_morning_puresky_2k copy.hdr");
+    float* stbiData = fileIO::LoadFloatImageFromIfstream(stream.value(), &width, &height, &numChannels, 4);
 
     if (stbiData == nullptr)
         throw std::runtime_error("Failed loading HDRI!");

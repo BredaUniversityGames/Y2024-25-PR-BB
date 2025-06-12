@@ -10,6 +10,7 @@
 #include "profile_macros.hpp"
 #include "resource_management/image_resource_manager.hpp"
 #include "resource_management/mesh_resource_manager.hpp"
+#include "file_io.hpp"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -476,7 +477,8 @@ CPUImage ProcessImage(const fastgltf::Image& gltfImage, const fastgltf::Asset& g
                        int32_t width, height, nrChannels;
 
                        const std::string path(filePath.uri.path().begin(), filePath.uri.path().end()); // Thanks C++.
-                       stbi_uc* stbiData = stbi_load(path.c_str(), &width, &height, &nrChannels, 4);
+                       auto stream = fileIO::OpenReadStream(path);
+                       stbi_uc* stbiData = fileIO::LoadImageFromIfstream(stream.value(), &width, &height, &nrChannels, 4);
                        if (!stbiData)
                            bblog::error("Failed loading data from STBI at path: {}", path);
 

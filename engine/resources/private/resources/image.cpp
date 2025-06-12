@@ -2,6 +2,7 @@
 #include "profile_macros.hpp"
 #include "vulkan_helper.hpp"
 
+#include <file_io.hpp>
 #include <stb_image.h>
 
 CPUImage& CPUImage::FromPNG(std::string_view path)
@@ -10,7 +11,8 @@ CPUImage& CPUImage::FromPNG(std::string_view path)
     int height;
     int nrChannels;
 
-    std::byte* data = reinterpret_cast<std::byte*>(stbi_load(std::string(path).c_str(),
+    auto stream = fileIO::OpenReadStream(std::string(path));
+    std::byte* data = reinterpret_cast<std::byte*>(fileIO::LoadImageFromIfstream(stream.value(),
         &width, &height, &nrChannels,
         4));
 

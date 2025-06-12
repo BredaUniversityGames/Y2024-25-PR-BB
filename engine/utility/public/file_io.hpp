@@ -4,6 +4,7 @@
 #include <chrono>
 #include <fstream>
 #include <optional>
+#include <stb_image.h>
 #include <string>
 #include <vector>
 
@@ -53,4 +54,6 @@ bool MakeDirectory(const std::string& path);
 /// </summary>
 std::optional<FileTime> GetLastModifiedTime(const std::string& path);
 
+float* LoadFloatImageFromIfstream(PhysFS::ifstream& file, int32_t* x, int32_t* y, int32_t* channels_in_file, int32_t desired_channels);
+stbi_uc* LoadImageFromIfstream(PhysFS::ifstream& file, int32_t* x, int32_t* y, int32_t* channels_in_file, int32_t desired_channels);
 };
