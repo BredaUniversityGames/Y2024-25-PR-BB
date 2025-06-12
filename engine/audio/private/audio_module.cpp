@@ -67,6 +67,23 @@ void AudioModule::Shutdown(MAYBE_UNUSED Engine& engine)
 {
     if (_studioSystem)
     {
+        Reset();
+        // 4. Release DSPs
+
+        if (_masterGroup && _lowPassDSP)
+        {
+            FMOD_CHECKRESULT(FMOD_ChannelGroup_RemoveDSP(_masterGroup, _lowPassDSP));
+            FMOD_CHECKRESULT(FMOD_DSP_Release(_lowPassDSP));
+            _lowPassDSP = nullptr;
+        }
+
+        if (_masterGroup && _fftDSP)
+        {
+            FMOD_CHECKRESULT(FMOD_ChannelGroup_RemoveDSP(_masterGroup, _fftDSP));
+            FMOD_CHECKRESULT(FMOD_DSP_Release(_fftDSP));
+            _fftDSP = nullptr;
+        }
+
         FMOD_CHECKRESULT(FMOD_Studio_System_Release(_studioSystem));
     }
 
@@ -81,6 +98,9 @@ void AudioModule::Reset()
     for (auto& [_, event] : _events)
     {
         if (event == nullptr)
+            continue;
+
+        if (!FMOD_Studio_EventInstance_IsValid(event))
             continue;
 
         FMOD_CHECKRESULT(FMOD_Studio_EventInstance_Stop(event, FMOD_STUDIO_STOP_IMMEDIATE));
@@ -338,6 +358,9 @@ void AudioModule::StopEvent(const EventInstance instance)
 {
     if (_events.contains(instance.id))
     {
+        if (!FMOD_Studio_EventInstance_IsValid(_events[instance.id]))
+            return;
+
         FMOD_CHECKRESULT(FMOD_Studio_EventInstance_Stop(_events[instance.id], FMOD_STUDIO_STOP_ALLOWFADEOUT));
         FMOD_CHECKRESULT(FMOD_Studio_EventInstance_Release(_events[instance.id]));
     }
@@ -362,6 +385,9 @@ void AudioModule::SetEventVolume(EventInstance ev, float volume)
 {
     if (const auto it = _events.find(ev.id); it != _events.end())
     {
+        if (!FMOD_Studio_EventInstance_IsValid(_events[ev.id]))
+            return;
+
         FMOD_CHECKRESULT(FMOD_Studio_EventInstance_SetVolume(it->second, volume));
     }
 }
@@ -370,6 +396,9 @@ void AudioModule::SetEventFloatAttribute(EventInstance ev, const std::string& na
 {
     if (const auto it = _events.find(ev.id); it != _events.end())
     {
+        if (!FMOD_Studio_EventInstance_IsValid(_events[ev.id]))
+            return;
+
         FMOD_CHECKRESULT(FMOD_Studio_EventInstance_SetParameterByName(it->second, name.c_str(), val, false));
     }
 }
@@ -387,6 +416,10 @@ void AudioModule::SetListener3DAttributes(const glm::vec3& position, const glm::
 
 void AudioModule::SetEvent3DAttributes(EventInstance instance, const glm::vec3& position, const glm::vec3& velocity, const glm::vec3& forward, const glm::vec3& up)
 {
+    // This should never happen but lets avoid a hard crash
+    if (!FMOD_Studio_EventInstance_IsValid(_events[instance.id]))
+        return;
+
     if (!_events.contains(instance.id))
     {
         bblog::warn("Tried to update event 3d attributes, of event that isn't playing");
