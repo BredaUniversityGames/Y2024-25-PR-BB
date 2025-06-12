@@ -7,7 +7,7 @@
     "assets",
     "shaders/bin",
     "game",
-    "input"
+    "content"
   ],
   "files": [
     "build/x64-Distribution/steam_api64.dll",

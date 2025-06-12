@@ -7,7 +7,7 @@
     "assets",
     "shaders/bin",
     "game",
-    "input"
+    "content"
   ],
   "files": [
     "build/WSL-RelWithDebInfo/libsteam_api.so",
