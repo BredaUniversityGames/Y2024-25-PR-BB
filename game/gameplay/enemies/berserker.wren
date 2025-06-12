@@ -23,6 +23,10 @@ class BerserkerEnemy {
         _attackTiming = 1200 // TODO: Should be added to small melee enemies
         _recoveryMaxTime = 500
         _deathTimerMax = 3000
+        _reasonTimeout = 2000
+        _waypointRadius = 5.0
+        _honeInRadius = 30.0
+        _honeInMaxAltitude = 4.0
 
         _growlSFX = "event:/SFX/DemonGrowl"
         _hurtSFX = "event:/SFX/DemonHurt"
@@ -64,7 +68,7 @@ class BerserkerEnemy {
 
         var rb = Rigidbody.new(engine.GetPhysics(), colliderShape, PhysicsObjectLayer.eENEMY(), false)
         var body = _rootEntity.AddRigidbodyComponent(rb)
-        body.SetGravityFactor(2.2)
+        body.SetGravityFactor(10.0)
 
         var animations = _meshEntity.GetAnimationControlComponent()
         animations.Play("Walk", 0.528, true, 1.0, true)
@@ -73,7 +77,6 @@ class BerserkerEnemy {
 
         _currentPath = null
         _currentPathNodeIdx = null
-        _honeInRadius = 30.0
 
         _isAlive = true
 
@@ -324,23 +327,28 @@ class BerserkerEnemy {
         var body = _rootEntity.GetRigidbodyComponent()
         var pos = body.GetPosition()
 
-        if(Math.Distance(position, engine.GetECS().GetEntityByName("Player").GetTransformComponent().GetWorldTranslation()) > _honeInRadius) {
+        var distToPlayer = Math.Distance(pos, playerPos)
+        var altitudeToPlayer = Math.Distance(Vec3.new(0.0, pos.y, 0.0), Vec3.new(0.0, playerPos.y, 0.0))
+
+        if(distToPlayer > _honeInRadius || altitudeToPlayer > _honeInMaxAltitude) {
             _reasonTimer = _reasonTimer + dt
-            if(_reasonTimer > 2000) {
+            if(_reasonTimer > _reasonTimeout) {
                 this.FindNewPath(engine)
                 _reasonTimer = 0
             }
         } else {
             _currentPath = null
-            _reasonTimer = 2001
+            _reasonTimer = _reasonTimeout + 1.0
         }
+
+        var forwardVector = Vec3.new(0.0, 0.0, 0.0)
 
         // Pathfinding logic
         if(_currentPath != null && _currentPath.GetWaypoints().count > 0) {
             var bias = 0.01
             var waypoint = _currentPath.GetWaypoints()[_currentPathNodeIdx]
 
-            if(Math.Distance(waypoint.center, pos) < 3.0 + bias) {
+            if(Math.Distance(waypoint.center, pos) < 5.0 + bias) {
                 _currentPathNodeIdx = _currentPathNodeIdx + 1
                 if(_currentPathNodeIdx == _currentPath.GetWaypoints().count) {
                     body.SetVelocity(Vec3.new(0.0, 0.0, 0.0))
@@ -358,30 +366,22 @@ class BerserkerEnemy {
 
             var dst = Math.Distance(pos, p1.center)
             var target = Math.MixVec3(p1.center, p2.center, dst * bias)
-            var forwardVector = (target - pos).normalize()
-
-            _rootEntity.GetRigidbodyComponent().SetVelocity(forwardVector.mulScalar(_maxVelocity))
-            
-            // Set forward rotation
-            var endRotation = Math.LookAt(Vec3.new(forwardVector.x, 0, forwardVector.z), Vec3.new(0, 1, 0))
-            var startRotation = body.GetRotation()
-            body.SetRotation(Math.Slerp(startRotation, endRotation, 0.01 *dt))
+            forwardVector = target - pos
         }else{
-            var forwardVector = playerPos - position
-            forwardVector.y = 0
-            forwardVector = (forwardVector.normalize() + _rootEntity.GetRigidbodyComponent().GetVelocity())
-            var maxVelocityScalar = 1.0
-            if(forwardVector.length() >= _maxVelocity) {
-                maxVelocityScalar = _maxVelocity / forwardVector.length()
+            forwardVector = (playerPos - position).normalize()
+            var localSteerForward = this.LocalSteer(engine, pos, forwardVector, playerPos)
+            if(localSteerForward) {
+                forwardVector = localSteerForward
             }
-
-            var factor = Vec3.new(maxVelocityScalar, 1.0, maxVelocityScalar)
-            _rootEntity.GetRigidbodyComponent().SetVelocity(forwardVector * factor)
-
-            var endRotation = Math.LookAt(Vec3.new(forwardVector.x, 0, forwardVector.z), Vec3.new(0, 1, 0))
-            var startRotation = body.GetRotation()
-            body.SetRotation(Math.Slerp(startRotation, endRotation, 0.01 *dt))
         }
+
+        forwardVector = forwardVector.normalize()
+        forwardVector = (_rootEntity.GetRigidbodyComponent().GetVelocity() + forwardVector).normalize()
+        _rootEntity.GetRigidbodyComponent().SetVelocity(forwardVector.mulScalar(_maxVelocity))
+
+        var endRotation = Math.LookAt(Vec3.new(forwardVector.x, 0, forwardVector.z), Vec3.new(0, 1, 0))
+        var startRotation = body.GetRotation()
+        body.SetRotation(Math.Slerp(startRotation, endRotation, 0.01 *dt))
     }
 
     FindNewPath(engine) {
@@ -389,6 +389,123 @@ class BerserkerEnemy {
         _currentPath = engine.GetPathfinding().FindPath(startPos, engine.GetECS().GetEntityByName("Player").GetTransformComponent().GetWorldTranslation())
         
         _currentPathNodeIdx = 1
+    }
+
+    // Returns a corrected vector or null if no objects were found
+    LocalSteer(engine, position, forwardVector, playerPosition) {
+        var seekDepth = 4.0
+        var rayCount = 10
+        var rayAngle = 20 // degrees
+
+        var forwardVectorPosY = forwardVector
+        forwardVectorPosY.y = Math.Max(forwardVectorPosY.y, 0.0001)
+        forwardVectorPosY = forwardVectorPosY.normalize()
+
+        var forwardOffset = 1.3
+
+        //------------------------------------------------------------------------------//
+        // Compute offset for raycasting (feet or chest if we're approaching a slope)   //
+        //------------------------------------------------------------------------------//
+        var offset = Vec3.new(0.0, -2.3, 0.0) // Offset to feet of berserker
+        offset = offset + forwardVectorPosY.mulScalar(forwardOffset)
+
+        // Check whether we're approaching a slope
+        var rayHitInfos = engine.GetPhysics().ShootRay(position + offset, forwardVectorPosY, seekDepth)
+        var closestHitFractionIndex = 0
+        var closestHitFraction = 1.0
+        for(i in 0...rayHitInfos.count) {
+            var hitInfo = rayHitInfos[i]
+
+            if(hitInfo.hitFraction < closestHitFraction) {
+                closestHitFraction = hitInfo.hitFraction
+                closestHitFractionIndex = i
+            }
+        }
+
+        if(rayHitInfos.count > 0) {
+            if(Math.Dot(rayHitInfos[closestHitFractionIndex].normal, Vec3.new(0.0, 1.0, 0.0)) > 0.5) {
+                offset = Vec3.new(0.0, 0.0, 0.0) + forwardVectorPosY.mulScalar(forwardOffset)
+            }
+        }
+
+        //--------------------------------------------------------------//
+        // Local steering behaviour                                     //
+        // Shoots out rays in angle and steers away from closest hits   //
+        // 1) Regular behaviour                                         //
+        // 2) If all hits are roughly equal steer a hard left or right  //
+        // 3) No obstacles in the way, resume regular path              //
+        //--------------------------------------------------------------//
+
+        var angleStep = Math.Radians(rayAngle) / (rayCount / 2)
+        var offsetDirection = Vec3.new(0, 0, 0)
+        var hardSteer = false
+
+        // Local steer
+        // Find closest ray hit and add this to the offsetDirection vector
+        if(hardSteer == false) {
+            for(i in 0...rayCount) {
+                var angleOffset = (i-(rayCount - 1) / 2.0) * angleStep
+                var rotatedDirection = Math.RotateY(forwardVectorPosY, angleOffset)
+
+                var hitInfos = engine.GetPhysics().ShootRay(position + offset, rotatedDirection, seekDepth)
+                var lowestHitFraction = 1.0
+                var lowestHitFractionIndex = 0
+                for(j in 0...hitInfos.count) {
+
+                    var ray = hitInfos[j]
+
+                    if(ray.GetEntity(engine.GetECS()).GetEnttEntity() == _rootEntity.GetEnttEntity() /*||
+                        ray.GetEntity(engine.GetECS()).GetEnttEntity() == engine.GetECS().GetEntityByName("Player").GetEnttEntity()*/) {
+                        continue
+                    }
+
+                    if(ray.hitFraction < lowestHitFraction) {
+                        lowestHitFraction = ray.hitFraction
+                        lowestHitFractionIndex = j
+                    }
+                }
+
+                if(hitInfos.count > 0) {
+                    offsetDirection = offsetDirection + (position - hitInfos[lowestHitFractionIndex].position)
+                }
+            }
+
+            // If we hit nothing
+            if(offsetDirection.length() < 0.001) {
+                return null
+            }
+
+            offsetDirection = offsetDirection.normalize()
+            var absDot = Math.Abs(Math.Dot(forwardVector, offsetDirection))
+
+            if(absDot > 0.6) {
+                // if the raycast results is a vector that is nearly a negated forward vector
+                // steer either hard left or right (random chance for either)
+                hardSteer = true
+            } else {
+                if(absDot < 0.001) {
+                    // if no hits (or too subtle) keep same forward vector
+                } else {
+                    // regular steering behavior
+                    forwardVector = forwardVector - offsetDirection
+                }
+            }
+        }
+
+        if(hardSteer) {
+            var angle = 0.0
+
+            var index = Random.RandomIndex(0, 1)
+            if(index == 0) {
+                angle = -90.0
+            } else {
+                angle = 90.0
+            }
+
+            forwardVector = Math.RotateY(forwardVector, angle)
+        }
+
+        return forwardVector
     }
 
     Destroy(engine) {

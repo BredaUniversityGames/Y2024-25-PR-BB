@@ -44,6 +44,10 @@ class WaveGenerator {
         var eyeCount = Math.Floor(eyePoints / 4)
         var berserkerCount = Math.Floor(berserkerPoints / 7)
 
+        skeletonCount = 0
+        eyeCount = 0
+        berserkerCount = 1
+
         wave.SetEnemySpawnCount(EnemyType.Skeleton, skeletonCount)
             .SetEnemySpawnCount(EnemyType.Eye, eyeCount)
             .SetEnemySpawnCount(EnemyType.Berserker, berserkerCount)
