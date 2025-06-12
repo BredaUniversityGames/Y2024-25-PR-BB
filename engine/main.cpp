@@ -7,6 +7,7 @@
 #include "main_engine.hpp"
 #include "particle_module.hpp"
 #include "pathfinding_module.hpp"
+#include "physfs.hpp"
 #include "physics_module.hpp"
 #include "profile_macros.hpp"
 #include "renderer_module.hpp"
@@ -15,47 +16,6 @@
 #include "thread_module.hpp"
 #include "time_module.hpp"
 #include "ui_module.hpp"
-
-#include "physfs.hpp"
-void listFilesInDir(const std::string& path, int indent = 0)
-{
-    char** rc = PHYSFS_enumerateFiles(path.c_str());
-    for (char** i = rc; *i != nullptr; i++)
-    {
-        std::string fullPath = path.empty() ? *i : path + "/" + *i;
-        std::string indentStr(indent * 2, ' ');
-
-        if (PHYSFS_isDirectory(fullPath.c_str()))
-        {
-            spdlog::info("{}[DIR] {}", indentStr, *i);
-            listFilesInDir(fullPath, indent + 1);
-        }
-        else
-        {
-            spdlog::info("{}{}", indentStr, *i);
-        }
-    }
-    PHYSFS_freeList(rc);
-}
-
-void dumpVFS()
-{
-    spdlog::info("==== VFS Dump Start ====");
-
-    // Dump search paths
-    char** paths = PHYSFS_getSearchPath();
-    for (char** p = paths; *p != nullptr; p++)
-    {
-        spdlog::info("Mounted path: {}", *p);
-    }
-    PHYSFS_freeList(paths);
-
-    // Dump file tree from root
-    spdlog::info("Filesystem contents:");
-    listFilesInDir("");
-
-    spdlog::info("==== VFS Dump End ====");
-}
 
 int Main()
 {
@@ -69,19 +29,19 @@ int Main()
         return 1;
     }
 
-    // if (!PhysFS::mount("./", "/", true))
-    //{
-    //     bblog::error("Failed mounting PhysFS!\n{}", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
-    //     return 1;
-    // }
-
-    if (!PhysFS::mount("stuff.zip", "", true))
+#ifdef DISTRIBUTION
+    if (!PhysFS::mount("data.bin", "", true))
     {
         bblog::error("Failed mounting PhysFS!\n{}", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
-        // return 1;
+        return 1;
     }
-
-    dumpVFS();
+#else
+    if (!PhysFS::mount("./", "/", true))
+    {
+        bblog::error("Failed mounting PhysFS!\n{}", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
+        return 1;
+    }
+#endif
 
     MainEngine instance;
     Stopwatch startupTimer {};

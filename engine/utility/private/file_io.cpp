@@ -29,7 +29,7 @@ std::optional<PhysFS::ofstream> fileIO::OpenWriteStream(const std::string& path)
 
     try
     {
-        return std::optional<PhysFS::ofstream> { path };
+        return std::nullopt; // std::optional<PhysFS::ofstream> { path };
     }
     catch (...)
     {

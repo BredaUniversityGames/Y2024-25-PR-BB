@@ -57,9 +57,9 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     auto font = LoadFromFile("assets/fonts/BLOODROSE.ttf", 100, graphicsContext);
     font->metrics.charSpacing = 0;
 
-    if (auto versionFile = fileIO::OpenReadStream("version.txt"))
+    if (auto versionFile = std::ifstream("version.txt"))
     {
-        std::string gameVersionText = fileIO::DumpStreamIntoString(versionFile.value());
+        std::string gameVersionText = fileIO::DumpStreamIntoString(versionFile);
         viewport.AddElement(GameVersionVisualization::Create(graphicsContext, viewportSize, font, gameVersionText));
     }
 
