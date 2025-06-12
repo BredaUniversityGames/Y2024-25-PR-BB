@@ -67,7 +67,7 @@ ModuleTickOrder GameModule::Init(Engine& engine)
 
     _mainMenu = viewport.AddElement(MainMenu::Create(graphicsContext, viewportSize, font));
     _hud = viewport.AddElement(HUD::Create(graphicsContext, viewportSize, font));
-    _loadingScreen = viewport.AddElement(LoadingScreen::Create(graphicsContext, viewportSize, font));
+    _loadingScreen = viewport.AddElement(LoadingScreen::Create(graphicsContext, *_bindingsVisualizationCache, viewportSize, font));
     _pauseMenu = viewport.AddElement(PauseMenu::Create(graphicsContext, viewportSize, font));
     _gameOver = viewport.AddElement(GameOverMenu::Create(graphicsContext, viewportSize, font));
     _controlsMenu = viewport.AddElement(ControlsMenu::Create(viewportSize, graphicsContext, *_bindingsVisualizationCache, engine.GetModule<ApplicationModule>().GetActionManager(), font));

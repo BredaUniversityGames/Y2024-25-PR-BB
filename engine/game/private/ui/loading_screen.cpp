@@ -6,9 +6,9 @@
 #include "ui_image.hpp"
 #include "ui_text.hpp"
 
-std::shared_ptr<LoadingScreen> LoadingScreen::Create(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution, std::shared_ptr<UIFont> font)
+std::shared_ptr<LoadingScreen> LoadingScreen::Create(GraphicsContext& graphicsContext, InputBindingsVisualizationCache& inputVisualizationsCache, const glm::uvec2& screenResolution, std::shared_ptr<UIFont> font)
 {
-    auto loading = std::make_shared<LoadingScreen>(screenResolution);
+    auto loading = std::make_shared<LoadingScreen>(screenResolution, inputVisualizationsCache);
 
     loading->_font = font;
 
@@ -102,7 +102,13 @@ void LoadingScreen::SetDisplayTextColor(glm::vec4 color)
 
 void LoadingScreen::ShowContinuePrompt()
 {
-    _continueText.lock()->display_color = { 1.0f, 1.0f, 1.0f, 1.0f };
+    std::shared_ptr<UITextElement> text = _continueText.lock();
+
+    auto visualizations = _inputVisualizationsCache.GetDigital("Interact");
+    std::string continueText = "Press " + visualizations[0].bindingInputName +  " to continue";
+    text->SetText(continueText);
+
+    text->display_color = { 1.0f, 1.0f, 1.0f, 1.0f };
 }
 
 void LoadingScreen::HideContinuePrompt()

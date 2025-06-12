@@ -105,10 +105,11 @@ class LoadingScreen : public Canvas
     static constexpr uint32_t MAX_LINE_BREAKS = 5;
 
 public:
-    static std::shared_ptr<LoadingScreen> Create(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution, std::shared_ptr<UIFont> font);
+    static std::shared_ptr<LoadingScreen> Create(GraphicsContext& graphicsContext, InputBindingsVisualizationCache& inputVisualizationsCache, const glm::uvec2& screenResolution, std::shared_ptr<UIFont> font);
 
-    LoadingScreen(const glm::uvec2& screenResolution)
+    LoadingScreen(const glm::uvec2& screenResolution, InputBindingsVisualizationCache& inputVisualizationsCache)
         : Canvas(screenResolution)
+        , _inputVisualizationsCache(inputVisualizationsCache)
     {
     }
 
@@ -120,6 +121,7 @@ public:
 private:
     constexpr static float _textSize = 100.0f;
 
+    InputBindingsVisualizationCache& _inputVisualizationsCache;
     std::array<std::weak_ptr<UITextElement>, MAX_LINE_BREAKS> _displayTexts;
     std::weak_ptr<UITextElement> _continueText;
     std::weak_ptr<UIFont> _font;
