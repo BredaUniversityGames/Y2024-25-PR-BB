@@ -207,6 +207,11 @@ public:
         return glm::slerp(from, to, t);
     }
 
+    static float Pow(float x, float e)
+    {
+        return std::powf(x, e);
+    }
+  
     static glm::vec3 RotateY(const glm::vec3& v, float angle)
     {
         return glm::rotateY(v, angle);
@@ -299,6 +304,7 @@ inline void BindMath(wren::ForeignModule& module)
         mathUtilClass.funcStatic<&MathUtil::Sqrt>("Sqrt");
         mathUtilClass.funcStatic<&MathUtil::Abs>("Abs");
         mathUtilClass.funcStatic<&MathUtil::PI>("PI");
+        mathUtilClass.funcStatic<&MathUtil::Pow>("Pow");
         mathUtilClass.funcStatic<&MathUtil::TwoPI>("TwoPI");
         mathUtilClass.funcStatic<&MathUtil::HalfPI>("HalfPI");
         mathUtilClass.funcStatic<&MathUtil::Distance>("Distance");
