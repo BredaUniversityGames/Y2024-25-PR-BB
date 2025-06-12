@@ -8,11 +8,11 @@
 #include "resource_management/image_resource_manager.hpp"
 #include "resource_management/sampler_resource_manager.hpp"
 
-std::shared_ptr<ControlsMenu> ControlsMenu::Create(const glm::uvec2& screenResolution, GraphicsContext& graphicsContext, ActionManager& actionManager, std::shared_ptr<UIFont> font)
+std::shared_ptr<ControlsMenu> ControlsMenu::Create(const glm::uvec2& screenResolution, GraphicsContext& graphicsContext, InputBindingsVisualizationCache& inputVisualizationsCache, ActionManager& actionManager, std::shared_ptr<UIFont> font)
 {
     constexpr glm::ivec2 popupResolution(423.0f * 5, 233.0f * 5);
 
-    auto menu = std::make_shared<ControlsMenu>(screenResolution, popupResolution, graphicsContext, actionManager, font);
+    auto menu = std::make_shared<ControlsMenu>(screenResolution, popupResolution, graphicsContext, inputVisualizationsCache, actionManager, font);
     menu->anchorPoint = UIElement::AnchorPoint::eMiddle;
     menu->SetAbsoluteTransform(menu->GetAbsoluteLocation(), screenResolution);
 
@@ -148,10 +148,10 @@ ControlsMenu::ActionControls ControlsMenu::AddActionVisualization(const std::str
     action.nameText->anchorPoint = UIElement::AnchorPoint::eTopLeft;
     action.nameText->SetLocation({ 0.0f, 0.0f });
 
-    const std::vector<BindingOriginVisual> blindingOrigins = isAnalogInput ? _actionManager.GetAnalogActionBindingOriginVisual(actionName) : _actionManager.GetDigitalActionBindingOriginVisual(actionName);
+    const std::vector<CachedBindingOriginVisual> blindingOrigins = isAnalogInput ? _inputVisualizationsCache.GetAnalog(actionName) : _inputVisualizationsCache.GetDigital(actionName);
     float horizontalOffset = _canvasResolution.x / 6.0f;
 
-    for (const BindingOriginVisual& origin : blindingOrigins)
+    for (const CachedBindingOriginVisual& origin : blindingOrigins)
     {
         ActionControls::Binding& binding = action.bindings.emplace_back();
 
@@ -164,13 +164,12 @@ ControlsMenu::ActionControls ControlsMenu::AddActionVisualization(const std::str
         horizontalOffset += binding.originName->GetAbsoluteScale().x * actionOriginBindingTextSize * origin.bindingInputName.length() + glyphHorizontalMargin * actionOriginBindingTextMarginMultiplier;
 
         // Create glyph
-        if (!origin.glyphImagePath.empty())
+        if (!origin.glyphImage.IsNull())
         {
-            ResourceHandle<GPUImage> glyphImage = GetGlyphImage(origin.glyphImagePath);
-            const GPUImage* gpuImage = _graphicsContext.Resources()->ImageResourceManager().Access(glyphImage);
+            const GPUImage* gpuImage = _graphicsContext.Resources()->ImageResourceManager().Access(origin.glyphImage);
 
             glm::vec2 size = glm::vec2(gpuImage->width, gpuImage->height) * 0.15f;
-            binding.glyph = action.canvas->AddChild<UIImage>(glyphImage, glm::vec2(horizontalOffset, 0.0f), size);
+            binding.glyph = action.canvas->AddChild<UIImage>(origin.glyphImage, glm::vec2(horizontalOffset, 0.0f), size);
             binding.glyph->anchorPoint = UIElement::AnchorPoint::eTopLeft;
         }
 
@@ -178,23 +177,6 @@ ControlsMenu::ActionControls ControlsMenu::AddActionVisualization(const std::str
     }
 
     return action;
-}
-
-ResourceHandle<GPUImage> ControlsMenu::GetGlyphImage(const std::string& path)
-{
-    auto it = _glyphsCache.find(path);
-    if (it != _glyphsCache.end())
-    {
-        return it->second;
-    }
-
-    CPUImage glyphCPUImage;
-    glyphCPUImage.format = vk::Format::eR8G8B8A8Unorm;
-    glyphCPUImage.SetFlags(vk::ImageUsageFlagBits::eSampled);
-    glyphCPUImage.FromPNG(path);
-
-    _glyphsCache[path] = _graphicsContext.Resources()->ImageResourceManager().Create(glyphCPUImage, sampler);
-    return _glyphsCache[path];
 }
 
 void ControlsMenu::ClearBindings()

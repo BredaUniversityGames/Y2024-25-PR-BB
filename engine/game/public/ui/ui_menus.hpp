@@ -3,9 +3,9 @@
 #include "fonts.hpp"
 #include "ui_slider.hpp"
 #include "ui_toggle.hpp"
-
+#include "InputBindingsVisualizationCache.hpp"
+#include "ui_button.hpp"
 #include <array>
-#include <ui_button.hpp>
 
 class UIImage;
 class UITextElement;
@@ -161,11 +161,12 @@ class Engine;
 class ControlsMenu : public Canvas
 {
 public:
-    static std::shared_ptr<ControlsMenu> Create(const glm::uvec2& screenResolution, GraphicsContext& graphicsContext, ActionManager& actionManager, std::shared_ptr<UIFont> font);
+    static std::shared_ptr<ControlsMenu> Create(const glm::uvec2& screenResolution, GraphicsContext& graphicsContext, InputBindingsVisualizationCache& inputVisualizationsCache, ActionManager& actionManager, std::shared_ptr<UIFont> font);
 
-    ControlsMenu(const glm::uvec2& screenResolution, const glm::ivec2 canvasResolution, GraphicsContext& graphicsContext, ActionManager& actionManager, std::shared_ptr<UIFont> font)
+    ControlsMenu(const glm::uvec2& screenResolution, const glm::ivec2 canvasResolution, GraphicsContext& graphicsContext, InputBindingsVisualizationCache& inputVisualizationsCache, ActionManager& actionManager, std::shared_ptr<UIFont> font)
         : Canvas(screenResolution)
         , _graphicsContext(graphicsContext)
+        , _inputVisualizationsCache(inputVisualizationsCache)
         , _actionManager(actionManager)
         , _font(font)
         , _canvasResolution(canvasResolution)
@@ -203,14 +204,12 @@ public:
 
 private:
     GraphicsContext& _graphicsContext;
+    InputBindingsVisualizationCache& _inputVisualizationsCache;
     ActionManager& _actionManager;
     std::shared_ptr<UIFont> _font;
     const glm::uvec2 _canvasResolution;
 
-    std::unordered_map<std::string, ResourceHandle<GPUImage>> _glyphsCache {};
-
     ActionControls AddActionVisualization(const std::string& actionName, Canvas& parent, float positionY, bool isAnalogInput);
-    ResourceHandle<GPUImage> GetGlyphImage(const std::string& path);
     void ClearBindings();
 };
 

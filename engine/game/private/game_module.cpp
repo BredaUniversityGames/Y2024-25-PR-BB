@@ -70,7 +70,7 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     _loadingScreen = viewport.AddElement(LoadingScreen::Create(graphicsContext, viewportSize, font));
     _pauseMenu = viewport.AddElement(PauseMenu::Create(graphicsContext, viewportSize, font));
     _gameOver = viewport.AddElement(GameOverMenu::Create(graphicsContext, viewportSize, font));
-    _controlsMenu = viewport.AddElement(ControlsMenu::Create(viewportSize, graphicsContext, engine.GetModule<ApplicationModule>().GetActionManager(), font));
+    _controlsMenu = viewport.AddElement(ControlsMenu::Create(viewportSize, graphicsContext, *_bindingsVisualizationCache, engine.GetModule<ApplicationModule>().GetActionManager(), font));
     _creditsMenu = viewport.AddElement(CreditsMenu::Create(engine, graphicsContext, viewportSize, font));
 
     gameSettings = GameSettings::FromFile(GAME_SETTINGS_FILE);
