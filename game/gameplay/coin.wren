@@ -1,4 +1,4 @@
-import "engine_api.wren" for Engine, ECS, Entity, Vec3, Vec2, Math, AnimationControlComponent, TransformComponent, Input, SpawnEmitterFlagBits, ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Random, Stat, Stats
+import "engine_api.wren" for Engine, ECS, Entity, Vec3, Achievements, Vec2, Math, AnimationControlComponent, TransformComponent, Input, SpawnEmitterFlagBits, ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Random, Stat, Stats
 import "gameplay/player.wren" for PlayerVariables
 import "gameplay/flash_system.wren" for FlashSystem
 
@@ -107,6 +107,7 @@ class Coin {
                 
                 var stat = engine.GetSteam().GetStat(Stats.GOLD_NUGGETS_COLLECTED())
                 stat.intValue = stat.intValue + 1
+                engine.GetSteam().Unlock(Achievements.FIRST_GOLD_NUGGET_COLLECTED())
 
                 // Play flash effect
                 //flashSystem.Flash(Vec3.new(0.89, 0.77, 0.06),0.1)

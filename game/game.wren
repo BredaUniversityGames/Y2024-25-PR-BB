@@ -1,4 +1,4 @@
-import "engine_api.wren" for Engine, TimeModule, ECS, ShapeFactory, PhysicsObjectLayer, Rigidbody, RigidbodyComponent, CollisionShape, Entity, Vec3, Vec2, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, Random, Stat, Stats
+import "engine_api.wren" for Engine, TimeModule, ECS, ShapeFactory, PhysicsObjectLayer, Achievements, Rigidbody, RigidbodyComponent, CollisionShape, Entity, Vec3, Vec2, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, Random, Stat, Stats
 import "gameplay/movement.wren" for PlayerMovement
 import "gameplay/weapon.wren" for Pistol, Shotgun, Weapons
 import "gameplay/camera.wren" for CameraVariables
@@ -498,6 +498,7 @@ class Main {
 
             var stat = engine.GetSteam().GetStat(Stats.TIMES_DIED())
             stat.intValue = stat.intValue + 1
+            _engine.GetSteam().Unlock(Achievements.FIRST_DEATH())
         }
 
 

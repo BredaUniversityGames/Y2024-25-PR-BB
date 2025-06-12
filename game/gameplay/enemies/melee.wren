@@ -1,4 +1,4 @@
-import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, Perlin, Random, Stat, Stats
+import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, Perlin, Random, Stat, Stats, Achievements
 import "../player.wren" for PlayerVariables
 import "../soul.wren" for Soul, SoulManager, SoulType
 import "../coin.wren" for Coin, CoinManager
@@ -148,11 +148,13 @@ class MeleeEnemy {
 
             var stat = engine.GetSteam().GetStat(Stats.SKELETONS_KILLED())
             stat.intValue = stat.intValue + 1
+            engine.GetSteam().Unlock(Achievements.FIRST_SKELETON_KILLED())
 
             var playerPowerUp = playerVariables.GetCurrentPowerUp()
             if(playerPowerUp != PowerUpType.NONE) {
                 var powerUpStat = engine.GetSteam().GetStat(Stats.ENEMIES_KILLED_WITH_RELIC())
                 powerUpStat.intValue = powerUpStat.intValue + 1
+                engine.GetSteam().Unlock(Achievements.FIRST_RELIC_USED())
             }
 
             _pointLight.intensity = 0

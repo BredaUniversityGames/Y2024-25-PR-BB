@@ -1,5 +1,5 @@
 import "gameplay/hud.wren" for WrenHUD, HitmarkerState
-import "engine_api.wren" for Math, Stat, Stats
+import "engine_api.wren" for Math, Stat, Stats, Achievements
 import "gameplay/station.wren" for PowerUpType
 
 class PlayerVariables {
