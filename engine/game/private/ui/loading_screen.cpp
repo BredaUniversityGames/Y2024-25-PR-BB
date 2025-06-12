@@ -40,7 +40,7 @@ std::shared_ptr<LoadingScreen> LoadingScreen::Create(GraphicsContext& graphicsCo
     std::shared_ptr<UITextElement> contRightText = loading->_continueTextRight.lock();
     contRightText->anchorPoint = UIElement::AnchorPoint::eBottomRight;
 
-    loading->_continueGlyph = loading->AddChild<UIImage>(ResourceHandle<GPUImage>::Null(), glm::vec2(), glm::vec2(_textSize / 2.0f));
+    loading->_continueGlyph = loading->AddChild<UIImage>(ResourceHandle<GPUImage>::Null(), glm::vec2(330.0f, 30.0f), glm::vec2(_textSize / 2.0f));
     std::shared_ptr<UIImage> contGlyph = loading->_continueGlyph.lock();
     contGlyph->anchorPoint = UIElement::AnchorPoint::eBottomRight;
 
@@ -113,17 +113,19 @@ void LoadingScreen::ShowContinuePrompt()
 
     auto visualizations = _inputVisualizationsCache.GetDigital("Interact");
 
-    textLeft->SetText("Press");
+    textLeft->SetText("Press ");
     textRight->SetText(visualizations[0].bindingInputName +  " to continue");
 
     textLeft->display_color = { 1.0f, 1.0f, 1.0f, 1.0f };
     textRight->display_color = { 1.0f, 1.0f, 1.0f, 1.0f };
 
-    textLeft->SetLocation(glm::vec2(50.0f, 30.0f));
+    textLeft->SetLocation(glm::vec2(380.0f, 30.0f));
     textRight->SetLocation(glm::vec2(20.0f, 30.0f));
 
     glyph->SetImage(visualizations[0].glyphImage);
     glyph->visibility = VisibilityState::eNotUpdatedAndVisible;
+
+    UpdateAllChildrenAbsoluteTransform();
 }
 
 void LoadingScreen::HideContinuePrompt()
