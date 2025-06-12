@@ -65,12 +65,17 @@ class Soul {
         _velocity = Vec3.new(0.0,0.0,0.0)
         _gravity = Vec3.new(0, -0.098, 0) // gravity for arc
         _soulSpeed = 0.005
+        _maxLightIntensity = _pointLight.intensity
 
         _collectSoundEvent = "event:/SFX/Soul"
     }
 
     SetTransparency(value){
-            _rootEntity.GetTransparencyComponent().transparency = value // Set the transparency of the soul
+            _rootEntity.GetTransparencyComponent().transparency = value // Set the transparency of the soul particles
+        }
+
+    SetLightIntensity(value){
+            _pointLight.intensity = value // Set the intensity of the soul light
         }
 
     CheckRange(engine, playerPos, playerVariables,flashSystem, dt){
@@ -158,6 +163,7 @@ class Soul {
 
     time {_time}
     time=(value) { _time  = value}
+    maxLightIntensity {_maxLightIntensity}
 }
 
 class SoulManager {
@@ -183,13 +189,23 @@ class SoulManager {
                 soul.CheckRange(engine, playerPos, playerVariables, flashSystem, dt) // Check if the soul is within range of the player
                 soul.time = soul.time + dt
 
-                // do appear and disappearing effect
                 soul.SetTransparency(1.0)
+
+                // fade in the souls
                 if(soul.time < _maxAppearTimeSoul) {
                     soul.SetTransparency(soul.time / _maxAppearTimeSoul)
                 }
-                if(soul.time > (_maxLifeTimeOfSoul - _maxDisappearTimeSoul)) {
-                    soul.SetTransparency((_maxLifeTimeOfSoul - soul.time) / _maxDisappearTimeSoul)
+
+                // fade out the souls
+                var fadeStart = _maxLifeTimeOfSoul * (2.0 / 3.0)
+                var fadeDuration = _maxLifeTimeOfSoul * (1.0 / 3.0)
+                if(soul.time > fadeStart){
+                    var t = (soul.time - fadeStart) / fadeDuration
+                    t = Math.Min(Math.Max(t, 0), 1) // Clamp between 0 and 1
+                    var transparency = 1.0 - t
+                    var lightIntensity = (1.0 - t) * soul.maxLightIntensity
+                    soul.SetTransparency(transparency) // Set the transparency of the soul particles
+                    soul.SetLightIntensity(lightIntensity) // Set the intensity of the soul light
                 }
 
                 if(soul.time > _maxLifeTimeOfSoul && !soul.entity.GetLifetimeComponent()){
