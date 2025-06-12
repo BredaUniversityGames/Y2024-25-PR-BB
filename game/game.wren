@@ -188,7 +188,6 @@ class Main {
 
         __heartBeatSFX = "event:/SFX/HeartBeat"
         __heartBeatEvent = engine.GetAudio().PlayEventLoop(__heartBeatSFX)
-        engine.GetAudio().SetEventVolume(__heartBeatEvent, 4)
 
         __camera.GetAudioEmitterComponent().AddEvent(__heartBeatEvent)
 

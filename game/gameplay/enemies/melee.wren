@@ -287,7 +287,6 @@ class MeleeEnemy {
 
                 if(_walkEventInstance == null || engine.GetAudio().IsEventPlaying(_walkEventInstance) == false) {
                     _walkEventInstance = engine.GetAudio().PlayEventLoop(_bonesStepsSFX)
-                    engine.GetAudio().SetEventVolume(_walkEventInstance, 8.0)
                     var audioEmitter = _rootEntity.GetAudioEmitterComponent()
                     audioEmitter.AddEvent(_walkEventInstance)
                 }
