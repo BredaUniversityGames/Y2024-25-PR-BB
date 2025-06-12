@@ -31,6 +31,7 @@ class Station {
         _activateSFX = "event:/SFX/StationActivate" 
         _powerUpType = PowerUpType.NONE
 
+        _powerUpCost = 5000
 
         _textOpacity = 0.0 // Transparency of the text
         _textColor = Vec3.new(1.0, 1.0, 1.0) // Color of the text
@@ -48,11 +49,11 @@ class Station {
         if(distance < _interactRange  && _isActive){
 
             if(_powerUpType == PowerUpType.QUAD_DAMAGE){
-                engine.GetGame().GetHUD().SetPowerUpText("QUAD DAMAGE RELIC [COST: 2000]")
+                engine.GetGame().GetHUD().SetPowerUpText("QUAD DAMAGE RELIC [COST: %(_powerUpCost)]")
             }
 
             if(_powerUpType == PowerUpType.DOUBLE_GUNS){
-                engine.GetGame().GetHUD().SetPowerUpText("DUAL GUN RELIC [COST: 2000]")
+                engine.GetGame().GetHUD().SetPowerUpText("DUAL GUN RELIC [COST: %(_powerUpCost)]")
             }
 
             _textOpacity = _textOpacity + dt * 0.005
@@ -65,7 +66,7 @@ class Station {
 
             if(engine.GetInput().GetDigitalAction("Interact").IsPressed()){
 
-                if(playerVariables.GetScore() >= 2000){
+                if(playerVariables.GetScore() >= _powerUpCost){
 
                     if(_powerUpType == PowerUpType.QUAD_DAMAGE){
                         _stationManagerReference.PlayQuadHumSound(engine)
@@ -76,7 +77,7 @@ class Station {
                     }
 
                     playerVariables.SetCurrentPowerUp(_powerUpType)
-                    playerVariables.DecreaseScore(2000)
+                    playerVariables.DecreaseScore(_powerUpCost)
                     _time = 0.0
                     this.SetStatus(false)
                     this.SetPowerUpType(PowerUpType.NONE)
