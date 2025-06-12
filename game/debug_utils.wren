@@ -65,7 +65,7 @@ class DebugUtils {
             }
 
             enemyList.clear()
-            waveSystem.NextWave(engine, enemyList)
+            waveSystem.NextWave(engine, player)
         }
 
         // if (engine.GetInput().DebugGetKey(Keycode.eU())) {

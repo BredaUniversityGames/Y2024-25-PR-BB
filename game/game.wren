@@ -4,7 +4,7 @@ import "gameplay/weapon.wren" for Pistol, Shotgun, Weapons
 import "gameplay/camera.wren" for CameraVariables
 import "gameplay/player.wren" for PlayerVariables, HitmarkerState
 import "gameplay/music_player.wren" for MusicPlayer, BGMPlayer
-import "gameplay/wave_system.wren" for WaveSystem, WaveConfig, EnemyType, WaveGenerator
+import "gameplay/wave_system.wren" for WaveSystem, Wave, EnemyType, WaveGenerator
 import "analytics/analytics.wren" for AnalyticsManager
 
 import "gameplay/hud.wren" for WrenHUD
@@ -203,9 +203,18 @@ class Main {
 
         var waveConfigs = []
 
-        for (v in 0...30) {
+        for (v in 0...10) {
             waveConfigs.add(WaveGenerator.GenerateWave(v))
         }
+
+        waveConfigs[0].spawns[EnemyType.Skeleton] = 2
+        waveConfigs[1].spawns[EnemyType.Skeleton] = 4
+        waveConfigs[2].spawns[EnemyType.Skeleton] = 5
+        waveConfigs[3].spawns[EnemyType.Skeleton] = 7
+        waveConfigs[4].spawns[EnemyType.Skeleton] = 4
+
+        //waveConfigs[1] = wave2
+        //waveConfigs[3] = wave4
 
         __waveSystem = WaveSystem.new(engine, waveConfigs, spawnLocations)
 
