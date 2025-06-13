@@ -386,7 +386,7 @@ class MeleeEnemy {
             }
         } else {
             _currentPath = null
-            _reasonTimer = 2001
+            _reasonTimer = _reasonTimeout + 1.0
         }
 
         // Pathfinding logic
@@ -471,7 +471,9 @@ class MeleeEnemy {
                 }
             }
 
-            offsetDirection = offsetDirection + (position - hitInfos[lowestHitFractionIndex].position)
+            if(hitInfos.count > 0) {
+                offsetDirection = offsetDirection + (position - hitInfos[lowestHitFractionIndex].position)
+            }
         }
 
         // If we hit nothing
