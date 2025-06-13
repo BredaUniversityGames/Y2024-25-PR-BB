@@ -258,6 +258,11 @@ void SetPowerupTimerTextColor(HUD& self, glm::vec4 color)
     powerupTimer->display_color = color;
 }
 
+void ShowGameVersionVisual(GameVersionVisualization& self, bool value)
+{
+    self.visibility = value ? UIElement::VisibilityState::eNotUpdatedAndVisible : UIElement::VisibilityState::eNotUpdatedAndInvisible;
+}
+
 void ShowActionBinding(HUD& self, const CachedBindingOriginVisual& visual)
 {
     std::shared_ptr<UITextElement> bindingText = self.actionBindingText.lock();
@@ -351,4 +356,8 @@ void BindGameUI(wren::ForeignModule& module)
     loadingScreen.func<&LoadingScreen::SetDisplayTextColor>("SetDisplayTextColor");
     loadingScreen.func<&LoadingScreen::HideContinuePrompt>("HideContinuePrompt");
     loadingScreen.func<&LoadingScreen::ShowContinuePrompt>("ShowContinuePrompt");
+
+    // Register to push onto UI stack
+    auto& gameVersionVisual = module.klass<GameVersionVisualization, Canvas>("GameVersionVisual");
+    gameVersionVisual.funcExt<bindings::ShowGameVersionVisual>("Show");
 }

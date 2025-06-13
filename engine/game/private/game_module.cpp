@@ -101,11 +101,12 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     auto font = LoadFromFile("assets/fonts/BLOODROSE.ttf", 100, graphicsContext);
     font->metrics.charSpacing = 0;
 
+    std::string gameVersionText {};
     if (auto versionFile = fileIO::OpenReadStream("version.txt"))
     {
-        std::string gameVersionText = fileIO::DumpStreamIntoString(versionFile.value());
-        viewport.AddElement(GameVersionVisualization::Create(graphicsContext, viewportSize, font, gameVersionText));
+        gameVersionText = fileIO::DumpStreamIntoString(versionFile.value());
     }
+    _gameVersionVisual = viewport.AddElement(GameVersionVisualization::Create(graphicsContext, viewportSize, font, gameVersionText));
 
     _mainMenu = viewport.AddElement(MainMenu::Create(graphicsContext, viewportSize, font));
     _hud = viewport.AddElement(HUD::Create(graphicsContext, viewportSize, font));
@@ -122,6 +123,7 @@ ModuleTickOrder GameModule::Init(Engine& engine)
 
     // Set all UI menus invisible
 
+    _gameVersionVisual.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     _mainMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     _hud.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     _loadingScreen.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
@@ -299,6 +301,15 @@ std::optional<std::shared_ptr<GameOverMenu>> GameModule::GetGameOver()
 std::optional<std::shared_ptr<LoadingScreen>> GameModule::GetLoadingScreen()
 {
     if (auto lock = _loadingScreen.lock())
+    {
+        return lock;
+    }
+    return std::nullopt;
+}
+
+std::optional<std::shared_ptr<GameVersionVisualization>> GameModule::GetGameVersionVisual()
+{
+    if (auto lock = _gameVersionVisual.lock())
     {
         return lock;
     }
