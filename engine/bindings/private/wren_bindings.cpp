@@ -39,6 +39,11 @@ float TimeModuleGetDeltatime(TimeModule& self)
     return self.GetDeltatime().count();
 }
 
+float TimeModuleGetRealDeltatime(TimeModule& self)
+{
+    return self.GetRealDeltatime().count();
+}
+
 void TransitionToScript(WrenEngine& engine, const std::string& path)
 {
     engine.instance->GetModule<GameModule>().SetNextScene(path);
@@ -155,6 +160,7 @@ void BindEngineAPI(wren::ForeignModule& module)
     {
         auto& time = module.klass<TimeModule>("TimeModule");
         time.funcExt<bindings::TimeModuleGetDeltatime>("GetDeltatime");
+        time.funcExt<bindings::TimeModuleGetRealDeltatime>("GetRealDeltatime");
         time.func<&TimeModule::SetDeltatimeScale>("SetScale");
     }
 

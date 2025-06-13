@@ -85,6 +85,8 @@ public:
 
     void SetLowpassBypass(bool state);
 
+    void SetMasterChannelGroupPitch(float pitch);
+
     std::vector<glm::vec3>& GetDebugLines()
     {
         return _debugLines;

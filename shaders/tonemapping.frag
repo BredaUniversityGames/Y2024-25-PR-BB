@@ -243,13 +243,10 @@ float getSun(vec3 dir) {
     return pow(max(0.0, dot(dir, getSunDirection())), 720.0) * 210.0;
 }
 
-
-//
-
 vec3 rayDirection(float fieldOfView, vec2 size, vec2 fragCoord)
 {
     vec2 xy = fragCoord - size / 2.0;
-    xy.y = -xy.y; // Invert Y coordinate to match OpenGL's coordinate system
+    xy.y = -xy.y; // Invert y-axis for correct orientation
     float z = (size.y / 2.0) / tan((fieldOfView) / 2.0);
     return normalize(vec3(xy, -z));
 }

@@ -1,4 +1,4 @@
-import "engine_api.wren" for Engine, ECS, Entity, Vec3, Vec2, Math, AnimationControlComponent, TransformComponent, Input, SpawnEmitterFlagBits, Stat, Stats
+import "engine_api.wren" for Engine, ECS, Entity, Vec3, Vec2, Math, AnimationControlComponent, TransformComponent, Input, SpawnEmitterFlagBits, PhysicsObjectLayer, Stat, Stats
 import "gameplay/player.wren" for PlayerVariables
 import "gameplay/flash_system.wren" for FlashSystem
 
@@ -17,9 +17,22 @@ class Soul {
         _rootEntity = engine.GetECS().NewEntity()
         _rootEntity.AddNameComponent().name = "Soul"
         _rootEntity.AddAudioEmitterComponent()
+        _rootEntity.AddTransparencyComponent()
 
         var transform = _rootEntity.AddTransformComponent()
         transform.translation = spawnPosition
+        _targetPosition = spawnPosition
+
+        var rayHitInfo = engine.GetPhysics().ShootRay(spawnPosition, Vec3.new(0, -1.0, 0), 100)
+        if(!rayHitInfo.isEmpty) {
+            for (rayHit in rayHitInfo) {
+                var hitEntity = rayHit.GetEntity(engine.GetECS())
+                if(hitEntity.GetRigidbodyComponent().GetLayer() == PhysicsObjectLayer.eSTATIC()) {
+                    _targetPosition = rayHit.position + Vec3.new(0, 1.0, 0)
+                    break
+                }
+            }
+        }
 
         _lightEntity = engine.GetECS().NewEntity()
         _lightEntity.AddNameComponent().name = "Soul Light"
@@ -52,9 +65,18 @@ class Soul {
         _velocity = Vec3.new(0.0,0.0,0.0)
         _gravity = Vec3.new(0, -0.098, 0) // gravity for arc
         _soulSpeed = 0.005
+        _maxLightIntensity = _pointLight.intensity
 
         _collectSoundEvent = "event:/SFX/Soul"
     }
+
+    SetTransparency(value){
+            _rootEntity.GetTransparencyComponent().transparency = value // Set the transparency of the soul particles
+        }
+
+    SetLightIntensity(value){
+            _pointLight.intensity = value // Set the intensity of the soul light
+        }
 
     CheckRange(engine, playerPos, playerVariables,flashSystem, dt){
         var soulTransform = _rootEntity.GetTransformComponent()
@@ -64,6 +86,17 @@ class Soul {
 
         if(distance < _maxRange){
             _velocity = (playerPos - soulPos).normalize()
+
+            var rayHitInfo = engine.GetPhysics().ShootRay(soulTransform.GetWorldTranslation(), Vec3.new(0, -1.0, 0), 100)
+            if(!rayHitInfo.isEmpty) {
+                for (rayHit in rayHitInfo) {
+                    var hitEntity = rayHit.GetEntity(engine.GetECS())
+                    if(hitEntity.GetRigidbodyComponent().GetLayer() == PhysicsObjectLayer.eSTATIC()) {
+                        _targetPosition = rayHit.position + Vec3.new(0, 1.0, 0)
+                        break
+                    }
+                }
+            }
 
             var arcHeight = distance * 0.25
             _velocity = _velocity.mulScalar(5.0) + Vec3.new(0.0, arcHeight, 0.0)
@@ -89,7 +122,6 @@ class Soul {
                  // Play audio
                 var player = engine.GetECS().GetEntityByName("Camera")
                 var eventInstance = engine.GetAudio().PlayEventOnce(_collectSoundEvent)
-                engine.GetAudio().SetEventVolume(eventInstance, 5.0)
                 var audioEmitter = player.GetAudioEmitterComponent()
                 audioEmitter.AddEvent(eventInstance)
 
@@ -113,8 +145,9 @@ class Soul {
 
             }
         }else {
+            var fall = Math.MixFloat(soulTransform.translation.y, _targetPosition.y, dt * 0.001)
             var bounce = Math.Sin(_time * 0.003) * 0.0008 *dt
-            soulTransform.translation = Vec3.new(soulTransform.translation.x,soulTransform.translation.y + bounce,soulTransform.translation.z)  // Make the soul bounce up and down
+            soulTransform.translation = Vec3.new(soulTransform.translation.x,fall + bounce,soulTransform.translation.z)  // Make the soul bounce up and down
         }
     }
 
@@ -132,6 +165,7 @@ class Soul {
 
     time {_time}
     time=(value) { _time  = value}
+    maxLightIntensity {_maxLightIntensity}
 }
 
 class SoulManager {
@@ -139,6 +173,8 @@ class SoulManager {
         _soulList = [] // List of souls
         _playerEntity = player // Reference to the player entity
         _maxLifeTimeOfSoul = 20000.0 // Maximum lifetime of a soul
+        _maxAppearTimeSoul = 1000.0
+        _maxDisappearTimeSoul = 2000.0
     }
 
     SpawnSoul(engine, spawnPosition,type){
@@ -154,6 +190,25 @@ class SoulManager {
             if(soul.entity.IsValid()){
                 soul.CheckRange(engine, playerPos, playerVariables, flashSystem, dt) // Check if the soul is within range of the player
                 soul.time = soul.time + dt
+
+                soul.SetTransparency(1.0)
+
+                // fade in the souls
+                if(soul.time < _maxAppearTimeSoul) {
+                    soul.SetTransparency(soul.time / _maxAppearTimeSoul)
+                }
+
+                // fade out the souls
+                var fadeStart = _maxLifeTimeOfSoul * (2.0 / 3.0)
+                var fadeDuration = _maxLifeTimeOfSoul * (1.0 / 3.0)
+                if(soul.time > fadeStart){
+                    var t = (soul.time - fadeStart) / fadeDuration
+                    t = Math.Min(Math.Max(t, 0), 1) // Clamp between 0 and 1
+                    var transparency = 1.0 - t
+                    var lightIntensity = (1.0 - t) * soul.maxLightIntensity
+                    soul.SetTransparency(transparency) // Set the transparency of the soul particles
+                    soul.SetLightIntensity(lightIntensity) // Set the intensity of the soul light
+                }
 
                 if(soul.time > _maxLifeTimeOfSoul && !soul.entity.GetLifetimeComponent()){
                     soul.Destroy() // Destroy the soul if it has been around for too long
