@@ -190,7 +190,9 @@ class WaveSystem {
         _audioEmitter.AddEvent(eventInstance)
 
         var stat = engine.GetSteam().GetStat(Stats.WAVES_REACHED())
-        stat.intValue = _waveIndex
+        if(_waveIndex > stat.intValue) {
+            stat.intValue = _waveIndex
+        }
 
         _currentWave = _waveConfigs[_waveIndex]
         System.print("Starting wave %(_waveIndex + 1)")
