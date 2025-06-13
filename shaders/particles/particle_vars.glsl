@@ -47,6 +47,7 @@ struct ParticleInstance
     ivec2 frameOffsetCurrent;
     ivec2 frameOffsetNext;
     vec2 textureMultiplier;
+    float alpha;
 };
 
 struct DrawCommands

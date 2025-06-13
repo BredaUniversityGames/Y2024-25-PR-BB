@@ -216,7 +216,7 @@ class Main {
         //waveConfigs[1] = wave2
         //waveConfigs[3] = wave4
 
-        __waveSystem = WaveSystem.new(waveConfigs, spawnLocations)
+        __waveSystem = WaveSystem.new(engine, waveConfigs, spawnLocations)
 
         // Souls
         __soulManager = SoulManager.new(engine, __player)
@@ -263,6 +263,7 @@ class Main {
         var backToMain = Fn.new {
             engine.TransitionToScript("game/main_menu.wren")
             engine.GetTime().SetScale(1.0)
+            engine.GetAudio().SetPlaybackSpeed(1.0)
         }
 
         var menuButton = engine.GetGame().GetPauseMenu().backButton
@@ -465,7 +466,7 @@ class Main {
         }
 
         if (engine.GetInput().GetDigitalAction("Shoot").IsHeld()  && __activeWeapon.isUnequiping(engine) == false ) {
-            __activeWeapon.attack(engine, dt, __playerVariables, __enemyList, __coinManager, __playerMovement.cameraFovCurrent)
+            __activeWeapon.attack(engine, dt, __playerVariables, __enemyList, __coinManager, __soulManager, __playerMovement.cameraFovCurrent, __waveSystem)
             if (__activeWeapon.ammo <= 0) {
                 __activeWeapon.reload(engine)
             }
@@ -478,7 +479,7 @@ class Main {
         if (engine.GetInput().GetDigitalAction("ShootSecondary").IsHeld()  && __activeWeapon.isUnequiping(engine) == false ) {
 
             if (__playerVariables.GetCurrentPowerUp() == PowerUpType.DOUBLE_GUNS){
-                __secondaryWeapon.attack(engine, dt, __playerVariables, __enemyList, __coinManager, __playerMovement.cameraFovCurrent)
+                __secondaryWeapon.attack(engine, dt, __playerVariables, __enemyList, __coinManager, __soulManager, __playerMovement.cameraFovCurrent, __waveSystem)
                 if (__secondaryWeapon.ammo <= 0) {
                     __secondaryWeapon.reload(engine)
                 }
@@ -520,7 +521,7 @@ class Main {
 
         __soulManager.Update(engine, __playerVariables,__flashSystem, dt)
         __coinManager.Update(engine, __playerVariables,__flashSystem, dt)
-        __waveSystem.Update(engine, __player, __enemyList, dt,__playerVariables)
+        __waveSystem.Update(engine, __player, __enemyList, dt,__playerVariables, __stationManager)
 
         __stationManager.Update(engine, __playerVariables, dt)
         __flashSystem.Update(engine, dt)

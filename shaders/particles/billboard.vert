@@ -25,6 +25,7 @@ layout (location = 4) out uint materialIndex;
 layout (location = 5) out uint flags;
 layout (location = 6) out vec3 outColor;
 layout (location = 7) out float frameBlend;
+layout (location = 8) out float alpha;
 
 void main()
 {
@@ -72,6 +73,7 @@ void main()
     flags = instance.flags;
     outColor = instance.color;
     frameBlend = instance.frameBlend;
+    alpha = instance.alpha;
 
     gl_Position = camera.VP * vec4(position, 1.0);
 }
