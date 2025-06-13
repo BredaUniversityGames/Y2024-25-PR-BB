@@ -129,6 +129,11 @@ class WaveSystem {
           
             this.NextWave(engine, enemyList, playerVariables)
             stationManager.ResetStations()
+
+            var playerPowerUp = playerVariables.GetCurrentPowerUp()
+            if(playerVariables.GetCurrentPowerUp() == PowerUpType.NONE){
+                stationManager.timer = stationManager.timer + stationManager.intervalBetweenStations
+            }
         }
     }
 

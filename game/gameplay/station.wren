@@ -66,7 +66,7 @@ class Station {
 
             if(engine.GetInput().GetDigitalAction("Interact").IsPressed()){
 
-                if(playerVariables.GetScore() >= _powerUpCost){
+                if((playerVariables.GetScore() >= _powerUpCost) && (playerVariables.GetCurrentPowerUp() == PowerUpType.NONE)){
 
                     if(_powerUpType == PowerUpType.QUAD_DAMAGE){
                         _stationManagerReference.PlayQuadHumSound(engine)
@@ -233,7 +233,9 @@ class StationManager {
 
     anyActiveStation { _anyActiveStation }
     anyActiveStation=(value) { _anyActiveStation = value }
+    timer { _timer }
     timer=(value) { _timer = value }
+    intervalBetweenStations { _intervalBetweenStations }
 
     PlayQuadHumSound(engine){
         var player = engine.GetECS().GetEntityByName("Camera")
