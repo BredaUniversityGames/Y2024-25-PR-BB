@@ -28,7 +28,7 @@ class Station {
         _time = 0.0 // Time since the station was spawned
         _ambientStationSound = "event:/SFX/StationAmbient"
         _ambientSoundEventInstance = null
-        _activateSFX = "event:/SFX/StationActivate" 
+        _activateSFX = "event:/SFX/StationActivate"
         _powerUpType = PowerUpType.NONE
 
         _powerUpCost = 5000
@@ -62,7 +62,8 @@ class Station {
 
             engine.GetGame().GetHUD().SetPowerUpTextColor(Vec4.new(_textColor.x,_textColor.y,_textColor.z,_textOpacity) )
 
-
+            var visual = engine.GetGame().GetDigitalActionBindingOriginVisual("Interact")
+            engine.GetGame().GetHUD().ShowActionBinding(visual[0])
 
             if(engine.GetInput().GetDigitalAction("Interact").IsPressed()){
 
@@ -73,7 +74,7 @@ class Station {
                     }
 
                     if(_powerUpType == PowerUpType.DOUBLE_GUNS){
-                        _stationManagerReference.PlayDualGunHumSound(engine) 
+                        _stationManagerReference.PlayDualGunHumSound(engine)
                     }
 
                     playerVariables.SetCurrentPowerUp(_powerUpType)
@@ -97,6 +98,7 @@ class Station {
             _textOpacity = Math.Clamp(_textOpacity, 0.0, 1.0)
             engine.GetGame().GetHUD().SetPowerUpTextColor(Vec4.new(1.0,1.0,1.0,_textOpacity) )
 
+            engine.GetGame().GetHUD().HideActionBinding()
         }
     }
 
@@ -209,10 +211,6 @@ class StationManager {
         var transformDualGunEmitter = _dualGunEmitter.AddTransformComponent()
         transformDualGunEmitter.translation = Vec3.new(0.0, -200.0, 0.0)
         engine.GetParticles().SpawnEmitter(_dualGunEmitter, "DualGunStation",emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.0, 0.0, 0.0))
-        
-        //
-
-
 
         // Load the stations
         for(i in 0..3) {
@@ -272,7 +270,7 @@ class StationManager {
         playerPos.y = playerPos.y - 1.0
 
         var currentPowerUpColor =  engine.GetGame().GetHUD().GetPowerUpTextColor()
-   
+
         var newOpacity = currentPowerUpColor.w - dt * 0.005
         newOpacity = Math.Clamp(newOpacity, 0.0, 1.0)
 
@@ -349,8 +347,8 @@ class StationManager {
 
                     if(powerUpType == PowerUpType.DOUBLE_GUNS){
                         _dualGunTransparency.transparency = Math.MixFloat(_dualGunTransparency.transparency, 1.1, 0.005 )
-                        _anyActiveStation = true 
-                        // Set the other meshes transparency to 0.0 
+                        _anyActiveStation = true
+                        // Set the other meshes transparency to 0.0
                         // TO BE ADDED when the other power ups are added
                         _quadDamageTransparency.transparency = 0.0
                     }

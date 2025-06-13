@@ -149,6 +149,9 @@ FetchContent_Declare(
 set(INTERPROCEDURAL_OPTIMIZATION OFF)
 set(CPP_RTTI_ENABLED ON)
 set(ENABLE_ALL_WARNINGS OFF)
+if("${CMAKE_PRESET_NAME}" STREQUAL "x64-Distribution" OR "${CMAKE_PRESET_NAME}" STREQUAL "WSL-Distribution")
+    set(USE_ASSERTS OFF)
+endif()
 
 # TODO: These options enable vectorization optimizations
 set(USE_SSE4_1 ON)

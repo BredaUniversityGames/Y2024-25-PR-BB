@@ -4,6 +4,11 @@
 #include "ui_image.hpp"
 #include "ui_progress_bar.hpp"
 #include "ui_text.hpp"
+#include "renderer_module.hpp"
+#include "graphics_context.hpp"
+#include "wren_engine.hpp"
+#include "input_bindings_visualization_cache.hpp"
+
 namespace bindings
 {
 void ButtonOnPress(UIButton& self, wren::Variable fn) { self.OnPress(fn); }
@@ -258,6 +263,38 @@ void ShowGameVersionVisual(GameVersionVisualization& self, bool value)
     self.visibility = value ? UIElement::VisibilityState::eNotUpdatedAndVisible : UIElement::VisibilityState::eNotUpdatedAndInvisible;
 }
 
+void ShowActionBinding(HUD& self, const CachedBindingOriginVisual& visual)
+{
+    std::shared_ptr<UITextElement> bindingText = self.actionBindingText.lock();
+    if (bindingText)
+    {
+        bindingText->SetText(visual.bindingInputName);
+        bindingText->visibility = UIElement::VisibilityState::eNotUpdatedAndVisible;
+    }
+
+    std::shared_ptr<UIImage> bindingGlyph = self.actionBindingGlyph.lock();
+    if (bindingGlyph && !visual.glyphImage.IsNull())
+    {
+        bindingGlyph->SetImage(visual.glyphImage);
+        bindingGlyph->visibility = UIElement::VisibilityState::eNotUpdatedAndVisible;
+    }
+}
+
+void HideActionBinding(HUD& self)
+{
+    std::shared_ptr<UITextElement> bindingText = self.actionBindingText.lock();
+    if (bindingText)
+    {
+        bindingText->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
+    }
+
+    std::shared_ptr<UIImage> bindingGlyph = self.actionBindingGlyph.lock();
+    if (bindingGlyph)
+    {
+        bindingGlyph->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
+    }
+}
+
 }
 
 void BindGameUI(wren::ForeignModule& module)
@@ -305,6 +342,8 @@ void BindGameUI(wren::ForeignModule& module)
     hud.funcExt<bindings::SetPowerupTimerText>("SetPowerUpTimerText", "Set powerup timer text");
     hud.funcExt<bindings::SetPowerupTimerTextColor>("SetPowerUpTimerTextColor", "Set powerup timer text color");
     hud.funcExt<bindings::SetDirectionalIndicatorRotationAndOpacity>("SetDirectionalIndicatorRotationAndOpacity");
+    hud.funcExt<bindings::ShowActionBinding>("ShowActionBinding", "Shows action binding on screen with the provided `CachedBindingOriginVisual`");
+    hud.funcExt<bindings::HideActionBinding>("HideActionBinding", "Hides the action binding visual");
 
     auto& gameOver
         = module.klass<GameOverMenu, Canvas>("GameOverMenu");
