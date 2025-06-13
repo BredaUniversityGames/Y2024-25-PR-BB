@@ -1,5 +1,6 @@
 #pragma once
 
+#include "input_bindings_visualization_cache.hpp"
 #include "common.hpp"
 #include "engine.hpp"
 #include "game_settings.hpp"
@@ -73,6 +74,9 @@ public:
     std::optional<std::shared_ptr<HUD>> GetHUD();
     std::optional<std::shared_ptr<GameOverMenu>> GetGameOver();
     std::optional<std::shared_ptr<LoadingScreen>> GetLoadingScreen();
+    std::optional<std::shared_ptr<GameVersionVisualization>> GetGameVersionVisual();
+
+    InputBindingsVisualizationCache& GetInputVisualiztionsCache() { return *_bindingsVisualizationCache; }
 
     NON_COPYABLE(GameModule);
     NON_MOVABLE(GameModule);
@@ -102,6 +106,8 @@ private:
     std::weak_ptr<ControlsMenu> _controlsMenu;
     std::weak_ptr<FrameCounter> _framerateCounter {};
     std::weak_ptr<CreditsMenu> _creditsMenu {};
+    std::unique_ptr<InputBindingsVisualizationCache> _bindingsVisualizationCache;
+    std::weak_ptr<GameVersionVisualization> _gameVersionVisual {};
 
     // Scene
 

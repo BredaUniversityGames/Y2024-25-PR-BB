@@ -9,7 +9,7 @@ std::shared_ptr<FrameCounter> FrameCounter::Create(const glm::uvec2& screenResol
 
     counter->SetAbsoluteTransform(counter->GetAbsoluteLocation(), screenResolution);
 
-    counter->text = counter->AddChild<UITextElement>(font, "", glm::vec2(160.0f, 80.0f), 70);
+    counter->text = counter->AddChild<UITextElement>(font, "", glm::vec2(20.0f, 40.0f), 70);
     counter->text.lock()->anchorPoint = UIElement::AnchorPoint::eTopRight;
     counter->text.lock()->display_color = glm::vec4(1.0f, 1.0f, 0.5f, 1.0f);
 

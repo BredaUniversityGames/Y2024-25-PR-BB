@@ -2,6 +2,7 @@ import "engine_api.wren" for Engine, ECS, Entity, Vec3, Vec2, Quat, Math, Transf
 import "enemies/melee.wren" for MeleeEnemy
 import "enemies/ranged.wren" for RangedEnemy
 import "enemies/berserker.wren" for BerserkerEnemy
+import "station.wren" for PowerUpType, Station, StationManager
 
 class EnemyType {
     static Skeleton { 0 }
@@ -33,10 +34,10 @@ class WaveGenerator {
 
         var wave = Wave.new()
 
-        var skeletonFormula = (0.8 * waveNumber * waveNumber + 25) * (0.08 + (1 - waveNumber / 30) * 0.1) 
+        var skeletonFormula = (0.8 * waveNumber * waveNumber + 25) * (0.08 + (1 - waveNumber / 30) * 0.1)
         var eyeFormula = Math.Pow(waveNumber, 1.25) * 0.2
-        var berserkerFormula = (0.7 * waveNumber * waveNumber + 50) * (0.005 + (waveNumber / 20) * 0.03)   
-     
+        var berserkerFormula = (0.7 * waveNumber * waveNumber + 50) * (0.005 + (waveNumber / 20) * 0.03)
+
         wave.spawns[EnemyType.Skeleton] = Math.Floor(skeletonFormula)
         wave.spawns[EnemyType.Eye] = Math.Floor(eyeFormula)
         wave.spawns[EnemyType.Berserker] =  Math.Floor(berserkerFormula)
@@ -48,7 +49,7 @@ class WaveGenerator {
 
 class WaveSystem {
 
-    construct new(waveConfigs, spawnLocations) {
+    construct new(engine, waveConfigs, spawnLocations) {
     
         _waveIndex = -1
         _waveConfigs = waveConfigs
@@ -59,6 +60,16 @@ class WaveSystem {
         _currentWave = Wave.new()
         _waveTimer = 0.0
         _waveDelay = 4.0
+        _realWaveTimer = 0.0
+        _waveSlowdown = 0.8
+        _enemyCount = 0
+
+        _timeSpeed = 1.0
+        _slowTime = 0.15
+
+        var entity = engine.GetECS().NewEntity()
+        entity.AddTransformComponent().translation = Vec3.new(-80, 111, 44)
+        _audioEmitter = entity.AddAudioEmitterComponent()
 
         _waveSpawnTimer = 0.0
         _waveSpawnInterval = 0.1
@@ -68,35 +79,61 @@ class WaveSystem {
         }
     }
 
-    Update(engine, player, enemyList, dt, playerVariables) {
+
+    Update(engine, player, enemyList, dt, playerVariables, stationManager) {
 
         _waveTimer = _waveTimer + dt / 1000.0
+        _realWaveTimer = _realWaveTimer + engine.GetTime().GetRealDeltatime() / 1000.0
         _waveSpawnTimer = _waveSpawnTimer + dt / 1000.0
+        var realDeltatime = engine.GetTime().GetRealDeltatime() / 1000 * 60
 
         // Waiting period
-        if (_waveTimer < _waveDelay) {
+        if (_realWaveTimer < _waveDelay) {
+            if (_realWaveTimer > _waveSlowdown) {
+                _timeSpeed = Math.MixFloat(_timeSpeed, 1.0, 0.09 * realDeltatime)
+            } else {
+                if (_waveIndex > -1) {
+                    _timeSpeed = Math.MixFloat(_timeSpeed, _slowTime, 0.09 * realDeltatime)
+                }
+            }
+            engine.GetTime().SetScale(_timeSpeed)
+            engine.GetAudio().SetPlaybackSpeed(_timeSpeed)
             return
         }
 
+        if (1 - _timeSpeed < 0.001) {
+            _timeSpeed = 1
+        } else {
+            _timeSpeed = Math.MixFloat(_timeSpeed, 1.0, 0.09 * realDeltatime)
+        }
+
+        engine.GetTime().SetScale(_timeSpeed)
+        engine.GetAudio().SetPlaybackSpeed(_timeSpeed)
+
         // Inside a wave
         if (_ongoingWave) {
-
             if (_waveSpawnTimer > _waveSpawnInterval) {
                 this.SpawnEnemy(engine, enemyList)
                 _waveSpawnTimer = 0.0
             }
 
-            if (enemyList.count == 0 && _currentWave.isOver()) {
+            if (_enemyCount == 0 && _currentWave.isOver()) {
 
                 _ongoingWave = false
                 _waveTimer = 0.0
-
+                _realWaveTimer = 0.0
                 System.print("Completed wave %(_waveIndex)")
             }
 
         } else {
           
-            this.NextWave(engine, playerVariables)
+            this.NextWave(engine, enemyList, playerVariables)
+            stationManager.ResetStations()
+
+            var playerPowerUp = playerVariables.GetCurrentPowerUp()
+            if(playerVariables.GetCurrentPowerUp() == PowerUpType.NONE){
+                stationManager.timer = stationManager.timer + stationManager.intervalBetweenStations
+            }
         }
     }
 
@@ -107,9 +144,10 @@ class WaveSystem {
         if (enemyType == EnemyType.Skeleton) {
 
             if (_currentWave.spawns[enemyType] > 0) {
-                var enemy = enemyList.add(MeleeEnemy.new(engine, this.GetSpawnLocation() + Vec3.new(0, 1, 0), _waveIndex))
+                var enemy = enemyList.add(MeleeEnemy.new(engine, this.GetSpawnLocation() + Vec3.new(0, 1, 0)))
                 _currentWave.spawns[enemyType] = _currentWave.spawns[enemyType] - 1
                 enemy.FindNewPath(engine)
+                _enemyCount = _enemyCount + 1
                 return
             } else {
                 enemyType = EnemyType.Eye
@@ -121,6 +159,7 @@ class WaveSystem {
                 var enemy = enemyList.add(RangedEnemy.new(engine, this.GetSpawnLocation() + Vec3.new(0, 6, 0)))
                 _currentWave.spawns[enemyType] = _currentWave.spawns[enemyType] - 1
                 enemy.FindNewPath(engine)
+                _enemyCount = _enemyCount + 1
                 return
             } else {
                 enemyType = EnemyType.Berserker
@@ -129,29 +168,36 @@ class WaveSystem {
         } else if (enemyType == EnemyType.Berserker) {
 
             if (_currentWave.spawns[enemyType] > 0) {
-                var enemy = enemyList.add(BerserkerEnemy.new(engine, this.GetSpawnLocation() + Vec3.new(0, 3, 0), _waveIndex))
+                var enemy = enemyList.add(BerserkerEnemy.new(engine, this.GetSpawnLocation() + Vec3.new(0, 3, 0)))
                 _currentWave.spawns[enemyType] = _currentWave.spawns[enemyType] - 1
                 enemy.FindNewPath(engine)
+                _enemyCount = _enemyCount + 1
                 return
             }
         }
     }
 
-    NextWave(engine, playerVariables) {
+    NextWave(engine, enemyList, playerVariables) {
 
         // Start the next wave
         _waveIndex = _waveIndex + 1
 
         if (_waveIndex == _waveConfigs.count) {
             _waveConfigs.add(WaveGenerator.GenerateWave(_waveIndex))
+        }
+
+        var eventInstance = engine.GetAudio().PlayEventOnce("event:/SFX/WaveStart")
+        _audioEmitter.AddEvent(eventInstance)
 
         var stat = engine.GetSteam().GetStat(Stats.WAVES_REACHED())
-        if(_currentWave > stat.intValue) {
-            stat.intValue = _currentWave
+        if(_waveIndex > stat.intValue) {
+            stat.intValue = _waveIndex
         }
 
         _currentWave = _waveConfigs[_waveIndex]
         System.print("Starting wave %(_waveIndex + 1)")
+
+        _enemyCount = 0
 
         _ongoingWave = true
         playerVariables.hud.IncrementWaveCounter(_waveIndex)
@@ -159,5 +205,9 @@ class WaveSystem {
 
     GetSpawnLocation() {
         return _spawnLocations[Random.RandomIndex(0, _spawnLocations.count - 1)]
+    }
+
+    DecreaseEnemyCount() {
+        _enemyCount = _enemyCount - 1
     }
 }

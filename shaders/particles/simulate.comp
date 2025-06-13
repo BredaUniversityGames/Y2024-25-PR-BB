@@ -7,6 +7,7 @@
 struct LocalEmitter
 {
     vec3 position;
+    float alpha;
     uint id;
 };
 
@@ -57,6 +58,7 @@ void main()
     if (particle.life > 0)
     {
         const float lifeLerp = 1 - particle.life / particle.maxLife;
+        float alpha = 1.0;
 
         // simulate size
         particle.size.xy += vec2(particle.size.z) * deltaTime;
@@ -75,6 +77,7 @@ void main()
                 if (localEmitters[i].id == particle.emitterId)
                 {
                     particle.position = localEmitters[i].position;
+                    alpha = localEmitters[i].alpha;
                     break;
                 }
             }
@@ -128,6 +131,7 @@ void main()
             instance.frameOffsetCurrent = offset;
             instance.frameOffsetNext = offset2;
             instance.textureMultiplier = particle.textureMultiplier;
+            instance.alpha = alpha;
             instances[culledIndex] = instance;
         }
     }

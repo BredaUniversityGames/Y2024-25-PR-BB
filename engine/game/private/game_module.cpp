@@ -71,7 +71,8 @@ ModuleTickOrder GameModule::Init(Engine& engine)
         CreateStat(SteamStatEnum::TIMES_DIED, EStatTypes::STAT_INT),
     };
 
-    engine.GetModule<ApplicationModule>().GetActionManager().SetGameActions(GAME_ACTIONS);
+    ActionManager& actionManager = engine.GetModule<ApplicationModule>().GetActionManager();
+    actionManager.SetGameActions(GAME_ACTIONS);
 
     auto& steam = engine.GetModule<SteamModule>();
     steam.InitSteamStats(_stats);
@@ -92,6 +93,7 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     ECS.AddSystem<LifetimeSystem>();
 
     GraphicsContext& graphicsContext = *engine.GetModule<RendererModule>().GetGraphicsContext();
+    _bindingsVisualizationCache = std::make_unique<InputBindingsVisualizationCache>(actionManager, graphicsContext);
 
     auto& viewport = engine.GetModule<UIModule>().GetViewport();
     const glm::uvec2 viewportSize = viewport.GetExtend();
@@ -99,18 +101,19 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     auto font = LoadFromFile("assets/fonts/BLOODROSE.ttf", 100, graphicsContext);
     font->metrics.charSpacing = 0;
 
+    std::string gameVersionText {};
     if (auto versionFile = fileIO::OpenReadStream("version.txt"))
     {
-        std::string gameVersionText = fileIO::DumpStreamIntoString(versionFile.value());
-        viewport.AddElement(GameVersionVisualization::Create(graphicsContext, viewportSize, font, gameVersionText));
+        gameVersionText = fileIO::DumpStreamIntoString(versionFile.value());
     }
+    _gameVersionVisual = viewport.AddElement(GameVersionVisualization::Create(graphicsContext, viewportSize, font, gameVersionText));
 
     _mainMenu = viewport.AddElement(MainMenu::Create(graphicsContext, viewportSize, font));
     _hud = viewport.AddElement(HUD::Create(graphicsContext, viewportSize, font));
-    _loadingScreen = viewport.AddElement(LoadingScreen::Create(graphicsContext, viewportSize, font));
+    _loadingScreen = viewport.AddElement(LoadingScreen::Create(graphicsContext, *_bindingsVisualizationCache, viewportSize, font));
     _pauseMenu = viewport.AddElement(PauseMenu::Create(graphicsContext, viewportSize, font));
     _gameOver = viewport.AddElement(GameOverMenu::Create(graphicsContext, viewportSize, font));
-    _controlsMenu = viewport.AddElement(ControlsMenu::Create(viewportSize, graphicsContext, engine.GetModule<ApplicationModule>().GetActionManager(), font));
+    _controlsMenu = viewport.AddElement(ControlsMenu::Create(viewportSize, graphicsContext, *_bindingsVisualizationCache, actionManager, font));
     _creditsMenu = viewport.AddElement(CreditsMenu::Create(engine, graphicsContext, viewportSize, font));
 
     gameSettings = GameSettings::FromFile(GAME_SETTINGS_FILE);
@@ -120,6 +123,7 @@ ModuleTickOrder GameModule::Init(Engine& engine)
 
     // Set all UI menus invisible
 
+    _gameVersionVisual.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     _mainMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     _hud.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     _loadingScreen.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
@@ -297,6 +301,15 @@ std::optional<std::shared_ptr<GameOverMenu>> GameModule::GetGameOver()
 std::optional<std::shared_ptr<LoadingScreen>> GameModule::GetLoadingScreen()
 {
     if (auto lock = _loadingScreen.lock())
+    {
+        return lock;
+    }
+    return std::nullopt;
+}
+
+std::optional<std::shared_ptr<GameVersionVisualization>> GameModule::GetGameVersionVisual()
+{
+    if (auto lock = _gameVersionVisual.lock())
     {
         return lock;
     }

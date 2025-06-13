@@ -18,6 +18,7 @@ class PlayerVariables {
         _grenadeChargeRate = 20
         _grenadeCharge = 0
         _hud =  WrenHUD.new(cppHud)
+        _hud.SetWaveCounter(0)
 
         _invincibilityMaxTime = 500
         _invincibilityTime = 0
