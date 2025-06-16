@@ -60,7 +60,7 @@ class WaveSystem {
 
         _currentWave = Wave.new()
         _waveDelay = 6.0
-        _waveSlowdown = 0.8
+        _waveSlowdown = 0.6
         _realWaveTimer = _waveSlowdown * 2
         _enemyCount = 0
 
@@ -90,11 +90,18 @@ class WaveSystem {
         // Waiting period
         if (_realWaveTimer < _waveDelay) {
 
-            if (_realWaveTimer < _waveSlowdown) {
-                _timeSpeed = Math.MixFloat(_timeSpeed, _slowTime, _realWaveTimer / 0.8)
-            } else if (_realWaveTimer < _waveSlowdown * 2) {
-                _timeSpeed = Math.MixFloat(_slowTime, 1.0, (_realWaveTimer - _waveSlowdown) / 0.8)
-            } 
+            var curve = Fn.new{|val|
+                System.print("%(val)")
+                return 2 * val - val * val
+            }
+
+            var t = curve.call(_realWaveTimer / _waveSlowdown)
+
+            if (_realWaveTimer < _waveSlowdown * 2) {
+                _timeSpeed = Math.MixFloat(1.0, _slowTime, t)
+            } else {
+                _timeSpeed = 1.0
+            }
 
             engine.GetTime().SetScale(_timeSpeed)
             engine.GetAudio().SetPlaybackSpeed(_timeSpeed)
