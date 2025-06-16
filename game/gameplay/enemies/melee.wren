@@ -205,6 +205,10 @@ class MeleeEnemy {
     Update(playerPos, playerVariables, engine, dt, soulManager, coinManager, flashSystem) {
         var body = _rootEntity.GetRigidbodyComponent()
         var pos = body.GetPosition()
+
+        if(pos.y < -50) {
+            body.SetTranslation(Vec3.new(-6, 15, 68))
+        }
         
         var animations = _meshEntity.GetAnimationControlComponent()
         var transparencyComponent = _meshEntity.GetTransparencyComponent()

@@ -72,7 +72,7 @@ class WaveSystem {
         _audioEmitter = entity.AddAudioEmitterComponent()
 
         _waveSpawnTimer = 0.0
-        _waveSpawnInterval = 0.1
+        _waveSpawnInterval = 0.2
 
         if(_spawnLocations.count == 0) {
             System.print("Should pass at least one spawn location to the wave system!")
@@ -168,7 +168,9 @@ class WaveSystem {
         } else if (enemyType == EnemyType.Berserker) {
 
             if (_currentWave.spawns[enemyType] > 0) {
-                var enemy = enemyList.add(BerserkerEnemy.new(engine, this.GetSpawnLocation() + Vec3.new(0, 3, 0)))
+                var offsetX = Random.RandomFloatRange(-1, 1)
+                var offsetZ = Random.RandomFloatRange(-1, 1)
+                var enemy = enemyList.add(BerserkerEnemy.new(engine, this.GetSpawnLocation() + Vec3.new(offsetX, 3, offsetZ)))
                 _currentWave.spawns[enemyType] = _currentWave.spawns[enemyType] - 1
                 enemy.FindNewPath(engine)
                 _enemyCount = _enemyCount + 1
