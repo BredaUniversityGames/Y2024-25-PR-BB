@@ -10,6 +10,7 @@ target_link_libraries(Bindings
         PRIVATE Renderer
         PRIVATE Particles
         PRIVATE GameAnalytics
+        PRIVATE magic_enum::magic_enum
 )
 
 target_include_directories(Renderer

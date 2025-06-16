@@ -17,11 +17,11 @@ class DebugUtils {
         var spawnPos = playerPos + playerRot.mulVec3(Vec3.new(0, 0, -15.0))
 
         if (engine.GetInput().DebugGetKey(Keycode.eL())) {
-            enemyList.add(MeleeEnemy.new(engine, spawnPos, 0))
+            enemyList.add(MeleeEnemy.new(engine, spawnPos))
         }
 
         if (engine.GetInput().DebugGetKey(Keycode.eK())) {
-            enemyList.add(BerserkerEnemy.new(engine, spawnPos, 0))
+            enemyList.add(BerserkerEnemy.new(engine, spawnPos))
         }
 
         if (engine.GetInput().DebugGetKey(Keycode.eI())) {
@@ -65,7 +65,7 @@ class DebugUtils {
             }
 
             enemyList.clear()
-            waveSystem.NextWave(engine, enemyList)
+            waveSystem.NextWave(engine, player)
         }
 
         // if (engine.GetInput().DebugGetKey(Keycode.eU())) {

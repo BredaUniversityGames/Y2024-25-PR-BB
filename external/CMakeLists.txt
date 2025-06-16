@@ -43,7 +43,7 @@ FetchContent_MakeAvailable(VMA)
 FetchContent_Declare(
         FastGLTF
         GIT_REPOSITORY https://github.com/spnda/fastgltf.git
-        GIT_TAG "ad3931d5f8beadaef118749c82bc6aa19618c47f"
+        GIT_TAG main
         GIT_PROGRESS TRUE
 )
 
@@ -149,6 +149,9 @@ FetchContent_Declare(
 set(INTERPROCEDURAL_OPTIMIZATION OFF)
 set(CPP_RTTI_ENABLED ON)
 set(ENABLE_ALL_WARNINGS OFF)
+if("${CMAKE_PRESET_NAME}" STREQUAL "x64-Distribution" OR "${CMAKE_PRESET_NAME}" STREQUAL "WSL-Distribution")
+    set(USE_ASSERTS OFF)
+endif()
 
 # TODO: These options enable vectorization optimizations
 set(USE_SSE4_1 ON)

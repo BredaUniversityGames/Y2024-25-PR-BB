@@ -1,4 +1,4 @@
-import "engine_api.wren" for Engine, Game, ECS, Entity, Vec3, Vec2, Quat, Math, TransformComponent, Input, SpawnEmitterFlagBits, EmitterPresetID
+import "engine_api.wren" for Engine, Game, ECS, Entity, Vec3, Vec2, Quat, Math, TransformComponent, Input, SpawnEmitterFlagBits
 
 class PlayerMovement{
 
@@ -284,7 +284,6 @@ class PlayerMovement{
 
             //Jump sound
             var eventInstance = engine.GetAudio().PlayEventOnce(_jumpSFX)
-            engine.GetAudio().SetEventVolume(eventInstance, 1.8)
             var audioEmitter = camera.GetAudioEmitterComponent()
             audioEmitter.AddEvent(eventInstance)
         }else {
@@ -293,7 +292,6 @@ class PlayerMovement{
                 velocity = velocity + Vec3.new(0.0, jumpForce*1.5, 0.0)
                 //Jump sound
                 var eventInstance = engine.GetAudio().PlayEventOnce(_jumpSFX)
-                engine.GetAudio().SetEventVolume(eventInstance, 1.8)
                 var audioEmitter = camera.GetAudioEmitterComponent()
                 audioEmitter.AddEvent(eventInstance)
                 if(moveInputDir.length() > 0.01){
@@ -410,7 +408,6 @@ class PlayerMovement{
 
             //play dash sound
             var eventInstance = engine.GetAudio().PlayEventOnce(_dashSFX)
-            engine.GetAudio().SetEventVolume(eventInstance, 2.8)
             var audioEmitter = camera.GetAudioEmitterComponent()
             audioEmitter.AddEvent(eventInstance)
 
@@ -593,7 +590,7 @@ class PlayerMovement{
             var lifetime = entity.AddLifetimeComponent()
             lifetime.lifetime = 2000.0
             var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
-            engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eFeathers(),emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.0, 0.0, 0.0))
+            engine.GetParticles().SpawnEmitter(entity, "Feathers",emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.0, 0.0, 0.0))
 
         }
     }

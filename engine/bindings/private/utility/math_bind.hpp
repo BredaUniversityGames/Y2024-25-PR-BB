@@ -2,6 +2,7 @@
 #include "wren_common.hpp"
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/rotate_vector.hpp>
 
 namespace bindings
 {
@@ -205,6 +206,16 @@ public:
         float t = maxAngle / angle;
         return glm::slerp(from, to, t);
     }
+
+    static float Pow(float x, float e)
+    {
+        return std::powf(x, e);
+    }
+  
+    static glm::vec3 RotateY(const glm::vec3& v, float angle)
+    {
+        return glm::rotateY(v, angle);
+    }
 };
 
 template <typename T>
@@ -293,12 +304,14 @@ inline void BindMath(wren::ForeignModule& module)
         mathUtilClass.funcStatic<&MathUtil::Sqrt>("Sqrt");
         mathUtilClass.funcStatic<&MathUtil::Abs>("Abs");
         mathUtilClass.funcStatic<&MathUtil::PI>("PI");
+        mathUtilClass.funcStatic<&MathUtil::Pow>("Pow");
         mathUtilClass.funcStatic<&MathUtil::TwoPI>("TwoPI");
         mathUtilClass.funcStatic<&MathUtil::HalfPI>("HalfPI");
         mathUtilClass.funcStatic<&MathUtil::Distance>("Distance");
         mathUtilClass.funcStatic<&MathUtil::AngleAxis2D>("AngleAxis2D");
         mathUtilClass.funcStatic<&MathUtil::Floor>("Floor");
         mathUtilClass.funcStatic<&MathUtil::RotateTowards>("RotateTowards");
+        mathUtilClass.funcStatic<&MathUtil::RotateY>("RotateY");
     }
 }
 

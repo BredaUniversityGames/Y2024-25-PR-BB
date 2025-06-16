@@ -21,15 +21,16 @@
 #include "renderer_module.hpp"
 #include "scene/model_loader.hpp"
 #include "scripting_module.hpp"
+#include "steam/steam_bindings.hpp"
 #include "time_module.hpp"
 #include "ui_module.hpp"
 #include "utility/math_bind.hpp"
 #include "utility/random_util.hpp"
 #include "wren_engine.hpp"
 #include "wren_entity.hpp"
-
 #include "passes/tonemapping_pass.hpp"
 #include "passes/volumetric_pass.hpp"
+#include <steam_module.hpp>
 
 namespace bindings
 {
@@ -37,6 +38,11 @@ namespace bindings
 float TimeModuleGetDeltatime(TimeModule& self)
 {
     return self.GetDeltatime().count();
+}
+
+float TimeModuleGetRealDeltatime(TimeModule& self)
+{
+    return self.GetRealDeltatime().count();
 }
 
 void TransitionToScript(WrenEngine& engine, const std::string& path)
@@ -142,6 +148,7 @@ void BindEngineAPI(wren::ForeignModule& module)
         engineAPI.func<&WrenEngine::GetModule<PathfindingModule>>("GetPathfinding");
         engineAPI.func<&WrenEngine::GetModule<RendererModule>>("GetRenderer");
         engineAPI.func<&WrenEngine::GetModule<UIModule>>("GetUI");
+        engineAPI.func<&WrenEngine::GetModule<SteamModule>>("GetSteam");
 
         engineAPI.funcExt<bindings::LoadModelScripting>("LoadModel");
         engineAPI.funcExt<bindings::LoadModelCollisions>("LoadCollisions");
@@ -161,6 +168,7 @@ void BindEngineAPI(wren::ForeignModule& module)
     {
         auto& time = module.klass<TimeModule>("TimeModule");
         time.funcExt<bindings::TimeModuleGetDeltatime>("GetDeltatime");
+        time.funcExt<bindings::TimeModuleGetRealDeltatime>("GetRealDeltatime");
         time.func<&TimeModule::SetDeltatimeScale>("SetScale");
     }
 
@@ -207,5 +215,10 @@ void BindEngineAPI(wren::ForeignModule& module)
     // Analytics
     {
         BindAnalyticsAPI(module);
+    }
+
+    // Steam
+    {
+        BindSteamAPI(module);
     }
 }

@@ -7,4 +7,5 @@ target_link_libraries(Game
         PUBLIC UserInterface
         PUBLIC Renderer
         PUBLIC Resources
+        PUBLIC Steam
 )

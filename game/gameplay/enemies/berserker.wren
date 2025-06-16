@@ -1,13 +1,14 @@
-import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, EmitterPresetID, Perlin, Random
+import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, Perlin, Random, Achievements, Stat, Stats
 import "../player.wren" for PlayerVariables
 
 import "../soul.wren" for Soul, SoulManager, SoulType
 import "../coin.wren" for Coin, CoinManager
 import "gameplay/flash_system.wren" for FlashSystem
+import "../station.wren" for PowerUpType
 
 class BerserkerEnemy {
 
-    construct new(engine, spawnPosition, waveNumber) {
+    construct new(engine, spawnPosition) {
         
         // ENEMY CONSTANTS
         _maxVelocity = 6.8
@@ -29,7 +30,7 @@ class BerserkerEnemy {
         _stepSFX = "event:/SFX/DemonStep"
         _attackSFX = "event:/SFX/DemonAttack"
         _attackHitSFX = "event:/SFX/DemonAttackHit"
-        _hitSFX = "event:/SFX/Hit"
+        _hitSFX = "event:/SFX/Hurt"
         _spawnSFX = "event:/SFX/EnemySpawn"
 
         // ENTITY SETUP
@@ -59,8 +60,8 @@ class BerserkerEnemy {
         _rootEntity.AttachChild(_lightEntity)
 
         _pointLight.intensity = 10
-        _pointLight.range = 2
-        _pointLight.color = Vec3.new(0.0, 1.0 - Math.Clamp(waveNumber - 3, 0, 7) / 7, Math.Min(waveNumber - 3, 7) / 7)
+        _pointLight.range = 6
+        _pointLight.color = Vec3.new(0.0, 1.0, 1.0)
 
         var rb = Rigidbody.new(engine.GetPhysics(), colliderShape, PhysicsObjectLayer.eENEMY(), false)
         var body = _rootEntity.AddRigidbodyComponent(rb)
@@ -109,15 +110,28 @@ class BerserkerEnemy {
         return false
     }
 
-    DecreaseHealth(amount, engine, coinManager) {
+    DecreaseHealth(amount, engine, coinManager, soulManager, waveSystem, playerVariables) {
         var animations = _meshEntity.GetAnimationControlComponent()
         var body = _rootEntity.GetRigidbodyComponent()
 
         _health = Math.Max(_health - amount, 0)
 
+        var entity = engine.GetECS().NewEntity()
+        var transform = entity.AddTransformComponent()
+
+        var forward = Math.ToVector(body.GetRotation()).mulScalar(-1.8)
+
+        transform.translation = body.GetPosition() + Vec3.new(forward.x, 2.0, forward.z)
+        var lifetime = entity.AddLifetimeComponent()
+        lifetime.lifetime = 170.0
+        var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomPosition()// |
+        engine.GetParticles().SpawnEmitter(entity, "Blood",emitterFlags,Vec3.new(0.0, 1000.0, 0.0), Vec3.new(0.0, 0.0, 0.0))
+
         if (_health <= 0 && _isAlive) {
             _isAlive = false
+            waveSystem.DecreaseEnemyCount()
             _rootEntity.RemoveEnemyTag()
+
             animations.Play("Death", 1.0, false, 0.3, false)
             body.SetLayer(PhysicsObjectLayer.eDEAD())
             body.SetVelocity(Vec3.new(0,0,0))
@@ -129,6 +143,24 @@ class BerserkerEnemy {
             var coinCount = Random.RandomIndex(7, 12)
             for(i in 0...coinCount) {
                 coinManager.SpawnCoin(engine, body.GetPosition() + Vec3.new(0, 1.0, 0))
+            }
+
+            // Spawn a soul
+            soulManager.SpawnSoul(engine, body.GetPosition(),SoulType.BIG)
+
+            var stat = engine.GetSteam().GetStat(Stats.BERSERKERS_KILLED())
+            if(stat != null) {
+                stat.intValue = stat.intValue + 1
+            }
+            engine.GetSteam().Unlock(Achievements.BERSERKERS_KILLED_1())
+
+            var playerPowerUp = playerVariables.GetCurrentPowerUp()
+            if(playerPowerUp != PowerUpType.NONE) {
+                var powerUpStat = engine.GetSteam().GetStat(Stats.ENEMIES_KILLED_WITH_RELIC())
+                if(powerUpStat != null) {
+                    powerUpStat.intValue = powerUpStat.intValue + 1
+                }
+                engine.GetSteam().Unlock(Achievements.RELIC_1())
             }
 
             var eventInstance = engine.GetAudio().PlayEventOnce(_hurtSFX)
@@ -246,7 +278,6 @@ class BerserkerEnemy {
 
                 if(_walkEventInstance == null || engine.GetAudio().IsEventPlaying(_walkEventInstance) == false) {
                     _walkEventInstance = engine.GetAudio().PlayEventLoop(_stepSFX)
-                    engine.GetAudio().SetEventVolume(_walkEventInstance, 1.0)
                     var audioEmitter = _rootEntity.GetAudioEmitterComponent()
                     audioEmitter.AddEvent(_walkEventInstance)
                 }
@@ -306,7 +337,7 @@ class BerserkerEnemy {
             }
 
             if (_deathTimer <= 0) {
-                soulManager.SpawnSoul(engine, body.GetPosition(),SoulType.BIG)
+
                 engine.GetECS().DestroyEntity(_rootEntity) // Destroys the entity, and in turn this object
             } else {
                 // Wait for death animation before starting descent

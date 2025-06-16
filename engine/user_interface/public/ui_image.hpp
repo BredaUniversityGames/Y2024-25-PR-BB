@@ -20,6 +20,9 @@ public:
 
     void SubmitDrawInfo(std::vector<QuadDrawInfo>& drawList) const override;
 
+    void SetImage(ResourceHandle<GPUImage> image) { _image = image; }
+    ResourceHandle<GPUImage> GetImage() const { return _image; }
+
 private:
     ResourceHandle<GPUImage> _image;
 };

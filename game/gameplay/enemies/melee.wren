@@ -1,12 +1,13 @@
-import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, EmitterPresetID, Perlin, Random
+import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, Perlin, Random, Stat, Stats, Achievements
 import "../player.wren" for PlayerVariables
 import "../soul.wren" for Soul, SoulManager, SoulType
 import "../coin.wren" for Coin, CoinManager
 import "gameplay/flash_system.wren" for FlashSystem
+import "../station.wren" for PowerUpType
 
 class MeleeEnemy {
 
-    construct new(engine, spawnPosition, waveNumber) {
+    construct new(engine, spawnPosition) {
         
         // ENEMY CONSTANTS
         _maxVelocity = 13
@@ -21,12 +22,15 @@ class MeleeEnemy {
         _getUpAppearMax = 1500
         _attackTiming = 1460
         _attackTimer = _attackTiming
+        _reasonTimeout = 2000
+        _honeInRadius = 30.0
+        _honeInMaxAltitude = 4.0
 
         _bonesSFX = "event:/SFX/Bones"
         _hitMarkerSFX = "event:/SFX/Hitmarker"
         _bonesStepsSFX = "event:/SFX/BonesSteps"
         _roar = "event:/SFX/Roar"
-        _hitSFX = "event:/SFX/Hit"
+        _hitSFX = "event:/SFX/Hurt"
         _spawnSFX = "event:/SFX/EnemySpawn"
 
         var enemySize = 0.0165
@@ -36,7 +40,7 @@ class MeleeEnemy {
         // PATHFINDING
         _currentPath = null
         _currentPathNodeIdx = null
-        _honeInRadius = 30.0
+
 
         // ENTITY SETUP
 
@@ -70,7 +74,7 @@ class MeleeEnemy {
 
         _pointLight.intensity = 10
         _pointLight.range = 2
-        _pointLight.color = Vec3.new(Math.Min(waveNumber, 10) / 10, 1.0 - Math.Min(waveNumber, 10) / 10, 0.0)
+        _pointLight.color = Vec3.new(0.0, 1.0, 0.0)
 
         var rb = Rigidbody.new(engine.GetPhysics(), colliderShape, PhysicsObjectLayer.eENEMY(), false)
         var body = _rootEntity.AddRigidbodyComponent(rb)
@@ -82,7 +86,7 @@ class MeleeEnemy {
         // STATE
         
         _isAlive = true
-        _reasonTimer = 2000
+        _reasonTimer = _reasonTimeout
         _getUpState = true
         _movingState = false
         _attackingState = false
@@ -114,7 +118,7 @@ class MeleeEnemy {
         return false
     }
 
-    DecreaseHealth(amount, engine, coinManager) {
+    DecreaseHealth(amount, engine, coinManager, soulManager, waveSystem, playerVariables) {
         var animations = _meshEntity.GetAnimationControlComponent()
         var body = _rootEntity.GetRigidbodyComponent()
 
@@ -127,11 +131,13 @@ class MeleeEnemy {
         var lifetime = entity.AddLifetimeComponent()
         lifetime.lifetime = 170.0
         var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomVelocity() // |
-        engine.GetParticles().SpawnEmitter(entity, EmitterPresetID.eBones(),emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.0, 15.0, 0.0))
+        engine.GetParticles().SpawnEmitter(entity, "Bones",emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.0, 15.0, 0.0))
 
         if (_health <= 0 && _isAlive) {
             _isAlive = false
+            waveSystem.DecreaseEnemyCount()
             _rootEntity.RemoveEnemyTag()
+
             animations.Play("Death", 1.0, false, 0.3, false)
             body.SetLayer(PhysicsObjectLayer.eDEAD())
             body.SetVelocity(Vec3.new(0,0,0))
@@ -141,8 +147,25 @@ class MeleeEnemy {
             for(i in 0...coinCount) {
                 coinManager.SpawnCoin(engine, body.GetPosition() + Vec3.new(0, 1.0, 0))
             }
+            // Spawn a soul
+            soulManager.SpawnSoul(engine, body.GetPosition(),SoulType.SMALL)
 
             _pointLight.intensity = 0
+
+            var stat = engine.GetSteam().GetStat(Stats.SKELETONS_KILLED())
+            if(stat != null) {
+                stat.intValue = stat.intValue + 1
+            }
+            engine.GetSteam().Unlock(Achievements.SKELETONS_KILLED_1())
+
+            var playerPowerUp = playerVariables.GetCurrentPowerUp()
+            if(playerPowerUp != PowerUpType.NONE) {
+                var powerUpStat = engine.GetSteam().GetStat(Stats.ENEMIES_KILLED_WITH_RELIC())
+                if(powerUpStat != null) {
+                    powerUpStat.intValue = powerUpStat.intValue + 1
+                }
+                engine.GetSteam().Unlock(Achievements.RELIC_1())
+            }
 
             var eventInstance = engine.GetAudio().PlayEventOnce(_bonesSFX)
             
@@ -180,9 +203,12 @@ class MeleeEnemy {
 
 
     Update(playerPos, playerVariables, engine, dt, soulManager, coinManager, flashSystem) {
-        
         var body = _rootEntity.GetRigidbodyComponent()
         var pos = body.GetPosition()
+
+        if(pos.y < -50) {
+            body.SetTranslation(Vec3.new(-6, 15, 68))
+        }
         
         var animations = _meshEntity.GetAnimationControlComponent()
         var transparencyComponent = _meshEntity.GetTransparencyComponent()
@@ -242,7 +268,7 @@ class MeleeEnemy {
 
                                 //Flash the screen red
                                 flashSystem.Flash(Vec3.new(105 / 255, 13 / 255, 1 / 255),0.75)
-                                
+
                                 playerVariables.hud.IndicateDamage(pos)
                                 engine.GetAudio().PlayEventOnce(_hitSFX)
                                 //animations.Play("Attack", 1.0, false, 0.1, false)
@@ -284,7 +310,6 @@ class MeleeEnemy {
 
                 if(_walkEventInstance == null || engine.GetAudio().IsEventPlaying(_walkEventInstance) == false) {
                     _walkEventInstance = engine.GetAudio().PlayEventLoop(_bonesStepsSFX)
-                    engine.GetAudio().SetEventVolume(_walkEventInstance, 8.0)
                     var audioEmitter = _rootEntity.GetAudioEmitterComponent()
                     audioEmitter.AddEvent(_walkEventInstance)
                 }
@@ -340,11 +365,8 @@ class MeleeEnemy {
             _deathTimer = _deathTimer - dt
             
             if (_deathTimer <= 0) {
-                //spawn a soul
-                soulManager.SpawnSoul(engine, body.GetPosition(),SoulType.SMALL)
 
                 engine.GetECS().DestroyEntity(_rootEntity) // Destroys the entity, and in turn this object
-                
 
             } else {
                 // Wait for death animation before starting descent
@@ -362,9 +384,13 @@ class MeleeEnemy {
         var body = _rootEntity.GetRigidbodyComponent()
         var pos = body.GetPosition()
 
-        if(Math.Distance(position, engine.GetECS().GetEntityByName("Player").GetTransformComponent().GetWorldTranslation()) > _honeInRadius) {
+        var distToPlayer = Math.Distance(pos, playerPos)
+        var altitudeToPlayer = Math.Distance(Vec3.new(0.0, pos.y, 0.0), Vec3.new(0.0, playerPos.y, 0.0))
+        var forwardVector = Vec3.new(0.0, 0.0, 0.0)
+
+        if(distToPlayer > _honeInRadius || altitudeToPlayer > _honeInMaxAltitude) {
             _reasonTimer = _reasonTimer + dt
-            if(_reasonTimer > 2000) {
+            if(_reasonTimer > _reasonTimeout) {
                 this.FindNewPath(engine)
                 _reasonTimer = 0
             }
@@ -396,31 +422,22 @@ class MeleeEnemy {
 
             var dst = Math.Distance(pos, p1.center)
             var target = Math.MixVec3(p1.center, p2.center, dst * bias)
-            var forwardVector = (target - pos).normalize()
-
-            _rootEntity.GetRigidbodyComponent().SetVelocity(forwardVector.mulScalar(_maxVelocity))
-            
-            // Set forward rotation
-            var endRotation = Math.LookAt(Vec3.new(forwardVector.x, 0, forwardVector.z), Vec3.new(0, 1, 0))
-            var startRotation = body.GetRotation()
-            body.SetRotation(Math.Slerp(startRotation, endRotation, 0.01 *dt))
+            forwardVector = target - pos
         }else{
-            var forwardVector = playerPos - position
-            forwardVector.y = 0
-            forwardVector = (forwardVector.normalize() + _rootEntity.GetRigidbodyComponent().GetVelocity())
-            var maxVelocityScalar = 1.0
-            if(forwardVector.length() >= _maxVelocity) {
-                maxVelocityScalar = _maxVelocity / forwardVector.length()
+            forwardVector = (playerPos - position).normalize()
+            var localSteerForward = this.LocalSteer(engine, pos, forwardVector)
+            if(localSteerForward) {
+                forwardVector = localSteerForward
             }
-
-            var factor = Vec3.new(maxVelocityScalar, 1.0, maxVelocityScalar)
-            _rootEntity.GetRigidbodyComponent().SetVelocity(forwardVector * factor)
-
-            var endRotation = Math.LookAt(Vec3.new(forwardVector.x, 0, forwardVector.z), Vec3.new(0, 1, 0))
-                        var startRotation = body.GetRotation()
-
-            body.SetRotation(Math.Slerp(startRotation, endRotation, 0.01 *dt))
         }
+
+        forwardVector = forwardVector.normalize()
+        forwardVector = (_rootEntity.GetRigidbodyComponent().GetVelocity() + forwardVector).normalize()
+        _rootEntity.GetRigidbodyComponent().SetVelocity(forwardVector.mulScalar(_maxVelocity))
+
+        var endRotation = Math.LookAt(Vec3.new(forwardVector.x, 0, forwardVector.z), Vec3.new(0, 1, 0))
+        var startRotation = body.GetRotation()
+        body.SetRotation(Math.Slerp(startRotation, endRotation, 0.01 *dt))
     }
 
     FindNewPath(engine) {
@@ -428,6 +445,77 @@ class MeleeEnemy {
         _currentPath = engine.GetPathfinding().FindPath(startPos, engine.GetECS().GetEntityByName("Player").GetTransformComponent().GetWorldTranslation())
         
         _currentPathNodeIdx = 1
+    }
+
+    // Returns a corrected vector or null if no objects were found
+    LocalSteer(engine, position, forwardVector) {
+        var seekDepth = 3.0
+        var rayCount = 6
+        var rayAngle = 20 // degrees
+
+        var offsetToKnees = Vec3.new(0.0, -0.25, 0.0)
+
+        var angleStep = Math.Radians(rayAngle) / (rayCount / 2)
+
+        var offsetDirection = Vec3.new(0, 0, 0)
+
+        // Find closest ray hit and add this to the offsetDirection vector
+        for(i in 0...rayCount) {
+            var angleOffset = (i-(rayCount - 1) / 2.0) * angleStep
+            var rotatedDirection = Math.RotateY(forwardVector, angleOffset)
+
+            var hitInfos = engine.GetPhysics().ShootRay(position + offsetToKnees, rotatedDirection, seekDepth)
+            var lowestHitFraction = 1.0
+            var lowestHitFractionIndex = 0
+            for(j in 0...hitInfos.count) {
+
+                var ray = hitInfos[j]
+
+                if(ray.GetEntity(engine.GetECS()).GetEnttEntity() == _rootEntity.GetEnttEntity()) {
+                    continue
+                }
+
+                if(ray.hitFraction < lowestHitFraction) {
+                    lowestHitFraction = ray.hitFraction
+                    lowestHitFractionIndex = j
+                }
+            }
+
+            offsetDirection = offsetDirection + (position - hitInfos[lowestHitFractionIndex].position)
+        }
+
+        // If we hit nothing
+        if(offsetDirection.length() < 0.001) {
+            return null
+        }
+
+        offsetDirection = offsetDirection.normalize()
+        var absDot = Math.Abs(Math.Dot(forwardVector, offsetDirection))
+
+        if(absDot > 0.9) {
+            // if the raycast results is a vector that is nearly a negated forward vector
+            // steer either hard left or right (random chance for either)
+
+            var angle = 0.0
+
+            var index = Random.RandomIndex(0, 1)
+            if(index == 0) {
+                angle = -90.0
+            } else {
+                angle = 90.0
+            }
+
+            forwardVector = Math.RotateY(forwardVector, angle)
+        } else {
+            if(absDot < 0.001) {
+                // if no hits (or too subtle) keep same forward vector
+            } else {
+                // regular steering behavior
+                forwardVector = forwardVector - offsetDirection
+            }
+        }
+
+        return forwardVector
     }
 
     Destroy(engine) {
