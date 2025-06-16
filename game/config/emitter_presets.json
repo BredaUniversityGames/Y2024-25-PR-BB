@@ -1330,16 +1330,16 @@
                 "key": "Blood",
                 "value": {
                     "size": {
-                        "x": 1.5,
-                        "y": 1.5,
-                        "z": 0.0
+                        "x": 2.0,
+                        "y": 2.0,
+                        "z": 0.4000000059604645
                     },
-                    "mass": 0.10000000149011612,
+                    "mass": 0.15000000596046449,
                     "rotationVelocity": {
                         "x": 0.0,
                         "y": 0.0
                     },
-                    "maxLife": 0.4000000059604645,
+                    "maxLife": 0.800000011920929,
                     "emitDelay": 2.0,
                     "count": 10,
                     "materialIndex": 74,
@@ -1356,14 +1356,14 @@
                     },
                     "startingVelocity": {
                         "x": 0.0,
-                        "y": 8.300000190734864,
+                        "y": 10.5,
                         "z": 0.0
                     },
                     "spriteDimensions": {
-                        "x": 3,
-                        "y": 3
+                        "x": 18,
+                        "y": 1
                     },
-                    "frameCount": 9,
+                    "frameCount": 18,
                     "frameRate": 0.0,
                     "color": {
                         "x": 1.0,
@@ -1389,7 +1389,7 @@
                             "loop": true
                         }
                     ],
-                    "imageName": "blood.png"
+                    "imageName": "blood2.png"
                 }
             }
         ]
