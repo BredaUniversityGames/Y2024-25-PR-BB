@@ -222,26 +222,18 @@ class BerserkerEnemy {
                         if (Math.Dot2D(forward2D, toPlayer2D) >= 0.8 && Math.Distance(playerPos, pos) < _attackRange) {
                             var rayHitInfo = engine.GetPhysics().ShootMultipleRays(pos, toPlayer, _attackRange, 3, 20)
                             var isOccluded = false
-                            System.print(rayHitInfo.count)
                             if (!rayHitInfo.isEmpty) {
                                 for (rayHit in rayHitInfo) {
 
                                     var hitEntity = rayHit.GetEntity(engine.GetECS())
-                                    System.print(hitEntity)
                                     if (hitEntity == _rootEntity || hitEntity.HasEnemyTag()) {
-                                        System.print("Continue")
                                         continue
                                     }
-                                    System.print("Not enemy")
                                     if (!hitEntity.HasPlayerTag()) {
                                         isOccluded = true
                                     }
                                     break
                                 }
-                            }
-
-                            if (isOccluded) {
-                                System.print("Occluded")
                             }
 
                             if (!isOccluded) {
