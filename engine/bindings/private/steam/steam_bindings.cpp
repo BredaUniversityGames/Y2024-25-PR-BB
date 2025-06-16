@@ -10,7 +10,7 @@
 
 namespace bindings
 {
-Stat* GetStat(SteamModule& self, SteamStatEnum stats)
+std::optional<Stat*> GetStat(SteamModule& self, SteamStatEnum stats)
 {
     return self.GetStats().GetStat(magic_enum::enum_name(stats));
 }
@@ -28,6 +28,18 @@ std::string_view GetAchievementDescription(Achievement& achievement)
     return std::string_view(achievement.description);
 }
 
+void Unlock(SteamModule& self, SteamAchievementEnum achievements)
+{
+    std::string_view name = magic_enum::enum_name(achievements);
+    if (auto achievement = self.GetAchievements().GetAchievement(name.data()))
+    {
+        if (!achievement->achieved)
+        {
+            self.GetAchievements().SetAchievement(name.data());
+        }
+    }
+}
+
 }
 
 void BindSteamAPI(wren::ForeignModule& module)
@@ -35,6 +47,7 @@ void BindSteamAPI(wren::ForeignModule& module)
     auto& steamClass = module.klass<SteamModule>("Steam");
     steamClass.funcExt<bindings::GetAchievement>("GetAchievement");
     steamClass.funcExt<bindings::GetStat>("GetStat");
+    steamClass.funcExt<bindings::Unlock>("Unlock");
 
     auto& statClass = module.klass<Stat>("Stat");
     statClass.var<&Stat::value>("intValue");

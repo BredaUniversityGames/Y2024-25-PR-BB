@@ -91,7 +91,12 @@ void SteamModule::InitSteamStats(std::span<Stat> stats)
 
 bool SteamModule::RequestCurrentStats()
 {
-    return SteamUserStats()->RequestCurrentStats();
+    if (auto stats = SteamUserStats())
+    {
+        return stats->RequestCurrentStats();
+    }
+
+    return false;
 }
 
 void SteamModule::SaveStats()

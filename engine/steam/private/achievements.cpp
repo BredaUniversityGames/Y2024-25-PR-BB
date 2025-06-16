@@ -10,13 +10,21 @@ SteamAchievementManager::SteamAchievementManager(std::span<Achievement> achievem
     , _callbackUserStatsStored(this, &SteamAchievementManager::OnUserStatsStored)
     , _callbackAchievementStored(this, &SteamAchievementManager::OnAchievementStored)
 {
-    _appID = SteamUtils()->GetAppID();
-    _achievements.resize(achievements.size());
-    std::copy(achievements.begin(), achievements.end(), _achievements.begin());
+    if (auto utils = SteamUtils())
+    {
+        _appID = utils->GetAppID();
+        _achievements.resize(achievements.size());
+        std::copy(achievements.begin(), achievements.end(), _achievements.begin());
+    }
 }
 
 Achievement* SteamAchievementManager::GetAchievement(std::string_view name)
 {
+    if (!_initialized)
+    {
+        return nullptr;
+    }
+
     auto result = std::find_if(_achievements.begin(), _achievements.end(), [&name](const auto& val)
         { return val.name == name; });
     if (result == _achievements.end())

@@ -9,13 +9,16 @@ SteamStatManager::SteamStatManager(std::span<Stat> stats)
     , _callbackUserStatsReceived(this, &SteamStatManager::OnUserStatsReceived)
     , _callbackUserStatsStored(this, &SteamStatManager::OnUserStatsStored)
 {
-    _appID = SteamUtils()->GetAppID();
+    if (auto utils = SteamUtils())
+    {
+        _appID = utils->GetAppID();
 
-    _stats.resize(stats.size());
-    _oldStats.resize(stats.size());
+        _stats.resize(stats.size());
+        _oldStats.resize(stats.size());
 
-    std::copy(stats.begin(), stats.end(), _stats.begin());
-    std::copy(stats.begin(), stats.end(), _oldStats.begin());
+        std::copy(stats.begin(), stats.end(), _stats.begin());
+        std::copy(stats.begin(), stats.end(), _oldStats.begin());
+    }
 }
 
 bool SteamStatManager::StoreStats()
@@ -69,12 +72,17 @@ bool SteamStatManager::StoreStats()
     return false;
 }
 
-Stat* SteamStatManager::GetStat(std::string_view name)
+std::optional<Stat*> SteamStatManager::GetStat(std::string_view name)
 {
+    if (!_initialized)
+    {
+        return std::nullopt;
+    }
+
     auto result = std::find_if(_stats.begin(), _stats.end(), [&name](const auto& val)
         { return val.name == name; });
     if (result == _stats.end())
-        return nullptr;
+        return std::nullopt;
 
     return &*result;
 }

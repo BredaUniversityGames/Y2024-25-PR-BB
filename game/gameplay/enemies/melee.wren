@@ -1,4 +1,4 @@
-import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, Perlin, Random, Stat, Stats
+import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, Perlin, Random, Stat, Stats, Achievements
 import "../player.wren" for PlayerVariables
 import "../soul.wren" for Soul, SoulManager, SoulType
 import "../coin.wren" for Coin, CoinManager
@@ -153,12 +153,18 @@ class MeleeEnemy {
             _pointLight.intensity = 0
 
             var stat = engine.GetSteam().GetStat(Stats.SKELETONS_KILLED())
-            stat.intValue = stat.intValue + 1
+            if(stat != null) {
+                stat.intValue = stat.intValue + 1
+            }
+            engine.GetSteam().Unlock(Achievements.SKELETONS_KILLED_1())
 
             var playerPowerUp = playerVariables.GetCurrentPowerUp()
             if(playerPowerUp != PowerUpType.NONE) {
                 var powerUpStat = engine.GetSteam().GetStat(Stats.ENEMIES_KILLED_WITH_RELIC())
-                powerUpStat.intValue = powerUpStat.intValue + 1
+                if(powerUpStat != null) {
+                    powerUpStat.intValue = powerUpStat.intValue + 1
+                }
+                engine.GetSteam().Unlock(Achievements.RELIC_1())
             }
 
             var eventInstance = engine.GetAudio().PlayEventOnce(_bonesSFX)
@@ -199,6 +205,10 @@ class MeleeEnemy {
     Update(playerPos, playerVariables, engine, dt, soulManager, coinManager, flashSystem) {
         var body = _rootEntity.GetRigidbodyComponent()
         var pos = body.GetPosition()
+
+        if(pos.y < -50) {
+            body.SetTranslation(Vec3.new(-6, 15, 68))
+        }
         
         var animations = _meshEntity.GetAnimationControlComponent()
         var transparencyComponent = _meshEntity.GetTransparencyComponent()

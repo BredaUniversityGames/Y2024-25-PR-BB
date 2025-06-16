@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "steam_include.hpp"
 #include <cstdint>
+#include <optional>
 #include <span>
 #include <string>
 #include <string_view>
@@ -48,7 +49,7 @@ public:
     ~SteamStatManager() = default;
 
     bool StoreStats();
-    Stat* GetStat(std::string_view name);
+    std::optional<Stat*> GetStat(std::string_view name);
 
     STEAM_CALLBACK(SteamStatManager, OnUserStatsReceived, UserStatsReceived_t,
         _callbackUserStatsReceived);
