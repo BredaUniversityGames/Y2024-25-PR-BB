@@ -26,11 +26,8 @@ public:
     NON_MOVABLE(VolumetricPass);
 
 private:
-
-
     struct PushConstants
     {
-        // Register 0 (16 bytes)
         uint32_t hdrTargetIndex;
         uint32_t bloomTargetIndex;
         uint32_t depthIndex;
@@ -38,6 +35,8 @@ private:
 
         uint32_t screenWidth;
         uint32_t screenHeight;
+        float time;
+        uint32_t _padding1;
 
         glm::vec4 rayOrigin;
         glm::vec4 rayDirection;

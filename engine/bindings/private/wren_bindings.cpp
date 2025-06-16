@@ -28,7 +28,8 @@
 #include "wren_engine.hpp"
 #include "wren_entity.hpp"
 
-#include <passes/tonemapping_pass.hpp>
+#include "passes/tonemapping_pass.hpp"
+#include "passes/volumetric_pass.hpp"
 
 namespace bindings
 {
@@ -89,8 +90,8 @@ void SetFog(WrenEngine& engine, float density)
 
 void SetGunDirectionAndOrigin(WrenEngine& engine, const glm::vec3& pos, const glm::vec3& dir)
 {
-    engine.instance->GetModule<RendererModule>().GetRenderer()->GetTonemappingPipeline().SetShotRayDirection(dir);
-    engine.instance->GetModule<RendererModule>().GetRenderer()->GetTonemappingPipeline().SetShotRayOrigin(pos);
+    engine.instance->GetModule<RendererModule>().GetRenderer()->GetVolumetricPipeline().SetShotRayDirection(dir);
+    engine.instance->GetModule<RendererModule>().GetRenderer()->GetVolumetricPipeline().SetShotRayOrigin(pos);
 }
 
 float GetFog(WrenEngine& engine)

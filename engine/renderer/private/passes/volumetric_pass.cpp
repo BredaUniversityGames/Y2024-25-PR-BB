@@ -45,6 +45,7 @@ void VolumetricPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cu
     timePassed += scene.deltaTime / 1000.0f;
 
     _pushConstants.rayOrigin.a -= (0.2 * (scene.deltaTime / 1000.0f));
+    _pushConstants.time = timePassed;
 
     vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo {
         .imageView = _context->Resources()->ImageResourceManager().Access(_outputTarget)->view,

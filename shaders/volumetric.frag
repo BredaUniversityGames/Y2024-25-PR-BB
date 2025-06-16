@@ -13,50 +13,15 @@ layout (push_constant) uniform PushConstants
     uint hdrTargetIndex;
     uint bloomTargetIndex;
     uint depthIndex;
-    uint enableFlags;
+    uint normalRIndex;
 
-    uint normalIndex;
-    uint tonemappingFunction;
-    float padding0;
-    float exposure;
-
-    float vignetteIntensity;
-    float lensDistortionIntensity;
-    float lensDistortionCubicIntensity;
-    float screenScale;
-
-    float brightness;
-    float contrast;
-    float saturation;
-    float vibrance;
-
-    float hue;
-    float minPixelSize;
-    float maxPixelSize;
-    float pixelizationLevels;
-
-    float pixelizationDepthBias;
     uint screenWidth;
     uint screenHeight;
-    float ditherAmount;
-
-    float paletteAmount;
     float time;
-    float cloudsSpeed;
-    uint paletteSize;
-
-    vec4 skyColor;
-    vec4 sunColor;
-    vec4 cloudsColor;
-    vec4 voidColor;
-
-    vec4 flashColor;
-    vec4 waterColor;
+    uint _padding1;
 
     vec4 rayOrigin;
-
     vec4 rayDirection;
-
 
 } pc;
 
