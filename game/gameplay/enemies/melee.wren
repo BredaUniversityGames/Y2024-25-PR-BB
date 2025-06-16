@@ -118,7 +118,7 @@ class MeleeEnemy {
         return false
     }
 
-    DecreaseHealth(amount, engine, coinManager, soulManager, waveSystem, playerVariables) {
+    DecreaseHealth(amount, engine, coinManager, soulManager, waveSystem, playerVariables, position) {
         var animations = _meshEntity.GetAnimationControlComponent()
         var body = _rootEntity.GetRigidbodyComponent()
 

@@ -113,7 +113,7 @@ class BerserkerEnemy {
         return false
     }
 
-    DecreaseHealth(amount, engine, coinManager, soulManager, waveSystem, playerVariables) {
+    DecreaseHealth(amount, engine, coinManager, soulManager, waveSystem, playerVariables, position) {
         var animations = _meshEntity.GetAnimationControlComponent()
         var body = _rootEntity.GetRigidbodyComponent()
 
@@ -124,7 +124,7 @@ class BerserkerEnemy {
 
         var forward = Math.ToVector(body.GetRotation()).mulScalar(-1.8)
 
-        transform.translation = body.GetPosition() + Vec3.new(forward.x, 2.0, forward.z)
+        transform.translation = position
         var lifetime = entity.AddLifetimeComponent()
         lifetime.lifetime = 170.0
         var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomPosition()// |
