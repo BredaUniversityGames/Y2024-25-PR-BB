@@ -1,6 +1,4 @@
 import "engine_api.wren" for Engine, Rigidbody, TracyZone, ShapeFactory, Random, Vec3, Math, PhysicsObjectLayer, Perlin, SpawnEmitterFlagBits, Stats, Achievements
-
-//Vec3, Engine, ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, Perlin, Random, Stat, Stats, Achievements
 import "../player.wren" for PlayerVariables
 import "../soul.wren" for Soul, SoulManager, SoulType
 import "../coin.wren" for Coin, CoinManager
@@ -8,6 +6,12 @@ import "gameplay/flash_system.wren" for FlashSystem
 import "../station.wren" for PowerUpType
 
 class MeleeEnemy {
+
+    seekDepth { 3.0 }
+    rayCount { 6 }
+    rayAngle { 20 }
+
+    offsetToKnees { Vec3.new(0.0, -0.25, 0.0) }
 
     construct new(engine, spawnPosition) {
         
@@ -294,11 +298,10 @@ class MeleeEnemy {
                     animations.Play("Idle", 1.0, true, 1.0, false)
                     animations.SetTime(0.0)
                 }
-                var forwardVector = (playerPos - pos).normalize()
 
+                var forwardVector = (playerPos - pos).normalize()
                 var endRotation = Math.LookAt(Vec3.new(forwardVector.x, 0, forwardVector.z), Vec3.new(0, 1, 0))
-                var startRotation = body.GetRotation()
-                body.SetRotation( Math.Slerp(startRotation, endRotation, 0.01 *dt))
+                body.SetRotation( Math.Slerp(body.GetRotation(), endRotation, 0.01 *dt))
 
                 _recoveryTime = _recoveryTime - dt
                 if (_recoveryTime <= 0) {
@@ -361,10 +364,10 @@ class MeleeEnemy {
             }
 
             _noiseOffset = _noiseOffset + dt * 0.001 * __flickerSpeed
-            var noise = __perlin.Noise1D(_noiseOffset)
-            var flickerIntensity = __baseIntensity + ((noise - 0.5) * __flickerRange)
-            _pointLight.intensity = flickerIntensity
+            _pointLight.intensity = __baseIntensity + ((__perlin.Noise1D(_noiseOffset) - 0.5) * __flickerRange)
+
         } else {
+
             _deathTimer = _deathTimer - dt
             
             if (_deathTimer <= 0) {
@@ -375,9 +378,7 @@ class MeleeEnemy {
                 // Wait for death animation before starting descent
                 if(_deathTimerMax - _deathTimer > 1800) {
                     transparencyComponent.transparency =  _deathTimer / (_deathTimerMax-1000)
-
-                    var newPos = pos - Vec3.new(0, 1, 0).mulScalar(1.0 * 0.00075 * dt)
-                    body.SetTranslation(newPos)
+                    body.SetTranslation(pos - Vec3.new(0, 1, 0).mulScalar(1.0 * 0.00075 * dt))
                 }
             }
         }
@@ -391,70 +392,77 @@ class MeleeEnemy {
         var pos = body.GetPosition()
 
         var distToPlayer = Math.Distance(pos, playerPos)
-        var altitudeToPlayer = Math.Distance(Vec3.new(0.0, pos.y, 0.0), Vec3.new(0.0, playerPos.y, 0.0))
         var forwardVector = Vec3.new(0.0, 0.0, 0.0)
 
-        if(distToPlayer > _honeInRadius || altitudeToPlayer > _honeInMaxAltitude) {
+        if (distToPlayer > _honeInRadius || Math.Abs(pos.y - playerPos.y) > _honeInMaxAltitude) {
+
             _reasonTimer = _reasonTimer + dt
             if(_reasonTimer > _reasonTimeout) {
-                this.FindNewPath(engine)
+                this.FindNewPath(engine, playerPos)
                 _reasonTimer = 0
             }
+
         } else {
             _currentPath = null
             _reasonTimer = _reasonTimeout + 1.0
         }
 
         // Pathfinding logic
-        if(_currentPath != null && _currentPath.GetWaypoints().count > 0) {
-            var bias = 0.01
-            var waypoint = _currentPath.GetWaypoints()[_currentPathNodeIdx]
+        if(_currentPath != null && _currentPath.Count() > 0) {
 
-            if(Math.Distance(waypoint.center, pos) < 3.0 + bias) {
+            var waypoint = _currentPath.GetWaypoint(_currentPathNodeIdx)
+
+            if(Math.Distance(waypoint.center, pos) < 3.0) {
+
                 _currentPathNodeIdx = _currentPathNodeIdx + 1
-                if(_currentPathNodeIdx == _currentPath.GetWaypoints().count) {
+
+                if(_currentPathNodeIdx == _currentPath.Count()) {
+
                     body.SetVelocity(Vec3.new(0.0, 0.0, 0.0))
                     _currentPath = null
                     zone.End()
                     return
                 }
-                waypoint = _currentPath.GetWaypoints()[_currentPathNodeIdx]
+
+                waypoint = _currentPath.GetWaypoint(_currentPathNodeIdx)
             }
 
-            var p1 = _currentPath.GetWaypoints()[_currentPathNodeIdx]
+            var p1 = _currentPath.GetWaypoint(_currentPathNodeIdx)
             var p2 = p1
-            if (_currentPathNodeIdx + 1 < _currentPath.GetWaypoints().count) {
-                p2 = _currentPath.GetWaypoints()[_currentPathNodeIdx + 1]
+
+            if (_currentPathNodeIdx + 1 < _currentPath.Count()) {
+                p2 = _currentPath.GetWaypoint(_currentPathNodeIdx + 1)
             }
 
             var dst = Math.Distance(pos, p1.center)
-            var target = Math.MixVec3(p1.center, p2.center, dst * bias)
-            forwardVector = target - pos
-        }else{
+            var target = Math.MixVec3(p1.center, p2.center, dst * 0.03)
+
+            forwardVector = (target - pos).normalize()
+
+        } else {
+
             forwardVector = (playerPos - position).normalize()
+            
             var localSteerForward = this.LocalSteer(engine, pos, forwardVector)
             if(localSteerForward) {
                 forwardVector = localSteerForward
             }
         }
 
-        forwardVector = forwardVector.normalize()
-        forwardVector = (_rootEntity.GetRigidbodyComponent().GetVelocity() + forwardVector).normalize()
-        _rootEntity.GetRigidbodyComponent().SetVelocity(forwardVector.mulScalar(_maxVelocity))
+        forwardVector = (body.GetVelocity() + forwardVector).normalize()
+        body.SetVelocity(forwardVector.mulScalar(_maxVelocity))
 
         var endRotation = Math.LookAt(Vec3.new(forwardVector.x, 0, forwardVector.z), Vec3.new(0, 1, 0))
-        var startRotation = body.GetRotation()
-        body.SetRotation(Math.Slerp(startRotation, endRotation, 0.01 *dt))
+        body.SetRotation(Math.Slerp(body.GetRotation(), endRotation, 0.01 *dt))
 
         zone.End()
     }
 
-    FindNewPath(engine) {
+    FindNewPath(engine, playerPos) {
 
         var zone = TracyZone.new("Find Path")
 
-        var startPos = position
-        _currentPath = engine.GetPathfinding().FindPath(startPos, engine.GetECS().GetEntityByName("Player").GetTransformComponent().GetWorldTranslation())
+        _currentPath = engine.GetPathfinding().FindPath(this.position, playerPos)
         _currentPathNodeIdx = 1
 
         zone.End()
@@ -464,25 +472,17 @@ class MeleeEnemy {
     LocalSteer(engine, position, forwardVector) {
 
         var zone = TracyZone.new("Local Steering")
-
-        var seekDepth = 3.0
-        var rayCount = 6
-        var rayAngle = 20 // degrees
-
-        var offsetToKnees = Vec3.new(0.0, -0.25, 0.0)
-
-        var angleStep = Math.Radians(rayAngle) / (rayCount / 2)
-
         var offsetDirection = Vec3.new(0, 0, 0)
 
         // Find closest ray hit and add this to the offsetDirection vector
         for(i in 0...rayCount) {
-            var angleOffset = (i-(rayCount - 1) / 2.0) * angleStep
-            var rotatedDirection = Math.RotateY(forwardVector, angleOffset)
 
-            var hitInfos = engine.GetPhysics().ShootRay(position + offsetToKnees, rotatedDirection, seekDepth)
+            var angleOffset = (i-(rayCount - 1) / 2.0) * Math.Radians(rayAngle) / (rayCount / 2)
+            var hitInfos = engine.GetPhysics().ShootRay(position + offsetToKnees, Math.RotateY(forwardVector, angleOffset), 3.0)
+
             var lowestHitFraction = 1.0
             var lowestHitFractionIndex = 0
+
             for(j in 0...hitInfos.count) {
 
                 var ray = hitInfos[j]
@@ -516,12 +516,12 @@ class MeleeEnemy {
             // steer either hard left or right (random chance for either)
 
             var angle = 0.0
-
-            var index = Random.RandomIndex(0, 1)
+            var index = Random.RandomIndex(0, 2)
+            
             if(index == 0) {
-                angle = -90.0
+                angle = Math.Radians(-90.0)
             } else {
-                angle = 90.0
+                angle = Math.Radians(90.0)
             }
 
             forwardVector = Math.RotateY(forwardVector, angle)

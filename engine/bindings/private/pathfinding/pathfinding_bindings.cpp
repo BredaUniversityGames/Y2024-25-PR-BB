@@ -26,6 +26,16 @@ const std::vector<PathNode>& GetWaypoints(ComputedPath& path)
     return path.waypoints;
 }
 
+PathNode GetWaypoint(ComputedPath& path, uint32_t index)
+{
+    return path.waypoints.at(index);
+}
+
+uint32_t GetSize(ComputedPath& path)
+{
+    return path.waypoints.size();
+}
+
 void ClearWaypoints(ComputedPath& path)
 {
     path.waypoints.clear();
@@ -50,6 +60,9 @@ void BindPathfindingAPI(wren::ForeignModule& module)
     pathNode.propReadonlyExt<bindings::GetCenter>("center");
 
     auto& computedPath = module.klass<ComputedPath>("ComputedPath");
-    computedPath.funcExt<bindings::GetWaypoints>("GetWaypoints");
+
+    computedPath.funcExt<bindings::GetSize>("Count");
+    // computedPath.funcExt<bindings::GetWaypoints>("GetWaypoints");
     computedPath.funcExt<bindings::ClearWaypoints>("ClearWaypoints");
+    computedPath.funcExt<bindings::GetWaypoint>("GetWaypoint");
 }

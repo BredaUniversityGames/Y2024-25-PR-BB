@@ -137,10 +137,6 @@ class WaveSystem {
     SpawnEnemy(engine, enemyList) {
 
         var zone = TracyZone.new("Enemy Spawn")
-
-        engine.GetTime().SetScale(1.0)
-        engine.GetAudio().SetPlaybackSpeed(1.0)
-
         var enemyType = EnemyType.Skeleton
 
         if (enemyType == EnemyType.Skeleton) {
@@ -148,7 +144,7 @@ class WaveSystem {
             if (_currentWave.spawns[enemyType] > 0) {
                 var enemy = enemyList.add(MeleeEnemy.new(engine, this.GetSpawnLocation() + Vec3.new(0, 1, 0)))
                 _currentWave.spawns[enemyType] = _currentWave.spawns[enemyType] - 1
-                enemy.FindNewPath(engine)
+            
                 _enemyCount = _enemyCount + 1
             } else {
                 enemyType = EnemyType.Eye
@@ -159,7 +155,7 @@ class WaveSystem {
             if (_currentWave.spawns[enemyType] > 0) {
                 var enemy = enemyList.add(RangedEnemy.new(engine, this.GetSpawnLocation() + Vec3.new(0, 6, 0)))
                 _currentWave.spawns[enemyType] = _currentWave.spawns[enemyType] - 1
-                enemy.FindNewPath(engine)
+
                 _enemyCount = _enemyCount + 1
             } else {
                 enemyType = EnemyType.Berserker
@@ -168,11 +164,12 @@ class WaveSystem {
         } else if (enemyType == EnemyType.Berserker) {
 
             if (_currentWave.spawns[enemyType] > 0) {
+
                 var offsetX = Random.RandomFloatRange(-1, 1)
                 var offsetZ = Random.RandomFloatRange(-1, 1)
                 var enemy = enemyList.add(BerserkerEnemy.new(engine, this.GetSpawnLocation() + Vec3.new(offsetX, 3, offsetZ)))
+
                 _currentWave.spawns[enemyType] = _currentWave.spawns[enemyType] - 1
-                enemy.FindNewPath(engine)
                 _enemyCount = _enemyCount + 1
             }
         }
