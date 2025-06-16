@@ -154,13 +154,17 @@ class RangedEnemy {
             soulManager.SpawnSoul(engine, body.GetPosition(),SoulType.BIG)
 
             var stat = engine.GetSteam().GetStat(Stats.EYES_KILLED())
-            stat.intValue = stat.intValue + 1
+            if(stat != null) {
+                stat.intValue = stat.intValue + 1
+            }
             engine.GetSteam().Unlock(Achievements.EYES_KILLED_1())
 
             var playerPowerUp = playerVariables.GetCurrentPowerUp()
             if(playerPowerUp != PowerUpType.NONE) {
                 var powerUpStat = engine.GetSteam().GetStat(Stats.ENEMIES_KILLED_WITH_RELIC())
-                powerUpStat.intValue = powerUpStat.intValue + 1
+                if(powerUpStat != null) {
+                    powerUpStat.intValue = powerUpStat.intValue + 1
+                }
                 engine.GetSteam().Unlock(Achievements.RELIC_1())
             }
 

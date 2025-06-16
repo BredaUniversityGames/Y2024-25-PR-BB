@@ -10,7 +10,7 @@
 
 namespace bindings
 {
-Stat* GetStat(SteamModule& self, SteamStatEnum stats)
+std::optional<Stat*> GetStat(SteamModule& self, SteamStatEnum stats)
 {
     return self.GetStats().GetStat(magic_enum::enum_name(stats));
 }

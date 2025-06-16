@@ -106,7 +106,9 @@ class Coin {
                 audioEmitter.AddEvent(eventInstance)
                 
                 var stat = engine.GetSteam().GetStat(Stats.GOLD_NUGGETS_COLLECTED())
-                stat.intValue = stat.intValue + 1
+                if(stat != null) {
+                    stat.intValue = stat.intValue + 1
+                }
                 engine.GetSteam().Unlock(Achievements.NUGGET_1())
 
                 // Play flash effect

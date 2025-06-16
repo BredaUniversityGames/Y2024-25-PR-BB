@@ -415,7 +415,6 @@ void GameModule::Tick(Engine& engine)
     if (inputDeviceManager.IsKeyPressed(KeyboardCode::eH))
     {
         applicationModule.SetMouseHidden(!applicationModule.GetMouseHidden());
-        engine.GetModule<SteamModule>().GetStats().GetStat(magic_enum::enum_name(SteamStatEnum::SKELETONS_KILLED))->value += 1;
     }
 #endif
 

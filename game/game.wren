@@ -506,7 +506,9 @@ class Main {
             engine.GetUI().SetSelectedElement(engine.GetGame().GetGameOverMenu().retryButton)
 
             var stat = engine.GetSteam().GetStat(Stats.TIMES_DIED())
-            stat.intValue = stat.intValue + 1
+            if(stat != null) {
+                stat.intValue = stat.intValue + 1
+            }
             engine.GetSteam().Unlock(Achievements.DIE_1())
         }
 

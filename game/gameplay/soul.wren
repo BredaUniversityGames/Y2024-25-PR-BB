@@ -126,7 +126,9 @@ class Soul {
                 audioEmitter.AddEvent(eventInstance)
 
                 var stat = engine.GetSteam().GetStat(Stats.SOULS_COLLECTED())
-                stat.intValue = stat.intValue + 1
+                if(stat != null){
+                    stat.intValue = stat.intValue + 1
+                }
                 engine.GetSteam().Unlock(Achievements.SOULS_1())
 
                 // Play flash effect

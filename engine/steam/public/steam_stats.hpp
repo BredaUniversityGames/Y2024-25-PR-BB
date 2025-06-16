@@ -48,7 +48,7 @@ public:
     ~SteamStatManager() = default;
 
     bool StoreStats();
-    Stat* GetStat(std::string_view name);
+    std::optional<Stat*> GetStat(std::string_view name);
 
     STEAM_CALLBACK(SteamStatManager, OnUserStatsReceived, UserStatsReceived_t,
         _callbackUserStatsReceived);
