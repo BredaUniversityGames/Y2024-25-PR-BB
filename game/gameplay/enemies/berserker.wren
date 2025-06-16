@@ -1,4 +1,4 @@
-import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, Perlin, Random, Stat, Stats
+import "engine_api.wren" for Vec3, Vec2, Engine, ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, Perlin, Random, Stat, Stats
 import "../player.wren" for PlayerVariables
 
 import "../soul.wren" for Soul, SoulManager, SoulType
@@ -207,23 +207,35 @@ class BerserkerEnemy {
                     _rootEntity.GetAudioEmitterComponent().AddEvent(engine.GetAudio().PlayEventOnce(_attackHitSFX))
                     if (!playerVariables.IsInvincible()) {
 
-                        var forward = Math.ToVector(_rootEntity.GetTransformComponent().rotation).mulScalar(-1)
+                        var forward = Math.ToVector(_rootEntity.GetTransformComponent().rotation).mulScalar(-1).normalize()
                         var toPlayer = (playerPos - pos).normalize()
 
-                        if (Math.Dot(forward, toPlayer) >= 0.8 && Math.Distance(playerPos, pos) < _attackRange) {
+                        var forward2D = Vec2.new(forward.x, forward.z).normalize()
+                        var toPlayer2D = Vec2.new(toPlayer.x, toPlayer.z).normalize()
+
+                        if (Math.Dot2D(forward2D, toPlayer2D) >= 0.8 && Math.Distance(playerPos, pos) < _attackRange) {
                             var rayHitInfo = engine.GetPhysics().ShootMultipleRays(pos, toPlayer, _attackRange, 3, 20)
                             var isOccluded = false
+                            System.print(rayHitInfo.count)
                             if (!rayHitInfo.isEmpty) {
                                 for (rayHit in rayHitInfo) {
+                                    
                                     var hitEntity = rayHit.GetEntity(engine.GetECS())
+                                    System.print(hitEntity)
                                     if (hitEntity == _rootEntity || hitEntity.HasEnemyTag()) {
+                                        System.print("Continue")
                                         continue
                                     }
+                                    System.print("Not enemy")
                                     if (!hitEntity.HasPlayerTag()) {
                                         isOccluded = true
                                     }
                                     break
                                 }
+                            }
+
+                            if (isOccluded) {
+                                System.print("Occluded")
                             }
 
                             if (!isOccluded) {
