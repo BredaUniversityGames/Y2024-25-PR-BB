@@ -1,4 +1,5 @@
-import "engine_api.wren" for Engine, ECS, Entity, Vec3, Vec2, Quat, Math, TransformComponent, Input, Random, ShapeFactory, Stat, Stats
+import "engine_api.wren" for Engine, TracyZone, Math, Random, Stats, Vec3
+
 import "enemies/melee.wren" for MeleeEnemy
 import "enemies/ranged.wren" for RangedEnemy
 import "enemies/berserker.wren" for BerserkerEnemy
@@ -58,10 +59,9 @@ class WaveSystem {
         _ongoingWave = false
 
         _currentWave = Wave.new()
-        _waveTimer = 0.0
-        _waveDelay = 4.0
-        _realWaveTimer = 0.0
+        _waveDelay = 6.0
         _waveSlowdown = 0.8
+        _realWaveTimer = _waveSlowdown * 2
         _enemyCount = 0
 
         _timeSpeed = 1.0
@@ -82,36 +82,28 @@ class WaveSystem {
 
     Update(engine, player, enemyList, dt, playerVariables, stationManager) {
 
-        _waveTimer = _waveTimer + dt / 1000.0
         _realWaveTimer = _realWaveTimer + engine.GetTime().GetRealDeltatime() / 1000.0
         _waveSpawnTimer = _waveSpawnTimer + dt / 1000.0
+
         var realDeltatime = engine.GetTime().GetRealDeltatime() / 1000 * 60
 
         // Waiting period
         if (_realWaveTimer < _waveDelay) {
-            if (_realWaveTimer > _waveSlowdown) {
-                _timeSpeed = Math.MixFloat(_timeSpeed, 1.0, 0.09 * realDeltatime)
-            } else {
-                if (_waveIndex > -1) {
-                    _timeSpeed = Math.MixFloat(_timeSpeed, _slowTime, 0.09 * realDeltatime)
-                }
-            }
+
+            if (_realWaveTimer < _waveSlowdown) {
+                _timeSpeed = Math.MixFloat(_timeSpeed, _slowTime, _realWaveTimer / 0.8)
+            } else if (_realWaveTimer < _waveSlowdown * 2) {
+                _timeSpeed = Math.MixFloat(_slowTime, 1.0, (_realWaveTimer - _waveSlowdown) / 0.8)
+            } 
+
             engine.GetTime().SetScale(_timeSpeed)
             engine.GetAudio().SetPlaybackSpeed(_timeSpeed)
             return
         }
 
-        if (1 - _timeSpeed < 0.001) {
-            _timeSpeed = 1
-        } else {
-            _timeSpeed = Math.MixFloat(_timeSpeed, 1.0, 0.09 * realDeltatime)
-        }
-
-        engine.GetTime().SetScale(_timeSpeed)
-        engine.GetAudio().SetPlaybackSpeed(_timeSpeed)
-
         // Inside a wave
         if (_ongoingWave) {
+
             if (_waveSpawnTimer > _waveSpawnInterval) {
                 this.SpawnEnemy(engine, enemyList)
                 _waveSpawnTimer = 0.0
@@ -120,14 +112,13 @@ class WaveSystem {
             if (_enemyCount == 0 && _currentWave.isOver()) {
 
                 _ongoingWave = false
-                _waveTimer = 0.0
                 _realWaveTimer = 0.0
                 System.print("Completed wave %(_waveIndex)")
             }
 
         } else {
           
-            this.NextWave(engine, enemyList, playerVariables)
+            this.NextWave(engine, playerVariables)
             stationManager.ResetStations()
 
             var playerPowerUp = playerVariables.GetCurrentPowerUp()
@@ -139,7 +130,12 @@ class WaveSystem {
 
     SpawnEnemy(engine, enemyList) {
 
-        var enemyType = Random.RandomIndex(0, EnemyType.SIZE)
+        var zone = TracyZone.new("Enemy Spawn")
+
+        engine.GetTime().SetScale(1.0)
+        engine.GetAudio().SetPlaybackSpeed(1.0)
+
+        var enemyType = EnemyType.Skeleton
 
         if (enemyType == EnemyType.Skeleton) {
 
@@ -148,7 +144,6 @@ class WaveSystem {
                 _currentWave.spawns[enemyType] = _currentWave.spawns[enemyType] - 1
                 enemy.FindNewPath(engine)
                 _enemyCount = _enemyCount + 1
-                return
             } else {
                 enemyType = EnemyType.Eye
             }
@@ -160,7 +155,6 @@ class WaveSystem {
                 _currentWave.spawns[enemyType] = _currentWave.spawns[enemyType] - 1
                 enemy.FindNewPath(engine)
                 _enemyCount = _enemyCount + 1
-                return
             } else {
                 enemyType = EnemyType.Berserker
             }
@@ -174,12 +168,13 @@ class WaveSystem {
                 _currentWave.spawns[enemyType] = _currentWave.spawns[enemyType] - 1
                 enemy.FindNewPath(engine)
                 _enemyCount = _enemyCount + 1
-                return
             }
         }
+
+        zone.End()
     }
 
-    NextWave(engine, enemyList, playerVariables) {
+    NextWave(engine, playerVariables) {
 
         // Start the next wave
         _waveIndex = _waveIndex + 1

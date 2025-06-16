@@ -1,4 +1,4 @@
-import "engine_api.wren" for Engine, Vec3, Vec2, Quat, ShapeFactory, Rigidbody, RigidbodyComponent, PhysicsObjectLayer, Math, Keycode, TracyZone
+import "engine_api.wren" for Engine, Vec3, Vec2, Quat, ShapeFactory, Rigidbody, RigidbodyComponent, PhysicsObjectLayer, Math, Keycode, TracyZone, Stats, Achievements
 
 import "gameplay/movement.wren" for PlayerMovement
 import "gameplay/weapon.wren" for Pistol, Shotgun, Weapons
@@ -476,15 +476,37 @@ class Main {
             zone.End()
         }
 
-        __soulManager.Update(engine, __playerVariables,__flashSystem, dt)
-        __coinManager.Update(engine, __playerVariables,__flashSystem, dt)
-        __waveSystem.Update(engine, __player, __enemyList, dt,__playerVariables, __stationManager)
+        {
+            var zone = TracyZone.new("Soul system update")
+            __soulManager.Update(engine, __playerVariables,__flashSystem, dt)
+            zone.End()
+        }
 
-        __stationManager.Update(engine, __playerVariables, dt)
-        __flashSystem.Update(engine, dt)
-        __powerUpSystem.Update(engine,__playerVariables,__flashSystem, dt)
+        {
+            var zone = TracyZone.new("Coin system update")
+            __coinManager.Update(engine, __playerVariables,__flashSystem, dt)
+            zone.End()
+        }
 
-        __playerVariables.hud.Update(engine, dt,__playerMovement,__playerVariables,__activeWeapon.ammo, __activeWeapon.maxAmmo)
+        {
+            var zone = TracyZone.new("Wave system update")
+            __waveSystem.Update(engine, __player, __enemyList, dt,__playerVariables, __stationManager)
+            zone.End()
+        }
+
+        {
+            var zone = TracyZone.new("Station / Flash / PowerUP Update")
+            __stationManager.Update(engine, __playerVariables, dt)
+            __flashSystem.Update(engine, dt)
+            __powerUpSystem.Update(engine,__playerVariables,__flashSystem, dt)
+            zone.End()
+        }
+
+        {
+            var zone = TracyZone.new("Player HUD Update")
+            __playerVariables.hud.Update(engine, dt,__playerMovement,__playerVariables,__activeWeapon.ammo, __activeWeapon.maxAmmo)
+            zone.End()
+        }
 
         if (!engine.IsDistribution()) {
             DebugUtils.Tick(engine, __enemyList,__soulManager, __coinManager, __flashSystem, __waveSystem, __playerVariables)
