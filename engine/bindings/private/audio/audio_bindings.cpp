@@ -95,6 +95,11 @@ void DisableLowPass(AudioModule& self)
     self.SetLowpassBypass(true);
 }
 
+void SetMasterChannelGroupPitch(AudioModule& self, float pitch)
+{
+    self.SetMasterChannelGroupPitch(pitch);
+}
+
 }
 
 void BindAudioAPI(wren::ForeignModule& module)
@@ -111,6 +116,7 @@ void BindAudioAPI(wren::ForeignModule& module)
     wren_class.funcExt<bindings::StopSFX>("StopSFX", "Stop playing a sound effect instance");
     wren_class.funcExt<&bindings::EnableLowPass>("EnableLowPass", "Enables the lowpass DSP");
     wren_class.funcExt<&bindings::DisableLowPass>("DisableLowPass", "Disables the lowpass DSP");
+    wren_class.funcExt<&bindings::SetMasterChannelGroupPitch>("SetPlaybackSpeed", "Sets the playback speed of all audio using pitch");
     wren_class.func<&AudioModule::SetEventFloatAttribute>("SetEventFloatAttribute", "Pass event instance, attribute name and float value");
     wren_class.func<&AudioModule::SetEventVolume>("SetEventVolume", "Set event volume from 0.0 to 1.0");
 

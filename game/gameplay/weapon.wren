@@ -129,7 +129,7 @@ class Pistol {
         }
     }
 
-    attack(engine, deltaTime, playerVariables, enemies, coinManager, fov) {
+    attack(engine, deltaTime, playerVariables, enemies, coinManager, soulManager, fov, waveSystem) {
         _manualTimer = Math.Max(_manualTimer-deltaTime,0)
         
         if (_entityName == "Gun") {
@@ -192,15 +192,11 @@ class Pistol {
             // Play quad damage audio if needed
             if(playerVariables.GetCurrentPowerUp() == PowerUpType.QUAD_DAMAGE){
                 var quadEventInstance = engine.GetAudio().PlayEventOnce(_quadHit)
-                engine.GetAudio().SetEventVolume(quadEventInstance, 3.0)
-
                 audioEmitter.AddEvent(quadEventInstance)
             }
 
             if(playerVariables.GetCurrentPowerUp() == PowerUpType.DOUBLE_GUNS){
                 var dualEventInstance = engine.GetAudio().PlayEventOnce(_dualGunHit)
-                engine.GetAudio().SetEventVolume(dualEventInstance, 2.0)
-
                 audioEmitter.AddEvent(dualEventInstance)
             }   
 
@@ -247,10 +243,7 @@ class Pistol {
                 var normal = Vec3.new(0, 1, 0)
                 for (rayHit in rayHitInfo) {
                     var hitEntity = rayHit.GetEntity(engine.GetECS())
-                    if (!hitEntity.HasPlayerTag()) {
-                        if (System.print(hitEntity.GetRigidbodyComponent().GetLayer()) == PhysicsObjectLayer.eDEAD()) {
-                            continue
-                        }
+                    if (!hitEntity.HasPlayerTag() && hitEntity.GetRigidbodyComponent().GetLayer() != PhysicsObjectLayer.eDEAD()) {
                         end = rayHit.position
                         normal = rayHit.normal
                         if (hitEntity.HasEnemyTag()) {
@@ -270,7 +263,7 @@ class Pistol {
                                         playerVariables.hitmarkerState = HitmarkerState.normal
                                     }
                                     playerVariables.UpdateMultiplier()
-                                    enemy.DecreaseHealth(_damage * multiplier * playerVariables.GetDamageMultiplier(),engine,coinManager)
+                                    enemy.DecreaseHealth(_damage * multiplier * playerVariables.GetDamageMultiplier(),engine,coinManager,soulManager,waveSystem, playerVariables)
                                     if (enemy.health <= 0) {
                                         playerVariables.IncreaseScore(5 * multiplier * playerVariables.multiplier)
                                         //playerVariables.UpdateUltCharge(1.0)
@@ -454,7 +447,7 @@ class Shotgun {
         }
     }
 
-    attack(engine, deltaTime, playerVariables, enemies, coinManager) {
+    attack(engine, deltaTime, playerVariables, enemies, coinManager, soulManager) {
         if (_cooldown <= 0 && _ammo > 0 && _reloadTimer <= 0) {
             _ammo = _ammo - 1
 
@@ -523,7 +516,7 @@ class Shotgun {
                                         hitAnEnemy = true
 
                                         playerVariables.hitmarkTimer = 200 //ms
-                                        enemy.DecreaseHealth(_damage,engine,coinManager)
+                                        enemy.DecreaseHealth(_damage,engine,coinManager,soulManager, playerVariables)
 
                                         playerVariables.multiplierTimer = playerVariables.multiplierMaxTime
                                         playerVariables.IncreaseHealth(0.1 * _damage)

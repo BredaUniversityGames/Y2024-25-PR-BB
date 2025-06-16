@@ -1,9 +1,10 @@
-import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, Random
+import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, Random, Stat, Stats
 import "../player.wren" for PlayerVariables
 import "gameplay/flash_system.wren" for FlashSystem
 
 import "../soul.wren" for Soul, SoulManager, SoulType
 import "../coin.wren" for Coin, CoinManager
+import "../station.wren" for PowerUpType
 
 class RangedEnemy {
 
@@ -27,8 +28,9 @@ class RangedEnemy {
 
         _shootSFX = "event:/SFX/EyeLaserBlast" 
         _chargeSFX = "event:/SFX/EyeLaserCharge"
-        _hitSFX = "event:/SFX/EyeHit"
+        _hurtSFX = "event:/SFX/EyeHit"
         _spawnSFX = "event:/SFX/EnemySpawn"
+        _hitSFX = "event:/SFX/Hurt"
 
         var enemyModel = "assets/models/eye.glb"
         var enemySize = 3.25
@@ -114,12 +116,11 @@ class RangedEnemy {
         return false
     }
 
-    DecreaseHealth(amount, engine, coinManager) {
+    DecreaseHealth(amount, engine, coinManager, soulManager, waveSystem, playerVariables) {
         var body = _rootEntity.GetRigidbodyComponent()
         _health = Math.Max(_health - amount, 0)
 
-        var eventInstance = engine.GetAudio().PlayEventOnce(_hitSFX)
-        engine.GetAudio().SetEventVolume(eventInstance, 20.0)
+        var eventInstance = engine.GetAudio().PlayEventOnce(_hurtSFX)
         _rootEntity.GetAudioEmitterComponent().AddEvent(eventInstance)
 
         // Fly some worms out of him
@@ -132,6 +133,7 @@ class RangedEnemy {
 
         if (_health <= 0 && _isAlive) {
             _isAlive = false
+            waveSystem.DecreaseEnemyCount()
             _rootEntity.RemoveEnemyTag()
             
             body.SetVelocity(Vec3.new(0,0,0))
@@ -146,6 +148,18 @@ class RangedEnemy {
             var coinCount = Random.RandomIndex(2, 5)
             for(i in 0...coinCount) {
                 coinManager.SpawnCoin(engine, body.GetPosition() + Vec3.new(0, 1.0, 0))
+            }
+
+            // Spawn a soul
+            soulManager.SpawnSoul(engine, body.GetPosition(),SoulType.BIG)
+
+            var stat = engine.GetSteam().GetStat(Stats.EYES_KILLED())
+            stat.intValue = stat.intValue + 1
+
+            var playerPowerUp = playerVariables.GetCurrentPowerUp()
+            if(playerPowerUp != PowerUpType.NONE) {
+                var powerUpStat = engine.GetSteam().GetStat(Stats.ENEMIES_KILLED_WITH_RELIC())
+                powerUpStat.intValue = powerUpStat.intValue + 1
             }
 
             body.SetDynamic()
@@ -271,6 +285,7 @@ class RangedEnemy {
                             playerVariables.cameraVariables.shakeIntensity = _shakeIntensity
                             playerVariables.invincibilityTime = playerVariables.invincibilityMaxTime
                             playerVariables.hud.IndicateDamage(pos)
+                            engine.GetAudio().PlayEventOnce(_hitSFX)
                             flashSystem.Flash(Vec3.new(1.0, 0.0, 0.0),0.75)
                         }
                     }
@@ -290,7 +305,6 @@ class RangedEnemy {
                     }
 
                     var eventInstance = engine.GetAudio().PlayEventOnce(_shootSFX)
-                    engine.GetAudio().SetEventVolume(eventInstance, 0.8)
                     _rootEntity.GetAudioEmitterComponent().AddEvent(eventInstance)
 
 
@@ -337,7 +351,6 @@ class RangedEnemy {
                     
                     //play charge sound
                     _chargeSoundEventInstance = engine.GetAudio().PlayEventOnce(_chargeSFX)
-                    engine.GetAudio().SetEventVolume(_chargeSoundEventInstance, 0.8)
                     _rootEntity.GetAudioEmitterComponent().AddEvent(_chargeSoundEventInstance)
 
                 } else if (_movingState == false) { // Enter attack state
@@ -366,9 +379,6 @@ class RangedEnemy {
             }
 
             if (_deathTimer <= 0) {
-                //spawn a soul
-                soulManager.SpawnSoul(engine, body.GetPosition(),SoulType.BIG)
-
                 engine.GetECS().DestroyEntity(_rootEntity) // Destroys the entity, and in turn this object
             } else {
                 // Wait for death animation before starting descent

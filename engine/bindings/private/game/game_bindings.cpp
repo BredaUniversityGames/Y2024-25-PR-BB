@@ -93,6 +93,17 @@ glm::vec3 GetAimAssistDirection(GameModule&, ECSModule& ecs, PhysicsModule& phys
 {
     return AimAssist::GetAimAssistDirection(ecs, physics, position, forward, range, minAngle);
 }
+
+std::vector<CachedBindingOriginVisual> GetDigitalActionBindingOriginVisual(GameModule& self, const std::string& actionName)
+{
+    return self.GetInputVisualiztionsCache().GetDigital(actionName);
+}
+
+std::vector<CachedBindingOriginVisual> GetAnalogActionBindingOriginVisual(GameModule& self, const std::string& actionName)
+{
+    return self.GetInputVisualiztionsCache().GetAnalog(actionName);
+}
+
 }
 
 void BindGameAPI(wren::ForeignModule& module)
@@ -120,6 +131,7 @@ void BindGameAPI(wren::ForeignModule& module)
     game.func<&GameModule::GetHUD>("GetHUD");
     game.func<&GameModule::GetGameOver>("GetGameOverMenu");
     game.func<&GameModule::GetLoadingScreen>("GetLoadingScreen");
+    game.func<&GameModule::GetGameVersionVisual>("GetGameVersionVisual");
 
     game.funcExt<&bindings::GetAimAssistDirection>("GetAimAssistDirection", "Returns the direction vector where to shoot to according to the aim assist");
 
@@ -127,6 +139,12 @@ void BindGameAPI(wren::ForeignModule& module)
     game.funcExt<&bindings::MenuStackSet>("SetUIMenu");
     game.funcExt<&bindings::MenuStackPush>("PushUIMenu");
     game.funcExt<&bindings::MenuStackPop>("PopUIMenu");
+
+    auto& bindingOriginVisual = module.klass<CachedBindingOriginVisual>("BindingOriginVisual");
+    bindingOriginVisual.varReadonly<&CachedBindingOriginVisual::bindingInputName>("bindingInputName");
+
+    game.funcExt<&bindings::GetDigitalActionBindingOriginVisual>("GetDigitalActionBindingOriginVisual");
+    game.funcExt<&bindings::GetAnalogActionBindingOriginVisual>("GetAnalogActionBindingOriginVisual");
 
     auto& ui = module.klass<UIModule>("UIModule");
     module.klass<UIElement>("UIElement");

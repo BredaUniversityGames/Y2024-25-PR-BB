@@ -4,7 +4,7 @@ import "gameplay/weapon.wren" for Pistol, Shotgun, Weapons
 import "gameplay/camera.wren" for CameraVariables
 import "gameplay/player.wren" for PlayerVariables, HitmarkerState
 import "gameplay/music_player.wren" for MusicPlayer, BGMPlayer
-import "gameplay/wave_system.wren" for WaveSystem, WaveConfig, EnemyType, WaveGenerator
+import "gameplay/wave_system.wren" for WaveSystem, Wave, EnemyType, WaveGenerator
 import "analytics/analytics.wren" for AnalyticsManager
 
 import "gameplay/hud.wren" for WrenHUD
@@ -44,7 +44,7 @@ class Main {
 
         // Player Setup
 
-        __playerVariables = PlayerVariables.new(engine.GetGame().GetHUD())
+        __playerVariables = PlayerVariables.new(engine.GetGame().GetHUD(), engine)
         __counter = 0
         __frameTimer = 0
         __groundedTimer = 0
@@ -188,7 +188,6 @@ class Main {
 
         __heartBeatSFX = "event:/SFX/HeartBeat"
         __heartBeatEvent = engine.GetAudio().PlayEventLoop(__heartBeatSFX)
-        engine.GetAudio().SetEventVolume(__heartBeatEvent, 4)
 
         __camera.GetAudioEmitterComponent().AddEvent(__heartBeatEvent)
 
@@ -204,11 +203,20 @@ class Main {
 
         var waveConfigs = []
 
-        for (v in 0...30) {
+        for (v in 0...10) {
             waveConfigs.add(WaveGenerator.GenerateWave(v))
         }
 
-        __waveSystem = WaveSystem.new(waveConfigs, spawnLocations)
+        waveConfigs[0].spawns[EnemyType.Skeleton] = 2
+        waveConfigs[1].spawns[EnemyType.Skeleton] = 4
+        waveConfigs[2].spawns[EnemyType.Skeleton] = 5
+        waveConfigs[3].spawns[EnemyType.Skeleton] = 7
+        waveConfigs[4].spawns[EnemyType.Skeleton] = 4
+
+        //waveConfigs[1] = wave2
+        //waveConfigs[3] = wave4
+
+        __waveSystem = WaveSystem.new(engine, waveConfigs, spawnLocations)
 
         // Souls
         __soulManager = SoulManager.new(engine, __player)
@@ -255,6 +263,7 @@ class Main {
         var backToMain = Fn.new {
             engine.TransitionToScript("game/main_menu.wren")
             engine.GetTime().SetScale(1.0)
+            engine.GetAudio().SetPlaybackSpeed(1.0)
         }
 
         var menuButton = engine.GetGame().GetPauseMenu().backButton
@@ -340,7 +349,7 @@ class Main {
         var healthFraction = __playerVariables.health / __playerVariables.maxHealth
         engine.GetAudio().SetEventFloatAttribute(__heartBeatEvent, "Health", healthFraction)
         if (healthFraction < 0.3) {
-            __flashSystem.SetBaseColor(Vec3.new(105 / 255, 13 / 255, 1 / 255),2 - healthFraction*4)
+            __flashSystem.SetBaseColor(Vec3.new(105 / 255, 13 / 255, 1 / 255),1 - healthFraction*4)
             engine.GetAudio().EnableLowPass()
         } else {
             engine.GetAudio().DisableLowPass()
@@ -457,7 +466,7 @@ class Main {
         }
 
         if (engine.GetInput().GetDigitalAction("Shoot").IsHeld()  && __activeWeapon.isUnequiping(engine) == false ) {
-            __activeWeapon.attack(engine, dt, __playerVariables, __enemyList, __coinManager, __playerMovement.cameraFovCurrent)
+            __activeWeapon.attack(engine, dt, __playerVariables, __enemyList, __coinManager, __soulManager, __playerMovement.cameraFovCurrent, __waveSystem)
             if (__activeWeapon.ammo <= 0) {
                 __activeWeapon.reload(engine)
             }
@@ -470,7 +479,7 @@ class Main {
         if (engine.GetInput().GetDigitalAction("ShootSecondary").IsHeld()  && __activeWeapon.isUnequiping(engine) == false ) {
 
             if (__playerVariables.GetCurrentPowerUp() == PowerUpType.DOUBLE_GUNS){
-                __secondaryWeapon.attack(engine, dt, __playerVariables, __enemyList, __coinManager, __playerMovement.cameraFovCurrent)
+                __secondaryWeapon.attack(engine, dt, __playerVariables, __enemyList, __coinManager, __soulManager, __playerMovement.cameraFovCurrent, __waveSystem)
                 if (__secondaryWeapon.ammo <= 0) {
                     __secondaryWeapon.reload(engine)
                 }
@@ -512,7 +521,7 @@ class Main {
 
         __soulManager.Update(engine, __playerVariables,__flashSystem, dt)
         __coinManager.Update(engine, __playerVariables,__flashSystem, dt)
-        __waveSystem.Update(engine, __player, __enemyList, dt,__playerVariables)
+        __waveSystem.Update(engine, __player, __enemyList, dt,__playerVariables, __stationManager)
 
         __stationManager.Update(engine, __playerVariables, dt)
         __flashSystem.Update(engine, dt)

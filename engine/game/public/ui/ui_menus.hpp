@@ -1,11 +1,11 @@
 #pragma once
+#include "input_bindings_visualization_cache.hpp"
 #include "canvas.hpp"
 #include "fonts.hpp"
+#include "ui_button.hpp"
 #include "ui_slider.hpp"
 #include "ui_toggle.hpp"
-
 #include <array>
-#include <ui_button.hpp>
 
 class UIImage;
 class UITextElement;
@@ -33,6 +33,9 @@ public:
     std::weak_ptr<UITextElement> scoreText;
     std::weak_ptr<UITextElement> powerupText;
     std::weak_ptr<UITextElement> powerUpTimer;
+
+    std::weak_ptr<UITextElement> actionBindingText;
+    std::weak_ptr<UIImage> actionBindingGlyph;
 
     std::weak_ptr<UITextElement> multiplierText;
 
@@ -102,10 +105,11 @@ class LoadingScreen : public Canvas
     static constexpr uint32_t MAX_LINE_BREAKS = 5;
 
 public:
-    static std::shared_ptr<LoadingScreen> Create(GraphicsContext& graphicsContext, const glm::uvec2& screenResolution, std::shared_ptr<UIFont> font);
+    static std::shared_ptr<LoadingScreen> Create(GraphicsContext& graphicsContext, InputBindingsVisualizationCache& inputVisualizationsCache, const glm::uvec2& screenResolution, std::shared_ptr<UIFont> font);
 
-    LoadingScreen(const glm::uvec2& screenResolution)
+    LoadingScreen(const glm::uvec2& screenResolution, InputBindingsVisualizationCache& inputVisualizationsCache)
         : Canvas(screenResolution)
+        , _inputVisualizationsCache(inputVisualizationsCache)
     {
     }
 
@@ -117,8 +121,11 @@ public:
 private:
     constexpr static float _textSize = 100.0f;
 
+    InputBindingsVisualizationCache& _inputVisualizationsCache;
     std::array<std::weak_ptr<UITextElement>, MAX_LINE_BREAKS> _displayTexts;
-    std::weak_ptr<UITextElement> _continueText;
+    std::weak_ptr<UITextElement> _continueTextLeft;
+    std::weak_ptr<UITextElement> _continueTextRight;
+    std::weak_ptr<UIImage> _continueGlyph;
     std::weak_ptr<UIFont> _font;
     glm::vec4 _displayTextColor = glm::vec4(1.0, 1.0f, 1.0f, 1.0f);
 };
@@ -158,11 +165,12 @@ class Engine;
 class ControlsMenu : public Canvas
 {
 public:
-    static std::shared_ptr<ControlsMenu> Create(const glm::uvec2& screenResolution, GraphicsContext& graphicsContext, ActionManager& actionManager, std::shared_ptr<UIFont> font);
+    static std::shared_ptr<ControlsMenu> Create(const glm::uvec2& screenResolution, GraphicsContext& graphicsContext, InputBindingsVisualizationCache& inputVisualizationsCache, ActionManager& actionManager, std::shared_ptr<UIFont> font);
 
-    ControlsMenu(const glm::uvec2& screenResolution, const glm::ivec2 canvasResolution, GraphicsContext& graphicsContext, ActionManager& actionManager, std::shared_ptr<UIFont> font)
+    ControlsMenu(const glm::uvec2& screenResolution, const glm::ivec2 canvasResolution, GraphicsContext& graphicsContext, InputBindingsVisualizationCache& inputVisualizationsCache, ActionManager& actionManager, std::shared_ptr<UIFont> font)
         : Canvas(screenResolution)
         , _graphicsContext(graphicsContext)
+        , _inputVisualizationsCache(inputVisualizationsCache)
         , _actionManager(actionManager)
         , _font(font)
         , _canvasResolution(canvasResolution)
@@ -200,14 +208,12 @@ public:
 
 private:
     GraphicsContext& _graphicsContext;
+    InputBindingsVisualizationCache& _inputVisualizationsCache;
     ActionManager& _actionManager;
     std::shared_ptr<UIFont> _font;
     const glm::uvec2 _canvasResolution;
 
-    std::unordered_map<std::string, ResourceHandle<GPUImage>> _glyphsCache {};
-
     ActionControls AddActionVisualization(const std::string& actionName, Canvas& parent, float positionY, bool isAnalogInput);
-    ResourceHandle<GPUImage> GetGlyphImage(const std::string& path);
     void ClearBindings();
 };
 

@@ -28,9 +28,10 @@ class Station {
         _time = 0.0 // Time since the station was spawned
         _ambientStationSound = "event:/SFX/StationAmbient"
         _ambientSoundEventInstance = null
-        _activateSFX = "event:/SFX/StationActivate" 
+        _activateSFX = "event:/SFX/StationActivate"
         _powerUpType = PowerUpType.NONE
 
+        _powerUpCost = 5000
 
         _textOpacity = 0.0 // Transparency of the text
         _textColor = Vec3.new(1.0, 1.0, 1.0) // Color of the text
@@ -48,11 +49,11 @@ class Station {
         if(distance < _interactRange  && _isActive){
 
             if(_powerUpType == PowerUpType.QUAD_DAMAGE){
-                engine.GetGame().GetHUD().SetPowerUpText("QUAD DAMAGE RELIC [COST: 2000]")
+                engine.GetGame().GetHUD().SetPowerUpText("4X DAMAGE RELIC [COST: %(_powerUpCost)]")
             }
 
             if(_powerUpType == PowerUpType.DOUBLE_GUNS){
-                engine.GetGame().GetHUD().SetPowerUpText("DUAL GUN RELIC [COST: 2000]")
+                engine.GetGame().GetHUD().SetPowerUpText("DUAL GUN RELIC [COST: %(_powerUpCost)]")
             }
 
             _textOpacity = _textOpacity + dt * 0.005
@@ -61,27 +62,26 @@ class Station {
 
             engine.GetGame().GetHUD().SetPowerUpTextColor(Vec4.new(_textColor.x,_textColor.y,_textColor.z,_textOpacity) )
 
-
+            var visual = engine.GetGame().GetDigitalActionBindingOriginVisual("Interact")
+            engine.GetGame().GetHUD().ShowActionBinding(visual[0])
 
             if(engine.GetInput().GetDigitalAction("Interact").IsPressed()){
 
-                if(playerVariables.GetScore() >= 2000){
+                if((playerVariables.GetScore() >= _powerUpCost) && (playerVariables.GetCurrentPowerUp() == PowerUpType.NONE)){
 
                     if(_powerUpType == PowerUpType.QUAD_DAMAGE){
                         _stationManagerReference.PlayQuadHumSound(engine)
                     }
 
                     if(_powerUpType == PowerUpType.DOUBLE_GUNS){
-                        _stationManagerReference.PlayDualGunHumSound(engine) 
+                        _stationManagerReference.PlayDualGunHumSound(engine)
                     }
 
                     playerVariables.SetCurrentPowerUp(_powerUpType)
-                    playerVariables.DecreaseScore(2000)
-                    _time = 0.0
-                    this.SetStatus(false)
-                    this.SetPowerUpType(PowerUpType.NONE)
+                    playerVariables.DecreaseScore(_powerUpCost)
 
-                    _stationManagerReference.anyActiveStation = false
+                    _stationManagerReference.ResetStations()
+                    _stationManagerReference.timer = 0.0
 
                     System.print("Picked up power up ")
 
@@ -98,6 +98,7 @@ class Station {
             _textOpacity = Math.Clamp(_textOpacity, 0.0, 1.0)
             engine.GetGame().GetHUD().SetPowerUpTextColor(Vec4.new(1.0,1.0,1.0,_textOpacity) )
 
+            engine.GetGame().GetHUD().HideActionBinding()
         }
     }
 
@@ -159,8 +160,7 @@ class StationManager {
     construct new(engine, player){
         _stationList = [] // List of souls
         _playerEntity = player // Reference to the player entity
-        _maxLifeOfActiveStation = 30000.0 // Maximum lifetime of a station
-        _intervalBetweenStations = 55000.0 // Time interval between station's spawn
+        _intervalBetweenStations = 30000.0 // Time interval between station's spawn
         _anyActiveStation = false // Flag to check if any station is active
 
         // Load here the power up meshes and effects
@@ -211,10 +211,6 @@ class StationManager {
         var transformDualGunEmitter = _dualGunEmitter.AddTransformComponent()
         transformDualGunEmitter.translation = Vec3.new(0.0, -200.0, 0.0)
         engine.GetParticles().SpawnEmitter(_dualGunEmitter, "DualGunStation",emitterFlags,Vec3.new(0.0, 0.0, 0.0),Vec3.new(0.0, 0.0, 0.0))
-        
-        //
-
-
 
         // Load the stations
         for(i in 0..3) {
@@ -226,7 +222,7 @@ class StationManager {
             }
         }
 
-        _timer = _intervalBetweenStations
+        _timer = 0.0
     }
 
     AddStation(engine, spawnPosition){
@@ -235,12 +231,15 @@ class StationManager {
 
     anyActiveStation { _anyActiveStation }
     anyActiveStation=(value) { _anyActiveStation = value }
+    timer { _timer }
+    timer=(value) { _timer = value }
+    intervalBetweenStations { _intervalBetweenStations }
 
     PlayQuadHumSound(engine){
         var player = engine.GetECS().GetEntityByName("Camera")
         var audioEmitter = player.GetAudioEmitterComponent()
         var quadEventInstance = engine.GetAudio().PlayEventOnce(_quadHumEvent)
-        engine.GetAudio().SetEventVolume(quadEventInstance, 2.4)
+        engine.GetAudio().SetEventVolume(quadEventInstance, 1.0)
         audioEmitter.AddEvent(quadEventInstance)
     }
 
@@ -248,8 +247,21 @@ class StationManager {
         var player = engine.GetECS().GetEntityByName("Camera")
         var audioEmitter = player.GetAudioEmitterComponent()
         var dualGunEventInstance = engine.GetAudio().PlayEventOnce(_dualGunHumEvent)
-        engine.GetAudio().SetEventVolume(dualGunEventInstance, 2.4)
+        engine.GetAudio().SetEventVolume(dualGunEventInstance, 1.0)
         audioEmitter.AddEvent(dualGunEventInstance)
+    }
+
+    ResetStations(){
+
+        // Disable all stations first
+        for(station in _stationList){
+            station.time = 0.0
+            station.SetStatus(false)
+            station.SetPowerUpType(PowerUpType.NONE)
+        }
+
+        // Reset this flag
+        _anyActiveStation = false
     }
 
     Update(engine, playerVariables, dt){
@@ -258,26 +270,25 @@ class StationManager {
         playerPos.y = playerPos.y - 1.0
 
         var currentPowerUpColor =  engine.GetGame().GetHUD().GetPowerUpTextColor()
-   
+
         var newOpacity = currentPowerUpColor.w - dt * 0.005
         newOpacity = Math.Clamp(newOpacity, 0.0, 1.0)
 
         engine.GetGame().GetHUD().SetPowerUpTextColor(Vec4.new(currentPowerUpColor.x,currentPowerUpColor.y,currentPowerUpColor.z,newOpacity) )
+
+        if(!_anyActiveStation){
+            // hide all the pickups meshes and effects under the map
+            _quadDamageMeshEntity.GetTransformComponent().translation = Vec3.new(0.0, -100.0, 0.0) // Move the mesh out of bounds
+            _quadDamageEmitter.GetTransformComponent().translation = Vec3.new(0.0, -200.0, 0.0) // Move the emitter out of bounds
+
+            _dualGunMeshEntity.GetTransformComponent().translation = Vec3.new(0.0, -100.0, 0.0) // Move the mesh out of bounds
+            _dualGunEmitter.GetTransformComponent().translation = Vec3.new(0.0, -200.0, 0.0) // Move the emitter out of bounds
+        }
+
         // Timer to set a random station active
         _timer = _timer + dt
-        if(_timer > _intervalBetweenStations){
+        if(!_anyActiveStation && (_timer > _intervalBetweenStations)){
             _timer = 0.0
-
-            // Disable all stations first
-            for(station in _stationList){
-                station.time = 0.0
-                station.SetStatus(false)
-                station.SetPowerUpType(PowerUpType.NONE)
-            }
-
-            // Reset this flag
-            _anyActiveStation = false
-
 
             // Enable a random one
             var randomIndex = Random.RandomIndex(0, 3)
@@ -286,10 +297,10 @@ class StationManager {
             // to be randomized when we add more power ups
 
             var randomPowerUp = Random.RandomIndex(1, 3)
-            
+
             _stationList[randomIndex].SetPowerUpType(randomPowerUp) // Set the power up type to quad damage
             _stationList[randomIndex].time = 0.0 // Reset the time for the station
-            _stationList[randomIndex].PlayActivateSound(engine, 2.5)
+            _stationList[randomIndex].PlayActivateSound(engine, 1.5)
             _quadDamageTransparency.transparency = 0.0 // Reset the transparency to 0.0
             _dualGunTransparency.transparency = 0.0 // Reset the transparency to 0.0
 
@@ -305,7 +316,7 @@ class StationManager {
                 _dualGunEmitter.GetTransformComponent().translation =  _stationList[randomIndex].entity.GetTransformComponent().translation + meshOffset + Vec3.new(0.0, 4.5, 0.0)
             }
 
-            System.print("Too much time has passed between stations, setting a new one active")
+            System.print("Setting new station active")
             //System.printAll(["New station is now available",randomIndex, _quadDamageMeshEntity.GetTransformComponent().translation.x, _quadDamageMeshEntity.GetTransformComponent().translation.y, _quadDamageMeshEntity.GetTransformComponent().translation.z]) //> 1[2, 3]4
         }
 
@@ -318,17 +329,6 @@ class StationManager {
                     station.time = station.time + dt
 
                     station.PlaySound(engine, 1.6) // Play the sound if the station is active
-
-                }
-
-                // Deactivate the station if it has been around for too long
-                // This balance gameplay by not allowing the player to spam pickup powerups
-                if(station.time > _maxLifeOfActiveStation ){
-                    station.time = 0.0
-                    station.SetStatus(false)
-                    station.SetPowerUpType(PowerUpType.NONE)
-                    _anyActiveStation = false
-                    System.print("Station has been around for too long, deactivating it")
 
                 }
 
@@ -347,8 +347,8 @@ class StationManager {
 
                     if(powerUpType == PowerUpType.DOUBLE_GUNS){
                         _dualGunTransparency.transparency = Math.MixFloat(_dualGunTransparency.transparency, 1.1, 0.005 )
-                        _anyActiveStation = true 
-                        // Set the other meshes transparency to 0.0 
+                        _anyActiveStation = true
+                        // Set the other meshes transparency to 0.0
                         // TO BE ADDED when the other power ups are added
                         _quadDamageTransparency.transparency = 0.0
                     }
@@ -357,15 +357,6 @@ class StationManager {
                 }
 
             }
-        }
-
-        if(!_anyActiveStation){
-            // hide all the pickups meshes and effects under the map
-            _quadDamageMeshEntity.GetTransformComponent().translation = Vec3.new(0.0, -100.0, 0.0) // Move the mesh out of bounds
-            _quadDamageEmitter.GetTransformComponent().translation = Vec3.new(0.0, -200.0, 0.0) // Move the emitter out of bounds
-
-            _dualGunMeshEntity.GetTransformComponent().translation = Vec3.new(0.0, -100.0, 0.0) // Move the mesh out of bounds
-            _dualGunEmitter.GetTransformComponent().translation = Vec3.new(0.0, -200.0, 0.0) // Move the emitter out of bounds
         }
 
         // Update quad damage mesh

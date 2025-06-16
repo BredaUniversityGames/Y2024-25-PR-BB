@@ -12,6 +12,7 @@ public:
 
     void Update() final;
     void SetGameActions(const GameActions& gameActions) final;
+    void SetActiveActionSet(std::string_view actionSetName) final;
 
 private:
     const SteamInputDeviceManager& _steamInputDeviceManager;

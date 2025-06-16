@@ -43,6 +43,7 @@ struct alignas(16) Emitter
 struct alignas(16) LocalEmitter
 {
     glm::vec3 position = { 0.0f, 0.0f, 0.0f };
+    float alpha = 1.0;
     uint32_t id = 0;
 };
 
@@ -85,4 +86,5 @@ struct alignas(16) ParticleInstance
     glm::ivec2 frameOffsetCurrent = { 0, 0 };
     glm::ivec2 frameOffsetNext = { 0, 0 };
     glm::vec2 textureMultiplier = { 1.0f, 1.0f };
+    float alpha = 1.0;
 };
