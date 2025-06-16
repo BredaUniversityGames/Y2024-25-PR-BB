@@ -44,7 +44,16 @@ void VolumetricPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cu
 
     timePassed += scene.deltaTime / 1000.0f;
 
-    _pushConstants.rayOrigin.a -= (0.2 * (scene.deltaTime / 1000.0f));
+    for (uint32_t i = 0; i < MAX_GUN_SHOTS; ++i)
+    {
+        _pushConstants.gunShots[i].origin.a -= (0.2 * (scene.deltaTime / 1000.0f));
+
+        bblog::info("{}", i);
+        bblog::info("{} {} {} {}", _pushConstants.gunShots[i].origin.x, _pushConstants.gunShots[i].origin.y, _pushConstants.gunShots[i].origin.z, _pushConstants.gunShots[i].origin.a);
+        bblog::info("{} {} {} {}", _pushConstants.gunShots[i].direction.x, _pushConstants.gunShots[i].direction.y, _pushConstants.gunShots[i].direction.z, _pushConstants.gunShots[i].direction.a);
+        bblog::info("\n");
+    }
+
     _pushConstants.time = timePassed;
 
     vk::RenderingAttachmentInfoKHR finalColorAttachmentInfo {

@@ -8,6 +8,11 @@
 #include "octahedron.glsl"
 #include "hashes.glsl"
 
+struct GunShot {
+    vec4 origin;
+    vec4 direction;
+};
+
 layout (push_constant) uniform PushConstants
 {
     uint hdrTargetIndex;
@@ -20,8 +25,7 @@ layout (push_constant) uniform PushConstants
     float time;
     uint _padding1;
 
-    vec4 rayOrigin;
-    vec4 rayDirection;
+    GunShot gunShot[4];
 
 } pc;
 
@@ -157,14 +161,30 @@ float density(vec3 pos)
     float den = base * 1.4 - 0.2 - smoothstep(2.0, 4.0, abs(pos.y));
     den = clamp(den, 0.0, 1.0);
 
-    // Hole (as before)
-    vec3 origin = pc.rayOrigin.xyz;
-    origin.y -= VOLUMETRIC_HEIGHT_OFFSET; // Offset the origin to match the hole height
-    vec3 rayDir = normalize(pc.rayDirection.xyz);
-    //rayDir.y -= VOLUMETRIC_HEIGHT_OFFSET; // Offset the ray direction to match the hole height
+    for (int i = 0; i < 4; i++) {
 
-    float dpr = distPointToRay(pos, origin, rayDir);
-    float holeInfluence = smoothstep(pc.rayOrigin.a + iHoleFeather, pc.rayOrigin.a, dpr);
+        const GunShot pcGunShot = pc.gunShot[i];
+        const float decay = pcGunShot.origin.a;
+        if (decay < 0.001)
+        {
+            continue; // Skip if the gunshot is not active
+        }
+        vec3 origin = pcGunShot.origin.xyz;
+        origin.y -= VOLUMETRIC_HEIGHT_OFFSET; // Offset the origin to match the hole height
+        vec3 rayDir = normalize(pcGunShot.direction.xyz);
+        //rayDir.y -= VOLUMETRIC_HEIGHT_OFFSET; // Offset the ray direction to match the hole height
+
+        float dpr = distPointToRay(pos, origin, rayDir);
+        float holeInfluence = smoothstep(decay + iHoleFeather, decay, dpr);
+        den *= (1.0 - holeInfluence);
+        // Hole (as before)
+    }
+
+    // same thing for player
+    vec3 playerPos = camera.cameraPosition;
+    playerPos.y -= VOLUMETRIC_HEIGHT_OFFSET; // Offset the player position to match the hole height
+    float dpr = distance(playerPos, pos);
+    float holeInfluence = smoothstep(1.0 + iHoleFeather, 1.0, dpr);
     den *= (1.0 - holeInfluence);
 
     // Add decay based on distance to the volume center
