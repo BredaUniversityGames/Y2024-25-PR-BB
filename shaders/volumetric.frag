@@ -34,15 +34,6 @@ layout (set = 2, binding = 0) uniform CameraUBO
     Camera camera;
 };
 
-layout (set = 3, binding = 0) uniform SceneUBO
-{
-    Scene scene;
-};
-
-layout (set = 4, binding = 0) uniform ColorPaletteUBO {
-    vec4 palette[64];
-};
-
 layout (location = 0) in vec2 texCoords;
 
 layout (location = 0) out vec4 outColor;
