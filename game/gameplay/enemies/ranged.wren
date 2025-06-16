@@ -174,11 +174,7 @@ class RangedEnemy {
 
         } else {
             _rootEntity.GetRigidbodyComponent().SetVelocity(Vec3.new(0.0, 0.0, 0.0))
-            //_hitState = true
-            //_movingState = false
-            //_evaluateState = false
-            //_attackingState = false
-            //_recoveryState = false
+
             _hasTakenDamage = true
             _hasDashedFromDamage = false
 

@@ -2,20 +2,14 @@
 
 #include "aim_assist.hpp"
 #include "cheats_component.hpp"
-#include "components/rigidbody_component.hpp"
 #include "ecs_module.hpp"
 #include "game_module.hpp"
-#include "model_loading.hpp"
-#include "physics/shape_factory.hpp"
 #include "physics_module.hpp"
 #include "systems/lifetime_component.hpp"
 #include "ui/game_ui_bindings.hpp"
 #include "ui_module.hpp"
 #include "wren_entity.hpp"
-
-#include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
-
-#include "ui_text.hpp"
+#include "wren_tracy_zone.hpp"
 
 namespace bindings
 {
@@ -150,6 +144,11 @@ void BindGameAPI(wren::ForeignModule& module)
     module.klass<UIElement>("UIElement");
 
     ui.funcExt<bindings::SetGamepadActiveButton>("SetSelectedElement");
+
+    auto& tracyZone = module.klass<WrenTracyZone>("TracyZone");
+
+    tracyZone.ctor<const std::string&>();
+    tracyZone.func<&WrenTracyZone::End>("End");
 
     BindGameUI(module);
 }
