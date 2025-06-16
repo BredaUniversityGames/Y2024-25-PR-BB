@@ -190,11 +190,8 @@ class WaveSystem {
         _audioEmitter.AddEvent(eventInstance)
 
         var stat = engine.GetSteam().GetStat(Stats.WAVES_REACHED())
-        System.print("1")
         if(stat != null) {
-            System.print("2")
             if(_waveIndex > stat.intValue) {
-                System.print("3")
                 stat.intValue = _waveIndex
             }
         }
