@@ -88,6 +88,10 @@ public:
     {
         return glm::dot(a, b);
     }
+    static float Dot2D(glm::vec2 a, glm::vec2 b)
+    {
+        return glm::dot(a, b);
+    }
     static glm::vec3 Cross(glm::vec3 a, glm::vec3 b)
     {
         return glm::cross(a, b);
@@ -181,7 +185,7 @@ public:
     static float AngleAxis2D(glm::vec2 from, glm::vec2 target)
     {
         float cos_theta = from.x * target.x + from.y * target.y;
-        float sin_theta = from.x * target.y - from.y * target.x; 
+        float sin_theta = from.x * target.y - from.y * target.x;
 
         return std::atan2(sin_theta, cos_theta);
     }
@@ -289,6 +293,7 @@ inline void BindMath(wren::ForeignModule& module)
         mathUtilClass.funcStatic<&MathUtil::MixQuat>("MixQuat");
         mathUtilClass.funcStatic<&MathUtil::Slerp>("Slerp");
         mathUtilClass.funcStatic<&MathUtil::Dot>("Dot");
+        mathUtilClass.funcStatic<&MathUtil::Dot2D>("Dot2D");
         mathUtilClass.funcStatic<&MathUtil::Cross>("Cross");
         mathUtilClass.funcStatic<&MathUtil::Clamp>("Clamp");
         mathUtilClass.funcStatic<&MathUtil::Max>("Max");
