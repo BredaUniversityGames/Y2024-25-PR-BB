@@ -23,7 +23,7 @@ struct RenderSceneDescription;
 class ParticlePass final : public FrameGraphRenderPass
 {
 public:
-    ParticlePass(const std::shared_ptr<GraphicsContext>& context, ECSModule& ecs, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& hdrTarget, const ResourceHandle<GPUImage>& brightnessTarget, const BloomSettings& bloomSettings);
+    ParticlePass(const std::shared_ptr<GraphicsContext>& context, ECSModule& ecs, const GBuffers& gBuffers, const CameraBatch& cameraBatch, const ResourceHandle<GPUImage>& hdrTarget, const ResourceHandle<GPUImage>& brightnessTarget, const BloomSettings& bloomSettings);
     ~ParticlePass() final;
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
@@ -55,7 +55,10 @@ private:
     struct SimulatePushConstant
     {
         float deltaTime;
+        float hzbSize;
         uint32_t localEmitterCount;
+        uint32_t hzbIndex;
+        uint32_t isReverseZ;
     } _simulatePushConstant;
     struct EmitPushConstant
     {
@@ -65,6 +68,7 @@ private:
     std::shared_ptr<GraphicsContext> _context;
     ECSModule& _ecs;
     const GBuffers& _gBuffers;
+    const CameraBatch& _cameraBatch;
     const ResourceHandle<GPUImage> _hdrTarget;
     const ResourceHandle<GPUImage> _brightnessTarget;
     const BloomSettings& _bloomSettings;

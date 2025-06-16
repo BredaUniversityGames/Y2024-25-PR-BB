@@ -193,7 +193,7 @@ class WaveSystem {
         stat.intValue = _waveIndex
 
         _currentWave = _waveConfigs[_waveIndex]
-        System.print("Starting wave %(_waveIndex + 1)")
+        System.print("Starting wave %(_waveIndex)")
 
         _enemyCount = 0
 

@@ -2,6 +2,7 @@
 
 #include "bloom_settings.hpp"
 #include "camera.hpp"
+#include "camera_batch.hpp"
 #include "components/transparency_component.hpp"
 #include "ecs_module.hpp"
 #include "emitter_component.hpp"
@@ -19,10 +20,11 @@
 #include <pipeline_builder.hpp>
 #include <random>
 
-ParticlePass::ParticlePass(const std::shared_ptr<GraphicsContext>& context, ECSModule& ecs, const GBuffers& gBuffers, const ResourceHandle<GPUImage>& hdrTarget, const ResourceHandle<GPUImage>& brightnessTarget, const BloomSettings& bloomSettings)
+ParticlePass::ParticlePass(const std::shared_ptr<GraphicsContext>& context, ECSModule& ecs, const GBuffers& gBuffers, const CameraBatch& cameraBatch, const ResourceHandle<GPUImage>& hdrTarget, const ResourceHandle<GPUImage>& brightnessTarget, const BloomSettings& bloomSettings)
     : _context(context)
     , _ecs(ecs)
     , _gBuffers(gBuffers)
+    , _cameraBatch(cameraBatch)
     , _hdrTarget(hdrTarget)
     , _brightnessTarget(brightnessTarget)
     , _bloomSettings(bloomSettings)
@@ -173,14 +175,20 @@ void ParticlePass::RecordSimulate(vk::CommandBuffer commandBuffer, const CameraR
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, _pipelines[static_cast<uint32_t>(ShaderStages::eSimulate)]);
 
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eSimulate)], 0, _context->BindlessSet(), {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eSimulate)], 1, _particlesBuffersDescriptorSet, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eSimulate)], 2, _culledInstancesDescriptorSet, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eSimulate)], 3, camera.DescriptorSet(currentFrame), {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eSimulate)], 4, _localEmittersDescriptorSet, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, _pipelineLayouts[static_cast<uint32_t>(ShaderStages::eSimulate)], 5, _drawCommandsDescriptorSet, {});
 
+    const auto* hzbImage = _context->Resources()->ImageResourceManager().Access(_cameraBatch.HZBImage());
+
     _simulatePushConstant.deltaTime = deltaTime * 1e-3;
     _simulatePushConstant.localEmitterCount = _localEmitters.size();
+    _simulatePushConstant.hzbSize = std::fmax(static_cast<float>(hzbImage->width), static_cast<float>(hzbImage->height));
+    _simulatePushConstant.hzbIndex = _cameraBatch.HZBImage().Index();
+    _simulatePushConstant.isReverseZ = _cameraBatch.Camera().UsesReverseZ();
     commandBuffer.pushConstants<SimulatePushConstant>(_pipelineLayouts[static_cast<uint32_t>(ShaderStages::eSimulate)], vk::ShaderStageFlagBits::eCompute, 0, { _simulatePushConstant });
 
     commandBuffer.dispatch(MAX_PARTICLES / 256, 1, 1);
