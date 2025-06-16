@@ -12,13 +12,14 @@
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 
-TonemappingPass::TonemappingPass(const std::shared_ptr<GraphicsContext>& context, const Settings::Tonemapping& settings, ResourceHandle<GPUImage> hdrTarget, ResourceHandle<GPUImage> bloomTarget, ResourceHandle<GPUImage> outputTarget, const SwapChain& _swapChain, const GBuffers& gBuffers, const BloomSettings& bloomSettings)
+TonemappingPass::TonemappingPass(const std::shared_ptr<GraphicsContext>& context, const Settings::Tonemapping& settings, ResourceHandle<GPUImage> hdrTarget, ResourceHandle<GPUImage> bloomTarget, ResourceHandle<GPUImage> volumetricTarget, ResourceHandle<GPUImage> outputTarget, const SwapChain& _swapChain, const GBuffers& gBuffers, const BloomSettings& bloomSettings)
     : _context(context)
     , _settings(settings)
     , _swapChain(_swapChain)
     , _gBuffers(gBuffers)
     , _hdrTarget(hdrTarget)
     , _bloomTarget(bloomTarget)
+    , _volumetricTarget(volumetricTarget)
     , _outputTarget(outputTarget)
     , _bloomSettings(bloomSettings)
 {
@@ -30,6 +31,7 @@ TonemappingPass::TonemappingPass(const std::shared_ptr<GraphicsContext>& context
     _pushConstants.hdrTargetIndex = hdrTarget.Index();
     _pushConstants.bloomTargetIndex = bloomTarget.Index();
     _pushConstants.depthIndex = gBuffers.Depth().Index();
+    _pushConstants.volumetricIndex = volumetricTarget.Index();
     _pushConstants.screenWidth = _gBuffers.Size().x;
     _pushConstants.screenHeight = _gBuffers.Size().y;
     _pushConstants.normalRIndex = _gBuffers.Attachments()[1].Index();

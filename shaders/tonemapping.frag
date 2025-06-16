@@ -24,7 +24,7 @@ layout (push_constant) uniform PushConstants
 
     uint normalIndex;
     uint tonemappingFunction;
-    float padding0;
+    uint volumetricIndex;
     float exposure;
 
     float vignetteIntensity;
@@ -498,6 +498,9 @@ void main()
     const vec3 earlyRay = rayDirection(camera.fov, texSize, vec2(pixelCoords));
     const vec3 rayDirection = normalize(transpose(mat3(camera.view)) * earlyRay);
 
+    ivec2 halfPixelCoords = ivec2(newTexCoords * (vec2(texSize) / 2.0));
+    vec4 volumetricSample = texelFetch(bindless_color_textures[nonuniformEXT (pc.volumetricIndex)], halfPixelCoords, 0);
+
     if (pixelatedDepthSample <= 0.0f)
     {
         vec3 waterColor = pc.voidColor.rgb;
@@ -562,31 +565,7 @@ void main()
         color += bloom;
     }
 
-    //if (pixelatedDepthSample >= 0.0f)
-    {
-
-        vec2 p = vec2(newTexCoords * vec2(texSize));
-
-        // Rotate the camera position around the origin
-        vec3 ro = camera.cameraPosition; // Initial camera position
-        ro.y -= VOLUMETRIC_HEIGHT_OFFSET;
-
-
-        // Compute the ray direction from camera to pixel
-
-        float linearizedSceneDepth = getLinearSceneDepth(pixelatedDepthSample, camera.zNear, camera.zFar);
-
-        vec3 pixelWorldPos = ReconstructWorldPosition(pixelatedDepthSample, newTexCoords, camera.inverseVP);
-
-        float dynamicMaxDist = MAX_DIST;
-        dynamicMaxDist += max(0.0, ro.y) * 1.1f;
-
-        vec3 col = raymarching(ro, rayDirection, 0.0, dynamicMaxDist, color, pixelWorldPos);
-
-        color = mix(color, col, 0.5);
-
-        //color = col;
-    }
+    color = mix(color, volumetricSample.rgb, volumetricSample.a);
 
     if (paletteEnabled)
     {
