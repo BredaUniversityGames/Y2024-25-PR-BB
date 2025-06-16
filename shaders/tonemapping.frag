@@ -562,7 +562,7 @@ void main()
         color += bloom;
     }
 
-    color = mix(color, volumetricSample.rgb, volumetricSample.a);
+    color = mix(color, volumetricSample.rgb, volumetricSample.a * 0.5);
 
     if (paletteEnabled)
     {

@@ -54,7 +54,7 @@ float linearize_depth(float d, float zNear, float zFar)
 float iHoleRadius = 0.1; // Radius of the hole
 float iHoleFeather = 0.1; // Smoothness of the hole edges (blends from iHoleRadius to iHoleRadius + iHoleFeather)
 // ---- Constants ----
-#define MAX_STEPS 80
+#define MAX_STEPS 128
 #define MAX_DIST 32.0
 
 // ---- Noise / Hash as in your code ----
@@ -117,7 +117,7 @@ float noise(in vec3 x)
 // Fractional Brownian motion
 float fbm(vec3 p)
 {
-    p = p - vec3(1.5, 0.2, 0.0) * pc.time * 0.1;
+    p = p - vec3(1.5, 0.2, 0.0) * pc.time * 0.2;
 
     float f = 0.5000 * noise(p);
     p = m * p;
@@ -140,6 +140,9 @@ float distPointToRay(vec3 p, vec3 rayOrigin, vec3 rayDir) {
 // ---- Infinite Density Field ----
 float density(vec3 pos)
 {
+
+
+
     // Just noise-based, optionally bias for "height" (e.g., less dense at y>2 or y<-2)
     float base = smoothstep(0.5, 1.0, fbm(vec3(pos.x * 0.13, pos.y * 0.25, pos.z * 0.13)));
     float den = base * 1.4 - 0.2 - smoothstep(2.0, 4.0, abs(pos.y));
@@ -154,6 +157,13 @@ float density(vec3 pos)
     float dpr = distPointToRay(pos, origin, rayDir);
     float holeInfluence = smoothstep(pc.rayOrigin.a + iHoleFeather, pc.rayOrigin.a, dpr);
     den *= (1.0 - holeInfluence);
+
+    // Add decay based on distance to the volume center
+
+    float distanceToVolume = distance(pos, vec3(-5.0, 9.595 - VOLUMETRIC_HEIGHT_OFFSET, 62.0));
+    float decayFactor = smoothstep(0.0, 1.0, distanceToVolume * 0.05);
+    den *= (1.0 - decayFactor);
+
 
     return den;
 }
@@ -202,6 +212,8 @@ vec4 raymarching(vec3 ro, vec3 rd, float tmin, float tmax, vec3 sceneDepthPositi
         }
 
         vec3 pos = ro + rd * t;
+
+
         if (pos.y > 25.0 || pos.y < -3.0) {
             break; // outside volume
         }
@@ -212,15 +224,15 @@ vec4 raymarching(vec3 ro, vec3 rd, float tmin, float tmax, vec3 sceneDepthPositi
         //t += 0.07 + 0.01 * float(i); // uniform or progressive steps
 
 
-        float stepSize = 0.07; // Minimum step size
+        float stepSize = 0.03; // Minimum step size
         if (den < 0.005) { // If very low density, step faster
-                           stepSize = 0.8;
+                           stepSize = 0.3;
         } else if (den > 0.8) { // If very high density, step slower for detail
-                                stepSize = 0.07;
+                                stepSize = 0.03;
         } else {
-            stepSize = mix(0.07, 0.8, den); // Interpolate
+            stepSize = mix(0.03, 0.3, den); // Interpolate
         }
-        t += stepSize + 0.01 * float(i);;
+        t += stepSize + 0.01 * float(i);
     }
     sum = clamp(sum, 0.0, 1.0);
     return sum;
