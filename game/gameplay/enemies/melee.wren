@@ -25,6 +25,7 @@ class MeleeEnemy {
         _reasonTimeout = 2000
         _honeInRadius = 30.0
         _honeInMaxAltitude = 4.0
+        _cliffAvoidanceTimeout = 500
 
         _bonesSFX = "event:/SFX/Bones"
         _hitMarkerSFX = "event:/SFX/Hitmarker"
@@ -98,6 +99,8 @@ class MeleeEnemy {
         _hitTimer = 0
         _getUpAppearTimer = _getUpAppearMax
         _deathTimer = _deathTimerMax
+        _cliffAvoidanceTimer = _cliffAvoidanceTimeout + 1
+        _cliffAvoidanceVector = Vec3.new(0.0, 0.0, 0.0)
 
         _walkEventInstance = null
 
@@ -424,7 +427,14 @@ class MeleeEnemy {
             var target = Math.MixVec3(p1.center, p2.center, dst * bias)
             forwardVector = target - pos
         }else{
-            forwardVector = (playerPos - position).normalize()
+            forwardVector = (playerPos - position)
+            if(_cliffAvoidanceTimer < _cliffAvoidanceTimeout) {
+                _cliffAvoidanceTimer = _cliffAvoidanceTimer + dt
+                forwardVector = _cliffAvoidanceVector
+                System.print("Steering using avoidance vector")
+            }
+
+            forwardVector.normalize()
             var localSteerForward = this.LocalSteer(engine, pos, forwardVector)
             if(localSteerForward) {
                 forwardVector = localSteerForward
@@ -491,6 +501,11 @@ class MeleeEnemy {
             return null
         }
 
+        var hardSteer = false
+        var LEFT_STEER = 1
+        var RIGHT_STEER = 2
+        var steerIndex = 0
+
         offsetDirection = offsetDirection.normalize()
         var absDot = Math.Abs(Math.Dot(forwardVector, offsetDirection))
 
@@ -498,16 +513,8 @@ class MeleeEnemy {
             // if the raycast results is a vector that is nearly a negated forward vector
             // steer either hard left or right (random chance for either)
 
-            var angle = 0.0
+            hardSteer = true
 
-            var index = Random.RandomIndex(0, 1)
-            if(index == 0) {
-                angle = -90.0
-            } else {
-                angle = 90.0
-            }
-
-            forwardVector = Math.RotateY(forwardVector, angle)
         } else {
             if(absDot < 0.001) {
                 // if no hits (or too subtle) keep same forward vector
@@ -515,6 +522,52 @@ class MeleeEnemy {
                 // regular steering behavior
                 forwardVector = forwardVector - offsetDirection
             }
+        }
+
+        // Check if we are close to a cliff
+        if(null) {
+            var cliffRayOrigin = position + Vec3.new(forwardVector.x, 0.0, forwardVector.z).normalize().mulScalar(6.0) + Vec3.new(0, 1, 0)
+
+            var cliffHitInfos = engine.GetPhysics().ShootRay(
+                    cliffRayOrigin,
+                    Vec3.new(0.0, -1.0, 0.0),
+                    300.0
+                )
+
+            var anyHit = false
+            var closestHit = 300.0
+            for(i in 0...cliffHitInfos.count) {
+                var cliffHitInfo = cliffHitInfos[i]
+
+                var dist = Math.Distance(cliffHitInfo.position, cliffRayOrigin)
+
+                if(dist < closestHit) {
+                    closestHit = dist
+                }
+            }
+
+            if(closestHit > 6.0 && cliffHitInfos.count > 0) {
+                System.print("Nearing cliff!")
+                forwardVector = -forwardVector
+                _cliffAvoidanceVector = forwardVector
+                _cliffAvoidanceTimer = 0.0
+            }
+        }
+
+        if(hardSteer) {
+            var angle = 0.0
+
+            if(steerIndex == 0) {
+                steerIndex = Random.RandomIndex(1, 2)
+            }
+            if(steerIndex == LEFT_STEER) {
+                angle = -90.0
+            }
+            if(steerIndex == RIGHT_STEER) {
+                angle = 90.0
+            }
+
+            forwardVector = Math.RotateY(forwardVector, angle)
         }
 
         return forwardVector

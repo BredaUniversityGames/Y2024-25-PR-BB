@@ -19,6 +19,8 @@
 
 #define TRIANGLE_EDGE_CENTERS 1
 
+std::vector<std::pair<glm::vec3, glm::vec3>> lines;
+
 ModuleTickOrder PathfindingModule::Init(MAYBE_UNUSED Engine& engine)
 {
     return ModuleTickOrder::eTick;
@@ -43,6 +45,12 @@ void PathfindingModule::Tick(MAYBE_UNUSED Engine& engine)
                 _debugLines.push_back(from);
                 _debugLines.push_back(to);
             }
+        }
+
+        for(const auto& line : lines)
+        {
+            //_debugLines.push_back(line.first);
+            //_debugLines.push_back(line.second);
         }
     }
 }
@@ -117,6 +125,10 @@ int32_t PathfindingModule::SetNavigationMesh(std::string_view filePath)
         glm::vec3 p0 = navmeshMesh.vertices[info.indices[0]].position;
         glm::vec3 p1 = navmeshMesh.vertices[info.indices[1]].position;
         glm::vec3 p2 = navmeshMesh.vertices[info.indices[2]].position;
+
+        lines.push_back((std::pair<glm::vec3, glm::vec3>{p0, p1}));
+        lines.push_back((std::pair<glm::vec3, glm::vec3>{p0, p2}));
+        lines.push_back((std::pair<glm::vec3, glm::vec3>{p1, p2}));
 
         info.centre = (p0 + p1 + p2) / 3.0f;
         info.centre = glm::vec3(transform * glm::vec4(info.centre, 1.0f));
@@ -233,10 +245,12 @@ ComputedPath PathfindingModule::FindPath(glm::vec3 startPos, glm::vec3 endPos)
     }
 
     glm::vec3 closestDestinationTriangleCentre = _triangles[closestDestinationTriangleIndex].centre;
+    glm::vec3 closestStartTriangleCentre = _triangles[closestStartTriangleIndex].centre;
 
     TriangleNode node {};
     node.totalCost = 0;
     node.estimateToGoal = Heuristic(startPos, endPos);
+    node.estimateToGoal = DirectedHeuristic(startPos, endPos, closestDestinationTriangleCentre);
     node.totalEstimatedCost = node.totalCost + node.estimateToGoal;
     node.triangleIndex = closestStartTriangleIndex;
     node.parentTriangleIndex = std::numeric_limits<uint32_t>::max();
@@ -287,7 +301,8 @@ ComputedPath PathfindingModule::FindPath(glm::vec3 startPos, glm::vec3 endPos)
             if (tentativeCostFromStart < neighbourNode.totalCost)
             {
                 neighbourNode.totalCost = tentativeCostFromStart;
-                neighbourNode.estimateToGoal = DirectedHeuristic(neighbourTriangleInfo.centre, endPos, closestDestinationTriangleCentre);
+                //neighbourNode.estimateToGoal = DirectedHeuristic(neighbourTriangleInfo.centre, endPos, closestDestinationTriangleCentre);
+                neighbourNode.estimateToGoal = TiebreakerHeuristic(closestStartTriangleCentre, neighbourTriangleInfo.centre, closestDestinationTriangleCentre);
                 neighbourNode.parentTriangleIndex = topNode.triangleIndex;
                 neighbourNode.totalEstimatedCost = neighbourNode.totalCost + neighbourNode.estimateToGoal;
             }
@@ -317,6 +332,17 @@ float PathfindingModule::DirectedHeuristic(glm::vec3 startPos, glm::vec3 endPos,
     float dot = std::max(glm::dot(towardsEnd, towardsFinal), 0.001f);
 
     return powf((1.0f - dot), 3.0f) * towardsEndLength;
+}
+
+float PathfindingModule::TiebreakerHeuristic(glm::vec3 startPos, glm::vec3 currentPos, glm::vec3 goalPosition)
+{
+    float dx1 = currentPos.x - goalPosition.x;
+    float dy1 = currentPos.z - goalPosition.z;
+    float dx2 = startPos.x - goalPosition.x;
+    float dy2 = startPos.z - goalPosition.z;
+
+    float cross = abs(dx1*dy2 - dx2*dy1);
+    return cross * 0.001f;
 }
 
 

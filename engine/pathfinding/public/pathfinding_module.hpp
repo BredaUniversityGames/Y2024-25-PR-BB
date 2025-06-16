@@ -103,6 +103,7 @@ public:
 private:
     float Heuristic(glm::vec3 startPos, glm::vec3 endPos);
     float DirectedHeuristic(glm::vec3 startPos, glm::vec3 endPos, glm::vec3 finalPosition);
+    float TiebreakerHeuristic(glm::vec3 startpos, glm::vec3 currentPos, glm::vec3 goalPosition);
     ComputedPath ReconstructPath(const uint32_t finalTriangleIndex, std::unordered_map<uint32_t, TriangleNode>& nodes);
 
     struct TriangleInfo
