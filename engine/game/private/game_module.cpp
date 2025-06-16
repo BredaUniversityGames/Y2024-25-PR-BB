@@ -47,17 +47,16 @@ Stat CreateStat(SteamStatEnum stats, EStatTypes type)
     };
 }
 
-
 ModuleTickOrder GameModule::Init(Engine& engine)
 {
     _achievements = {
-        CreateAchievement(SteamAchievementEnum::FIRST_SKELETON_KILLED),
-        CreateAchievement(SteamAchievementEnum::FIRST_EYE_KILLED),
-        CreateAchievement(SteamAchievementEnum::FIRST_BERSERKER_KILLED),
-        CreateAchievement(SteamAchievementEnum::FIRST_SOUL_COLLECTED),
-        CreateAchievement(SteamAchievementEnum::FIRST_GOLD_NUGGET_COLLECTED),
-        CreateAchievement(SteamAchievementEnum::FIRST_DEATH),
-        CreateAchievement(SteamAchievementEnum::FIRST_RELIC_USED),
+        CreateAchievement(SteamAchievementEnum::SKELETONS_KILLED_1),
+        CreateAchievement(SteamAchievementEnum::EYES_KILLED_1),
+        CreateAchievement(SteamAchievementEnum::BERSERKERS_KILLED_1),
+        CreateAchievement(SteamAchievementEnum::SOULS_1),
+        CreateAchievement(SteamAchievementEnum::NUGGET_1),
+        CreateAchievement(SteamAchievementEnum::DIE_1),
+        CreateAchievement(SteamAchievementEnum::RELIC_1),
     };
 
     _stats = {
@@ -69,6 +68,7 @@ ModuleTickOrder GameModule::Init(Engine& engine)
         CreateStat(SteamStatEnum::GOLD_NUGGETS_COLLECTED, EStatTypes::STAT_INT),
         CreateStat(SteamStatEnum::GOLD_CURRENCY_COLLECTED, EStatTypes::STAT_INT),
         CreateStat(SteamStatEnum::ENEMIES_KILLED_WITH_RELIC, EStatTypes::STAT_INT),
+        CreateStat(SteamStatEnum::TIMES_DIED, EStatTypes::STAT_INT),
     };
 
     ActionManager& actionManager = engine.GetModule<ApplicationModule>().GetActionManager();
@@ -415,7 +415,6 @@ void GameModule::Tick(Engine& engine)
     if (inputDeviceManager.IsKeyPressed(KeyboardCode::eH))
     {
         applicationModule.SetMouseHidden(!applicationModule.GetMouseHidden());
-        engine.GetModule<SteamModule>().GetStats().GetStat(magic_enum::enum_name(SteamStatEnum::SKELETONS_KILLED))->value += 1;
     }
 #endif
 
