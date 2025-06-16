@@ -1,4 +1,6 @@
-import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, Perlin, Random, Stat, Stats, Achievements
+import "engine_api.wren" for Engine, Rigidbody, TracyZone, ShapeFactory, Random, Vec3, Math, PhysicsObjectLayer, Perlin, SpawnEmitterFlagBits, Stats, Achievements
+
+//Vec3, Engine, ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, Perlin, Random, Stat, Stats, Achievements
 import "../player.wren" for PlayerVariables
 import "../soul.wren" for Soul, SoulManager, SoulType
 import "../coin.wren" for Coin, CoinManager
@@ -38,9 +40,9 @@ class MeleeEnemy {
         var colliderShape = ShapeFactory.MakeCapsuleShape(90.0, 40.0) // TODO: Make this engine units
 
         // PATHFINDING
+
         _currentPath = null
         _currentPathNodeIdx = null
-
 
         // ENTITY SETUP
 
@@ -206,6 +208,7 @@ class MeleeEnemy {
         var body = _rootEntity.GetRigidbodyComponent()
         var pos = body.GetPosition()
 
+        // TODO: probably better to kill him than TP
         if(pos.y < -50) {
             body.SetTranslation(Vec3.new(-6, 15, 68))
         }
@@ -381,6 +384,9 @@ class MeleeEnemy {
     }
 
     DoPathfinding(playerPos, engine, dt) {
+
+        var zone = TracyZone.new("Enemy Pathfinding")
+
         var body = _rootEntity.GetRigidbodyComponent()
         var pos = body.GetPosition()
 
@@ -409,6 +415,7 @@ class MeleeEnemy {
                 if(_currentPathNodeIdx == _currentPath.GetWaypoints().count) {
                     body.SetVelocity(Vec3.new(0.0, 0.0, 0.0))
                     _currentPath = null
+                    zone.End()
                     return
                 }
                 waypoint = _currentPath.GetWaypoints()[_currentPathNodeIdx]
@@ -438,17 +445,26 @@ class MeleeEnemy {
         var endRotation = Math.LookAt(Vec3.new(forwardVector.x, 0, forwardVector.z), Vec3.new(0, 1, 0))
         var startRotation = body.GetRotation()
         body.SetRotation(Math.Slerp(startRotation, endRotation, 0.01 *dt))
+
+        zone.End()
     }
 
     FindNewPath(engine) {
+
+        var zone = TracyZone.new("Find Path")
+
         var startPos = position
         _currentPath = engine.GetPathfinding().FindPath(startPos, engine.GetECS().GetEntityByName("Player").GetTransformComponent().GetWorldTranslation())
-        
         _currentPathNodeIdx = 1
+
+        zone.End()
     }
 
     // Returns a corrected vector or null if no objects were found
     LocalSteer(engine, position, forwardVector) {
+
+        var zone = TracyZone.new("Local Steering")
+
         var seekDepth = 3.0
         var rayCount = 6
         var rayAngle = 20 // degrees
@@ -488,6 +504,7 @@ class MeleeEnemy {
 
         // If we hit nothing
         if(offsetDirection.length() < 0.001) {
+            zone.End()
             return null
         }
 
@@ -517,6 +534,7 @@ class MeleeEnemy {
             }
         }
 
+        zone.End()
         return forwardVector
     }
 

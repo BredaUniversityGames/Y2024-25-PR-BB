@@ -210,7 +210,7 @@ class Main {
             waveConfigs.add(WaveGenerator.GenerateWave(v))
         }
 
-        waveConfigs[0].spawns[EnemyType.Skeleton] = 2
+        waveConfigs[0].spawns[EnemyType.Skeleton] = 200
         waveConfigs[1].spawns[EnemyType.Skeleton] = 4
         waveConfigs[2].spawns[EnemyType.Skeleton] = 5
         waveConfigs[3].spawns[EnemyType.Skeleton] = 7

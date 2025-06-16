@@ -91,7 +91,6 @@ class WaveSystem {
         if (_realWaveTimer < _waveDelay) {
 
             var curve = Fn.new{|val|
-                System.print("%(val)")
                 return 2 * val - val * val
             }
 
