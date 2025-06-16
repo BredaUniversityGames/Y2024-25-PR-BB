@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "steam_include.hpp"
 #include <cstdint>
+#include <optional>
 #include <span>
 #include <string>
 #include <string_view>

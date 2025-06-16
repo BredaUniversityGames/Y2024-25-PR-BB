@@ -30,7 +30,11 @@ std::string_view GetAchievementDescription(Achievement& achievement)
 
 void Unlock(SteamModule& self, SteamAchievementEnum achievements)
 {
-    self.GetAchievements().SetAchievement(magic_enum::enum_name(achievements).data());
+    std::string_view name = magic_enum::enum_name(achievements);
+    if (!self.GetAchievements().GetAchievement(name.data())->achieved)
+    {
+        self.GetAchievements().SetAchievement(name.data());
+    }
 }
 
 }
