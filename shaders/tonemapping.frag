@@ -495,7 +495,7 @@ void main()
     const vec3 earlyRay = rayDirection(camera.fov, texSize, vec2(pixelCoords));
     const vec3 rayDirection = normalize(transpose(mat3(camera.view)) * earlyRay);
 
-    ivec2 halfPixelCoords = ivec2(newTexCoords * (vec2(texSize) / 2.0));
+    ivec2 halfPixelCoords = ivec2(newTexCoords * (vec2(texSize) / 4.0));
     vec4 volumetricSample = texelFetch(bindless_color_textures[nonuniformEXT (pc.volumetricIndex)], halfPixelCoords, 0);
 
     if (pixelatedDepthSample <= 0.0f)
@@ -562,7 +562,12 @@ void main()
         color += bloom;
     }
 
-    color = mix(color, volumetricSample.rgb, volumetricSample.a * 0.5);
+    if (paletteEnabled)
+    {
+        volumetricSample = vec4(ComputeQuantizedColor(volumetricSample.rgb, pc.ditherAmount, pc.paletteAmount), volumetricSample.a);
+    }
+
+    color = mix(color, volumetricSample.rgb, volumetricSample.a * 0.3);
 
     if (paletteEnabled)
     {

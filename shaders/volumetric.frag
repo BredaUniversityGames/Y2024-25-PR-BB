@@ -33,11 +33,20 @@ layout (set = 2, binding = 0) uniform CameraUBO
 {
     Camera camera;
 };
+layout (set = 3, binding = 0) uniform SceneUBO
+{
+    Scene scene;
+};
 
 layout (location = 0) in vec2 texCoords;
 
 layout (location = 0) out vec4 outColor;
 
+
+vec3 getSunDirection() {
+    const vec3 lightDir = normalize(scene.directionalLight.direction.xyz); //sunDirection
+    return lightDir;
+}
 
 
 float linearize_depth(float d, float zNear, float zFar)
@@ -55,7 +64,7 @@ float iHoleRadius = 0.1; // Radius of the hole
 float iHoleFeather = 0.1; // Smoothness of the hole edges (blends from iHoleRadius to iHoleRadius + iHoleFeather)
 // ---- Constants ----
 #define MAX_STEPS 128
-#define MAX_DIST 32.0
+#define MAX_DIST 64.0
 
 // ---- Noise / Hash as in your code ----
 /**float hash(vec3 p) {
@@ -117,7 +126,7 @@ float noise(in vec3 x)
 // Fractional Brownian motion
 float fbm(vec3 p)
 {
-    p = p - vec3(1.5, 0.2, 0.0) * pc.time * 0.2;
+    p = p - vec3(1.5, 0.2, 0.0) * pc.time * 0.18;
 
     float f = 0.5000 * noise(p);
     p = m * p;
@@ -144,7 +153,7 @@ float density(vec3 pos)
 
 
     // Just noise-based, optionally bias for "height" (e.g., less dense at y>2 or y<-2)
-    float base = smoothstep(0.5, 1.0, fbm(vec3(pos.x * 0.13, pos.y * 0.25, pos.z * 0.13)));
+    float base = smoothstep(0.5, 1.0, fbm(vec3(pos.x * 0.1, pos.y * 0.2, pos.z * 0.1)));
     float den = base * 1.4 - 0.2 - smoothstep(2.0, 4.0, abs(pos.y));
     den = clamp(den, 0.0, 1.0);
 
@@ -160,14 +169,16 @@ float density(vec3 pos)
 
     // Add decay based on distance to the volume center
 
+/**
     float distanceToVolume = distance(pos, vec3(-5.0, 9.595 - VOLUMETRIC_HEIGHT_OFFSET, 62.0));
     float decayFactor = smoothstep(0.0, 1.0, distanceToVolume * 0.05);
     den *= (1.0 - decayFactor);
+*/
 
-
+    den = clamp(den, 0.0, 0.85);
     return den;
 }
-vec3 color(float den, float y)
+/**vec3 color(float den, float y)
 {
     vec3 result = mix(vec3(1.0, 0.9, 0.8 + sin(pc.time) * 0.1),
                       vec3(0.5, 0.15, 0.1 + sin(pc.time) * 0.1), den * den);
@@ -177,7 +188,22 @@ vec3 color(float den, float y)
     result *= mix(colBot, colTop, smoothstep(-3.0, 3.0, y));
     result *= vec3(0.1, 0.05, 0.05);
     return result;
+}*/
+
+vec3 color(float den, float y)
+{
+    // add animation
+    vec3 result = mix(vec3(1.0, 0.9, 0.8 + sin(pc.time) * 0.1),
+                      vec3(0.5, 0.15, 0.1 + sin(pc.time) * 0.1), den * den);
+
+
+    vec3 colBot = 3.0 * vec3(1.0, 0.9, 0.5);
+    vec3 colTop = 2.0 * vec3(0.5, 0.55, 0.55);
+    result *= mix(colBot, colTop, smoothstep(-3.0, 3.0, y));
+    result *= vec3(0.1, 0.05, 0.05);
+    return result;
 }
+
 
 // ---- Camera ----
 mat3 setCamera(vec3 ro, vec3 ta, float cr) {
@@ -186,6 +212,10 @@ mat3 setCamera(vec3 ro, vec3 ta, float cr) {
     vec3 cu = normalize(cross(cw, cp));
     vec3 cv = normalize(cross(cu, cw));
     return mat3(cu, cv, cw);
+}
+float BeerLambert(float absorptionCoefficient, float distanceTraveled)
+{
+    return exp(-absorptionCoefficient * distanceTraveled);
 }
 
 // ---- Raymarching through infinite volume ----
@@ -198,6 +228,8 @@ vec4 raymarching(vec3 ro, vec3 rd, float tmin, float tmax, vec3 sceneDepthPositi
     // This value represents how far we need to march along 'rd' to hit the opaque object.
     float distToOpaqueObject = distance(ro, sceneDepthPosition);
 
+    float lightTransmittance = 1.0;
+
     for (int i = 0; i < MAX_STEPS; i++)
     {
         // Stop if we've accumulated enough opacity or gone too far
@@ -207,23 +239,18 @@ vec4 raymarching(vec3 ro, vec3 rd, float tmin, float tmax, vec3 sceneDepthPositi
         // the distance to the opaque object.
         // Also check sum.a to ensure we don't prematurely clip a dense cloud
         // that starts before the opaque object but extends slightly past its depth.
+
         if (t > distToOpaqueObject) {
             break;
         }
 
         vec3 pos = ro + rd * t;
 
-
         if (pos.y > 25.0 || pos.y < -3.0) {
             break; // outside volume
         }
+
         float den = density(pos);
-        vec4 col = vec4(color(den, pos.y), den);
-        col.rgb *= col.a;
-        sum = sum + col * (1.0 - sum.a);
-        //t += 0.07 + 0.01 * float(i); // uniform or progressive steps
-
-
         float stepSize = 0.03; // Minimum step size
         if (den < 0.005) { // If very low density, step faster
                            stepSize = 0.3;
@@ -232,6 +259,34 @@ vec4 raymarching(vec3 ro, vec3 rd, float tmin, float tmax, vec3 sceneDepthPositi
         } else {
             stepSize = mix(0.03, 0.3, den); // Interpolate
         }
+
+
+
+
+        lightTransmittance *= exp(-den * 0.000001 * stepSize);
+        float lightFactor = max(0.001, dot(rd, getSunDirection()));
+
+        // Combine ambient and directional light
+        vec3 baseCloudColor = color(den, pos.y);
+
+
+
+        vec3 litAmount = vec3(1.0) * (lightFactor * vec3(1.0, 0.8, 0.6)); // Adjusted for ambient light and directional light
+        litAmount = clamp(litAmount, 0.0, 1.0); // Ensure it stays within valid range
+
+        vec3 litCloudColor = baseCloudColor * litAmount * scene.directionalLight.color.rgb;
+
+        vec4 col = vec4(baseCloudColor, den);
+        col.rgb *= col.a; // Premultiply alpha
+        sum = sum + col * (1.0 - sum.a);
+
+
+
+
+        //t += 0.07 + 0.01 * float(i); // uniform or progressive steps
+
+
+
         t += stepSize + 0.01 * float(i);
     }
     sum = clamp(sum, 0.0, 1.0);
@@ -278,14 +333,16 @@ void main()
 
     // Compute the ray direction from camera to pixel
 
-    float linearizedSceneDepth = getLinearSceneDepth(depthSample, camera.zNear, camera.zFar);
+    //float linearizedSceneDepth = getLinearSceneDepth(depthSample, camera.zNear, camera.zFar);
 
     vec3 pixelWorldPos = ReconstructWorldPosition(depthSample, texCoords, camera.inverseVP);
+    pixelWorldPos.y -= VOLUMETRIC_HEIGHT_OFFSET; // Offset the pixel world position to match the hole height
 
     float dynamicMaxDist = MAX_DIST;
     dynamicMaxDist += max(0.0, ro.y) * 1.1f;
 
     outColor = raymarching(ro, rayDirection, 0.0, dynamicMaxDist, pixelWorldPos);
+
 
 
 }

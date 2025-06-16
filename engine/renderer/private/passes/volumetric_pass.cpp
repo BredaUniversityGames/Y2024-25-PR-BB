@@ -27,8 +27,8 @@ VolumetricPass::VolumetricPass(const std::shared_ptr<GraphicsContext>& context, 
     _pushConstants.hdrTargetIndex = hdrTarget.Index();
     _pushConstants.bloomTargetIndex = bloomTarget.Index();
     _pushConstants.depthIndex = gBuffers.Depth().Index();
-    _pushConstants.screenWidth = _gBuffers.Size().x / 2.0;
-    _pushConstants.screenHeight = _gBuffers.Size().y / 2.0;
+    _pushConstants.screenWidth = _gBuffers.Size().x / 4.0;
+    _pushConstants.screenHeight = _gBuffers.Size().y / 4.0;
     _pushConstants.normalRIndex = _gBuffers.Attachments()[1].Index();
 }
 
@@ -59,7 +59,7 @@ void VolumetricPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cu
     vk::RenderingInfoKHR renderingInfo {
         .renderArea = {
             .offset = vk::Offset2D { 0, 0 },
-            .extent = vk::Extent2D { _gBuffers.Size().x / 2, _gBuffers.Size().y / 2 } },
+            .extent = vk::Extent2D { _gBuffers.Size().x / 4, _gBuffers.Size().y / 4 } },
         .layerCount = 1,
         .colorAttachmentCount = 1,
         .pColorAttachments = &finalColorAttachmentInfo,
@@ -76,6 +76,7 @@ void VolumetricPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cu
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 0, { _context->BindlessSet() }, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 1, { _bloomSettings.GetDescriptorSetData(currentFrame) }, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 2, { scene.gpuScene->MainCamera().DescriptorSet(currentFrame) }, {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 3, { scene.gpuScene->GetSceneDescriptorSet(currentFrame) }, {});
 
     // Fullscreen triangle.
     commandBuffer.draw(3, 1, 0, 0);
