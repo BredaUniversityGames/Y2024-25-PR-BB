@@ -100,7 +100,6 @@ void BindPathfindingAPI(wren::ForeignModule& module)
     auto& computedPath = module.klass<ComputedPath>("ComputedPath");
 
     computedPath.funcExt<bindings::GetSize>("Count");
-    // computedPath.funcExt<bindings::GetWaypoints>("GetWaypoints");
     computedPath.funcExt<bindings::Follow>("GetFollowDirection");
     computedPath.funcExt<bindings::ShouldGoNextWaypoint>("ShouldGoNextWaypoint");
     computedPath.funcExt<bindings::ClearWaypoints>("ClearWaypoints");
