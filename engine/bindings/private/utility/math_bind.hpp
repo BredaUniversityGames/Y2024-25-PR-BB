@@ -2,6 +2,7 @@
 #include "wren_common.hpp"
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/rotate_vector.hpp>
 
 namespace bindings
 {
@@ -84,6 +85,10 @@ public:
         return glm::slerp(start, end, t);
     }
     static float Dot(glm::vec3 a, glm::vec3 b)
+    {
+        return glm::dot(a, b);
+    }
+    static float Dot2D(glm::vec2 a, glm::vec2 b)
     {
         return glm::dot(a, b);
     }
@@ -180,7 +185,7 @@ public:
     static float AngleAxis2D(glm::vec2 from, glm::vec2 target)
     {
         float cos_theta = from.x * target.x + from.y * target.y;
-        float sin_theta = from.x * target.y - from.y * target.x; 
+        float sin_theta = from.x * target.y - from.y * target.x;
 
         return std::atan2(sin_theta, cos_theta);
     }
@@ -204,6 +209,16 @@ public:
 
         float t = maxAngle / angle;
         return glm::slerp(from, to, t);
+    }
+
+    static float Pow(float x, float e)
+    {
+        return std::powf(x, e);
+    }
+  
+    static glm::vec3 RotateY(const glm::vec3& v, float angle)
+    {
+        return glm::rotateY(v, angle);
     }
 };
 
@@ -278,6 +293,7 @@ inline void BindMath(wren::ForeignModule& module)
         mathUtilClass.funcStatic<&MathUtil::MixQuat>("MixQuat");
         mathUtilClass.funcStatic<&MathUtil::Slerp>("Slerp");
         mathUtilClass.funcStatic<&MathUtil::Dot>("Dot");
+        mathUtilClass.funcStatic<&MathUtil::Dot2D>("Dot2D");
         mathUtilClass.funcStatic<&MathUtil::Cross>("Cross");
         mathUtilClass.funcStatic<&MathUtil::Clamp>("Clamp");
         mathUtilClass.funcStatic<&MathUtil::Max>("Max");
@@ -293,12 +309,14 @@ inline void BindMath(wren::ForeignModule& module)
         mathUtilClass.funcStatic<&MathUtil::Sqrt>("Sqrt");
         mathUtilClass.funcStatic<&MathUtil::Abs>("Abs");
         mathUtilClass.funcStatic<&MathUtil::PI>("PI");
+        mathUtilClass.funcStatic<&MathUtil::Pow>("Pow");
         mathUtilClass.funcStatic<&MathUtil::TwoPI>("TwoPI");
         mathUtilClass.funcStatic<&MathUtil::HalfPI>("HalfPI");
         mathUtilClass.funcStatic<&MathUtil::Distance>("Distance");
         mathUtilClass.funcStatic<&MathUtil::AngleAxis2D>("AngleAxis2D");
         mathUtilClass.funcStatic<&MathUtil::Floor>("Floor");
         mathUtilClass.funcStatic<&MathUtil::RotateTowards>("RotateTowards");
+        mathUtilClass.funcStatic<&MathUtil::RotateY>("RotateY");
     }
 }
 

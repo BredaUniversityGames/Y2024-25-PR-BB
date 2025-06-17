@@ -1,4 +1,5 @@
 #include "game_module.hpp"
+#include "achievements.hpp"
 #include "application_module.hpp"
 #include "audio_module.hpp"
 #include "canvas.hpp"
@@ -29,12 +30,54 @@
 #include "time_module.hpp"
 #include "ui/ui_menus.hpp"
 #include "ui_module.hpp"
+#include "ui_text.hpp"
 
-#include <ui_text.hpp>
+#include <magic_enum.hpp>
+
+Achievement CreateAchievement(SteamAchievementEnum achievements)
+{
+    return Achievement { static_cast<int32_t>(achievements), magic_enum::enum_name(achievements) };
+}
+
+Stat CreateStat(SteamStatEnum stats, EStatTypes type)
+{
+    return Stat {
+        static_cast<int32_t>(stats),
+        type, magic_enum::enum_name(stats)
+    };
+}
 
 ModuleTickOrder GameModule::Init(Engine& engine)
 {
-    engine.GetModule<ApplicationModule>().GetActionManager().SetGameActions(GAME_ACTIONS);
+    _achievements = {
+        CreateAchievement(SteamAchievementEnum::SKELETONS_KILLED_1),
+        CreateAchievement(SteamAchievementEnum::EYES_KILLED_1),
+        CreateAchievement(SteamAchievementEnum::BERSERKERS_KILLED_1),
+        CreateAchievement(SteamAchievementEnum::SOULS_1),
+        CreateAchievement(SteamAchievementEnum::NUGGET_1),
+        CreateAchievement(SteamAchievementEnum::DIE_1),
+        CreateAchievement(SteamAchievementEnum::RELIC_1),
+    };
+
+    _stats = {
+        CreateStat(SteamStatEnum::SKELETONS_KILLED, EStatTypes::STAT_INT),
+        CreateStat(SteamStatEnum::EYES_KILLED, EStatTypes::STAT_INT),
+        CreateStat(SteamStatEnum::BERSERKERS_KILLED, EStatTypes::STAT_INT),
+        CreateStat(SteamStatEnum::WAVES_REACHED, EStatTypes::STAT_INT),
+        CreateStat(SteamStatEnum::SOULS_COLLECTED, EStatTypes::STAT_INT),
+        CreateStat(SteamStatEnum::GOLD_NUGGETS_COLLECTED, EStatTypes::STAT_INT),
+        CreateStat(SteamStatEnum::GOLD_CURRENCY_COLLECTED, EStatTypes::STAT_INT),
+        CreateStat(SteamStatEnum::ENEMIES_KILLED_WITH_RELIC, EStatTypes::STAT_INT),
+        CreateStat(SteamStatEnum::TIMES_DIED, EStatTypes::STAT_INT),
+    };
+
+    ActionManager& actionManager = engine.GetModule<ApplicationModule>().GetActionManager();
+    actionManager.SetGameActions(GAME_ACTIONS);
+
+    auto& steam = engine.GetModule<SteamModule>();
+    steam.InitSteamStats(_stats);
+    steam.InitSteamAchievements(_achievements);
+    steam.RequestCurrentStats();
 
     // Audio Setup
     auto& audio = engine.GetModule<AudioModule>();
@@ -50,6 +93,7 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     ECS.AddSystem<LifetimeSystem>();
 
     GraphicsContext& graphicsContext = *engine.GetModule<RendererModule>().GetGraphicsContext();
+    _bindingsVisualizationCache = std::make_unique<InputBindingsVisualizationCache>(actionManager, graphicsContext);
 
     auto& viewport = engine.GetModule<UIModule>().GetViewport();
     const glm::uvec2 viewportSize = viewport.GetExtend();
@@ -57,18 +101,20 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     auto font = LoadFromFile("assets/fonts/BLOODROSE.ttf", 100, graphicsContext);
     font->metrics.charSpacing = 0;
 
-    if (auto versionFile = std::ifstream("version.txt"))
+    std::string gameVersionText {};
+    if (auto versionFile = fileIO::OpenReadStream("version.txt"))
     {
-        std::string gameVersionText = fileIO::DumpStreamIntoString(versionFile);
+        gameVersionText = fileIO::DumpStreamIntoString(versionFile.value());
         viewport.AddElement(GameVersionVisualization::Create(graphicsContext, viewportSize, font, gameVersionText));
     }
+    _gameVersionVisual = viewport.AddElement(GameVersionVisualization::Create(graphicsContext, viewportSize, font, gameVersionText));
 
     _mainMenu = viewport.AddElement(MainMenu::Create(graphicsContext, viewportSize, font));
     _hud = viewport.AddElement(HUD::Create(graphicsContext, viewportSize, font));
-    _loadingScreen = viewport.AddElement(LoadingScreen::Create(graphicsContext, viewportSize, font));
+    _loadingScreen = viewport.AddElement(LoadingScreen::Create(graphicsContext, *_bindingsVisualizationCache, viewportSize, font));
     _pauseMenu = viewport.AddElement(PauseMenu::Create(graphicsContext, viewportSize, font));
     _gameOver = viewport.AddElement(GameOverMenu::Create(graphicsContext, viewportSize, font));
-    _controlsMenu = viewport.AddElement(ControlsMenu::Create(viewportSize, graphicsContext, engine.GetModule<ApplicationModule>().GetActionManager(), font));
+    _controlsMenu = viewport.AddElement(ControlsMenu::Create(viewportSize, graphicsContext, *_bindingsVisualizationCache, actionManager, font));
     _creditsMenu = viewport.AddElement(CreditsMenu::Create(engine, graphicsContext, viewportSize, font));
 
     gameSettings = GameSettings::FromFile(GAME_SETTINGS_FILE);
@@ -78,6 +124,7 @@ ModuleTickOrder GameModule::Init(Engine& engine)
 
     // Set all UI menus invisible
 
+    _gameVersionVisual.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     _mainMenu.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     _hud.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
     _loadingScreen.lock()->visibility = UIElement::VisibilityState::eNotUpdatedAndInvisible;
@@ -126,6 +173,7 @@ ModuleTickOrder GameModule::Init(Engine& engine)
 
     auto openControlsMenu = [this, &engine]()
     {
+        this->_controlsMenu.lock()->UpdateBindings();
         this->PushUIMenu(this->_controlsMenu);
         this->PushPreviousFocusedElement(_mainMenu.lock()->controlsButton);
         engine.GetModule<UIModule>().uiInputContext.focusedUIElement = this->_controlsMenu.lock()->backButton;
@@ -260,6 +308,15 @@ std::optional<std::shared_ptr<LoadingScreen>> GameModule::GetLoadingScreen()
     return std::nullopt;
 }
 
+std::optional<std::shared_ptr<GameVersionVisualization>> GameModule::GetGameVersionVisual()
+{
+    if (auto lock = _gameVersionVisual.lock())
+    {
+        return lock;
+    }
+    return std::nullopt;
+}
+
 void GameModule::SetUIMenu(std::weak_ptr<Canvas> menu)
 {
     _menuStack = {};
@@ -309,7 +366,7 @@ void GameModule::TransitionScene(Engine& engine)
     engine.GetModule<TimeModule>().ResetTimer();
 }
 
-void GameModule::Tick(MAYBE_UNUSED Engine& engine)
+void GameModule::Tick(Engine& engine)
 {
     ApplySettings(engine);
 

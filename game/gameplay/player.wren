@@ -1,9 +1,10 @@
 import "gameplay/hud.wren" for WrenHUD, HitmarkerState
-import "engine_api.wren" for Math
+import "engine_api.wren" for Math, Stat, Stats, Achievements
 import "gameplay/station.wren" for PowerUpType
 
 class PlayerVariables {
-    construct new(cppHud) {
+    construct new(cppHud, engine) {
+        _engine = engine
         _maxHealth = 100.0
         _health = _maxHealth
         _score = 0
@@ -17,6 +18,7 @@ class PlayerVariables {
         _grenadeChargeRate = 20
         _grenadeCharge = 0
         _hud =  WrenHUD.new(cppHud)
+        _hud.SetWaveCounter(0)
 
         _invincibilityMaxTime = 500
         _invincibilityTime = 0
@@ -109,6 +111,11 @@ class PlayerVariables {
 
     IncreaseScore(value) {
         _score = _score + value
+
+        var stat = _engine.GetSteam().GetStat(Stats.GOLD_CURRENCY_COLLECTED())
+        if(stat != null) {
+            stat.intValue = stat.intValue + value
+        }
     }
 
     GetScore() {

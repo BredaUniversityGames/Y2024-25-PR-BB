@@ -1,13 +1,14 @@
-import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, Perlin, Random
+import "engine_api.wren" for Vec3, Vec2, Engine, ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, Perlin, Random, Achievements, Stat, Stats
 import "../player.wren" for PlayerVariables
 
 import "../soul.wren" for Soul, SoulManager, SoulType
 import "../coin.wren" for Coin, CoinManager
 import "gameplay/flash_system.wren" for FlashSystem
+import "../station.wren" for PowerUpType
 
 class BerserkerEnemy {
 
-    construct new(engine, spawnPosition, waveNumber) {
+    construct new(engine, spawnPosition) {
         
         // ENEMY CONSTANTS
         _maxVelocity = 6.8
@@ -23,13 +24,17 @@ class BerserkerEnemy {
         _attackTiming = 1200 // TODO: Should be added to small melee enemies
         _recoveryMaxTime = 500
         _deathTimerMax = 3000
+        _reasonTimeout = 2000
+        _waypointRadius = 5.0
+        _honeInRadius = 30.0
+        _honeInMaxAltitude = 4.0
 
         _growlSFX = "event:/SFX/DemonGrowl"
         _hurtSFX = "event:/SFX/DemonHurt"
         _stepSFX = "event:/SFX/DemonStep"
         _attackSFX = "event:/SFX/DemonAttack"
         _attackHitSFX = "event:/SFX/DemonAttackHit"
-        _hitSFX = "event:/SFX/Hit"
+        _hitSFX = "event:/SFX/Hurt"
         _spawnSFX = "event:/SFX/EnemySpawn"
 
         // ENTITY SETUP
@@ -59,12 +64,12 @@ class BerserkerEnemy {
         _rootEntity.AttachChild(_lightEntity)
 
         _pointLight.intensity = 10
-        _pointLight.range = 2
-        _pointLight.color = Vec3.new(0.0, 1.0 - Math.Clamp(waveNumber - 3, 0, 7) / 7, Math.Min(waveNumber - 3, 7) / 7)
+        _pointLight.range = 6
+        _pointLight.color = Vec3.new(0.0, 1.0, 1.0)
 
         var rb = Rigidbody.new(engine.GetPhysics(), colliderShape, PhysicsObjectLayer.eENEMY(), false)
         var body = _rootEntity.AddRigidbodyComponent(rb)
-        body.SetGravityFactor(2.2)
+        body.SetGravityFactor(10.0)
 
         var animations = _meshEntity.GetAnimationControlComponent()
         animations.Play("Walk", 0.528, true, 1.0, true)
@@ -73,7 +78,6 @@ class BerserkerEnemy {
 
         _currentPath = null
         _currentPathNodeIdx = null
-        _honeInRadius = 30.0
 
         _isAlive = true
 
@@ -109,15 +113,28 @@ class BerserkerEnemy {
         return false
     }
 
-    DecreaseHealth(amount, engine, coinManager) {
+    DecreaseHealth(amount, engine, coinManager, soulManager, waveSystem, playerVariables, position) {
         var animations = _meshEntity.GetAnimationControlComponent()
         var body = _rootEntity.GetRigidbodyComponent()
 
         _health = Math.Max(_health - amount, 0)
 
+        var entity = engine.GetECS().NewEntity()
+        var transform = entity.AddTransformComponent()
+
+        var forward = Math.ToVector(body.GetRotation()).mulScalar(-1.8)
+
+        transform.translation = position
+        var lifetime = entity.AddLifetimeComponent()
+        lifetime.lifetime = 170.0
+        var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomPosition()// |
+        engine.GetParticles().SpawnEmitter(entity, "Blood",emitterFlags,Vec3.new(0.0, 1000.0, 0.0), Vec3.new(0.0, 0.0, 0.0))
+
         if (_health <= 0 && _isAlive) {
             _isAlive = false
+            waveSystem.DecreaseEnemyCount()
             _rootEntity.RemoveEnemyTag()
+
             animations.Play("Death", 1.0, false, 0.3, false)
             body.SetLayer(PhysicsObjectLayer.eDEAD())
             body.SetVelocity(Vec3.new(0,0,0))
@@ -131,6 +148,24 @@ class BerserkerEnemy {
                 coinManager.SpawnCoin(engine, body.GetPosition() + Vec3.new(0, 1.0, 0))
             }
 
+            // Spawn a soul
+            soulManager.SpawnSoul(engine, body.GetPosition(),SoulType.BIG)
+
+            var stat = engine.GetSteam().GetStat(Stats.BERSERKERS_KILLED())
+            if(stat != null) {
+                stat.intValue = stat.intValue + 1
+            }
+            engine.GetSteam().Unlock(Achievements.BERSERKERS_KILLED_1())
+
+            var playerPowerUp = playerVariables.GetCurrentPowerUp()
+            if(playerPowerUp != PowerUpType.NONE) {
+                var powerUpStat = engine.GetSteam().GetStat(Stats.ENEMIES_KILLED_WITH_RELIC())
+                if(powerUpStat != null) {
+                    powerUpStat.intValue = powerUpStat.intValue + 1
+                }
+                engine.GetSteam().Unlock(Achievements.RELIC_1())
+            }
+
             var eventInstance = engine.GetAudio().PlayEventOnce(_hurtSFX)
             var growlInstance = engine.GetAudio().PlayEventOnce(_growlSFX)
             var audioEmitter = _rootEntity.GetAudioEmitterComponent()
@@ -139,11 +174,9 @@ class BerserkerEnemy {
         } else {
             //animations.Play("Hit", 1.0, false, 0.1, false)
             //_rootEntity.GetRigidbodyComponent().SetVelocity(Vec3.new(0.0, 0.0, 0.0))
-            var hitmarkerSFX = engine.GetAudio().PlayEventOnce(_hitSFX)
             var eventInstance = engine.GetAudio().PlayEventOnce(_hurtSFX)
             var audioEmitter = _rootEntity.GetAudioEmitterComponent()
             audioEmitter.AddEvent(eventInstance)
-            audioEmitter.AddEvent(hitmarkerSFX)
         }
     }
 
@@ -178,14 +211,18 @@ class BerserkerEnemy {
                     _rootEntity.GetAudioEmitterComponent().AddEvent(engine.GetAudio().PlayEventOnce(_attackHitSFX))
                     if (!playerVariables.IsInvincible()) {
 
-                        var forward = Math.ToVector(_rootEntity.GetTransformComponent().rotation).mulScalar(-1)
+                        var forward = Math.ToVector(_rootEntity.GetTransformComponent().rotation).mulScalar(-1).normalize()
                         var toPlayer = (playerPos - pos).normalize()
 
-                        if (Math.Dot(forward, toPlayer) >= 0.8 && Math.Distance(playerPos, pos) < _attackRange) {
+                        var forward2D = Vec2.new(forward.x, forward.z).normalize()
+                        var toPlayer2D = Vec2.new(toPlayer.x, toPlayer.z).normalize()
+
+                        if (Math.Dot2D(forward2D, toPlayer2D) >= 0.8 && Math.Distance(playerPos, pos) < _attackRange) {
                             var rayHitInfo = engine.GetPhysics().ShootMultipleRays(pos, toPlayer, _attackRange, 3, 20)
                             var isOccluded = false
                             if (!rayHitInfo.isEmpty) {
                                 for (rayHit in rayHitInfo) {
+
                                     var hitEntity = rayHit.GetEntity(engine.GetECS())
                                     if (hitEntity == _rootEntity || hitEntity.HasEnemyTag()) {
                                         continue
@@ -246,7 +283,6 @@ class BerserkerEnemy {
 
                 if(_walkEventInstance == null || engine.GetAudio().IsEventPlaying(_walkEventInstance) == false) {
                     _walkEventInstance = engine.GetAudio().PlayEventLoop(_stepSFX)
-                    engine.GetAudio().SetEventVolume(_walkEventInstance, 1.0)
                     var audioEmitter = _rootEntity.GetAudioEmitterComponent()
                     audioEmitter.AddEvent(_walkEventInstance)
                 }
@@ -306,7 +342,7 @@ class BerserkerEnemy {
             }
 
             if (_deathTimer <= 0) {
-                soulManager.SpawnSoul(engine, body.GetPosition(),SoulType.BIG)
+
                 engine.GetECS().DestroyEntity(_rootEntity) // Destroys the entity, and in turn this object
             } else {
                 // Wait for death animation before starting descent
@@ -324,23 +360,28 @@ class BerserkerEnemy {
         var body = _rootEntity.GetRigidbodyComponent()
         var pos = body.GetPosition()
 
-        if(Math.Distance(position, engine.GetECS().GetEntityByName("Player").GetTransformComponent().GetWorldTranslation()) > _honeInRadius) {
+        var distToPlayer = Math.Distance(pos, playerPos)
+        var altitudeToPlayer = Math.Distance(Vec3.new(0.0, pos.y, 0.0), Vec3.new(0.0, playerPos.y, 0.0))
+
+        if(distToPlayer > _honeInRadius || altitudeToPlayer > _honeInMaxAltitude) {
             _reasonTimer = _reasonTimer + dt
-            if(_reasonTimer > 2000) {
+            if(_reasonTimer > _reasonTimeout) {
                 this.FindNewPath(engine)
                 _reasonTimer = 0
             }
         } else {
             _currentPath = null
-            _reasonTimer = 2001
+            _reasonTimer = _reasonTimeout + 1.0
         }
+
+        var forwardVector = Vec3.new(0.0, 0.0, 0.0)
 
         // Pathfinding logic
         if(_currentPath != null && _currentPath.GetWaypoints().count > 0) {
             var bias = 0.01
             var waypoint = _currentPath.GetWaypoints()[_currentPathNodeIdx]
 
-            if(Math.Distance(waypoint.center, pos) < 3.0 + bias) {
+            if(Math.Distance(waypoint.center, pos) < 5.0 + bias) {
                 _currentPathNodeIdx = _currentPathNodeIdx + 1
                 if(_currentPathNodeIdx == _currentPath.GetWaypoints().count) {
                     body.SetVelocity(Vec3.new(0.0, 0.0, 0.0))
@@ -358,30 +399,22 @@ class BerserkerEnemy {
 
             var dst = Math.Distance(pos, p1.center)
             var target = Math.MixVec3(p1.center, p2.center, dst * bias)
-            var forwardVector = (target - pos).normalize()
-
-            _rootEntity.GetRigidbodyComponent().SetVelocity(forwardVector.mulScalar(_maxVelocity))
-            
-            // Set forward rotation
-            var endRotation = Math.LookAt(Vec3.new(forwardVector.x, 0, forwardVector.z), Vec3.new(0, 1, 0))
-            var startRotation = body.GetRotation()
-            body.SetRotation(Math.Slerp(startRotation, endRotation, 0.01 *dt))
+            forwardVector = target - pos
         }else{
-            var forwardVector = playerPos - position
-            forwardVector.y = 0
-            forwardVector = (forwardVector.normalize() + _rootEntity.GetRigidbodyComponent().GetVelocity())
-            var maxVelocityScalar = 1.0
-            if(forwardVector.length() >= _maxVelocity) {
-                maxVelocityScalar = _maxVelocity / forwardVector.length()
+            forwardVector = (playerPos - position).normalize()
+            var localSteerForward = this.LocalSteer(engine, pos, forwardVector, playerPos)
+            if(localSteerForward) {
+                forwardVector = localSteerForward
             }
-
-            var factor = Vec3.new(maxVelocityScalar, 1.0, maxVelocityScalar)
-            _rootEntity.GetRigidbodyComponent().SetVelocity(forwardVector * factor)
-
-            var endRotation = Math.LookAt(Vec3.new(forwardVector.x, 0, forwardVector.z), Vec3.new(0, 1, 0))
-            var startRotation = body.GetRotation()
-            body.SetRotation(Math.Slerp(startRotation, endRotation, 0.01 *dt))
         }
+
+        forwardVector = forwardVector.normalize()
+        forwardVector = (_rootEntity.GetRigidbodyComponent().GetVelocity() + forwardVector).normalize()
+        _rootEntity.GetRigidbodyComponent().SetVelocity(forwardVector.mulScalar(_maxVelocity))
+
+        var endRotation = Math.LookAt(Vec3.new(forwardVector.x, 0, forwardVector.z), Vec3.new(0, 1, 0))
+        var startRotation = body.GetRotation()
+        body.SetRotation(Math.Slerp(startRotation, endRotation, 0.01 *dt))
     }
 
     FindNewPath(engine) {
@@ -389,6 +422,123 @@ class BerserkerEnemy {
         _currentPath = engine.GetPathfinding().FindPath(startPos, engine.GetECS().GetEntityByName("Player").GetTransformComponent().GetWorldTranslation())
         
         _currentPathNodeIdx = 1
+    }
+
+    // Returns a corrected vector or null if no objects were found
+    LocalSteer(engine, position, forwardVector, playerPosition) {
+        var seekDepth = 4.0
+        var rayCount = 10
+        var rayAngle = 20 // degrees
+
+        var forwardVectorPosY = forwardVector
+        forwardVectorPosY.y = Math.Max(forwardVectorPosY.y, 0.0001)
+        forwardVectorPosY = forwardVectorPosY.normalize()
+
+        var forwardOffset = 1.3
+
+        //------------------------------------------------------------------------------//
+        // Compute offset for raycasting (feet or chest if we're approaching a slope)   //
+        //------------------------------------------------------------------------------//
+        var offset = Vec3.new(0.0, -2.3, 0.0) // Offset to feet of berserker
+        offset = offset + forwardVectorPosY.mulScalar(forwardOffset)
+
+        // Check whether we're approaching a slope
+        var rayHitInfos = engine.GetPhysics().ShootRay(position + offset, forwardVectorPosY, seekDepth)
+        var closestHitFractionIndex = 0
+        var closestHitFraction = 1.0
+        for(i in 0...rayHitInfos.count) {
+            var hitInfo = rayHitInfos[i]
+
+            if(hitInfo.hitFraction < closestHitFraction) {
+                closestHitFraction = hitInfo.hitFraction
+                closestHitFractionIndex = i
+            }
+        }
+
+        if(rayHitInfos.count > 0) {
+            if(Math.Dot(rayHitInfos[closestHitFractionIndex].normal, Vec3.new(0.0, 1.0, 0.0)) > 0.5) {
+                offset = Vec3.new(0.0, 0.0, 0.0) + forwardVectorPosY.mulScalar(forwardOffset)
+            }
+        }
+
+        //--------------------------------------------------------------//
+        // Local steering behaviour                                     //
+        // Shoots out rays in angle and steers away from closest hits   //
+        // 1) Regular behaviour                                         //
+        // 2) If all hits are roughly equal steer a hard left or right  //
+        // 3) No obstacles in the way, resume regular path              //
+        //--------------------------------------------------------------//
+
+        var angleStep = Math.Radians(rayAngle) / (rayCount / 2)
+        var offsetDirection = Vec3.new(0, 0, 0)
+        var hardSteer = false
+
+        // Local steer
+        // Find closest ray hit and add this to the offsetDirection vector
+        if(hardSteer == false) {
+            for(i in 0...rayCount) {
+                var angleOffset = (i-(rayCount - 1) / 2.0) * angleStep
+                var rotatedDirection = Math.RotateY(forwardVectorPosY, angleOffset)
+
+                var hitInfos = engine.GetPhysics().ShootRay(position + offset, rotatedDirection, seekDepth)
+                var lowestHitFraction = 1.0
+                var lowestHitFractionIndex = 0
+                for(j in 0...hitInfos.count) {
+
+                    var ray = hitInfos[j]
+
+                    if(ray.GetEntity(engine.GetECS()).GetEnttEntity() == _rootEntity.GetEnttEntity() /*||
+                        ray.GetEntity(engine.GetECS()).GetEnttEntity() == engine.GetECS().GetEntityByName("Player").GetEnttEntity()*/) {
+                        continue
+                    }
+
+                    if(ray.hitFraction < lowestHitFraction) {
+                        lowestHitFraction = ray.hitFraction
+                        lowestHitFractionIndex = j
+                    }
+                }
+
+                if(hitInfos.count > 0) {
+                    offsetDirection = offsetDirection + (position - hitInfos[lowestHitFractionIndex].position)
+                }
+            }
+
+            // If we hit nothing
+            if(offsetDirection.length() < 0.001) {
+                return null
+            }
+
+            offsetDirection = offsetDirection.normalize()
+            var absDot = Math.Abs(Math.Dot(forwardVector, offsetDirection))
+
+            if(absDot > 0.6) {
+                // if the raycast results is a vector that is nearly a negated forward vector
+                // steer either hard left or right (random chance for either)
+                hardSteer = true
+            } else {
+                if(absDot < 0.001) {
+                    // if no hits (or too subtle) keep same forward vector
+                } else {
+                    // regular steering behavior
+                    forwardVector = forwardVector - offsetDirection
+                }
+            }
+        }
+
+        if(hardSteer) {
+            var angle = 0.0
+
+            var index = Random.RandomIndex(0, 1)
+            if(index == 0) {
+                angle = -90.0
+            } else {
+                angle = 90.0
+            }
+
+            forwardVector = Math.RotateY(forwardVector, angle)
+        }
+
+        return forwardVector
     }
 
     Destroy(engine) {

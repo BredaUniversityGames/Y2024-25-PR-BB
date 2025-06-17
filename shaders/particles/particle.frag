@@ -29,9 +29,33 @@ layout (location = 4) flat in uint materialIndex;
 layout (location = 5) flat in uint flags;
 layout (location = 6) in vec3 colorIn;
 layout (location = 7) in float frameBlend;
+layout (location = 8) in float alpha;
 
 layout (location = 0) out vec4 outColor;
 layout (location = 1) out vec4 outBrightness;
+
+/// Gpt o1 random hash function
+// A simple 32-bit hash function
+uint hash32(uint x) {
+    x ^= x >> 16;
+    x *= 0x7FEB352D;
+    x ^= x >> 15;
+    x *= 0x846CA68B;
+    x ^= x >> 16;
+    return x;
+}
+
+// Return a float in [0..1) from the hash
+float randomFloatFromCoord(ivec2 coord)
+{
+    // Combine x and y into a single 32-bit integer
+    // so that each pixel coordinate produces a unique seed.
+    // The shift + XOR helps reduce collisions.
+    uint seed = hash32(uint(coord.x) ^ (uint(coord.y) << 16));
+    // Map [0 .. 2^32-1] to [0.0 .. 1.0).
+    return float(seed) * (1.0 / 4294967296.0);
+}
+///
 
 float CalculateShadowBias(float cosTheta, float baseBias);
 void DirectionalShadowMap(vec3 position, float bias, inout float shadow);
@@ -45,6 +69,19 @@ void main()
         vec4 color2 = pow(texture(bindless_color_textures[nonuniformEXT(materialIndex)], texCoord2), vec4(2.2));
 
         color = mix(color, color2, frameBlend);
+    }
+
+    // If alpha is not fully opaque (1.0), apply noise dithering
+    if (alpha < 1.0)
+    {
+        ivec2 pixelPos = ivec2(gl_FragCoord.xy);
+        float noiseVal = randomFloatFromCoord(pixelPos);
+
+        // If the transparency is less than this random threshold, discard
+        if (alpha < noiseVal)
+        {
+            discard;
+        }
     }
 
     if (color.a < 0.2f)

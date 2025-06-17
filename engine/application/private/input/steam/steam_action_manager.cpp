@@ -49,6 +49,23 @@ void SteamActionManager::SetGameActions(const GameActions& gameActions)
     }
 }
 
+void SteamActionManager::SetActiveActionSet(std::string_view actionSetName)
+{
+    ActionManager::SetActiveActionSet(actionSetName);
+
+    // Make sure we have the steam handles cached
+    if (_steamGameActionsCache.empty())
+    {
+        CacheSteamInputHandles();
+    }
+
+    if (!_steamGameActionsCache.empty())
+    {
+        SteamInput()->ActivateActionSet(_steamInputDeviceManager.GetGamepadHandle(), _steamGameActionsCache[_activeActionSet].actionSetHandle);
+        SteamInput()->RunFrame();
+    }
+}
+
 DigitalActionType SteamActionManager::CheckInput(std::string_view actionName, MAYBE_UNUSED GamepadButton button) const
 {
     DigitalActionType result {};

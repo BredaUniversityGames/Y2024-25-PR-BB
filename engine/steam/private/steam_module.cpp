@@ -1,6 +1,9 @@
 #include "steam_module.hpp"
+#include "achievements.hpp"
 #include "log.hpp"
 #include "steam_include.hpp"
+
+#include <time_module.hpp>
 
 void DebugCallback(int severity, const char* message)
 {
@@ -10,13 +13,13 @@ void DebugCallback(int severity, const char* message)
     switch (severity)
     {
     case 0:
-        bblog::info("[Steamworks] ", message);
+        bblog::info("[Steamworks] {}", message);
         break;
     case 1:
-        bblog::warn("[Steamworks] ", message);
+        bblog::warn("[Steamworks] {}", message);
         break;
     default:
-        bblog::error("[Steamworks] ", message);
+        bblog::error("[Steamworks] {}", message);
     }
 }
 
@@ -63,11 +66,49 @@ void SteamModule::Tick(MAYBE_UNUSED Engine& engine)
     }
 
     SteamAPI_RunCallbacks();
+
+    // Let's save stats once every X seconds
+    if (_statsCounterMs > _statsCounterMaxMs)
+    {
+        _statsCounterMs = 0;
+        SaveStats();
+    }
+    _statsCounterMs += engine.GetModule<TimeModule>().GetRealDeltatime().count();
 }
 
 void SteamModule::Shutdown(MAYBE_UNUSED Engine& engine)
 {
     SteamAPI_Shutdown();
+}
+void SteamModule::InitSteamAchievements(std::span<Achievement> achievements)
+{
+    _steamAchievements = std::make_unique<SteamAchievementManager>(achievements);
+}
+void SteamModule::InitSteamStats(std::span<Stat> stats)
+{
+    _steamStats = std::make_unique<SteamStatManager>(stats);
+}
+
+bool SteamModule::RequestCurrentStats()
+{
+    if (auto stats = SteamUserStats())
+    {
+        return stats->RequestCurrentStats();
+    }
+
+    return false;
+}
+
+void SteamModule::SaveStats()
+{
+    if (_steamStats)
+    {
+        _steamStats->StoreStats();
+    }
+    else
+    {
+        bblog::error("Cannot save stats, SteamStats does not exist.");
+    }
 }
 void SteamModule::OpenSteamBrowser(const std::string& url)
 {

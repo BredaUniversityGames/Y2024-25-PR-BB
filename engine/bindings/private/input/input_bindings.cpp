@@ -36,16 +36,6 @@ glm::vec2 GetAnalogAction(ApplicationModule& self, const std::string& actionName
     return self.GetActionManager().GetAnalogAction(actionName);
 }
 
-std::vector<BindingOriginVisual> GetDigitalActionBindingOriginVisual(ApplicationModule& self, const std::string& actionName)
-{
-    return self.GetActionManager().GetDigitalActionBindingOriginVisual(actionName);
-}
-
-std::vector<BindingOriginVisual> GetAnalogActionBindingOriginVisual(ApplicationModule& self, const std::string& actionName)
-{
-    return self.GetActionManager().GetAnalogActionBindingOriginVisual(actionName);
-}
-
 glm::vec2 GetMousePosition(ApplicationModule& self)
 {
     int32_t mouseX, mouseY;
@@ -89,20 +79,11 @@ void BindInputAPI(wren::ForeignModule& module)
     wrenClass.funcExt<bindings::GetMousePosition>("GetMousePosition");
     wrenClass.funcExt<bindings::IsInputEnabled>("DebugIsInputEnabled");
 
-
     wrenClass.funcExt<bindings::IsGamepadConnected>("IsGamepadConnected");
-
-    wrenClass.funcExt<bindings::GetDigitalActionBindingOriginVisual>("GetDigitalActionBindingOriginVisual");
-    wrenClass.funcExt<bindings::GetAnalogActionBindingOriginVisual>("GetAnalogActionBindingOriginVisual");
-
 
     auto& digitalActionResult = module.klass<DigitalActionResult>("DigitalActionResult");
     digitalActionResult.funcExt<bindings::GetDigitalActionIsPressed>("IsPressed");
     digitalActionResult.funcExt<bindings::GetDigitalActionIsHeld>("IsHeld");
     digitalActionResult.funcExt<bindings::GetDigitalActionIsReleased>("IsReleased");
     bindings::BindEnum<KeyboardCode>(module, "Keycode");
-
-    auto& bindingOriginVisual = module.klass<BindingOriginVisual>("BindingOriginVisual");
-    bindingOriginVisual.varReadonly<&BindingOriginVisual::bindingInputName>("bindingInputName");
-    bindingOriginVisual.varReadonly<&BindingOriginVisual::glyphImagePath>("glyphImagePath");
 }

@@ -81,6 +81,8 @@ class Main {
             engine.SetExit(0)
         })
 
+        engine.GetGame().GetGameVersionVisual().Show(true)
+
         __musicPlayer = BGMPlayer.new(engine.GetAudio(),
             "event:/BGM/MainMenu",
             0.3)
@@ -99,6 +101,7 @@ class Main {
         System.print("Exited main menu")
         __musicPlayer.Destroy(engine.GetAudio())
         __ambientPlayer.Destroy(engine.GetAudio())
+        engine.GetGame().GetGameVersionVisual().Show(false)
     }
 
     static Update(engine, dt) {
