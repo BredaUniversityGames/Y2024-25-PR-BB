@@ -267,7 +267,7 @@ override_option(PHYSFS_BUILD_TEST OFF)
 
 FetchContent_MakeAvailable(PhysFS)
 
-target_compile_options(physfs-static PRIVATE -Wno-deprecated-declarations -Wno-error=implicit-function-declaration)
+target_compile_options(physfs-static PRIVATE -Wno-deprecated-declarations -Wno-error=implicit-function-declaration -Wno-error=deprecated-declarations)
 
 if (ENABLE_UNITY)
     target_enable_unity(Jolt)
