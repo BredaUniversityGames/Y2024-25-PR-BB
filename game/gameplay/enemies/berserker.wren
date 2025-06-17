@@ -386,13 +386,12 @@ class BerserkerEnemy {
         // Pathfinding logic
         if(_currentPath != null && _currentPath.GetWaypoints().count > 0) {
            
-            if (_currentPath.ShouldGoNextWaypoint(_currentPathNodeIdx, pos)) {
+            if (_currentPath.ShouldGoNextWaypoint(_currentPathNodeIdx, pos, offsetToKnees.y + 5.0)) {
                 _currentPathNodeIdx = _currentPathNodeIdx + 1
 
                 if (_currentPathNodeIdx >= _currentPath.Count()) {
                     body.SetVelocity(Vec3.new(0.0, 0.0, 0.0))
                     _currentPath = null
-                    zone.End()
                     return
                 }
             }
@@ -402,18 +401,18 @@ class BerserkerEnemy {
         } else {
 
             forwardVector = (playerPos - position).normalize()
+
+            var localSteerForward = engine.GetPhysics().LocalEnemySteering(
+                body, 
+                forwardVector, 
+                offsetToKnees, 
+                rayAngle, rayCount
+            ) 
+
+            if(localSteerForward) {
+                forwardVector = localSteerForward
+            }
         }
-
-        // var localSteerForward = engine.GetPhysics().LocalEnemySteering(
-        //         body, 
-        //         forwardVector, 
-        //         offsetToKnees, 
-        //         rayAngle, rayCount
-        //     ) 
-
-        // if(localSteerForward) {
-        //     forwardVector = localSteerForward
-        // }
 
         forwardVector = (body.GetVelocity() + forwardVector).normalize()
         body.SetVelocity(forwardVector.mulScalar(_maxVelocity))
