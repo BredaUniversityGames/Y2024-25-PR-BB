@@ -6,10 +6,12 @@
 #include "physics/physics_bindings.hpp"
 #include "physics/shape_factory.hpp"
 #include "physics_module.hpp"
+#include "profile_macros.hpp"
 #include "utility/enum_bind.hpp"
+#include "utility/random_util.hpp"
 #include "wren_entity.hpp"
 
-#include <optional>
+#include <glm/gtx/rotate_vector.hpp>
 
 namespace bindings
 {
@@ -134,6 +136,99 @@ void SetOnCollisionStay(WrenComponent<RigidbodyComponent>& self, wren::Variable 
 {
     self.component->onCollisionStay = { callback };
 }
+
+std::optional<glm::vec3> LocalEnemySteering(
+    PhysicsModule& physics,
+    const WrenComponent<RigidbodyComponent>& self,
+    const glm::vec3& forward,
+    const glm::vec3& kneeOffset,
+    float rayAngle, int rayCount)
+{
+    ZoneScopedN("Local Enemy Steering");
+
+    auto position = self.component->GetPosition();
+    glm::vec3 offsetDirection = glm::vec3(0.0f, 0.0f, 0.0f);
+
+    // Find closest ray hit and add this to the offsetDirection vector
+    for (int i = 0; i < rayCount; i++)
+    {
+        auto angleOffset = (i - (rayCount - 1) / 2.0) * glm::radians(rayAngle) / (rayCount / 2);
+
+        auto hitInfos = physics.ShootRay(
+            position + kneeOffset,
+            glm::rotateY<float>(forward, angleOffset),
+            3.0);
+
+        float lowestHitFraction = 1.0;
+        float lowestHitFractionIndex = 0;
+
+        for (size_t j = 0; j < hitInfos.size(); j++)
+        {
+            auto& ray = hitInfos[j];
+
+            if (ray.bodyID == self.component->bodyID)
+            {
+                continue;
+            }
+
+            if (ray.hitFraction < lowestHitFraction)
+            {
+                lowestHitFraction = ray.hitFraction;
+                lowestHitFractionIndex = j;
+            }
+        }
+
+        if (!hitInfos.empty())
+        {
+            offsetDirection = offsetDirection + (position - hitInfos[lowestHitFractionIndex].position);
+        }
+    }
+
+    // If we hit nothing
+    if (glm::length(offsetDirection) < 0.001)
+    {
+        return std::nullopt;
+    }
+
+    glm::vec3 out = forward;
+    offsetDirection = glm::normalize(offsetDirection);
+    auto absDot = glm::abs(glm::dot(forward, offsetDirection));
+
+    if (absDot > 0.9)
+    {
+        // if the raycast results is a vector that is nearly a negated forward vector
+        // steer either hard left or right (random chance for either)
+
+        float angle = 0.0;
+        uint32_t index = RandomUtil::RandomIndex(0, 2);
+        assert(index == 1 || index == 0);
+
+        if (index == 0)
+        {
+            angle = glm::radians(-90.0);
+        }
+        else
+        {
+            angle = glm::radians(90.0);
+        }
+
+        out = glm::rotateY(forward, angle);
+    }
+    else
+    {
+        if (absDot < 0.001)
+        {
+            // if no hits (or too subtle) keep same forward vector
+        }
+        else
+        {
+            // regular steering behavior
+            out -= offsetDirection;
+        }
+    }
+
+    return out;
+}
 }
 void BindPhysicsAPI(wren::ForeignModule& module)
 {
@@ -142,6 +237,8 @@ void BindPhysicsAPI(wren::ForeignModule& module)
 
     wren_class.funcExt<bindings::ShootRay>("ShootRay");
     wren_class.funcExt<bindings::ShootMultipleRays>("ShootMultipleRays");
+    wren_class.funcExt<bindings::LocalEnemySteering>("LocalEnemySteering",
+        "Get a steering direction for an enemy based on raycasts in front of it. Returns nullopt if no raycast hit was found");
 
     // RayHit struct
     auto& rayHitInfo = module.klass<RayHitInfo>("RayHitInfo");

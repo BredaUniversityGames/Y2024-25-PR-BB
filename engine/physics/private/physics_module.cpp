@@ -154,8 +154,10 @@ std::vector<RayHitInfo> PhysicsModule::ShootRay(const glm::vec3& origin, const g
 
         if (hitEntity != entt::null)
         {
+            hitInfos[iterator].bodyID = hit.mBodyID;
             hitInfos[iterator].entity = hitEntity;
         }
+
         hitInfos[iterator].position = origin + hit.mFraction * ((direction * distance));
         hitInfos[iterator].hitFraction = hit.mFraction;
 

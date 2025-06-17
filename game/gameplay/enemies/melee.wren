@@ -410,40 +410,34 @@ class MeleeEnemy {
         // Pathfinding logic
         if(_currentPath != null && _currentPath.Count() > 0) {
 
-            var waypoint = _currentPath.GetWaypoint(_currentPathNodeIdx)
+            var skipResult = _currentPath.ShouldGoNextWaypoint(_currentPathNodeIdx, pos)
 
-            if(Math.Distance(waypoint.center, pos) < 3.0) {
-
+            if(skipResult == 1) {
+                
                 _currentPathNodeIdx = _currentPathNodeIdx + 1
+                
+            } else if (skipResult == 2) {
 
-                if(_currentPathNodeIdx == _currentPath.Count()) {
+                body.SetVelocity(Vec3.new(0.0, 0.0, 0.0))
+                _currentPath = null
+                zone.End()
+                return
 
-                    body.SetVelocity(Vec3.new(0.0, 0.0, 0.0))
-                    _currentPath = null
-                    zone.End()
-                    return
-                }
-
-                waypoint = _currentPath.GetWaypoint(_currentPathNodeIdx)
             }
 
-            var p1 = _currentPath.GetWaypoint(_currentPathNodeIdx)
-            var p2 = p1
-
-            if (_currentPathNodeIdx + 1 < _currentPath.Count()) {
-                p2 = _currentPath.GetWaypoint(_currentPathNodeIdx + 1)
-            }
-
-            var dst = Math.Distance(pos, p1.center)
-            var target = Math.MixVec3(p1.center, p2.center, dst * 0.03)
-
-            forwardVector = (target - pos).normalize()
+            forwardVector = (_currentPath.GetFollowDirection(_currentPathNodeIdx) - pos).normalize()
 
         } else {
 
             forwardVector = (playerPos - position).normalize()
             
-            var localSteerForward = this.LocalSteer(engine, pos, forwardVector)
+            var localSteerForward = engine.GetPhysics().LocalEnemySteering(
+                body, 
+                forwardVector, 
+                offsetToKnees, 
+                rayAngle, rayCount
+            ) 
+
             if(localSteerForward) {
                 forwardVector = localSteerForward
             }

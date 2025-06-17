@@ -2,6 +2,7 @@
 
 #include "aim_assist.hpp"
 #include "cheats_component.hpp"
+#include "components/rigidbody_component.hpp"
 #include "ecs_module.hpp"
 #include "game_module.hpp"
 #include "physics_module.hpp"
@@ -10,6 +11,7 @@
 #include "ui_module.hpp"
 #include "wren_entity.hpp"
 #include "wren_tracy_zone.hpp"
+
 
 namespace bindings
 {
