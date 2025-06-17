@@ -14,6 +14,6 @@ target_link_libraries(Utility
 
 target_include_directories(Utility
         PUBLIC "${PROJECT_SOURCE_DIR}/external/visit_struct/include"
-        PUBLIC "${physfs_SOURCE_DIR}/src"
+        PUBLIC "${PHYSFS_SOURCE_DIR}/src"
         PRIVATE "${PROJECT_SOURCE_DIR}/external/stb"
 )
