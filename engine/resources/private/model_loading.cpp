@@ -114,11 +114,18 @@ fastgltf::Asset LoadFastGLTFAsset(std::string_view path)
     // if (!fileStream.isOpen())
     //   throw std::runtime_error("Path not found!");
 
+#ifdef DISTRIBUTION
+    std::string_view directory = "./";
+#else
     std::string_view directory = path.substr(0, path.find_last_of('/'));
+#endif
 
     auto loadedGltf = parser.loadGltf(fileStream, directory, DEFAULT_LOAD_FLAGS);
     if (!loadedGltf)
+    {
+        bblog::error("error in gltf");
         throw std::runtime_error(getErrorMessage(loadedGltf.error()).data());
+    }
 
     auto gltf = std::move(loadedGltf.get());
 
@@ -204,29 +211,28 @@ CPUModel ModelLoading::LoadGLTF(std::string_view path)
     std::string zone = std::string(path) + " Model Extraction";
     ZoneName(zone.c_str(), 128);
 
-    fastgltf::GltfFileStream fileStream { path };
+    detail::IfstreamDataGetter fileStream { path };
 
-    if (!fileStream.isOpen())
-        throw std::runtime_error("Path not found!");
+    // if (!fileStream.isOpen())
+    //   throw std::runtime_error("Path not found!");
 
+#ifdef DISTRIBUTION
+    std::string_view directory = "./";
+#else
     std::string_view directory = path.substr(0, path.find_last_of('/'));
+#endif
+
+    auto loadedGltf = parser.loadGltf(fileStream, directory, DEFAULT_LOAD_FLAGS);
+    if (!loadedGltf)
+    {
+        bblog::error("error in gltf");
+        throw std::runtime_error(getErrorMessage(loadedGltf.error()).data());
+    }
+
+    auto gltf = std::move(loadedGltf.get());
+
     size_t offset = path.find_last_of('/') + 1;
     std::string_view name = path.substr(offset, path.find_last_of('.') - offset);
-
-    fastgltf::Asset gltf {};
-
-    {
-        ZoneScoped;
-
-        std::string zone = std::string(path) + " FastGLTF parse";
-        ZoneName(zone.c_str(), 128);
-
-        auto loadedGltf = parser.loadGltf(fileStream, directory, DEFAULT_LOAD_FLAGS);
-        if (!loadedGltf)
-            throw std::runtime_error(getErrorMessage(loadedGltf.error()).data());
-
-        gltf = std::move(loadedGltf.get());
-    }
 
     if (gltf.scenes.size() > 1)
         bblog::warn("GLTF contains more than one scene, but we only load one scene!");
