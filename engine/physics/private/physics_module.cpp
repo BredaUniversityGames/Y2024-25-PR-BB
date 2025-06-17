@@ -81,7 +81,7 @@ void PhysicsModule::Shutdown(MAYBE_UNUSED Engine& engine)
 
 void PhysicsModule::Tick(MAYBE_UNUSED Engine& engine)
 {
-    float deltatimeSeconds = engine.GetModule<TimeModule>().GetDeltatime().count() * 0.001f;
+    float deltatimeSeconds = glm::min(engine.GetModule<TimeModule>().GetDeltatime().count(), PHYSICS_MAX_DT) * 0.001f;
 
     // This is being optimistic: we always do one collision step no matter how small the dt
     const int updatesNeeded = std::min(static_cast<int>(glm::ceil(deltatimeSeconds / PHYSICS_STEPS_PER_SECOND)), PHYSICS_MAX_STEPS_PER_FRAME);
