@@ -82,7 +82,7 @@ private:
         }
         if (c != traits_type::eof())
         {
-            if (PHYSFS_write(file, &c, 1, 1) < 1)
+            if (PHYSFS_writeBytes(file, &c, 1) < 1)
             {
                 return traits_type::eof();
             }
