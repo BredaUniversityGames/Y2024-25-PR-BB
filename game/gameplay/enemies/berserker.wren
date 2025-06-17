@@ -386,7 +386,7 @@ class BerserkerEnemy {
         // Pathfinding logic
         if(_currentPath != null && _currentPath.GetWaypoints().count > 0) {
            
-            if (_currentPath.ShouldGoNextWaypoint(_currentPathNodeIdx, pos, offsetToKnees.y + 5.0)) {
+            if (_currentPath.ShouldGoNextWaypoint(_currentPathNodeIdx, pos, offsetToKnees.y + 6.0)) {
                 _currentPathNodeIdx = _currentPathNodeIdx + 1
 
                 if (_currentPathNodeIdx >= _currentPath.Count()) {

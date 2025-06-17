@@ -51,7 +51,18 @@ glm::vec3 Follow(ComputedPath& path, const glm::vec3& currentPos, uint32_t curre
     assert(path.waypoints.size() > 0);
 
     auto& p1 = path.waypoints.at(current_index);
-    return glm::normalize(p1.centre - currentPos);
+
+    if (current_index + 1 < path.waypoints.size())
+    {
+        auto& p2 = path.waypoints.at(current_index + 1);
+        auto dst = glm::distance(currentPos, p1.centre);
+        auto target = glm::mix(p1.centre, p2.centre, glm::clamp(dst * 0.5f, 0.0f, 1.0f));
+        return glm::normalize(target - currentPos);
+    }
+    else
+    {
+        return glm::normalize(p1.centre - currentPos);
+    }
 }
 
 bool ShouldGoNextWaypoint(ComputedPath& path, uint32_t current_index, const glm::vec3& position, float bias)
