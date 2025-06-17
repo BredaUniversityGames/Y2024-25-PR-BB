@@ -133,7 +133,7 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     _geometryPass = std::make_unique<GeometryPass>(_context, *_gBuffers, _gpuScene->MainCameraBatch());
     _shadowPass = std::make_unique<ShadowPass>(_context, *_gpuScene, _gpuScene->ShadowCameraBatch());
     _skydomePass = std::make_unique<SkydomePass>(_context, uvSphere, _hdrTarget, _bloomTarget, _environmentMap, *_gBuffers, *_bloomSettings);
-    _volumetricPass = std::make_unique<VolumetricPass>(_context, _settings.data.tonemapping, _hdrTarget, _bloomTarget, _volumetricTarget, *_swapChain, *_gBuffers, *_bloomSettings);
+    _volumetricPass = std::make_unique<VolumetricPass>(_context, _settings.data.tonemapping, _hdrTarget, _bloomTarget, _volumetricTarget, *_swapChain, *_gBuffers, *_bloomSettings, _ecs);
     _tonemappingPass = std::make_unique<TonemappingPass>(_context, _settings.data.tonemapping, _hdrTarget, _bloomTarget, _volumetricTarget, _tonemappingTarget, *_swapChain, *_gBuffers, *_bloomSettings);
     _fxaaPass = std::make_unique<FXAAPass>(_context, _settings.data.fxaa, *_gBuffers, _fxaaTarget, _tonemappingTarget);
     _uiPass = std::make_unique<UIPass>(_context, _fxaaTarget, *_swapChain);

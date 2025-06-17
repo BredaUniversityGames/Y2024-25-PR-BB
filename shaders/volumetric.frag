@@ -25,8 +25,6 @@ layout (push_constant) uniform PushConstants
     float time;
     uint _padding1;
 
-    GunShot gunShot[4];
-
 } pc;
 
 layout (set = 1, binding = 0) uniform BloomSettingsUBO
@@ -40,6 +38,11 @@ layout (set = 2, binding = 0) uniform CameraUBO
 layout (set = 3, binding = 0) uniform SceneUBO
 {
     Scene scene;
+};
+
+layout (set = 4, binding = 0) uniform FogTrailsUBO {
+    GunShot gunShots[8];
+    vec4 playerTrailPositions[32];
 };
 
 layout (location = 0) in vec2 texCoords;
@@ -150,6 +153,13 @@ float distPointToRay(vec3 p, vec3 rayOrigin, vec3 rayDir) {
     return length(p - closestPoint);
 }
 
+//https://iquilezles.org/articles/distfunctions/
+float sdVerticalCapsule(vec3 p, float h, float r)
+{
+    p.y -= clamp(p.y, 0.0, h);
+    return length(p) - r;
+}
+
 // ---- Infinite Density Field ----
 float density(vec3 pos)
 {
@@ -161,9 +171,9 @@ float density(vec3 pos)
     float den = base * 1.4 - 0.2 - smoothstep(2.0, 4.0, abs(pos.y));
     den = clamp(den, 0.0, 1.0);
 
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < 8; i++) {
 
-        const GunShot pcGunShot = pc.gunShot[i];
+        const GunShot pcGunShot = gunShots[i];
         const float decay = pcGunShot.origin.a;
         if (decay < 0.001)
         {
@@ -178,6 +188,22 @@ float density(vec3 pos)
         float holeInfluence = smoothstep(decay + iHoleFeather, decay, dpr);
         den *= (1.0 - holeInfluence);
         // Hole (as before)
+    }
+
+    // Now apply player trail
+    for (int i = 0; i < 32; i++) {
+        const vec4 playerTrail = playerTrailPositions[i];
+        const float decay = playerTrail.a;
+        if (decay < 0.001)
+        {
+            continue; // Skip if the player trail is not active
+        }
+        vec3 origin = playerTrail.xyz;
+        origin.y -= VOLUMETRIC_HEIGHT_OFFSET; // Offset the origin to match the hole height
+        origin.y -= 1.6; // Additional offset to lower the hole height
+        float dpr = sdVerticalCapsule(pos - origin, 2.1, 0.08);
+        float holeInfluence = smoothstep(1.0 + 0.4, 1.0, dpr);
+        den *= (1.0 - holeInfluence);
     }
 
     // same thing for player

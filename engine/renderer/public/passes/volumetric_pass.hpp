@@ -14,7 +14,7 @@ class GraphicsContext;
 class VolumetricPass final : public FrameGraphRenderPass
 {
 public:
-    VolumetricPass(const std::shared_ptr<GraphicsContext>& context, const Settings::Tonemapping& settings, ResourceHandle<GPUImage> hdrTarget, ResourceHandle<GPUImage> bloomTarget, ResourceHandle<GPUImage> outputTarget, const SwapChain& _swapChain, const GBuffers& gBuffers, const BloomSettings& bloomSettings);
+    VolumetricPass(const std::shared_ptr<GraphicsContext>& context, const Settings::Tonemapping& settings, ResourceHandle<GPUImage> hdrTarget, ResourceHandle<GPUImage> bloomTarget, ResourceHandle<GPUImage> outputTarget, const SwapChain& _swapChain, const GBuffers& gBuffers, const BloomSettings& bloomSettings, ECSModule& ecs);
     ~VolumetricPass() final;
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
@@ -22,11 +22,37 @@ public:
     void AddGunShot(const glm::vec3 origin, const glm::vec3 direction)
     {
         // Place the new GunShot at the current index
-        _pushConstants.gunShots[next_gunshot_index].origin = glm::vec4(origin, 0.3);
-        _pushConstants.gunShots[next_gunshot_index].direction = glm::vec4(direction, 0.3);
+        gunShots[next_gunshot_index].origin = glm::vec4(origin, 0.3);
+        gunShots[next_gunshot_index].direction = glm::vec4(direction, 0.3);
 
-        // Increment the index and wrap it around if it reaches MAX_GUNSHOTS
-        next_gunshot_index = (next_gunshot_index + 1) % MAX_GUN_SHOTS;
+        next_gunshot_index = (next_gunshot_index + 1) % gunShots.size();
+    }
+
+    void AddPlayerPos(const glm::vec3 position)
+    {
+        // Place the new player position at the current index
+        int index = next_player_pos_index;
+        if (index == 0)
+        {
+            index = playerTrailPositions.size() - 1;
+        }
+        else
+        {
+            index = next_player_pos_index - 1;
+        }
+        glm::vec4 currentPos = playerTrailPositions[index];
+        if (currentPos.a > 0.01)
+        {
+            // return; // not ready to be replaced
+        }
+        const float distanceCheck = glm::distance(position, glm::vec3(currentPos));
+        if (distanceCheck < 1.09f)
+        {
+            return; // too close to the last position
+        }
+        playerTrailPositions[next_player_pos_index] = glm::vec4(position, 2.0);
+
+        next_player_pos_index = (next_player_pos_index + 1) % playerTrailPositions.size();
     }
 
     NON_COPYABLE(VolumetricPass);
@@ -50,8 +76,6 @@ private:
         uint32_t screenHeight;
         float time;
         uint32_t _padding1;
-
-        GunShot gunShots[4];
     } _pushConstants;
 
     std::shared_ptr<GraphicsContext> _context;
@@ -65,12 +89,25 @@ private:
     vk::PipelineLayout _pipelineLayout;
     vk::Pipeline _pipeline;
 
+    std::array<GunShot, 8> gunShots;
+    std::array<glm::vec4, 32> playerTrailPositions;
+    ResourceHandle<Buffer> _fogTrailsBuffer;
+    vk::DescriptorSetLayout _fogTrailsDescriptorSetLayout;
+    vk::DescriptorSet _fogTrailsDescriptorSet;
+
     const BloomSettings& _bloomSettings;
     float timePassed = 0.0f;
-    const uint32_t MAX_GUN_SHOTS = 4;
+    const uint32_t MAX_GUN_SHOTS = 8;
     int next_gunshot_index = 0; // Points to where the next shot will be added
+    int next_player_pos_index = 0; // Points to where the next player position will be added
 
+    float _playerPosCounterMs = 0;
+    const float _playerPosCounterMaxMs = 300;
+
+    ECSModule& _ecs;
     void CreatePipeline();
+    void UpdateFogTrailsBuffer();
+    void CreateFogTrailsBuffer();
     void CreateDescriptorSetLayouts();
     void CreateDescriptorSets();
 };
