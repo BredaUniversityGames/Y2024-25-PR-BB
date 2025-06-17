@@ -22,8 +22,8 @@ public:
     void AddGunShot(const glm::vec3 origin, const glm::vec3 direction)
     {
         // Place the new GunShot at the current index
-        gunShots[next_gunshot_index].origin = glm::vec4(origin, 0.3);
-        gunShots[next_gunshot_index].direction = glm::vec4(direction, 0.3);
+        gunShots[next_gunshot_index].origin = glm::vec4(origin, 0.4);
+        gunShots[next_gunshot_index].direction = glm::vec4(direction, 0.4);
 
         next_gunshot_index = (next_gunshot_index + 1) % gunShots.size();
     }

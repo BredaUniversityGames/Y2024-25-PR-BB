@@ -293,8 +293,14 @@ class Pistol {
 
             var gunStart = _barrelEndEntity.GetTransformComponent().GetWorldTranslation()
 
-            var cloudDirection = (end - (gunStart - right.mulScalar(0.5) + up.mulScalar(0.2)))
-            engine.SetGunDirectionAndOrigin(gunStart - right.mulScalar(0.5) + up.mulScalar(0.2), cloudDirection)
+            var endFixed = translation + forward * _rangeVector
+            if(_entityName == "Gun") {
+                var cloudDirection = (endFixed - (gunStart - right.mulScalar(0.6) + up.mulScalar(0.2)))
+                engine.SetGunDirectionAndOrigin(gunStart - right.mulScalar(0.6) + up.mulScalar(0.2), cloudDirection)
+            }else{
+                var cloudDirection = (endFixed - (gunStart + right.mulScalar(0.6) + up.mulScalar(0.2)))
+                engine.SetGunDirectionAndOrigin(gunStart + right.mulScalar(0.6) + up.mulScalar(0.2), cloudDirection)
+            }
 
             var length = (end - gunStart).length()
             var i = 1.0
