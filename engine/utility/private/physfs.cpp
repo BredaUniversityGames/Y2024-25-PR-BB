@@ -42,6 +42,8 @@ private:
         case std::ios_base::end:
             PHYSFS_seek(file, PHYSFS_fileLength(file) + pos);
             break;
+        default:
+            break;
         }
         if (mode & std::ios_base::in)
         {
@@ -74,7 +76,7 @@ private:
         {
             return 0; // no-op
         }
-        if (PHYSFS_write(file, pbase(), pptr() - pbase(), 1) < 1)
+        if (PHYSFS_writeBytes(file, pbase(), pptr() - pbase()) < 1)
         {
             return traits_type::eof();
         }
