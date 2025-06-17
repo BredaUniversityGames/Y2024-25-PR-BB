@@ -66,11 +66,6 @@ void VolumetricPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cu
     for (uint32_t i = 0; i < gunShots.size(); ++i)
     {
         gunShots[i].origin.a -= (0.2 * (scene.deltaTime / 1000.0f));
-
-        /*bblog::info("{}", i);
-        bblog::info("{} {} {} {}", gunShots[i].origin.x, gunShots[i].origin.y, gunShots[i].origin.z, gunShots[i].origin.a);
-        bblog::info("{} {} {} {}", gunShots[i].direction.x, gunShots[i].direction.y, gunShots[i].direction.z, gunShots[i].direction.a);
-        bblog::info("\n");*/
     }
 
     // leave a delayed trail positions for the player
@@ -78,26 +73,19 @@ void VolumetricPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cu
     {
         playerTrailPositions[i].a -= (0.2 * (scene.deltaTime / 1000.0f));
 
-        // Update once every 0.5ms
-        // if (_playerPosCounterMs > _playerPosCounterMaxMs)
+        _playerPosCounterMs = 0;
+        // Update the player position trail
+        auto cameraView = _ecs.GetRegistry().view<CameraComponent, TransformComponent>();
+        for (const auto& [entity, cameraComponent, transformComponent] : cameraView.each())
         {
-            _playerPosCounterMs = 0;
-            // Update the player position trail
-            auto cameraView = _ecs.GetRegistry().view<CameraComponent, TransformComponent>();
-            for (const auto& [entity, cameraComponent, transformComponent] : cameraView.each())
-            {
 
-                auto position = TransformHelpers::GetWorldPosition(_ecs.GetRegistry(), entity);
-                AddPlayerPos(position);
-                break; // we only need the player
-            }
+            auto position = TransformHelpers::GetWorldPosition(_ecs.GetRegistry(), entity);
+            AddPlayerPos(position);
+            break; // we only need the player
         }
+
         _playerPosCounterMs += scene.deltaTime;
-        // bblog::info("{}", _playerPosCounterMs);
-        bblog::info("{}", i);
-        bblog::info("Player Trail {}: {} {} {} {}", i, playerTrailPositions[i].x, playerTrailPositions[i].y, playerTrailPositions[i].z, playerTrailPositions[i].a);
     }
-    bblog::info("\n");
 
     _pushConstants.time = timePassed;
     UpdateFogTrailsBuffer();
