@@ -14,6 +14,10 @@
 
 struct FTStreamContext
 {
+    explicit FTStreamContext(PhysFS::ifstream* stream)
+        : stream(stream)
+    {
+    }
     PhysFS::ifstream* stream;
 };
 
