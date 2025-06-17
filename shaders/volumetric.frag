@@ -7,6 +7,7 @@
 #include "scene.glsl"
 #include "octahedron.glsl"
 #include "hashes.glsl"
+#include "clusters.glsl"
 
 struct GunShot {
     vec4 origin;
@@ -44,6 +45,15 @@ layout (set = 4, binding = 0) uniform FogTrailsUBO {
     GunShot gunShots[8];
     vec4 playerTrailPositions[24];
 };
+
+layout (set = 5, binding = 0) buffer PointLightSSBO
+{
+    PointLightArray pointLights;
+};
+
+layout (set = 6, binding = 0) readonly buffer AtomicCount { uint count; };
+layout (set = 6, binding = 1) readonly buffer LightCells { LightCell lightCells[]; };
+layout (set = 6, binding = 2) readonly buffer LightIndices { uint lightIndices[]; };
 
 layout (location = 0) in vec2 texCoords;
 
@@ -210,7 +220,7 @@ float density(vec3 pos)
     vec3 playerPos = camera.cameraPosition;
     playerPos.y -= VOLUMETRIC_HEIGHT_OFFSET; // Offset the player position to match the hole height
     float dpr = distance(playerPos, pos);
-    float holeInfluence = smoothstep(1.0 + iHoleFeather, 1.0, dpr);
+    float holeInfluence = smoothstep(1.6 + iHoleFeather, 1.6, dpr);
     den *= (1.0 - holeInfluence);
 
     // Add decay based on distance to the volume center
@@ -263,10 +273,21 @@ float BeerLambert(float absorptionCoefficient, float distanceTraveled)
 {
     return exp(-absorptionCoefficient * distanceTraveled);
 }
+float LinearDepth(float z, float near, float far)
+{
+    return near * far / (far + z * (near - far));
+}
+
+float CalculateAttenuation(vec3 lightPos, vec3 position, float range) {
+    float distance = length(lightPos - position);
+    return max(1.0 - (distance / range), 0.0) / (distance * distance);
+}
 
 // ---- Raymarching through infinite volume ----
 vec4 raymarching(vec3 ro, vec3 rd, float tmin, float tmax, vec3 sceneDepthPosition)
 {
+    const ivec2 texSize = textureSize(bindless_color_textures[nonuniformEXT(pc.depthIndex)], 0);
+
     vec4 sum = vec4(0.0);
     float t = tmin;
 
@@ -275,6 +296,8 @@ vec4 raymarching(vec3 ro, vec3 rd, float tmin, float tmax, vec3 sceneDepthPositi
     float distToOpaqueObject = distance(ro, sceneDepthPosition);
 
     float lightTransmittance = 1.0;
+
+
 
     for (int i = 0; i < MAX_STEPS; i++)
     {
@@ -322,7 +345,50 @@ vec4 raymarching(vec3 ro, vec3 rd, float tmin, float tmax, vec3 sceneDepthPositi
 
         vec3 litCloudColor = baseCloudColor * litAmount * scene.directionalLight.color.rgb;
 
+
+
         vec4 col = vec4(baseCloudColor, den);
+
+
+        // Cluster usage
+
+        float zFloat = 24;
+        float log2FarDivNear = log2(camera.zFar / camera.zNear);
+        float log2Near = log2(camera.zNear);
+
+        float sliceScaling = zFloat / log2FarDivNear;
+        float sliceBias = -(zFloat * log2Near / log2FarDivNear);
+        uint zIndex = uint(max(log2(t) * sliceScaling + sliceBias, 0.0));
+        vec2 tileSize =
+        vec2((texSize.x / 6.0) / float(16),
+        (texSize.y / 6.0) / float(9));
+
+        uvec3 cluster = uvec3(
+        gl_FragCoord.x / tileSize.x,
+        gl_FragCoord.y / tileSize.y,
+        zIndex);
+        uint clusterIndex =
+        cluster.x +
+        cluster.y * 16 +
+        cluster.z * 16 * 9;
+
+        uint lightCount = lightCells[clusterIndex].count;
+        uint lightIndexOffset = lightCells[clusterIndex].offset;
+
+        for (int i = 0; i < lightCount; i++)
+        {
+            uint lightIndex = lightIndices[i + lightIndexOffset];
+            PointLight light = pointLights.lights[lightIndex];
+
+            vec3 lightPos = light.position.xyz;
+            lightPos.y -= VOLUMETRIC_HEIGHT_OFFSET; // Offset the light position to match the hole height
+            vec3 L = normalize(lightPos - pos);
+            float attenuation = CalculateAttenuation(lightPos, pos, light.range);
+            vec3 lightColor = light.color.rgb * attenuation * light.intensity;
+            col.rgb += lightColor * col.a;//* BeerLambert(0.0001, length(lightPos - pos));
+
+        }
+
         col.rgb *= col.a; // Premultiply alpha
         sum = sum + col * (1.0 - sum.a);
 
@@ -359,11 +425,20 @@ float getLinearSceneDepth(float rawDepthValue, float near, float far) {
     return 1.0 / (rawDepthValue * (1.0 / near - 1.0 / far) + 1.0 / far);
 }
 
+
+
 void main()
 {
 
     const ivec2 texSize = textureSize(bindless_color_textures[nonuniformEXT(pc.depthIndex)], 0);
     float depthSample = texture(bindless_depth_textures[nonuniformEXT (pc.depthIndex)], texCoords).r;
+
+
+
+
+    //
+
+
 
 
     ivec2 pixelCoords = ivec2(texCoords * vec2(texSize));

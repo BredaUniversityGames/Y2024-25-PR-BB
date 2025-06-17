@@ -122,6 +122,9 @@ void VolumetricPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cu
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 3, { scene.gpuScene->GetSceneDescriptorSet(currentFrame) }, {});
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 4, { _fogTrailsDescriptorSet }, {});
 
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 5, { scene.gpuScene->GetPointLightDescriptorSet(currentFrame) }, {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, _pipelineLayout, 6, { scene.gpuScene->GetClusterCullingDescriptorSet(currentFrame) }, {});
+
     // Fullscreen triangle.
     commandBuffer.draw(3, 1, 0, 0);
 
