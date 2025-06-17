@@ -487,7 +487,7 @@ class Main {
 
         {
             var zone = TracyZone.new("Wave system update")
-            //__waveSystem.Update(engine, __player, __enemyList, dt,__playerVariables, __stationManager)
+            __waveSystem.Update(engine, __player, __enemyList, dt,__playerVariables, __stationManager)
             zone.End()
         }
 
