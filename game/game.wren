@@ -338,7 +338,7 @@ class Main {
             return
         }
 
-        __playerMovement.lookSensitivity = engine.GetGame().GetSettings().aimSensitivity * (2.5 - 0.2) + 0.2
+        __playerMovement.lookSensitivity = engine.GetGame().GetSettings().aimSensitivity * (2.5 - 0.2) + 0.0001
 
         if (__enemyList.count != 0) {
             __musicPlayer.SetAttribute(engine.GetAudio(), "Intensity", 1.0)
