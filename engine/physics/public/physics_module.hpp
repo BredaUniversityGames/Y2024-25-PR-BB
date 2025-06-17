@@ -18,6 +18,7 @@ class PhysicsDebugRenderer;
 
 struct RayHitInfo
 {
+    JPH::BodyID bodyID; // Body ID of the hit object
     entt::entity entity = entt::null; // entity that was hit
     glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f); // Position where the ray hits; HitPoint = Start + mFraction * (End - Start)
     glm::vec3 normal = glm::vec3(0.0f, 0.0f, 0.0f); // Normal of the hit surface

@@ -259,6 +259,7 @@ void GameModule::ApplySettings(Engine& engine)
 
 void GameModule::Shutdown(MAYBE_UNUSED Engine& engine)
 {
+    gameSettings.SaveToFile(GAME_SETTINGS_FILE);
 }
 
 std::optional<std::shared_ptr<MainMenu>> GameModule::GetMainMenu()
