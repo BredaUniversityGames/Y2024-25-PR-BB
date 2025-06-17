@@ -1,1397 +1,1397 @@
 {
-  "data": {
-    "cereal_class_version": 0,
-    "emitterPresets": [
-      {
-        "key": "ShotgunShoot",
-        "value": {
-          "cereal_class_version": 0,
-          "size": {
-            "x": 0.20000000298023225,
-            "y": 0.20000000298023225,
-            "z": 0.0
-          },
-          "mass": 0.0,
-          "rotationVelocity": {
-            "x": 0.0,
-            "y": 10.0
-          },
-          "maxLife": 1.0,
-          "emitDelay": 0.10000000149011612,
-          "count": 5,
-          "materialIndex": 62,
-          "spawnRandomness": {
-            "x": 0.10000000149011612,
-            "y": 0.10000000149011612,
-            "z": 0.10000000149011612
-          },
-          "flags": 2,
-          "velocityRandomness": {
-            "x": 0.0,
-            "y": 0.0,
-            "z": 0.0
-          },
-          "startingVelocity": {
-            "x": 1.0,
-            "y": 5.0,
-            "z": 1.0
-          },
-          "spriteDimensions": {
-            "x": 1,
-            "y": 1
-          },
-          "frameCount": 1,
-          "frameRate": 0.0,
-          "color": {
-            "x": 0.6000000238418579,
-            "y": 0.6000000238418579,
-            "z": 0.6000000238418579,
-            "w": 1.0
-          },
-          "bursts": [],
-          "imageName": "swoosh.png"
-        }
-      },
-      {
-        "key": "Flame",
-        "value": {
-          "size": {
-            "x": 1.0,
-            "y": 1.0,
-            "z": -0.800000011920929
-          },
-          "mass": -0.004999999888241291,
-          "rotationVelocity": {
-            "x": 0.0,
-            "y": 0.0
-          },
-          "maxLife": 2.0,
-          "emitDelay": 0.10000000149011612,
-          "count": 10,
-          "materialIndex": 63,
-          "spawnRandomness": {
-            "x": 0.05000000074505806,
-            "y": 0.05000000074505806,
-            "z": 0.05000000074505806
-          },
-          "flags": 2,
-          "velocityRandomness": {
-            "x": 0.05000000074505806,
-            "y": 0.05000000074505806,
-            "z": 0.05000000074505806
-          },
-          "startingVelocity": {
-            "x": 1.0,
-            "y": 5.0,
-            "z": 1.0
-          },
-          "spriteDimensions": {
-            "x": 1,
-            "y": 1
-          },
-          "frameCount": 1,
-          "frameRate": 0.0,
-          "color": {
-            "x": 1.0,
-            "y": 1.0,
-            "z": 1.0,
-            "w": 5.0
-          },
-          "bursts": [],
-          "imageName": "flame_03.png"
-        }
-      },
-      {
-        "key": "EyeFlame",
-        "value": {
-          "size": {
-            "x": 2.0,
-            "y": 2.0,
-            "z": -2.0
-          },
-          "mass": 0.0,
-          "rotationVelocity": {
-            "x": 0.0,
-            "y": 0.0
-          },
-          "maxLife": 0.8600000143051148,
-          "emitDelay": 0.10000000149011612,
-          "count": 68,
-          "materialIndex": 63,
-          "spawnRandomness": {
-            "x": 5.0,
-            "y": 5.0,
-            "z": 5.0
-          },
-          "flags": 7,
-          "velocityRandomness": {
-            "x": 0.029999999329447748,
-            "y": 0.029999999329447748,
-            "z": 0.029999999329447748
-          },
-          "startingVelocity": {
-            "x": 0.0,
-            "y": 1.0,
-            "z": 0.0
-          },
-          "spriteDimensions": {
-            "x": 1,
-            "y": 1
-          },
-          "frameCount": 1,
-          "frameRate": 0.0,
-          "color": {
-            "x": 0.9218106865882874,
-            "y": 0.0,
-            "z": 0.0,
-            "w": 0.4000000059604645
-          },
-          "bursts": [],
-          "imageName": "flame_03.png"
-        }
-      },
-      {
-        "key": "Dust",
-        "value": {
-          "size": {
-            "x": 0.05000000074505806,
-            "y": 0.05000000074505806,
-            "z": 0.0
-          },
-          "mass": 0.004999999888241291,
-          "rotationVelocity": {
-            "x": 0.0,
-            "y": 0.0
-          },
-          "maxLife": 8.0,
-          "emitDelay": 0.5,
-          "count": 20,
-          "materialIndex": 64,
-          "spawnRandomness": {
-            "x": 1.0,
-            "y": 1.0,
-            "z": 1.0
-          },
-          "flags": 2,
-          "velocityRandomness": {
-            "x": 0.0,
-            "y": 0.0,
-            "z": 0.0
-          },
-          "startingVelocity": {
-            "x": 1.0,
-            "y": 5.0,
-            "z": 1.0
-          },
-          "spriteDimensions": {
-            "x": 1,
-            "y": 1
-          },
-          "frameCount": 1,
-          "frameRate": 0.0,
-          "color": {
-            "x": 0.5,
-            "y": 0.5,
-            "z": 0.5,
-            "w": 1.0
-          },
-          "bursts": [],
-          "imageName": "point_03.png"
-        }
-      },
-      {
-        "key": "Stab",
-        "value": {
-          "size": {
-            "x": 0.20000000298023225,
-            "y": 0.20000000298023225,
-            "z": -0.029999999329447748
-          },
-          "mass": 0.0,
-          "rotationVelocity": {
-            "x": 0.0,
-            "y": 0.0
-          },
-          "maxLife": 0.30000001192092898,
-          "emitDelay": 0.10000000149011612,
-          "count": 20,
-          "materialIndex": 65,
-          "spawnRandomness": {
-            "x": 0.5,
-            "y": 0.5,
-            "z": 0.5
-          },
-          "flags": 2,
-          "velocityRandomness": {
-            "x": 0.0,
-            "y": 0.0,
-            "z": 0.0
-          },
-          "startingVelocity": {
-            "x": 1.0,
-            "y": 5.0,
-            "z": 1.0
-          },
-          "spriteDimensions": {
-            "x": 1,
-            "y": 1
-          },
-          "frameCount": 1,
-          "frameRate": 0.0,
-          "color": {
-            "x": 4.0,
-            "y": 0.0,
-            "z": 0.0,
-            "w": 1.0
-          },
-          "bursts": [],
-          "imageName": "star.png"
-        }
-      },
-      {
-        "key": "RayDualGun",
-        "value": {
-          "size": {
-            "x": 0.10000000149011612,
-            "y": 0.10000000149011612,
-            "z": 0.0
-          },
-          "mass": 0.0020000000949949028,
-          "rotationVelocity": {
-            "x": 0.0,
-            "y": 10.0
-          },
-          "maxLife": 1.0,
-          "emitDelay": 0.10000000149011612,
-          "count": 3,
-          "materialIndex": 62,
-          "spawnRandomness": {
-            "x": 0.10000000149011612,
-            "y": 0.10000000149011612,
-            "z": 0.10000000149011612
-          },
-          "flags": 3,
-          "velocityRandomness": {
-            "x": 0.0,
-            "y": 0.0,
-            "z": 0.0
-          },
-          "startingVelocity": {
-            "x": 1.0,
-            "y": 5.0,
-            "z": 1.0
-          },
-          "spriteDimensions": {
-            "x": 1,
-            "y": 1
-          },
-          "frameCount": 1,
-          "frameRate": 0.0,
-          "color": {
-            "x": 0.8600000143051148,
-            "y": 0.6700000166893005,
-            "z": 0.0,
-            "w": 1.0
-          },
-          "bursts": [
+    "data": {
+        "cereal_class_version": 0,
+        "emitterPresets": [
             {
-              "cereal_class_version": 0,
-              "startTime": 0.0,
-              "count": 3,
-              "cycles": 0,
-              "maxInterval": 0.05000000074505806,
-              "currentInterval": 0.0,
-              "loop": true
+                "key": "ShotgunShoot",
+                "value": {
+                    "cereal_class_version": 0,
+                    "size": {
+                        "x": 0.20000000298023225,
+                        "y": 0.20000000298023225,
+                        "z": 0.0
+                    },
+                    "mass": 0.0,
+                    "rotationVelocity": {
+                        "x": 0.0,
+                        "y": 10.0
+                    },
+                    "maxLife": 1.0,
+                    "emitDelay": 0.10000000149011612,
+                    "count": 5,
+                    "materialIndex": 62,
+                    "spawnRandomness": {
+                        "x": 0.10000000149011612,
+                        "y": 0.10000000149011612,
+                        "z": 0.10000000149011612
+                    },
+                    "flags": 2,
+                    "velocityRandomness": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "startingVelocity": {
+                        "x": 1.0,
+                        "y": 5.0,
+                        "z": 1.0
+                    },
+                    "spriteDimensions": {
+                        "x": 1,
+                        "y": 1
+                    },
+                    "frameCount": 1,
+                    "frameRate": 0.0,
+                    "color": {
+                        "x": 0.6000000238418579,
+                        "y": 0.6000000238418579,
+                        "z": 0.6000000238418579,
+                        "w": 1.0
+                    },
+                    "bursts": [],
+                    "imageName": "swoosh.png"
+                }
             },
             {
-              "startTime": 0.0,
-              "count": 3,
-              "cycles": 0,
-              "maxInterval": 0.07999999821186066,
-              "currentInterval": 0.0,
-              "loop": true
+                "key": "Flame",
+                "value": {
+                    "size": {
+                        "x": 1.0,
+                        "y": 1.0,
+                        "z": -0.800000011920929
+                    },
+                    "mass": -0.004999999888241291,
+                    "rotationVelocity": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "maxLife": 2.0,
+                    "emitDelay": 0.10000000149011612,
+                    "count": 10,
+                    "materialIndex": 63,
+                    "spawnRandomness": {
+                        "x": 0.05000000074505806,
+                        "y": 0.05000000074505806,
+                        "z": 0.05000000074505806
+                    },
+                    "flags": 2,
+                    "velocityRandomness": {
+                        "x": 0.05000000074505806,
+                        "y": 0.05000000074505806,
+                        "z": 0.05000000074505806
+                    },
+                    "startingVelocity": {
+                        "x": 1.0,
+                        "y": 5.0,
+                        "z": 1.0
+                    },
+                    "spriteDimensions": {
+                        "x": 1,
+                        "y": 1
+                    },
+                    "frameCount": 1,
+                    "frameRate": 0.0,
+                    "color": {
+                        "x": 1.0,
+                        "y": 1.0,
+                        "z": 1.0,
+                        "w": 5.0
+                    },
+                    "bursts": [],
+                    "imageName": "flame_03.png"
+                }
+            },
+            {
+                "key": "EyeFlame",
+                "value": {
+                    "size": {
+                        "x": 2.0,
+                        "y": 2.0,
+                        "z": -2.0
+                    },
+                    "mass": 0.0,
+                    "rotationVelocity": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "maxLife": 0.8600000143051148,
+                    "emitDelay": 0.10000000149011612,
+                    "count": 68,
+                    "materialIndex": 63,
+                    "spawnRandomness": {
+                        "x": 5.0,
+                        "y": 5.0,
+                        "z": 5.0
+                    },
+                    "flags": 7,
+                    "velocityRandomness": {
+                        "x": 0.029999999329447748,
+                        "y": 0.029999999329447748,
+                        "z": 0.029999999329447748
+                    },
+                    "startingVelocity": {
+                        "x": 0.0,
+                        "y": 1.0,
+                        "z": 0.0
+                    },
+                    "spriteDimensions": {
+                        "x": 1,
+                        "y": 1
+                    },
+                    "frameCount": 1,
+                    "frameRate": 0.0,
+                    "color": {
+                        "x": 0.9218106865882874,
+                        "y": 0.0,
+                        "z": 0.0,
+                        "w": 0.4000000059604645
+                    },
+                    "bursts": [],
+                    "imageName": "flame_03.png"
+                }
+            },
+            {
+                "key": "Dust",
+                "value": {
+                    "size": {
+                        "x": 0.05000000074505806,
+                        "y": 0.05000000074505806,
+                        "z": 0.0
+                    },
+                    "mass": 0.004999999888241291,
+                    "rotationVelocity": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "maxLife": 8.0,
+                    "emitDelay": 0.5,
+                    "count": 20,
+                    "materialIndex": 64,
+                    "spawnRandomness": {
+                        "x": 1.0,
+                        "y": 1.0,
+                        "z": 1.0
+                    },
+                    "flags": 2,
+                    "velocityRandomness": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "startingVelocity": {
+                        "x": 1.0,
+                        "y": 5.0,
+                        "z": 1.0
+                    },
+                    "spriteDimensions": {
+                        "x": 1,
+                        "y": 1
+                    },
+                    "frameCount": 1,
+                    "frameRate": 0.0,
+                    "color": {
+                        "x": 0.5,
+                        "y": 0.5,
+                        "z": 0.5,
+                        "w": 1.0
+                    },
+                    "bursts": [],
+                    "imageName": "point_03.png"
+                }
+            },
+            {
+                "key": "Stab",
+                "value": {
+                    "size": {
+                        "x": 0.20000000298023225,
+                        "y": 0.20000000298023225,
+                        "z": -0.029999999329447748
+                    },
+                    "mass": 0.0,
+                    "rotationVelocity": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "maxLife": 0.30000001192092898,
+                    "emitDelay": 0.10000000149011612,
+                    "count": 20,
+                    "materialIndex": 65,
+                    "spawnRandomness": {
+                        "x": 0.5,
+                        "y": 0.5,
+                        "z": 0.5
+                    },
+                    "flags": 2,
+                    "velocityRandomness": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "startingVelocity": {
+                        "x": 1.0,
+                        "y": 5.0,
+                        "z": 1.0
+                    },
+                    "spriteDimensions": {
+                        "x": 1,
+                        "y": 1
+                    },
+                    "frameCount": 1,
+                    "frameRate": 0.0,
+                    "color": {
+                        "x": 4.0,
+                        "y": 0.0,
+                        "z": 0.0,
+                        "w": 1.0
+                    },
+                    "bursts": [],
+                    "imageName": "star.png"
+                }
+            },
+            {
+                "key": "RayDualGun",
+                "value": {
+                    "size": {
+                        "x": 0.10000000149011612,
+                        "y": 0.10000000149011612,
+                        "z": 0.0
+                    },
+                    "mass": 0.0020000000949949028,
+                    "rotationVelocity": {
+                        "x": 0.0,
+                        "y": 10.0
+                    },
+                    "maxLife": 1.0,
+                    "emitDelay": 0.10000000149011612,
+                    "count": 3,
+                    "materialIndex": 62,
+                    "spawnRandomness": {
+                        "x": 0.10000000149011612,
+                        "y": 0.10000000149011612,
+                        "z": 0.10000000149011612
+                    },
+                    "flags": 3,
+                    "velocityRandomness": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "startingVelocity": {
+                        "x": 1.0,
+                        "y": 5.0,
+                        "z": 1.0
+                    },
+                    "spriteDimensions": {
+                        "x": 1,
+                        "y": 1
+                    },
+                    "frameCount": 1,
+                    "frameRate": 0.0,
+                    "color": {
+                        "x": 0.8600000143051148,
+                        "y": 0.6700000166893005,
+                        "z": 0.0,
+                        "w": 1.0
+                    },
+                    "bursts": [
+                        {
+                            "cereal_class_version": 0,
+                            "startTime": 0.0,
+                            "count": 3,
+                            "cycles": 0,
+                            "maxInterval": 0.05000000074505806,
+                            "currentInterval": 0.0,
+                            "loop": true
+                        },
+                        {
+                            "startTime": 0.0,
+                            "count": 3,
+                            "cycles": 0,
+                            "maxInterval": 0.07999999821186066,
+                            "currentInterval": 0.0,
+                            "loop": true
+                        }
+                    ],
+                    "imageName": "swoosh.png"
+                }
+            },
+            {
+                "key": "Feathers",
+                "value": {
+                    "size": {
+                        "x": 0.800000011920929,
+                        "y": 0.800000011920929,
+                        "z": 0.0
+                    },
+                    "mass": 0.05000000074505806,
+                    "rotationVelocity": {
+                        "x": 2.0,
+                        "y": 2.0
+                    },
+                    "maxLife": 5.0,
+                    "emitDelay": 1.0,
+                    "count": 10,
+                    "materialIndex": 66,
+                    "spawnRandomness": {
+                        "x": 5.0,
+                        "y": 5.0,
+                        "z": 5.0
+                    },
+                    "flags": 0,
+                    "velocityRandomness": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "startingVelocity": {
+                        "x": 1.0,
+                        "y": 5.0,
+                        "z": 1.0
+                    },
+                    "spriteDimensions": {
+                        "x": 1,
+                        "y": 1
+                    },
+                    "frameCount": 1,
+                    "frameRate": 0.0,
+                    "color": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0,
+                        "w": 1.0
+                    },
+                    "bursts": [
+                        {
+                            "startTime": 0.0,
+                            "count": 5,
+                            "cycles": 0,
+                            "maxInterval": 1.0,
+                            "currentInterval": 0.0,
+                            "loop": true
+                        },
+                        {
+                            "startTime": 0.0,
+                            "count": 5,
+                            "cycles": 0,
+                            "maxInterval": 1.5,
+                            "currentInterval": 0.0,
+                            "loop": true
+                        }
+                    ],
+                    "imageName": "feather.png"
+                }
+            },
+            {
+                "key": "Bullets",
+                "value": {
+                    "size": {
+                        "x": 0.20000000298023225,
+                        "y": 0.20000000298023225,
+                        "z": 0.0
+                    },
+                    "mass": 0.09000000357627869,
+                    "rotationVelocity": {
+                        "x": 30.0,
+                        "y": 30.0
+                    },
+                    "maxLife": 5.0,
+                    "emitDelay": 1.0,
+                    "count": 2,
+                    "materialIndex": 67,
+                    "spawnRandomness": {
+                        "x": 0.5,
+                        "y": 0.5,
+                        "z": 0.5
+                    },
+                    "flags": 0,
+                    "velocityRandomness": {
+                        "x": 0.009999999776482582,
+                        "y": 0.009999999776482582,
+                        "z": 0.009999999776482582
+                    },
+                    "startingVelocity": {
+                        "x": 0.20000000298023225,
+                        "y": 2.0,
+                        "z": 0.20000000298023225
+                    },
+                    "spriteDimensions": {
+                        "x": 1,
+                        "y": 1
+                    },
+                    "frameCount": 1,
+                    "frameRate": 0.0,
+                    "color": {
+                        "x": 0.62890625,
+                        "y": 0.4609375,
+                        "z": 0.0703125,
+                        "w": 1.0
+                    },
+                    "bursts": [
+                        {
+                            "startTime": 0.20000000298023225,
+                            "count": 2,
+                            "cycles": 0,
+                            "maxInterval": 0.20000000298023225,
+                            "currentInterval": 0.0,
+                            "loop": true
+                        },
+                        {
+                            "startTime": 0.10000000149011612,
+                            "count": 2,
+                            "cycles": 0,
+                            "maxInterval": 0.05000000074505806,
+                            "currentInterval": 0.0,
+                            "loop": true
+                        }
+                    ],
+                    "imageName": "bullet.png"
+                }
+            },
+            {
+                "key": "Bones",
+                "value": {
+                    "size": {
+                        "x": 0.4000000059604645,
+                        "y": 0.4000000059604645,
+                        "z": 0.0
+                    },
+                    "mass": 0.30000001192092898,
+                    "rotationVelocity": {
+                        "x": 15.0,
+                        "y": 15.0
+                    },
+                    "maxLife": 5.0,
+                    "emitDelay": 1.0,
+                    "count": 20,
+                    "materialIndex": 68,
+                    "spawnRandomness": {
+                        "x": 8.0,
+                        "y": 17.0,
+                        "z": 8.0
+                    },
+                    "flags": 0,
+                    "velocityRandomness": {
+                        "x": 1.0,
+                        "y": 1.0,
+                        "z": 1.0
+                    },
+                    "startingVelocity": {
+                        "x": 0.0,
+                        "y": 3.0,
+                        "z": 0.0
+                    },
+                    "spriteDimensions": {
+                        "x": 1,
+                        "y": 1
+                    },
+                    "frameCount": 1,
+                    "frameRate": 0.0,
+                    "color": {
+                        "x": 1.0,
+                        "y": 1.0,
+                        "z": 1.0,
+                        "w": 1.0
+                    },
+                    "bursts": [
+                        {
+                            "startTime": 0.0,
+                            "count": 5,
+                            "cycles": 0,
+                            "maxInterval": 0.20000000298023225,
+                            "currentInterval": 0.0,
+                            "loop": true
+                        },
+                        {
+                            "startTime": 0.0,
+                            "count": 2,
+                            "cycles": 0,
+                            "maxInterval": 0.05000000074505806,
+                            "currentInterval": 0.0,
+                            "loop": true
+                        }
+                    ],
+                    "imageName": "bone.png"
+                }
+            },
+            {
+                "key": "Ray",
+                "value": {
+                    "size": {
+                        "x": 0.10000000149011612,
+                        "y": 0.10000000149011612,
+                        "z": 0.0
+                    },
+                    "mass": 0.0,
+                    "rotationVelocity": {
+                        "x": 0.0,
+                        "y": 10.0
+                    },
+                    "maxLife": 1.0,
+                    "emitDelay": 0.10000000149011612,
+                    "count": 3,
+                    "materialIndex": 62,
+                    "spawnRandomness": {
+                        "x": 0.10000000149011612,
+                        "y": 0.10000000149011612,
+                        "z": 0.10000000149011612
+                    },
+                    "flags": 3,
+                    "velocityRandomness": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "startingVelocity": {
+                        "x": 1.0,
+                        "y": 5.0,
+                        "z": 1.0
+                    },
+                    "spriteDimensions": {
+                        "x": 1,
+                        "y": 1
+                    },
+                    "frameCount": 1,
+                    "frameRate": 0.0,
+                    "color": {
+                        "x": 0.0784313753247261,
+                        "y": 0.054901961237192157,
+                        "z": 0.054901961237192157,
+                        "w": 1.0
+                    },
+                    "bursts": [
+                        {
+                            "startTime": 0.0,
+                            "count": 2,
+                            "cycles": 0,
+                            "maxInterval": 0.05000000074505806,
+                            "currentInterval": 0.0,
+                            "loop": true
+                        },
+                        {
+                            "startTime": 0.0,
+                            "count": 2,
+                            "cycles": 0,
+                            "maxInterval": 0.07999999821186066,
+                            "currentInterval": 0.0,
+                            "loop": true
+                        }
+                    ],
+                    "imageName": "swoosh.png"
+                }
+            },
+            {
+                "key": "Impact",
+                "value": {
+                    "size": {
+                        "x": 0.07999999821186066,
+                        "y": 0.07999999821186066,
+                        "z": 0.0
+                    },
+                    "mass": 0.0,
+                    "rotationVelocity": {
+                        "x": 2.0,
+                        "y": 2.0
+                    },
+                    "maxLife": 2.0,
+                    "emitDelay": 1.0,
+                    "count": 1,
+                    "materialIndex": 62,
+                    "spawnRandomness": {
+                        "x": 0.07500000298023224,
+                        "y": 0.0,
+                        "z": 0.07500000298023224
+                    },
+                    "flags": 3,
+                    "velocityRandomness": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "startingVelocity": {
+                        "x": 0.0,
+                        "y": 0.07999999821186066,
+                        "z": 0.0
+                    },
+                    "spriteDimensions": {
+                        "x": 1,
+                        "y": 1
+                    },
+                    "frameCount": 1,
+                    "frameRate": 0.0,
+                    "color": {
+                        "x": 0.0784313753247261,
+                        "y": 0.054901961237192157,
+                        "z": 0.054901961237192157,
+                        "w": 1.0
+                    },
+                    "bursts": [
+                        {
+                            "startTime": 0.0,
+                            "count": 2,
+                            "cycles": 0,
+                            "maxInterval": 0.10000000149011612,
+                            "currentInterval": 0.0,
+                            "loop": true
+                        },
+                        {
+                            "startTime": 0.0,
+                            "count": 1,
+                            "cycles": 0,
+                            "maxInterval": 0.05000000074505806,
+                            "currentInterval": 0.0,
+                            "loop": true
+                        }
+                    ],
+                    "imageName": "swoosh.png"
+                }
+            },
+            {
+                "key": "RayQuadDamage",
+                "value": {
+                    "size": {
+                        "x": 0.15000000596046449,
+                        "y": 0.15000000596046449,
+                        "z": 0.0
+                    },
+                    "mass": 0.0020000000949949028,
+                    "rotationVelocity": {
+                        "x": 0.0,
+                        "y": 10.0
+                    },
+                    "maxLife": 1.0,
+                    "emitDelay": 0.10000000149011612,
+                    "count": 3,
+                    "materialIndex": 62,
+                    "spawnRandomness": {
+                        "x": 0.10000000149011612,
+                        "y": 0.10000000149011612,
+                        "z": 0.10000000149011612
+                    },
+                    "flags": 3,
+                    "velocityRandomness": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "startingVelocity": {
+                        "x": 1.0,
+                        "y": 5.0,
+                        "z": 1.0
+                    },
+                    "spriteDimensions": {
+                        "x": 1,
+                        "y": 1
+                    },
+                    "frameCount": 1,
+                    "frameRate": 0.0,
+                    "color": {
+                        "x": 0.2740798890590668,
+                        "y": 0.015227834694087506,
+                        "z": 0.3081395626068115,
+                        "w": 1.0
+                    },
+                    "bursts": [
+                        {
+                            "startTime": 0.0,
+                            "count": 3,
+                            "cycles": 0,
+                            "maxInterval": 0.05000000074505806,
+                            "currentInterval": 0.0,
+                            "loop": true
+                        },
+                        {
+                            "startTime": 0.0,
+                            "count": 3,
+                            "cycles": 0,
+                            "maxInterval": 0.07999999821186066,
+                            "currentInterval": 0.0,
+                            "loop": true
+                        }
+                    ],
+                    "imageName": "swoosh.png"
+                }
+            },
+            {
+                "key": "Muzzle",
+                "value": {
+                    "size": {
+                        "x": 0.30000001192092898,
+                        "y": 0.30000001192092898,
+                        "z": 0.0
+                    },
+                    "mass": 0.0,
+                    "rotationVelocity": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "maxLife": 0.11999999731779099,
+                    "emitDelay": 0.0,
+                    "count": 1,
+                    "materialIndex": 69,
+                    "spawnRandomness": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "flags": 23,
+                    "velocityRandomness": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "startingVelocity": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "spriteDimensions": {
+                        "x": 4,
+                        "y": 1
+                    },
+                    "frameCount": 4,
+                    "frameRate": 0.0,
+                    "color": {
+                        "x": 0.784375011920929,
+                        "y": 0.32625091075897219,
+                        "z": 0.1299120932817459,
+                        "w": 12.100000381469727
+                    },
+                    "bursts": [],
+                    "imageName": "muzzle.png"
+                }
+            },
+            {
+                "key": "RayEyeStart",
+                "value": {
+                    "size": {
+                        "x": 0.05999999865889549,
+                        "y": 0.05999999865889549,
+                        "z": 0.0
+                    },
+                    "mass": 0.0,
+                    "rotationVelocity": {
+                        "x": 0.0,
+                        "y": 10.0
+                    },
+                    "maxLife": 1.0,
+                    "emitDelay": 0.10000000149011612,
+                    "count": 5,
+                    "materialIndex": 62,
+                    "spawnRandomness": {
+                        "x": 0.10000000149011612,
+                        "y": 0.10000000149011612,
+                        "z": 0.10000000149011612
+                    },
+                    "flags": 2,
+                    "velocityRandomness": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "startingVelocity": {
+                        "x": 1.0,
+                        "y": 5.0,
+                        "z": 1.0
+                    },
+                    "spriteDimensions": {
+                        "x": 1,
+                        "y": 1
+                    },
+                    "frameCount": 1,
+                    "frameRate": 0.0,
+                    "color": {
+                        "x": 1.0,
+                        "y": 1.0,
+                        "z": 1.0,
+                        "w": 1.0
+                    },
+                    "bursts": [
+                        {
+                            "startTime": 0.0,
+                            "count": 5,
+                            "cycles": 0,
+                            "maxInterval": 0.05000000074505806,
+                            "currentInterval": 0.0,
+                            "loop": true
+                        },
+                        {
+                            "startTime": 0.0,
+                            "count": 5,
+                            "cycles": 0,
+                            "maxInterval": 0.07999999821186066,
+                            "currentInterval": 0.0,
+                            "loop": true
+                        }
+                    ],
+                    "imageName": "swoosh.png"
+                }
+            },
+            {
+                "key": "RayEyeEnd",
+                "value": {
+                    "size": {
+                        "x": 0.30000001192092898,
+                        "y": 0.30000001192092898,
+                        "z": 0.0
+                    },
+                    "mass": 0.0,
+                    "rotationVelocity": {
+                        "x": 0.0,
+                        "y": 10.0
+                    },
+                    "maxLife": 1.0,
+                    "emitDelay": 0.10000000149011612,
+                    "count": 5,
+                    "materialIndex": 62,
+                    "spawnRandomness": {
+                        "x": 0.10000000149011612,
+                        "y": 0.10000000149011612,
+                        "z": 0.10000000149011612
+                    },
+                    "flags": 2,
+                    "velocityRandomness": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "startingVelocity": {
+                        "x": 1.0,
+                        "y": 5.0,
+                        "z": 1.0
+                    },
+                    "spriteDimensions": {
+                        "x": 1,
+                        "y": 1
+                    },
+                    "frameCount": 1,
+                    "frameRate": 0.0,
+                    "color": {
+                        "x": 1.0,
+                        "y": 0.0,
+                        "z": 0.0,
+                        "w": 30.0
+                    },
+                    "bursts": [
+                        {
+                            "startTime": 0.0,
+                            "count": 5,
+                            "cycles": 0,
+                            "maxInterval": 0.05000000074505806,
+                            "currentInterval": 0.0,
+                            "loop": true
+                        },
+                        {
+                            "startTime": 0.0,
+                            "count": 5,
+                            "cycles": 0,
+                            "maxInterval": 0.07999999821186066,
+                            "currentInterval": 0.0,
+                            "loop": true
+                        }
+                    ],
+                    "imageName": "swoosh.png"
+                }
+            },
+            {
+                "key": "SpriteSheetTest",
+                "value": {
+                    "size": {
+                        "x": 1.600000023841858,
+                        "y": 2.0,
+                        "z": 0.0
+                    },
+                    "mass": 0.0,
+                    "rotationVelocity": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "maxLife": 2.0,
+                    "emitDelay": 2.0,
+                    "count": 1,
+                    "materialIndex": 70,
+                    "spawnRandomness": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "flags": 14,
+                    "velocityRandomness": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "startingVelocity": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "spriteDimensions": {
+                        "x": 4,
+                        "y": 5
+                    },
+                    "frameCount": 19,
+                    "frameRate": 0.0,
+                    "color": {
+                        "x": 1.0,
+                        "y": 1.0,
+                        "z": 1.0,
+                        "w": 1.0
+                    },
+                    "bursts": [],
+                    "imageName": "Fire+Sparks-Sheet.png"
+                }
+            },
+            {
+                "key": "Health",
+                "value": {
+                    "size": {
+                        "x": 1.0,
+                        "y": 1.0,
+                        "z": 0.0
+                    },
+                    "mass": 0.0,
+                    "rotationVelocity": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "maxLife": 8.0,
+                    "emitDelay": 10000.0,
+                    "count": 0,
+                    "materialIndex": 71,
+                    "spawnRandomness": {
+                        "x": 20.0,
+                        "y": 0.20000000298023225,
+                        "z": 20.0
+                    },
+                    "flags": 14,
+                    "velocityRandomness": {
+                        "x": 0.30000001192092898,
+                        "y": 0.10000000149011612,
+                        "z": 0.30000001192092898
+                    },
+                    "startingVelocity": {
+                        "x": 0.0,
+                        "y": 1.399999976158142,
+                        "z": 0.0
+                    },
+                    "spriteDimensions": {
+                        "x": 1,
+                        "y": 1
+                    },
+                    "frameCount": 1,
+                    "frameRate": 0.0,
+                    "color": {
+                        "x": 0.16859999299049378,
+                        "y": 1.0,
+                        "z": 0.0860000029206276,
+                        "w": 3.0
+                    },
+                    "bursts": [
+                        {
+                            "startTime": 0.10000000149011612,
+                            "count": 250,
+                            "cycles": 1,
+                            "maxInterval": 0.0,
+                            "currentInterval": 0.0,
+                            "loop": false
+                        },
+                        {
+                            "startTime": 0.20000000298023225,
+                            "count": 100,
+                            "cycles": 1,
+                            "maxInterval": 0.0,
+                            "currentInterval": 0.0,
+                            "loop": false
+                        },
+                        {
+                            "startTime": 0.25,
+                            "count": 100,
+                            "cycles": 1,
+                            "maxInterval": 0.0,
+                            "currentInterval": 0.0,
+                            "loop": false
+                        }
+                    ],
+                    "imageName": "health.png"
+                }
+            },
+            {
+                "key": "Worms",
+                "value": {
+                    "size": {
+                        "x": 0.30000001192092898,
+                        "y": 0.30000001192092898,
+                        "z": 0.0
+                    },
+                    "mass": 0.019999999552965165,
+                    "rotationVelocity": {
+                        "x": 0.0,
+                        "y": 10.0
+                    },
+                    "maxLife": 1.0,
+                    "emitDelay": 0.10000000149011612,
+                    "count": 5,
+                    "materialIndex": 62,
+                    "spawnRandomness": {
+                        "x": 0.10000000149011612,
+                        "y": 0.20000000298023225,
+                        "z": 0.5
+                    },
+                    "flags": 2,
+                    "velocityRandomness": {
+                        "x": 0.5,
+                        "y": 0.20000000298023225,
+                        "z": 0.5
+                    },
+                    "startingVelocity": {
+                        "x": 1.0,
+                        "y": 5.0,
+                        "z": 1.0
+                    },
+                    "spriteDimensions": {
+                        "x": 1,
+                        "y": 1
+                    },
+                    "frameCount": 1,
+                    "frameRate": 0.0,
+                    "color": {
+                        "x": 1.0,
+                        "y": 1.0,
+                        "z": 1.0,
+                        "w": 1.0
+                    },
+                    "bursts": [
+                        {
+                            "startTime": 0.0,
+                            "count": 15,
+                            "cycles": 0,
+                            "maxInterval": 0.05000000074505806,
+                            "currentInterval": 0.0,
+                            "loop": true
+                        },
+                        {
+                            "startTime": 0.0,
+                            "count": 15,
+                            "cycles": 0,
+                            "maxInterval": 0.07999999821186066,
+                            "currentInterval": 0.0,
+                            "loop": true
+                        }
+                    ],
+                    "imageName": "swoosh.png"
+                }
+            },
+            {
+                "key": "SoulSheet",
+                "value": {
+                    "size": {
+                        "x": 0.4000000059604645,
+                        "y": 0.8999999761581421,
+                        "z": 0.0
+                    },
+                    "mass": 0.0,
+                    "rotationVelocity": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "maxLife": 2.0,
+                    "emitDelay": 2.0,
+                    "count": 1,
+                    "materialIndex": 72,
+                    "spawnRandomness": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "flags": 31,
+                    "velocityRandomness": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "startingVelocity": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "spriteDimensions": {
+                        "x": 60,
+                        "y": 1
+                    },
+                    "frameCount": 60,
+                    "frameRate": 0.0,
+                    "color": {
+                        "x": 0.35237815976142886,
+                        "y": 0.6235741376876831,
+                        "z": 0.20153535902500153,
+                        "w": 4.800000190734863
+                    },
+                    "bursts": [],
+                    "imageName": "Soul2.png"
+                }
+            },
+            {
+                "key": "SoulSheetBig",
+                "value": {
+                    "size": {
+                        "x": 0.699999988079071,
+                        "y": 1.2000000476837159,
+                        "z": 0.0
+                    },
+                    "mass": 0.0,
+                    "rotationVelocity": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "maxLife": 2.0,
+                    "emitDelay": 2.0,
+                    "count": 1,
+                    "materialIndex": 72,
+                    "spawnRandomness": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "flags": 31,
+                    "velocityRandomness": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "startingVelocity": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "spriteDimensions": {
+                        "x": 60,
+                        "y": 1
+                    },
+                    "frameCount": 60,
+                    "frameRate": 0.0,
+                    "color": {
+                        "x": 1.0,
+                        "y": 1.0,
+                        "z": 1.0,
+                        "w": 6.5
+                    },
+                    "bursts": [],
+                    "imageName": "Soul2.png"
+                }
+            },
+            {
+                "key": "MuzzleQuad",
+                "value": {
+                    "size": {
+                        "x": 0.30000001192092898,
+                        "y": 0.30000001192092898,
+                        "z": 0.0
+                    },
+                    "mass": 0.0,
+                    "rotationVelocity": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "maxLife": 0.11999999731779099,
+                    "emitDelay": 0.0,
+                    "count": 1,
+                    "materialIndex": 69,
+                    "spawnRandomness": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "flags": 23,
+                    "velocityRandomness": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "startingVelocity": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "spriteDimensions": {
+                        "x": 4,
+                        "y": 1
+                    },
+                    "frameCount": 4,
+                    "frameRate": 0.0,
+                    "color": {
+                        "x": 0.2740798890590668,
+                        "y": 0.015227834694087506,
+                        "z": 0.3081395626068115,
+                        "w": 12.0
+                    },
+                    "bursts": [],
+                    "imageName": "muzzle.png"
+                }
+            },
+            {
+                "key": "QuadStation",
+                "value": {
+                    "size": {
+                        "x": 2.0,
+                        "y": 24.0,
+                        "z": 0.0
+                    },
+                    "mass": 0.0,
+                    "rotationVelocity": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "maxLife": 2.0,
+                    "emitDelay": 2.0,
+                    "count": 1,
+                    "materialIndex": 73,
+                    "spawnRandomness": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "flags": 31,
+                    "velocityRandomness": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "startingVelocity": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "spriteDimensions": {
+                        "x": 60,
+                        "y": 1
+                    },
+                    "frameCount": 60,
+                    "frameRate": 0.0,
+                    "color": {
+                        "x": 0.5627374649047852,
+                        "y": 0.0,
+                        "z": 1.0,
+                        "w": 8.5
+                    },
+                    "bursts": [],
+                    "imageName": "soul-Sheet.png"
+                }
+            },
+            {
+                "key": "DualGunStation",
+                "value": {
+                    "size": {
+                        "x": 2.0,
+                        "y": 24.0,
+                        "z": 0.0
+                    },
+                    "mass": 0.0,
+                    "rotationVelocity": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "maxLife": 2.0,
+                    "emitDelay": 2.0,
+                    "count": 1,
+                    "materialIndex": 73,
+                    "spawnRandomness": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "flags": 31,
+                    "velocityRandomness": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "startingVelocity": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "spriteDimensions": {
+                        "x": 60,
+                        "y": 1
+                    },
+                    "frameCount": 60,
+                    "frameRate": 0.0,
+                    "color": {
+                        "x": 0.8600000143051148,
+                        "y": 0.6700000166893005,
+                        "z": 0.0,
+                        "w": 8.5
+                    },
+                    "bursts": [],
+                    "imageName": "soul-Sheet.png"
+                }
+            },
+            {
+                "key": "Blood",
+                "value": {
+                    "size": {
+                        "x": 2.0,
+                        "y": 2.0,
+                        "z": 0.4000000059604645
+                    },
+                    "mass": 0.15000000596046449,
+                    "rotationVelocity": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "maxLife": 0.800000011920929,
+                    "emitDelay": 2.0,
+                    "count": 10,
+                    "materialIndex": 74,
+                    "spawnRandomness": {
+                        "x": 7.0,
+                        "y": 9.0,
+                        "z": 7.0
+                    },
+                    "flags": 7,
+                    "velocityRandomness": {
+                        "x": 0.10000000149011612,
+                        "y": 0.10000000149011612,
+                        "z": 0.10000000149011612
+                    },
+                    "startingVelocity": {
+                        "x": 0.0,
+                        "y": 10.5,
+                        "z": 0.0
+                    },
+                    "spriteDimensions": {
+                        "x": 18,
+                        "y": 1
+                    },
+                    "frameCount": 18,
+                    "frameRate": 0.0,
+                    "color": {
+                        "x": 1.0,
+                        "y": 0.0,
+                        "z": 0.0,
+                        "w": 0.20000000298023225
+                    },
+                    "bursts": [
+                        {
+                            "startTime": 0.0,
+                            "count": 5,
+                            "cycles": 0,
+                            "maxInterval": 0.20000000298023225,
+                            "currentInterval": 0.0,
+                            "loop": true
+                        },
+                        {
+                            "startTime": 0.0,
+                            "count": 2,
+                            "cycles": 0,
+                            "maxInterval": 0.05000000074505806,
+                            "currentInterval": 0.0,
+                            "loop": true
+                        }
+                    ],
+                    "imageName": "blood2.png"
+                }
             }
-          ],
-          "imageName": "swoosh.png"
-        }
-      },
-      {
-        "key": "Feathers",
-        "value": {
-          "size": {
-            "x": 0.800000011920929,
-            "y": 0.800000011920929,
-            "z": 0.0
-          },
-          "mass": 0.05000000074505806,
-          "rotationVelocity": {
-            "x": 2.0,
-            "y": 2.0
-          },
-          "maxLife": 5.0,
-          "emitDelay": 1.0,
-          "count": 10,
-          "materialIndex": 66,
-          "spawnRandomness": {
-            "x": 5.0,
-            "y": 5.0,
-            "z": 5.0
-          },
-          "flags": 0,
-          "velocityRandomness": {
-            "x": 0.0,
-            "y": 0.0,
-            "z": 0.0
-          },
-          "startingVelocity": {
-            "x": 1.0,
-            "y": 5.0,
-            "z": 1.0
-          },
-          "spriteDimensions": {
-            "x": 1,
-            "y": 1
-          },
-          "frameCount": 1,
-          "frameRate": 0.0,
-          "color": {
-            "x": 0.0,
-            "y": 0.0,
-            "z": 0.0,
-            "w": 1.0
-          },
-          "bursts": [
-            {
-              "startTime": 0.0,
-              "count": 5,
-              "cycles": 0,
-              "maxInterval": 1.0,
-              "currentInterval": 0.0,
-              "loop": true
-            },
-            {
-              "startTime": 0.0,
-              "count": 5,
-              "cycles": 0,
-              "maxInterval": 1.5,
-              "currentInterval": 0.0,
-              "loop": true
-            }
-          ],
-          "imageName": "feather.png"
-        }
-      },
-      {
-        "key": "Bullets",
-        "value": {
-          "size": {
-            "x": 0.20000000298023225,
-            "y": 0.20000000298023225,
-            "z": 0.0
-          },
-          "mass": 0.09000000357627869,
-          "rotationVelocity": {
-            "x": 30.0,
-            "y": 30.0
-          },
-          "maxLife": 5.0,
-          "emitDelay": 1.0,
-          "count": 2,
-          "materialIndex": 67,
-          "spawnRandomness": {
-            "x": 0.5,
-            "y": 0.5,
-            "z": 0.5
-          },
-          "flags": 0,
-          "velocityRandomness": {
-            "x": 0.009999999776482582,
-            "y": 0.009999999776482582,
-            "z": 0.009999999776482582
-          },
-          "startingVelocity": {
-            "x": 0.20000000298023225,
-            "y": 2.0,
-            "z": 0.20000000298023225
-          },
-          "spriteDimensions": {
-            "x": 1,
-            "y": 1
-          },
-          "frameCount": 1,
-          "frameRate": 0.0,
-          "color": {
-            "x": 0.62890625,
-            "y": 0.4609375,
-            "z": 0.0703125,
-            "w": 1.0
-          },
-          "bursts": [
-            {
-              "startTime": 0.20000000298023225,
-              "count": 2,
-              "cycles": 0,
-              "maxInterval": 0.20000000298023225,
-              "currentInterval": 0.0,
-              "loop": true
-            },
-            {
-              "startTime": 0.10000000149011612,
-              "count": 2,
-              "cycles": 0,
-              "maxInterval": 0.05000000074505806,
-              "currentInterval": 0.0,
-              "loop": true
-            }
-          ],
-          "imageName": "bullet.png"
-        }
-      },
-      {
-        "key": "Bones",
-        "value": {
-          "size": {
-            "x": 0.4000000059604645,
-            "y": 0.4000000059604645,
-            "z": 0.0
-          },
-          "mass": 0.30000001192092898,
-          "rotationVelocity": {
-            "x": 15.0,
-            "y": 15.0
-          },
-          "maxLife": 5.0,
-          "emitDelay": 1.0,
-          "count": 20,
-          "materialIndex": 68,
-          "spawnRandomness": {
-            "x": 8.0,
-            "y": 17.0,
-            "z": 8.0
-          },
-          "flags": 0,
-          "velocityRandomness": {
-            "x": 1.0,
-            "y": 1.0,
-            "z": 1.0
-          },
-          "startingVelocity": {
-            "x": 0.0,
-            "y": 3.0,
-            "z": 0.0
-          },
-          "spriteDimensions": {
-            "x": 1,
-            "y": 1
-          },
-          "frameCount": 1,
-          "frameRate": 0.0,
-          "color": {
-            "x": 1.0,
-            "y": 1.0,
-            "z": 1.0,
-            "w": 1.0
-          },
-          "bursts": [
-            {
-              "startTime": 0.0,
-              "count": 5,
-              "cycles": 0,
-              "maxInterval": 0.20000000298023225,
-              "currentInterval": 0.0,
-              "loop": true
-            },
-            {
-              "startTime": 0.0,
-              "count": 2,
-              "cycles": 0,
-              "maxInterval": 0.05000000074505806,
-              "currentInterval": 0.0,
-              "loop": true
-            }
-          ],
-          "imageName": "bone.png"
-        }
-      },
-      {
-        "key": "Ray",
-        "value": {
-          "size": {
-            "x": 0.10000000149011612,
-            "y": 0.10000000149011612,
-            "z": 0.0
-          },
-          "mass": 0.0,
-          "rotationVelocity": {
-            "x": 0.0,
-            "y": 10.0
-          },
-          "maxLife": 1.0,
-          "emitDelay": 0.10000000149011612,
-          "count": 3,
-          "materialIndex": 62,
-          "spawnRandomness": {
-            "x": 0.10000000149011612,
-            "y": 0.10000000149011612,
-            "z": 0.10000000149011612
-          },
-          "flags": 3,
-          "velocityRandomness": {
-            "x": 0.0,
-            "y": 0.0,
-            "z": 0.0
-          },
-          "startingVelocity": {
-            "x": 1.0,
-            "y": 5.0,
-            "z": 1.0
-          },
-          "spriteDimensions": {
-            "x": 1,
-            "y": 1
-          },
-          "frameCount": 1,
-          "frameRate": 0.0,
-          "color": {
-            "x": 0.0784313753247261,
-            "y": 0.054901961237192157,
-            "z": 0.054901961237192157,
-            "w": 1.0
-          },
-          "bursts": [
-            {
-              "startTime": 0.0,
-              "count": 2,
-              "cycles": 0,
-              "maxInterval": 0.05000000074505806,
-              "currentInterval": 0.0,
-              "loop": true
-            },
-            {
-              "startTime": 0.0,
-              "count": 2,
-              "cycles": 0,
-              "maxInterval": 0.07999999821186066,
-              "currentInterval": 0.0,
-              "loop": true
-            }
-          ],
-          "imageName": "swoosh.png"
-        }
-      },
-      {
-        "key": "Impact",
-        "value": {
-          "size": {
-            "x": 0.07999999821186066,
-            "y": 0.07999999821186066,
-            "z": 0.0
-          },
-          "mass": 0.0,
-          "rotationVelocity": {
-            "x": 2.0,
-            "y": 2.0
-          },
-          "maxLife": 2.0,
-          "emitDelay": 1.0,
-          "count": 1,
-          "materialIndex": 62,
-          "spawnRandomness": {
-            "x": 0.07500000298023224,
-            "y": 0.0,
-            "z": 0.07500000298023224
-          },
-          "flags": 3,
-          "velocityRandomness": {
-            "x": 0.0,
-            "y": 0.0,
-            "z": 0.0
-          },
-          "startingVelocity": {
-            "x": 0.0,
-            "y": 0.07999999821186066,
-            "z": 0.0
-          },
-          "spriteDimensions": {
-            "x": 1,
-            "y": 1
-          },
-          "frameCount": 1,
-          "frameRate": 0.0,
-          "color": {
-            "x": 0.0784313753247261,
-            "y": 0.054901961237192157,
-            "z": 0.054901961237192157,
-            "w": 1.0
-          },
-          "bursts": [
-            {
-              "startTime": 0.0,
-              "count": 2,
-              "cycles": 0,
-              "maxInterval": 0.10000000149011612,
-              "currentInterval": 0.0,
-              "loop": true
-            },
-            {
-              "startTime": 0.0,
-              "count": 1,
-              "cycles": 0,
-              "maxInterval": 0.05000000074505806,
-              "currentInterval": 0.0,
-              "loop": true
-            }
-          ],
-          "imageName": "swoosh.png"
-        }
-      },
-      {
-        "key": "RayQuadDamage",
-        "value": {
-          "size": {
-            "x": 0.15000000596046449,
-            "y": 0.15000000596046449,
-            "z": 0.0
-          },
-          "mass": 0.0020000000949949028,
-          "rotationVelocity": {
-            "x": 0.0,
-            "y": 10.0
-          },
-          "maxLife": 1.0,
-          "emitDelay": 0.10000000149011612,
-          "count": 3,
-          "materialIndex": 62,
-          "spawnRandomness": {
-            "x": 0.10000000149011612,
-            "y": 0.10000000149011612,
-            "z": 0.10000000149011612
-          },
-          "flags": 3,
-          "velocityRandomness": {
-            "x": 0.0,
-            "y": 0.0,
-            "z": 0.0
-          },
-          "startingVelocity": {
-            "x": 1.0,
-            "y": 5.0,
-            "z": 1.0
-          },
-          "spriteDimensions": {
-            "x": 1,
-            "y": 1
-          },
-          "frameCount": 1,
-          "frameRate": 0.0,
-          "color": {
-            "x": 0.2740798890590668,
-            "y": 0.015227834694087506,
-            "z": 0.3081395626068115,
-            "w": 1.0
-          },
-          "bursts": [
-            {
-              "startTime": 0.0,
-              "count": 3,
-              "cycles": 0,
-              "maxInterval": 0.05000000074505806,
-              "currentInterval": 0.0,
-              "loop": true
-            },
-            {
-              "startTime": 0.0,
-              "count": 3,
-              "cycles": 0,
-              "maxInterval": 0.07999999821186066,
-              "currentInterval": 0.0,
-              "loop": true
-            }
-          ],
-          "imageName": "swoosh.png"
-        }
-      },
-      {
-        "key": "Muzzle",
-        "value": {
-          "size": {
-            "x": 0.30000001192092898,
-            "y": 0.30000001192092898,
-            "z": 0.0
-          },
-          "mass": 0.0,
-          "rotationVelocity": {
-            "x": 0.0,
-            "y": 0.0
-          },
-          "maxLife": 0.11999999731779099,
-          "emitDelay": 0.0,
-          "count": 1,
-          "materialIndex": 69,
-          "spawnRandomness": {
-            "x": 0.0,
-            "y": 0.0,
-            "z": 0.0
-          },
-          "flags": 23,
-          "velocityRandomness": {
-            "x": 0.0,
-            "y": 0.0,
-            "z": 0.0
-          },
-          "startingVelocity": {
-            "x": 0.0,
-            "y": 0.0,
-            "z": 0.0
-          },
-          "spriteDimensions": {
-            "x": 4,
-            "y": 1
-          },
-          "frameCount": 4,
-          "frameRate": 0.0,
-          "color": {
-            "x": 0.784375011920929,
-            "y": 0.32625091075897219,
-            "z": 0.1299120932817459,
-            "w": 12.100000381469727
-          },
-          "bursts": [],
-          "imageName": "muzzle.png"
-        }
-      },
-      {
-        "key": "RayEyeStart",
-        "value": {
-          "size": {
-            "x": 0.05999999865889549,
-            "y": 0.05999999865889549,
-            "z": 0.0
-          },
-          "mass": 0.0,
-          "rotationVelocity": {
-            "x": 0.0,
-            "y": 10.0
-          },
-          "maxLife": 1.0,
-          "emitDelay": 0.10000000149011612,
-          "count": 5,
-          "materialIndex": 62,
-          "spawnRandomness": {
-            "x": 0.10000000149011612,
-            "y": 0.10000000149011612,
-            "z": 0.10000000149011612
-          },
-          "flags": 2,
-          "velocityRandomness": {
-            "x": 0.0,
-            "y": 0.0,
-            "z": 0.0
-          },
-          "startingVelocity": {
-            "x": 1.0,
-            "y": 5.0,
-            "z": 1.0
-          },
-          "spriteDimensions": {
-            "x": 1,
-            "y": 1
-          },
-          "frameCount": 1,
-          "frameRate": 0.0,
-          "color": {
-            "x": 1.0,
-            "y": 1.0,
-            "z": 1.0,
-            "w": 1.0
-          },
-          "bursts": [
-            {
-              "startTime": 0.0,
-              "count": 5,
-              "cycles": 0,
-              "maxInterval": 0.05000000074505806,
-              "currentInterval": 0.0,
-              "loop": true
-            },
-            {
-              "startTime": 0.0,
-              "count": 5,
-              "cycles": 0,
-              "maxInterval": 0.07999999821186066,
-              "currentInterval": 0.0,
-              "loop": true
-            }
-          ],
-          "imageName": "swoosh.png"
-        }
-      },
-      {
-        "key": "RayEyeEnd",
-        "value": {
-          "size": {
-            "x": 0.30000001192092898,
-            "y": 0.30000001192092898,
-            "z": 0.0
-          },
-          "mass": 0.0,
-          "rotationVelocity": {
-            "x": 0.0,
-            "y": 10.0
-          },
-          "maxLife": 1.0,
-          "emitDelay": 0.10000000149011612,
-          "count": 5,
-          "materialIndex": 62,
-          "spawnRandomness": {
-            "x": 0.10000000149011612,
-            "y": 0.10000000149011612,
-            "z": 0.10000000149011612
-          },
-          "flags": 2,
-          "velocityRandomness": {
-            "x": 0.0,
-            "y": 0.0,
-            "z": 0.0
-          },
-          "startingVelocity": {
-            "x": 1.0,
-            "y": 5.0,
-            "z": 1.0
-          },
-          "spriteDimensions": {
-            "x": 1,
-            "y": 1
-          },
-          "frameCount": 1,
-          "frameRate": 0.0,
-          "color": {
-            "x": 1.0,
-            "y": 0.0,
-            "z": 0.0,
-            "w": 30.0
-          },
-          "bursts": [
-            {
-              "startTime": 0.0,
-              "count": 5,
-              "cycles": 0,
-              "maxInterval": 0.05000000074505806,
-              "currentInterval": 0.0,
-              "loop": true
-            },
-            {
-              "startTime": 0.0,
-              "count": 5,
-              "cycles": 0,
-              "maxInterval": 0.07999999821186066,
-              "currentInterval": 0.0,
-              "loop": true
-            }
-          ],
-          "imageName": "swoosh.png"
-        }
-      },
-      {
-        "key": "SpriteSheetTest",
-        "value": {
-          "size": {
-            "x": 1.600000023841858,
-            "y": 2.0,
-            "z": 0.0
-          },
-          "mass": 0.0,
-          "rotationVelocity": {
-            "x": 0.0,
-            "y": 0.0
-          },
-          "maxLife": 2.0,
-          "emitDelay": 2.0,
-          "count": 1,
-          "materialIndex": 70,
-          "spawnRandomness": {
-            "x": 0.0,
-            "y": 0.0,
-            "z": 0.0
-          },
-          "flags": 14,
-          "velocityRandomness": {
-            "x": 0.0,
-            "y": 0.0,
-            "z": 0.0
-          },
-          "startingVelocity": {
-            "x": 0.0,
-            "y": 0.0,
-            "z": 0.0
-          },
-          "spriteDimensions": {
-            "x": 4,
-            "y": 5
-          },
-          "frameCount": 19,
-          "frameRate": 0.0,
-          "color": {
-            "x": 1.0,
-            "y": 1.0,
-            "z": 1.0,
-            "w": 1.0
-          },
-          "bursts": [],
-          "imageName": "Fire+Sparks-Sheet.png"
-        }
-      },
-      {
-        "key": "Health",
-        "value": {
-          "size": {
-            "x": 1.0,
-            "y": 1.0,
-            "z": 0.0
-          },
-          "mass": 0.0,
-          "rotationVelocity": {
-            "x": 0.0,
-            "y": 0.0
-          },
-          "maxLife": 8.0,
-          "emitDelay": 10000.0,
-          "count": 0,
-          "materialIndex": 71,
-          "spawnRandomness": {
-            "x": 20.0,
-            "y": 0.20000000298023225,
-            "z": 20.0
-          },
-          "flags": 14,
-          "velocityRandomness": {
-            "x": 0.30000001192092898,
-            "y": 0.10000000149011612,
-            "z": 0.30000001192092898
-          },
-          "startingVelocity": {
-            "x": 0.0,
-            "y": 1.399999976158142,
-            "z": 0.0
-          },
-          "spriteDimensions": {
-            "x": 1,
-            "y": 1
-          },
-          "frameCount": 1,
-          "frameRate": 0.0,
-          "color": {
-            "x": 0.16859999299049378,
-            "y": 1.0,
-            "z": 0.0860000029206276,
-            "w": 3.0
-          },
-          "bursts": [
-            {
-              "startTime": 0.10000000149011612,
-              "count": 250,
-              "cycles": 1,
-              "maxInterval": 0.0,
-              "currentInterval": 0.0,
-              "loop": false
-            },
-            {
-              "startTime": 0.20000000298023225,
-              "count": 100,
-              "cycles": 1,
-              "maxInterval": 0.0,
-              "currentInterval": 0.0,
-              "loop": false
-            },
-            {
-              "startTime": 0.25,
-              "count": 100,
-              "cycles": 1,
-              "maxInterval": 0.0,
-              "currentInterval": 0.0,
-              "loop": false
-            }
-          ],
-          "imageName": "health.png"
-        }
-      },
-      {
-        "key": "Worms",
-        "value": {
-          "size": {
-            "x": 0.30000001192092898,
-            "y": 0.30000001192092898,
-            "z": 0.0
-          },
-          "mass": 0.019999999552965165,
-          "rotationVelocity": {
-            "x": 0.0,
-            "y": 10.0
-          },
-          "maxLife": 1.0,
-          "emitDelay": 0.10000000149011612,
-          "count": 5,
-          "materialIndex": 62,
-          "spawnRandomness": {
-            "x": 0.10000000149011612,
-            "y": 0.20000000298023225,
-            "z": 0.5
-          },
-          "flags": 2,
-          "velocityRandomness": {
-            "x": 0.5,
-            "y": 0.20000000298023225,
-            "z": 0.5
-          },
-          "startingVelocity": {
-            "x": 1.0,
-            "y": 5.0,
-            "z": 1.0
-          },
-          "spriteDimensions": {
-            "x": 1,
-            "y": 1
-          },
-          "frameCount": 1,
-          "frameRate": 0.0,
-          "color": {
-            "x": 1.0,
-            "y": 1.0,
-            "z": 1.0,
-            "w": 1.0
-          },
-          "bursts": [
-            {
-              "startTime": 0.0,
-              "count": 15,
-              "cycles": 0,
-              "maxInterval": 0.05000000074505806,
-              "currentInterval": 0.0,
-              "loop": true
-            },
-            {
-              "startTime": 0.0,
-              "count": 15,
-              "cycles": 0,
-              "maxInterval": 0.07999999821186066,
-              "currentInterval": 0.0,
-              "loop": true
-            }
-          ],
-          "imageName": "swoosh.png"
-        }
-      },
-      {
-        "key": "SoulSheet",
-        "value": {
-          "size": {
-            "x": 0.4000000059604645,
-            "y": 0.8999999761581421,
-            "z": 0.0
-          },
-          "mass": 0.0,
-          "rotationVelocity": {
-            "x": 0.0,
-            "y": 0.0
-          },
-          "maxLife": 2.0,
-          "emitDelay": 2.0,
-          "count": 1,
-          "materialIndex": 72,
-          "spawnRandomness": {
-            "x": 0.0,
-            "y": 0.0,
-            "z": 0.0
-          },
-          "flags": 31,
-          "velocityRandomness": {
-            "x": 0.0,
-            "y": 0.0,
-            "z": 0.0
-          },
-          "startingVelocity": {
-            "x": 0.0,
-            "y": 0.0,
-            "z": 0.0
-          },
-          "spriteDimensions": {
-            "x": 60,
-            "y": 1
-          },
-          "frameCount": 60,
-          "frameRate": 0.0,
-          "color": {
-            "x": 0.35237815976142886,
-            "y": 0.6235741376876831,
-            "z": 0.20153535902500153,
-            "w": 4.800000190734863
-          },
-          "bursts": [],
-          "imageName": "Soul2.png"
-        }
-      },
-      {
-        "key": "SoulSheetBig",
-        "value": {
-          "size": {
-            "x": 0.699999988079071,
-            "y": 1.2000000476837159,
-            "z": 0.0
-          },
-          "mass": 0.0,
-          "rotationVelocity": {
-            "x": 0.0,
-            "y": 0.0
-          },
-          "maxLife": 2.0,
-          "emitDelay": 2.0,
-          "count": 1,
-          "materialIndex": 72,
-          "spawnRandomness": {
-            "x": 0.0,
-            "y": 0.0,
-            "z": 0.0
-          },
-          "flags": 31,
-          "velocityRandomness": {
-            "x": 0.0,
-            "y": 0.0,
-            "z": 0.0
-          },
-          "startingVelocity": {
-            "x": 0.0,
-            "y": 0.0,
-            "z": 0.0
-          },
-          "spriteDimensions": {
-            "x": 60,
-            "y": 1
-          },
-          "frameCount": 60,
-          "frameRate": 0.0,
-          "color": {
-            "x": 1.0,
-            "y": 1.0,
-            "z": 1.0,
-            "w": 6.5
-          },
-          "bursts": [],
-          "imageName": "Soul2.png"
-        }
-      },
-      {
-        "key": "MuzzleQuad",
-        "value": {
-          "size": {
-            "x": 0.30000001192092898,
-            "y": 0.30000001192092898,
-            "z": 0.0
-          },
-          "mass": 0.0,
-          "rotationVelocity": {
-            "x": 0.0,
-            "y": 0.0
-          },
-          "maxLife": 0.11999999731779099,
-          "emitDelay": 0.0,
-          "count": 1,
-          "materialIndex": 69,
-          "spawnRandomness": {
-            "x": 0.0,
-            "y": 0.0,
-            "z": 0.0
-          },
-          "flags": 23,
-          "velocityRandomness": {
-            "x": 0.0,
-            "y": 0.0,
-            "z": 0.0
-          },
-          "startingVelocity": {
-            "x": 0.0,
-            "y": 0.0,
-            "z": 0.0
-          },
-          "spriteDimensions": {
-            "x": 4,
-            "y": 1
-          },
-          "frameCount": 4,
-          "frameRate": 0.0,
-          "color": {
-            "x": 0.2740798890590668,
-            "y": 0.015227834694087506,
-            "z": 0.3081395626068115,
-            "w": 12.0
-          },
-          "bursts": [],
-          "imageName": "muzzle.png"
-        }
-      },
-      {
-        "key": "QuadStation",
-        "value": {
-          "size": {
-            "x": 2.0,
-            "y": 24.0,
-            "z": 0.0
-          },
-          "mass": 0.0,
-          "rotationVelocity": {
-            "x": 0.0,
-            "y": 0.0
-          },
-          "maxLife": 2.0,
-          "emitDelay": 2.0,
-          "count": 1,
-          "materialIndex": 73,
-          "spawnRandomness": {
-            "x": 0.0,
-            "y": 0.0,
-            "z": 0.0
-          },
-          "flags": 31,
-          "velocityRandomness": {
-            "x": 0.0,
-            "y": 0.0,
-            "z": 0.0
-          },
-          "startingVelocity": {
-            "x": 0.0,
-            "y": 0.0,
-            "z": 0.0
-          },
-          "spriteDimensions": {
-            "x": 60,
-            "y": 1
-          },
-          "frameCount": 60,
-          "frameRate": 0.0,
-          "color": {
-            "x": 0.5627374649047852,
-            "y": 0.0,
-            "z": 1.0,
-            "w": 8.5
-          },
-          "bursts": [],
-          "imageName": "soul-Sheet.png"
-        }
-      },
-      {
-        "key": "DualGunStation",
-        "value": {
-          "size": {
-            "x": 2.0,
-            "y": 24.0,
-            "z": 0.0
-          },
-          "mass": 0.0,
-          "rotationVelocity": {
-            "x": 0.0,
-            "y": 0.0
-          },
-          "maxLife": 2.0,
-          "emitDelay": 2.0,
-          "count": 1,
-          "materialIndex": 73,
-          "spawnRandomness": {
-            "x": 0.0,
-            "y": 0.0,
-            "z": 0.0
-          },
-          "flags": 31,
-          "velocityRandomness": {
-            "x": 0.0,
-            "y": 0.0,
-            "z": 0.0
-          },
-          "startingVelocity": {
-            "x": 0.0,
-            "y": 0.0,
-            "z": 0.0
-          },
-          "spriteDimensions": {
-            "x": 60,
-            "y": 1
-          },
-          "frameCount": 60,
-          "frameRate": 0.0,
-          "color": {
-            "x": 0.8600000143051148,
-            "y": 0.6700000166893005,
-            "z": 0.0,
-            "w": 8.5
-          },
-          "bursts": [],
-          "imageName": "soul-Sheet.png"
-        }
-      },
-      {
-        "key": "Blood",
-        "value": {
-          "size": {
-            "x": 2.0,
-            "y": 2.0,
-            "z": 0.4000000059604645
-          },
-          "mass": 0.15000000596046449,
-          "rotationVelocity": {
-            "x": 0.0,
-            "y": 0.0
-          },
-          "maxLife": 0.800000011920929,
-          "emitDelay": 2.0,
-          "count": 10,
-          "materialIndex": 74,
-          "spawnRandomness": {
-            "x": 7.0,
-            "y": 9.0,
-            "z": 7.0
-          },
-          "flags": 7,
-          "velocityRandomness": {
-            "x": 0.10000000149011612,
-            "y": 0.10000000149011612,
-            "z": 0.10000000149011612
-          },
-          "startingVelocity": {
-            "x": 0.0,
-            "y": 10.5,
-            "z": 0.0
-          },
-          "spriteDimensions": {
-            "x": 18,
-            "y": 1
-          },
-          "frameCount": 18,
-          "frameRate": 0.0,
-          "color": {
-            "x": 1.0,
-            "y": 0.0,
-            "z": 0.0,
-            "w": 0.20000000298023225
-          },
-          "bursts": [
-            {
-              "startTime": 0.0,
-              "count": 5,
-              "cycles": 0,
-              "maxInterval": 0.20000000298023225,
-              "currentInterval": 0.0,
-              "loop": true
-            },
-            {
-              "startTime": 0.0,
-              "count": 2,
-              "cycles": 0,
-              "maxInterval": 0.05000000074505806,
-              "currentInterval": 0.0,
-              "loop": true
-            }
-          ],
-          "imageName": "blood2.png"
-        }
-      }
-    ]
-  }
+        ]
+    }
 }
