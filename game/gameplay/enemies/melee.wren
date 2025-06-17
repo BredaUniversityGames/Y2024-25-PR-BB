@@ -209,6 +209,7 @@ class MeleeEnemy {
 
 
     Update(playerPos, playerVariables, engine, dt, soulManager, coinManager, flashSystem) {
+        
         var body = _rootEntity.GetRigidbodyComponent()
         var pos = body.GetPosition()
 
@@ -221,6 +222,7 @@ class MeleeEnemy {
         var transparencyComponent = _meshEntity.GetTransparencyComponent()
 
         _delaySpawnSFX = Math.Max(_delaySpawnSFX - dt, 0)
+        
         if (!_playedSpawnSFX && _delaySpawnSFX <= 0) {
             var audioEmitter = _rootEntity.GetAudioEmitterComponent()
             audioEmitter.AddEvent(engine.GetAudio().PlayEventOnce(_spawnSFX))
@@ -301,7 +303,7 @@ class MeleeEnemy {
 
                 var forwardVector = (playerPos - pos).normalize()
                 var endRotation = Math.LookAt(Vec3.new(forwardVector.x, 0, forwardVector.z), Vec3.new(0, 1, 0))
-                body.SetRotation( Math.Slerp(body.GetRotation(), endRotation, 0.01 *dt))
+                body.SetRotation(Math.Slerp(body.GetRotation(), endRotation, 0.01 *dt))
 
                 _recoveryTime = _recoveryTime - dt
                 if (_recoveryTime <= 0) {
@@ -311,6 +313,8 @@ class MeleeEnemy {
             }
 
             if (_movingState) {
+
+                var zone = TracyZone.new("Enemy Evaluate State")
                 this.DoPathfinding(playerPos, engine, dt)
                 _evaluateState = true
 
@@ -319,6 +323,8 @@ class MeleeEnemy {
                     var audioEmitter = _rootEntity.GetAudioEmitterComponent()
                     audioEmitter.AddEvent(_walkEventInstance)
                 }
+                zone.End()
+
             }else{
                 if(_walkEventInstance && engine.GetAudio().IsEventPlaying(_walkEventInstance) == true) {
                     engine.GetAudio().StopEvent(_walkEventInstance)
@@ -326,6 +332,9 @@ class MeleeEnemy {
             }
 
             if (_evaluateState) {
+
+                var zone = TracyZone.new("Enemy Evaluate State")
+
                 if (Math.Distance(playerPos, pos) < _attackRange) {
                     // Enter attack state
                     _attackingState = true
@@ -348,6 +357,8 @@ class MeleeEnemy {
                     animations.Play("Run", 1.25, true, 0.2, true)
                     _movingState = true
                 }
+
+                zone.End()
             }
 
             if(_hitState) {
@@ -391,10 +402,9 @@ class MeleeEnemy {
         var body = _rootEntity.GetRigidbodyComponent()
         var pos = body.GetPosition()
 
-        var distToPlayer = Math.Distance(pos, playerPos)
         var forwardVector = Vec3.new(0.0, 0.0, 0.0)
 
-        if (distToPlayer > _honeInRadius || Math.Abs(pos.y - playerPos.y) > _honeInMaxAltitude) {
+        if (Math.Distance(pos, playerPos) > _honeInRadius || Math.Abs(pos.y - playerPos.y) > _honeInMaxAltitude) {
 
             _reasonTimer = _reasonTimer + dt
             if(_reasonTimer > _reasonTimeout) {
@@ -410,38 +420,35 @@ class MeleeEnemy {
         // Pathfinding logic
         if(_currentPath != null && _currentPath.Count() > 0) {
 
-            var skipResult = _currentPath.ShouldGoNextWaypoint(_currentPathNodeIdx, pos)
-
-            if(skipResult == 1) {
-                
+            if (_currentPath.ShouldGoNextWaypoint(_currentPathNodeIdx, pos)) {
                 _currentPathNodeIdx = _currentPathNodeIdx + 1
-                
-            } else if (skipResult == 2) {
 
-                body.SetVelocity(Vec3.new(0.0, 0.0, 0.0))
-                _currentPath = null
-                zone.End()
-                return
-
+                if (_currentPathNodeIdx >= _currentPath.Count()) {
+                    body.SetVelocity(Vec3.new(0.0, 0.0, 0.0))
+                    _currentPath = null
+                    zone.End()
+                    return
+                }
             }
 
-            forwardVector = (_currentPath.GetFollowDirection(_currentPathNodeIdx) - pos).normalize()
+            forwardVector = _currentPath.GetFollowDirection(pos, _currentPathNodeIdx)
 
         } else {
 
             forwardVector = (playerPos - position).normalize()
-            
-            var localSteerForward = engine.GetPhysics().LocalEnemySteering(
-                body, 
-                forwardVector, 
-                offsetToKnees, 
-                rayAngle, rayCount
-            ) 
 
-            if(localSteerForward) {
-                forwardVector = localSteerForward
-            }
         }
+
+        // var localSteerForward = engine.GetPhysics().LocalEnemySteering(
+        //     body, 
+        //     forwardVector, 
+        //     offsetToKnees, 
+        //     rayAngle, rayCount
+        // ) 
+
+        // if(localSteerForward) {
+        //     forwardVector = localSteerForward
+        // }
 
         forwardVector = (body.GetVelocity() + forwardVector).normalize()
         body.SetVelocity(forwardVector.mulScalar(_maxVelocity))
@@ -453,83 +460,8 @@ class MeleeEnemy {
     }
 
     FindNewPath(engine, playerPos) {
-
-        var zone = TracyZone.new("Find Path")
-
         _currentPath = engine.GetPathfinding().FindPath(this.position, playerPos)
         _currentPathNodeIdx = 1
-
-        zone.End()
-    }
-
-    // Returns a corrected vector or null if no objects were found
-    LocalSteer(engine, position, forwardVector) {
-
-        var zone = TracyZone.new("Local Steering")
-        var offsetDirection = Vec3.new(0, 0, 0)
-
-        // Find closest ray hit and add this to the offsetDirection vector
-        for(i in 0...rayCount) {
-
-            var angleOffset = (i-(rayCount - 1) / 2.0) * Math.Radians(rayAngle) / (rayCount / 2)
-            var hitInfos = engine.GetPhysics().ShootRay(position + offsetToKnees, Math.RotateY(forwardVector, angleOffset), 3.0)
-
-            var lowestHitFraction = 1.0
-            var lowestHitFractionIndex = 0
-
-            for(j in 0...hitInfos.count) {
-
-                var ray = hitInfos[j]
-
-                if(ray.GetEntity(engine.GetECS()).GetEnttEntity() == _rootEntity.GetEnttEntity()) {
-                    continue
-                }
-
-                if(ray.hitFraction < lowestHitFraction) {
-                    lowestHitFraction = ray.hitFraction
-                    lowestHitFractionIndex = j
-                }
-            }
-
-            if(hitInfos.count > 0) {
-                offsetDirection = offsetDirection + (position - hitInfos[lowestHitFractionIndex].position)
-            }
-        }
-
-        // If we hit nothing
-        if(offsetDirection.length() < 0.001) {
-            zone.End()
-            return null
-        }
-
-        offsetDirection = offsetDirection.normalize()
-        var absDot = Math.Abs(Math.Dot(forwardVector, offsetDirection))
-
-        if(absDot > 0.9) {
-            // if the raycast results is a vector that is nearly a negated forward vector
-            // steer either hard left or right (random chance for either)
-
-            var angle = 0.0
-            var index = Random.RandomIndex(0, 2)
-            
-            if(index == 0) {
-                angle = Math.Radians(-90.0)
-            } else {
-                angle = Math.Radians(90.0)
-            }
-
-            forwardVector = Math.RotateY(forwardVector, angle)
-        } else {
-            if(absDot < 0.001) {
-                // if no hits (or too subtle) keep same forward vector
-            } else {
-                // regular steering behavior
-                forwardVector = forwardVector - offsetDirection
-            }
-        }
-
-        zone.End()
-        return forwardVector
     }
 
     Destroy(engine) {

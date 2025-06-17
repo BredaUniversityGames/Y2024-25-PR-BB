@@ -144,10 +144,16 @@ std::optional<glm::vec3> LocalEnemySteering(
     const glm::vec3& kneeOffset,
     float rayAngle, int rayCount)
 {
-    ZoneScopedN("Local Enemy Steering");
-
     auto position = self.component->GetPosition();
     glm::vec3 offsetDirection = glm::vec3(0.0f, 0.0f, 0.0f);
+
+    //--------------------------------------------------------------//
+    // Local steering behaviour                                     //
+    // Shoots out rays in angle and steers away from closest hits   //
+    // 1) Regular behaviour                                         //
+    // 2) If all hits are roughly equal steer a hard left or right  //
+    // 3) No obstacles in the way, resume regular path              //
+    //--------------------------------------------------------------//
 
     // Find closest ray hit and add this to the offsetDirection vector
     for (int i = 0; i < rayCount; i++)

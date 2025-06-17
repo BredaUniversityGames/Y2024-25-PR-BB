@@ -136,8 +136,7 @@ class WaveSystem {
 
     SpawnEnemy(engine, enemyList) {
 
-        var zone = TracyZone.new("Enemy Spawn")
-        var enemyType = EnemyType.Skeleton
+        var enemyType = Random.RandomIndex(0, EnemyType.SIZE)
 
         if (enemyType == EnemyType.Skeleton) {
 
@@ -173,8 +172,6 @@ class WaveSystem {
                 _enemyCount = _enemyCount + 1
             }
         }
-
-        zone.End()
     }
 
     NextWave(engine, playerVariables) {
