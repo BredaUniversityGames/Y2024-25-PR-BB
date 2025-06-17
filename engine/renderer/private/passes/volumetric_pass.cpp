@@ -71,7 +71,7 @@ void VolumetricPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cu
     // leave a delayed trail positions for the player
     for (uint32_t i = 0; i < playerTrailPositions.size(); ++i)
     {
-        playerTrailPositions[i].a -= (0.2 * (scene.deltaTime / 1000.0f));
+        playerTrailPositions[i].a -= (0.45 * (scene.deltaTime / 1000.0f));
 
         _playerPosCounterMs = 0;
         // Update the player position trail
@@ -102,7 +102,7 @@ void VolumetricPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cu
     vk::RenderingInfoKHR renderingInfo {
         .renderArea = {
             .offset = vk::Offset2D { 0, 0 },
-            .extent = vk::Extent2D { _gBuffers.Size().x / 4, _gBuffers.Size().y / 4 } },
+            .extent = vk::Extent2D { _gBuffers.Size().x / 6, _gBuffers.Size().y / 6 } },
         .layerCount = 1,
         .colorAttachmentCount = 1,
         .pColorAttachments = &finalColorAttachmentInfo,

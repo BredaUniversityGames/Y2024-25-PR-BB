@@ -41,16 +41,12 @@ public:
             index = next_player_pos_index - 1;
         }
         glm::vec4 currentPos = playerTrailPositions[index];
-        if (currentPos.a > 0.01)
-        {
-            // return; // not ready to be replaced
-        }
         const float distanceCheck = glm::distance(position, glm::vec3(currentPos));
         if (distanceCheck < 1.09f)
         {
             return; // too close to the last position
         }
-        playerTrailPositions[next_player_pos_index] = glm::vec4(position, 2.0);
+        playerTrailPositions[next_player_pos_index] = glm::vec4(position, 1.1);
 
         next_player_pos_index = (next_player_pos_index + 1) % playerTrailPositions.size();
     }
@@ -90,7 +86,7 @@ private:
     vk::Pipeline _pipeline;
 
     std::array<GunShot, 8> gunShots;
-    std::array<glm::vec4, 32> playerTrailPositions;
+    std::array<glm::vec4, 24> playerTrailPositions;
     ResourceHandle<Buffer> _fogTrailsBuffer;
     vk::DescriptorSetLayout _fogTrailsDescriptorSetLayout;
     vk::DescriptorSet _fogTrailsDescriptorSet;

@@ -549,7 +549,7 @@ void Renderer::InitializeVolumetricTarget()
     auto size = _swapChain->GetImageSize();
 
     CPUImage volumetricCreation {};
-    volumetricCreation.SetName("Volumetric Target").SetSize(size.x / 4.0, size.y / 4.0).SetFormat(_swapChain->GetFormat()).SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eTransferDst);
+    volumetricCreation.SetName("Volumetric Target").SetSize(size.x / 6.0, size.y / 6.0).SetFormat(_swapChain->GetFormat()).SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eTransferDst);
 
     _volumetricTarget = _context->Resources()->ImageResourceManager().Create(volumetricCreation);
 }

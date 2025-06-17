@@ -42,7 +42,7 @@ layout (set = 3, binding = 0) uniform SceneUBO
 
 layout (set = 4, binding = 0) uniform FogTrailsUBO {
     GunShot gunShots[8];
-    vec4 playerTrailPositions[32];
+    vec4 playerTrailPositions[24];
 };
 
 layout (location = 0) in vec2 texCoords;
@@ -191,7 +191,7 @@ float density(vec3 pos)
     }
 
     // Now apply player trail
-    for (int i = 0; i < 32; i++) {
+    for (int i = 0; i < 24; i++) {
         const vec4 playerTrail = playerTrailPositions[i];
         const float decay = playerTrail.a;
         if (decay < 0.001)
@@ -202,7 +202,7 @@ float density(vec3 pos)
         origin.y -= VOLUMETRIC_HEIGHT_OFFSET; // Offset the origin to match the hole height
         origin.y -= 1.6; // Additional offset to lower the hole height
         float dpr = sdVerticalCapsule(pos - origin, 2.1, 0.08);
-        float holeInfluence = smoothstep(1.0 + 0.4, 1.0, dpr);
+        float holeInfluence = smoothstep(decay + 0.4, decay, dpr);
         den *= (1.0 - holeInfluence);
     }
 
