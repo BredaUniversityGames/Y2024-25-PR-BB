@@ -252,11 +252,6 @@ string getBaseDir()
     return PHYSFS_getBaseDir();
 }
 
-string getUserDir()
-{
-    return PHYSFS_getUserDir();
-}
-
 string getWriteDir()
 {
     return PHYSFS_getWriteDir();
@@ -265,11 +260,6 @@ string getWriteDir()
 void setWriteDir(const string& newDir)
 {
     PHYSFS_setWriteDir(newDir.c_str());
-}
-
-void removeFromSearchPath(const string& oldDir)
-{
-    PHYSFS_removeFromSearchPath(oldDir.c_str());
 }
 
 StringList getSearchPath()
@@ -322,9 +312,9 @@ StringList enumerateFiles(const string& directory)
     return files;
 }
 
-void enumerateFiles(const string& directory, EnumFilesCallback callback, void* extra)
+void enumerate(const string& directory, EnumFilesCallback callback, void* extra)
 {
-    PHYSFS_enumerateFilesCallback(directory.c_str(), callback, extra);
+    PHYSFS_enumerate(directory.c_str(), callback, extra);
 }
 
 bool exists(const string& filename)
@@ -334,17 +324,10 @@ bool exists(const string& filename)
 
 bool isDirectory(const string& filename)
 {
-    return PHYSFS_isDirectory(filename.c_str());
-}
+    PHYSFS_Stat statbuf;
 
-bool isSymbolicLink(const string& filename)
-{
-    return PHYSFS_isSymbolicLink(filename.c_str());
-}
-
-sint64 getLastModTime(const string& filename)
-{
-    return PHYSFS_getLastModTime(filename.c_str());
+    PHYSFS_stat(filename.c_str(), &statbuf);
+    return statbuf.filetype == PHYSFS_FILETYPE_DIRECTORY;
 }
 
 bool isInit()

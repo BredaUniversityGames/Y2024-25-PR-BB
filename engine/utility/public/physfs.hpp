@@ -38,7 +38,7 @@ typedef PHYSFS_sint64 sint64;
 
 typedef PHYSFS_StringCallback StringCallback;
 
-typedef PHYSFS_EnumFilesCallback EnumFilesCallback;
+typedef PHYSFS_EnumerateCallback EnumFilesCallback;
 
 typedef PHYSFS_Version Version;
 
@@ -100,13 +100,9 @@ void getCdRomDirs(StringCallback callback, void* extra);
 
 string getBaseDir();
 
-string getUserDir();
-
 string getWriteDir();
 
 void setWriteDir(string const& newDir);
-
-void removeFromSearchPath(string const& oldDir);
 
 StringList getSearchPath();
 
@@ -120,17 +116,13 @@ void deleteFile(string const& filename);
 
 string getRealDir(string const& filename);
 
-StringList enumerateFiles(string const& directory);
+StringList enumerateFile(string const& directory);
 
 void enumerateFiles(string const& directory, EnumFilesCallback callback, void* extra);
 
 bool exists(string const& filename);
 
 bool isDirectory(string const& filename);
-
-bool isSymbolicLink(string const& filename);
-
-sint64 getLastModTime(string const& filename);
 
 bool isInit();
 
