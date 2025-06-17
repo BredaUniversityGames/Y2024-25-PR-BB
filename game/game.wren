@@ -1,12 +1,11 @@
-import "engine_api.wren" for Engine, TimeModule, ECS, ShapeFactory, PhysicsObjectLayer, Achievements, Rigidbody, RigidbodyComponent, CollisionShape, Entity, Vec3, Vec2, Quat, Math, AnimationControlComponent, TransformComponent, Input, Keycode, SpawnEmitterFlagBits, Random, Stat, Stats
+import "engine_api.wren" for Engine, Vec3, Vec2, Quat, ShapeFactory, Rigidbody, RigidbodyComponent, PhysicsObjectLayer, Math, Keycode, TracyZone, Stats, Achievements
+
 import "gameplay/movement.wren" for PlayerMovement
 import "gameplay/weapon.wren" for Pistol, Shotgun, Weapons
 import "gameplay/camera.wren" for CameraVariables
 import "gameplay/player.wren" for PlayerVariables, HitmarkerState
 import "gameplay/music_player.wren" for MusicPlayer, BGMPlayer
 import "gameplay/wave_system.wren" for WaveSystem, Wave, EnemyType, WaveGenerator
-import "analytics/analytics.wren" for AnalyticsManager
-
 import "gameplay/hud.wren" for WrenHUD
 import "gameplay/soul.wren" for Soul, SoulManager, SoulType
 import "gameplay/coin.wren" for Coin, CoinManager
@@ -58,9 +57,13 @@ class Main {
         engine.PreloadModel("assets/models/Skeleton.glb")
         engine.PreloadModel("assets/models/eye.glb")
         engine.PreloadModel("assets/models/Berserker.glb")
-
+        engine.PreloadModel("assets/models/nug.glb")
         engine.PreloadModel("assets/models/Revolver.glb")
         engine.PreloadModel("assets/models/Shotgun.glb")
+        
+        engine.PreloadModel("assets/models/revolver_left.glb")
+        engine.PreloadModel("assets/models/quad_dmg.glb")
+        engine.PreloadModel("assets/models/dual_gun.glb")
 
         // Player stuff
         engine.GetInput().SetMouseHidden(true)
@@ -213,9 +216,6 @@ class Main {
         waveConfigs[3].spawns[EnemyType.Skeleton] = 7
         waveConfigs[4].spawns[EnemyType.Skeleton] = 4
 
-        //waveConfigs[1] = wave2
-        //waveConfigs[3] = wave4
-
         __waveSystem = WaveSystem.new(engine, waveConfigs, spawnLocations)
 
         // Souls
@@ -359,23 +359,9 @@ class Main {
 
         var cheats = __playerController.GetCheatsComponent()
         var deltaTime = engine.GetTime().GetDeltatime()
+
         __timer = __timer + dt
         __playerVariables.grenadeCharge = Math.Min(__playerVariables.grenadeCharge + __playerVariables.grenadeChargeRate * dt / 1000, __playerVariables.grenadeMaxCharge)
-
-        // if (__playerVariables.ultActive) {
-        //     __playerVariables.ultCharge = Math.Max(__playerVariables.ultCharge - __playerVariables.ultDecayRate * dt / 1000, 0)
-        //     if (__playerVariables.ultCharge <= 0) {
-        //         __activeWeapon = __armory[Weapons.pistol]
-        //         __activeWeapon.equip(engine)
-        //         __playerVariables.ultActive = false
-        //         __playerVariables.wasUltReadyLastFrame = false
-        //     }
-        // }
-
-        // if (!__playerVariables.wasUltReadyLastFrame && __playerVariables.ultCharge == __playerVariables.ultMaxCharge) {
-        //     engine.GetAudio().PlayEventOnce("event:/SFX/UltReady")
-        //     __playerVariables.wasUltReadyLastFrame = true
-        // }
 
         __playerVariables.invincibilityTime = Math.Max(__playerVariables.invincibilityTime - dt, 0)
         __playerVariables.multiplierTimer = Math.Max(__playerVariables.multiplierTimer - dt, 0)
@@ -406,49 +392,6 @@ class Main {
                     weapon.ammo = weapon.maxAmmo
                 }
             }
-        }
-
-        if (engine.GetInput().DebugIsInputEnabled()) {
-
-            if(engine.GetInput().DebugGetKey(Keycode.eN())){
-               cheats.noClip = !cheats.noClip
-            }
-
-            // // engine.GetInput().GetDigitalAction("Ultimate").IsPressed()
-            // if (engine.GetInput().DebugGetKey(Keycode.eU())) {
-            //     if (__playerVariables.ultCharge >= __playerVariables.ultMaxCharge) {
-            //         System.print("Activate ultimate")
-            //         __activeWeapon = __armory[Weapons.shotgun]
-            //         __activeWeapon.equip(engine)
-            //         __playerVariables.ultActive = true
-
-            //         engine.GetAudio().PlayEventOnce("event:/SFX/ActivateUlt")
-
-            //         var particleEntity = engine.GetECS().NewEntity()
-            //         particleEntity.AddTransformComponent().translation = __player.GetTransformComponent().translation - Vec3.new(0,3.5,0)
-            //         var lifetime = particleEntity.AddLifetimeComponent()
-            //         lifetime.lifetime = 400.0
-            //         var emitterFlags = SpawnEmitterFlagBits.eIsActive()
-            //         engine.GetParticles().SpawnEmitter(particleEntity, "Health", emitterFlags, Vec3.new(0.0, 0.0, 0.0), Vec3.new(0.0, 0.0, 0.0))
-            //     }
-            // }
-
-            if (engine.GetInput().DebugGetKey(Keycode.eG()) && false) {
-                if (__playerVariables.grenadeCharge == __playerVariables.grenadeMaxCharge) {
-                    // Throw grenade
-                    __playerVariables.grenadeCharge = 0
-                }
-            }
-
-            // if (engine.GetInput().DebugGetKey(Keycode.e1()) && __activeWeapon.isUnequiping(engine) == false) {
-            //     __activeWeapon.unequip(engine)
-            //     __nextWeapon = __armory[Weapons.pistol]
-            // }
-
-            // if (engine.GetInput().DebugGetKey(Keycode.e2()) && __activeWeapon.isUnequiping(engine) == false) {
-            //     __activeWeapon.unequip(engine)
-            //     __nextWeapon = __armory[Weapons.shotgun]
-            // }
         }
 
         if(__activeWeapon.isUnequiping(engine) == false && __nextWeapon != null){
@@ -512,28 +455,55 @@ class Main {
             engine.GetSteam().Unlock(Achievements.DIE_1())
         }
 
-
         var playerPos = __playerController.GetRigidbodyComponent().GetPosition()
+
+        // We delete the entity from the ecs when it dies
+        // Then we check for entity validity, and remove it from the list if it is no longer valid
+
         for (enemy in __enemyList) {
 
-            // We delete the entity from the ecs when it dies
-            // Then we check for entity validity, and remove it from the list if it is no longer valid
+            var zone = TracyZone.new("Enemy Update")
+
             if (enemy.entity.IsValid()) {
                 enemy.Update(playerPos, __playerVariables, engine, dt, __soulManager, __coinManager, __flashSystem)
             } else {
                 __enemyList.removeAt(__enemyList.indexOf(enemy))
             }
+
+            zone.End()
         }
 
-        __soulManager.Update(engine, __playerVariables,__flashSystem, dt)
-        __coinManager.Update(engine, __playerVariables,__flashSystem, dt)
-        __waveSystem.Update(engine, __player, __enemyList, dt,__playerVariables, __stationManager)
+        {
+            var zone = TracyZone.new("Soul system update")
+            __soulManager.Update(engine, __playerVariables,__flashSystem, dt)
+            zone.End()
+        }
 
-        __stationManager.Update(engine, __playerVariables, dt)
-        __flashSystem.Update(engine, dt)
-        __powerUpSystem.Update(engine,__playerVariables,__flashSystem, dt)
+        {
+            var zone = TracyZone.new("Coin system update")
+            __coinManager.Update(engine, __playerVariables,__flashSystem, dt)
+            zone.End()
+        }
 
-        __playerVariables.hud.Update(engine, dt,__playerMovement,__playerVariables,__activeWeapon.ammo, __activeWeapon.maxAmmo)
+        {
+            var zone = TracyZone.new("Wave system update")
+            __waveSystem.Update(engine, __player, __enemyList, dt,__playerVariables, __stationManager)
+            zone.End()
+        }
+
+        {
+            var zone = TracyZone.new("Station / Flash / PowerUP Update")
+            __stationManager.Update(engine, __playerVariables, dt)
+            __flashSystem.Update(engine, dt)
+            __powerUpSystem.Update(engine,__playerVariables,__flashSystem, dt)
+            zone.End()
+        }
+
+        {
+            var zone = TracyZone.new("Player HUD Update")
+            __playerVariables.hud.Update(engine, dt,__playerMovement,__playerVariables,__activeWeapon.ammo, __activeWeapon.maxAmmo)
+            zone.End()
+        }
 
         if (!engine.IsDistribution()) {
             DebugUtils.Tick(engine, __enemyList,__soulManager, __coinManager, __flashSystem, __waveSystem, __playerVariables)
