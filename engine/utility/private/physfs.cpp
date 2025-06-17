@@ -19,7 +19,7 @@ private:
         {
             return traits_type::eof();
         }
-        size_t bytesRead = PHYSFS_read(file, buffer, 1, bufferSize);
+        size_t bytesRead = PHYSFS_readBytes(file, buffer, bufferSize);
         if (bytesRead < 1)
         {
             return traits_type::eof();
