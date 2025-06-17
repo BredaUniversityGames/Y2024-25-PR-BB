@@ -28,13 +28,23 @@ ModuleTickOrder SteamModule::Init(MAYBE_UNUSED Engine& engine)
     SteamErrMsg errorMessage = { 0 };
     if (SteamAPI_InitEx(&errorMessage) != k_ESteamAPIInitResult_OK)
     {
-        bblog::error("[Steamworks] ", errorMessage);
-        bblog::warn("[Steamworks] Steam is probably not running, Steamworks API functionality will be unavailable");
+        bblog::error("[Steamworks] {}", errorMessage);
 
         return ModuleTickOrder::ePreTick;
     }
 
     SteamClient()->SetWarningMessageHook(&DebugCallback);
+
+    // User doesn't have to be logged in to use steam input, but the base API still has to be available
+    if (!SteamInput()->Init(false))
+    {
+        bblog::error("[Steamworks] Failed to initialize Steam Input");
+
+        return ModuleTickOrder::ePreTick;
+    }
+
+    _steamInputAvailable = true;
+    SteamAPI_RunCallbacks(); // Run callbacks to initialize the first frame for steam input
 
     if (!SteamUser()->BLoggedOn())
     {
@@ -45,16 +55,6 @@ ModuleTickOrder SteamModule::Init(MAYBE_UNUSED Engine& engine)
 
     _steamAvailable = true;
 
-    if (!SteamInput()->Init(false))
-    {
-        bblog::error("[Steamworks] Failed to initialize Steam Input");
-
-        return ModuleTickOrder::ePreTick;
-    }
-
-    _steamInputAvailable = true;
-    SteamAPI_RunCallbacks();
-
     return ModuleTickOrder::ePreTick;
 }
 
@@ -62,6 +62,13 @@ void SteamModule::Tick(MAYBE_UNUSED Engine& engine)
 {
     if (!_steamAvailable)
     {
+        // Make sure steam input still runs, even if steam itself is unavailable.
+        // Can happen when running without internet.
+        if (_steamInputAvailable)
+        {
+            SteamInput()->RunFrame();
+        }
+
         return;
     }
 
