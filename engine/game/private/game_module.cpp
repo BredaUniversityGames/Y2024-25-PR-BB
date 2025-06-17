@@ -233,7 +233,7 @@ void GameModule::ApplySettings(Engine& engine)
     }
 
     auto& swapchain = engine.GetModule<RendererModule>().GetRenderer()->GetSwapChain();
-    if (swapchain.SetPresentMode(gameSettings.vsync ? vk::PresentModeKHR::eFifo : vk::PresentModeKHR::eImmediate))
+    if (swapchain.SetPresentMode(gameSettings.vsync ? vk::PresentModeKHR::eFifo : vk::PresentModeKHR::eMailbox))
     {
         swapchain.Resize(swapchain.GetImageSize());
     }
