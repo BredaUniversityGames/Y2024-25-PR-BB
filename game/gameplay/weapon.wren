@@ -171,7 +171,7 @@ class Pistol {
             var muzzleLight = muzzleLightEntity.AddPointLightComponent()
             muzzleLight.color = Vec3.new(200/255, 83/255, 33/255)
             muzzleLight.range = 20.0
-            muzzleLight.intensity = 128.0
+            muzzleLight.intensity = 112.0
 
             // 1 - ((fov - minFov) / (maxFov - minFov)): minFov=50 maxFov=150
             var mul = 1 - ((fov - 50) / 100)
@@ -211,6 +211,8 @@ class Pistol {
             var right = Math.Cross(forward, up)
             var start = translation + forward * Vec3.new(1, 1, 1) - right * Vec3.new(0.09, 0.09, 0.09) - up * Vec3.new(0.12, 0.12, 0.12)
             var end = translation + forward * _rangeVector
+
+
 
             var direction = (end - start).normalize()
             var rayHitInfo = engine.GetPhysics().ShootRay(start, direction, _range)
@@ -290,6 +292,15 @@ class Pistol {
             }
 
             var gunStart = _barrelEndEntity.GetTransformComponent().GetWorldTranslation()
+
+            var endFixed = translation + forward * _rangeVector
+            if(_entityName == "Gun") {
+                var cloudDirection = (endFixed - (gunStart - right.mulScalar(0.6) + up.mulScalar(0.2)))
+                engine.SetGunDirectionAndOrigin(gunStart - right.mulScalar(0.6) + up.mulScalar(0.2), cloudDirection)
+            }else{
+                var cloudDirection = (endFixed - (gunStart + right.mulScalar(0.6) + up.mulScalar(0.2)))
+                engine.SetGunDirectionAndOrigin(gunStart + right.mulScalar(0.6) + up.mulScalar(0.2), cloudDirection)
+            }
 
             var length = (end - gunStart).length()
             var i = 1.0

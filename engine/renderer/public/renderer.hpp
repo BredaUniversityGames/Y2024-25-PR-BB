@@ -19,6 +19,7 @@ class GeometryPass;
 class SSAOPass;
 class LightingPass;
 class SkydomePass;
+class VolumetricPass;
 class TonemappingPass;
 class FXAAPass;
 class UIPass;
@@ -63,6 +64,7 @@ public:
     FXAAPass& GetFXAAPipeline() const { return *_fxaaPass; }
     ShadowPass& GetShadowPipeline() const { return *_shadowPass; }
     TonemappingPass& GetTonemappingPipeline() const { return *_tonemappingPass; }
+    VolumetricPass& GetVolumetricPipeline() const { return *_volumetricPass; }
     ParticlePass& GetParticlePipeline() const { return *_particlePass; }
     GPUScene& GetGPUScene() { return *_gpuScene; }
 
@@ -92,6 +94,7 @@ private:
     std::unique_ptr<ShadowPass> _shadowPass;
     std::unique_ptr<LightingPass> _lightingPass;
     std::unique_ptr<SkydomePass> _skydomePass;
+    std::unique_ptr<VolumetricPass> _volumetricPass;
     std::unique_ptr<TonemappingPass> _tonemappingPass;
     std::unique_ptr<FXAAPass> _fxaaPass;
     std::unique_ptr<UIPass> _uiPass;
@@ -109,6 +112,7 @@ private:
     ResourceHandle<GPUImage> _environmentMap;
     ResourceHandle<GPUImage> _bloomTarget;
     ResourceHandle<GPUImage> _tonemappingTarget;
+    ResourceHandle<GPUImage> _volumetricTarget;
     ResourceHandle<GPUImage> _fxaaTarget;
 
     ResourceHandle<Sampler> _bloomSampler;
@@ -140,6 +144,7 @@ private:
     void InitializeHDRTarget();
     void InitializeBloomTargets();
     void InitializeTonemappingTarget();
+    void InitializeVolumetricTarget();
     void InitializeFXAATarget();
     void InitializeSSAOTarget();
     void LoadEnvironmentMap();
