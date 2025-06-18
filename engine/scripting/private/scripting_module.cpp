@@ -1,6 +1,8 @@
 #include "scripting_module.hpp"
+#include "bytes.hpp"
 #include "file_io.hpp"
 #include "log.hpp"
+#include "profile_macros.hpp"
 #include "time_module.hpp"
 #include "wren_bindings.hpp"
 
@@ -35,6 +37,10 @@ ModuleTickOrder ScriptingModule::Init(MAYBE_UNUSED Engine& engine)
     config.includePaths.emplace_back("./");
     config.includePaths.emplace_back("./game/");
 
+    config.initialHeapSize = 10_mb;
+    config.minHeapSize = 10_mb;
+    config.heapGrowthPercent = 0;
+
     _context = std::make_unique<ScriptingContext>(config);
     _engineBindingsPath = "game/engine_api.wren";
 
@@ -52,7 +58,10 @@ void ScriptingModule::Tick(Engine& engine)
         _mainModule->Update(dt);
     }
 
-    _context->GetVM().gc();
+    {
+        ZoneScopedN("Garbage Collection");
+        _context->GetVM().gc();
+    }
 }
 
 void ScriptingModule::SetMainScript(Engine& engine, const std::string& path)
