@@ -329,27 +329,9 @@ vec4 raymarching(vec3 ro, vec3 rd, float tmin, float tmax, vec3 sceneDepthPositi
             stepSize = mix(0.03, 0.3, den); // Interpolate
         }
 
-
-
-
-        lightTransmittance *= exp(-den * 0.000001 * stepSize);
-        float lightFactor = max(0.001, dot(rd, getSunDirection()));
-
         // Combine ambient and directional light
         vec3 baseCloudColor = color(den, pos.y);
-
-
-
-        vec3 litAmount = vec3(1.0) * (lightFactor * vec3(1.0, 0.8, 0.6)); // Adjusted for ambient light and directional light
-        litAmount = clamp(litAmount, 0.0, 1.0); // Ensure it stays within valid range
-
-        vec3 litCloudColor = baseCloudColor * litAmount * scene.directionalLight.color.rgb;
-
-
-
-        vec4 col = vec4(baseCloudColor, den);
-
-
+        
         // Cluster usage
 
         float zFloat = 24;
@@ -375,6 +357,7 @@ vec4 raymarching(vec3 ro, vec3 rd, float tmin, float tmax, vec3 sceneDepthPositi
         uint lightCount = lightCells[clusterIndex].count;
         uint lightIndexOffset = lightCells[clusterIndex].offset;
 
+        vec3 scatteredLight = vec3(0.0);
         for (int i = 0; i < lightCount; i++)
         {
             uint lightIndex = lightIndices[i + lightIndexOffset];
@@ -384,20 +367,24 @@ vec4 raymarching(vec3 ro, vec3 rd, float tmin, float tmax, vec3 sceneDepthPositi
             lightPos.y -= VOLUMETRIC_HEIGHT_OFFSET; // Offset the light position to match the hole height
             vec3 L = normalize(lightPos - pos);
             float attenuation = CalculateAttenuation(lightPos, pos, light.range);
-            vec3 lightColor = light.color.rgb * attenuation * light.intensity;
-            col.rgb += lightColor * col.a;//* BeerLambert(0.0001, length(lightPos - pos));
+        /**vec3 lightColor = light.color.rgb * attenuation * light.intensity;
+            col.rgb += lightColor * col.a;*/
+
+            float phase = 1.0; // Or use Henyey-Greenstein, etc.
+            // Optionally, add a shadow test here
+
+            scatteredLight += light.color.rgb * attenuation * light.intensity * phase;
 
         }
 
+        scatteredLight *= den * stepSize;
+        vec3 fogColor = (baseCloudColor + scatteredLight);
+
+        vec4 col = vec4(fogColor, den); // Step alpha = extinction * step size
         col.rgb *= col.a; // Premultiply alpha
+
+
         sum = sum + col * (1.0 - sum.a);
-
-
-
-
-        //t += 0.07 + 0.01 * float(i); // uniform or progressive steps
-
-
 
         t += stepSize + 0.01 * float(i);
     }
