@@ -1,5 +1,6 @@
 #pragma once
 
+#include "log.hpp"
 #include "physfs.hpp"
 #include <chrono>
 #include <fstream>
@@ -56,4 +57,34 @@ std::optional<FileTime> GetLastModifiedTime(const std::string& path);
 
 float* LoadFloatImageFromIfstream(PhysFS::ifstream& file, int32_t* x, int32_t* y, int32_t* channels_in_file, int32_t desired_channels);
 stbi_uc* LoadImageFromIfstream(PhysFS::ifstream& file, int32_t* x, int32_t* y, int32_t* channels_in_file, int32_t desired_channels);
+
+class FileSystem
+{
+public:
+    FileSystem()
+    {
+        if (!PhysFS::init(""))
+        {
+            bblog::error("Failed initializing PhysFS!\n{}", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
+            return;
+        }
+
+#ifdef DISTRIBUTION
+        if (!PhysFS::mount("data.bin", "", true))
+        {
+            bblog::error("Failed mounting PhysFS!\n{}", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
+        }
+#else
+        if (!PhysFS::mount("./", "/", true))
+        {
+            bblog::error("Failed mounting PhysFS!\n{}", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
+        }
+#endif
+    }
+
+    ~FileSystem()
+    {
+        PHYSFS_deinit();
+    }
+};
 };

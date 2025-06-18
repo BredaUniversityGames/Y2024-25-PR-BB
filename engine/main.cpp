@@ -23,25 +23,7 @@ int Main()
     bblog::StartWritingToFile();
 #endif
 
-    if (!PhysFS::init(""))
-    {
-        bblog::error("Failed initializing PhysFS!\n{}", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
-        return 1;
-    }
-
-#ifdef DISTRIBUTION
-    if (!PhysFS::mount("data.bin", "", true))
-    {
-        bblog::error("Failed mounting PhysFS!\n{}", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
-        return 1;
-    }
-#else
-    if (!PhysFS::mount("./", "/", true))
-    {
-        bblog::error("Failed mounting PhysFS!\n{}", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
-        return 1;
-    }
-#endif
+    fileIO::FileSystem {}; // RAII wrapper for mounting the file system.
 
     MainEngine instance;
     Stopwatch startupTimer {};

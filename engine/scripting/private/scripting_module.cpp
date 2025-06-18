@@ -13,12 +13,12 @@ void ScriptingModule::ResetVM()
 
 void ScriptingModule::GenerateEngineBindingsFile()
 {
+    auto& module = GetForeignAPI();
+    auto out_script = module.str();
+
     if (auto stream = fileIO::OpenWriteStream(_engineBindingsPath))
     {
         auto& output = stream.value();
-
-        auto& module = GetForeignAPI();
-        auto out_script = module.str();
 
         // Craft the header of the Generated File
         output << "// Automatically generated file: DO NOT MODIFY!\n";
