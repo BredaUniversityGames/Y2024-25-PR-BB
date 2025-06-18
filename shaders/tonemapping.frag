@@ -561,12 +561,7 @@ void main()
 
         color += bloom;
     }
-
-    if (paletteEnabled)
-    {
-        volumetricSample = vec4(ComputeQuantizedColor(volumetricSample.rgb, pc.ditherAmount, pc.paletteAmount), volumetricSample.a);
-    }
-
+    
     color = mix(color, volumetricSample.rgb, volumetricSample.a * 0.3);
 
     if (paletteEnabled)

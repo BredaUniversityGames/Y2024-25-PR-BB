@@ -286,7 +286,21 @@ float CalculateAttenuation(vec3 lightPos, vec3 position, float range) {
 // ---- Raymarching through infinite volume ----
 vec4 raymarching(vec3 ro, vec3 rd, float tmin, float tmax, vec3 sceneDepthPosition)
 {
+    // Clusters fetching
     const ivec2 texSize = textureSize(bindless_color_textures[nonuniformEXT(pc.depthIndex)], 0);
+
+    const float zFloat = 24;
+    const float log2FarDivNear = log2(camera.zFar / camera.zNear);
+    const float log2Near = log2(camera.zNear);
+
+    const float sliceScaling = zFloat / log2FarDivNear;
+    const float sliceBias = -(zFloat * log2Near / log2FarDivNear);
+    const vec2 tileSize = vec2((texSize.x / 6.0) / float(16), (texSize.y / 6.0) / float(9));
+
+    const uvec3 clusterNoZ = uvec3(gl_FragCoord.x / tileSize.x, gl_FragCoord.y / tileSize.y, 0);
+    //
+
+
 
     vec4 sum = vec4(0.0);
     float t = tmin;
@@ -331,33 +345,13 @@ vec4 raymarching(vec3 ro, vec3 rd, float tmin, float tmax, vec3 sceneDepthPositi
 
         // Combine ambient and directional light
         vec3 baseCloudColor = color(den, pos.y);
-        
-        // Cluster usage
-
-        float zFloat = 24;
-        float log2FarDivNear = log2(camera.zFar / camera.zNear);
-        float log2Near = log2(camera.zNear);
-
-        float sliceScaling = zFloat / log2FarDivNear;
-        float sliceBias = -(zFloat * log2Near / log2FarDivNear);
-        uint zIndex = uint(max(log2(t) * sliceScaling + sliceBias, 0.0));
-        vec2 tileSize =
-        vec2((texSize.x / 6.0) / float(16),
-        (texSize.y / 6.0) / float(9));
-
-        uvec3 cluster = uvec3(
-        gl_FragCoord.x / tileSize.x,
-        gl_FragCoord.y / tileSize.y,
-        zIndex);
-        uint clusterIndex =
-        cluster.x +
-        cluster.y * 16 +
-        cluster.z * 16 * 9;
-
-        uint lightCount = lightCells[clusterIndex].count;
-        uint lightIndexOffset = lightCells[clusterIndex].offset;
 
         vec3 scatteredLight = vec3(0.0);
+
+        const uint zIndex = uint(max(log2(t) * sliceScaling + sliceBias, 0.0));
+        const uint clusterIndex = clusterNoZ.x + clusterNoZ.y * 16 + zIndex * 16 * 9;
+        const uint lightCount = lightCells[clusterIndex].count;
+        const uint lightIndexOffset = lightCells[clusterIndex].offset;
         for (int i = 0; i < lightCount; i++)
         {
             uint lightIndex = lightIndices[i + lightIndexOffset];
@@ -367,8 +361,6 @@ vec4 raymarching(vec3 ro, vec3 rd, float tmin, float tmax, vec3 sceneDepthPositi
             lightPos.y -= VOLUMETRIC_HEIGHT_OFFSET; // Offset the light position to match the hole height
             vec3 L = normalize(lightPos - pos);
             float attenuation = CalculateAttenuation(lightPos, pos, light.range);
-        /**vec3 lightColor = light.color.rgb * attenuation * light.intensity;
-            col.rgb += lightColor * col.a;*/
 
             float phase = 1.0; // Or use Henyey-Greenstein, etc.
             // Optionally, add a shadow test here
@@ -420,31 +412,16 @@ void main()
     const ivec2 texSize = textureSize(bindless_color_textures[nonuniformEXT(pc.depthIndex)], 0);
     float depthSample = texture(bindless_depth_textures[nonuniformEXT (pc.depthIndex)], texCoords).r;
 
-
-
-
-    //
-
-
-
-
-    ivec2 pixelCoords = ivec2(texCoords * vec2(texSize));
+    const ivec2 pixelCoords = ivec2(texCoords * vec2(texSize));
     const vec3 earlyRay = rayDirection(camera.fov, texSize, vec2(pixelCoords));
     const vec3 rayDirection = normalize(transpose(mat3(camera.view)) * earlyRay);
 
-    vec2 p = vec2(texCoords * vec2(texSize));
 
-    // Rotate the camera position around the origin
-    vec3 ro = camera.cameraPosition; // Initial camera position
+    vec3 ro = camera.cameraPosition;
     ro.y -= VOLUMETRIC_HEIGHT_OFFSET;
 
-
-    // Compute the ray direction from camera to pixel
-
-    //float linearizedSceneDepth = getLinearSceneDepth(depthSample, camera.zNear, camera.zFar);
-
     vec3 pixelWorldPos = ReconstructWorldPosition(depthSample, texCoords, camera.inverseVP);
-    pixelWorldPos.y -= VOLUMETRIC_HEIGHT_OFFSET; // Offset the pixel world position to match the hole height
+    pixelWorldPos.y -= VOLUMETRIC_HEIGHT_OFFSET;
 
     float dynamicMaxDist = MAX_DIST;
     dynamicMaxDist += max(0.0, ro.y) * 1.1f;
