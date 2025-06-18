@@ -13,6 +13,8 @@
 #include "particle_module.hpp"
 #include "particles/particle_bindings.hpp"
 #include "passes/debug_pass.hpp"
+#include "passes/tonemapping_pass.hpp"
+#include "passes/volumetric_pass.hpp"
 #include "pathfinding/pathfinding_bindings.hpp"
 #include "pathfinding_module.hpp"
 #include "physics/physics_bindings.hpp"
@@ -28,7 +30,6 @@
 #include "utility/random_util.hpp"
 #include "wren_engine.hpp"
 #include "wren_entity.hpp"
-
 #include <steam_module.hpp>
 
 namespace bindings
@@ -93,6 +94,11 @@ void SetFog(WrenEngine& engine, float density)
     engine.instance->GetModule<RendererModule>().GetRenderer()->GetSettings().data.fog.density = density;
 }
 
+void SetGunDirectionAndOrigin(WrenEngine& engine, const glm::vec3& pos, const glm::vec3& dir)
+{
+    engine.instance->GetModule<RendererModule>().GetRenderer()->GetVolumetricPipeline().AddGunShot(pos, dir);
+}
+
 float GetFog(WrenEngine& engine)
 {
     return engine.instance->GetModule<RendererModule>().GetRenderer()->GetSettings().data.fog.density;
@@ -151,6 +157,7 @@ void BindEngineAPI(wren::ForeignModule& module)
         engineAPI.funcExt<bindings::SpawnDecal>("SpawnDecal");
         engineAPI.funcExt<bindings::ResetDecals>("ResetDecals");
         engineAPI.propExt<bindings::GetFog, bindings::SetFog>("Fog");
+        engineAPI.funcExt<bindings::SetGunDirectionAndOrigin>("SetGunDirectionAndOrigin");
         engineAPI.propExt<bindings::GetAmbientStrength, bindings::SetAmbientStrength>("AmbientStrength");
         engineAPI.funcExt<bindings::IsDistribution>("IsDistribution");
         engineAPI.funcExt<bindings::DrawDebugLine>("DrawDebugLine");

@@ -48,6 +48,8 @@
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 
+#include <passes/volumetric_pass.hpp>
+
 Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std::shared_ptr<GraphicsContext>& context, ECSModule& ecs)
     : _context(context)
     , _application(application)
@@ -69,6 +71,7 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
         InitializeHDRTarget();
         InitializeBloomTargets();
         InitializeSSAOTarget();
+        InitializeVolumetricTarget();
         InitializeTonemappingTarget();
         InitializeFXAATarget();
     }
@@ -131,7 +134,8 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
     _geometryPass = std::make_unique<GeometryPass>(_context, *_gBuffers, _gpuScene->MainCameraBatch());
     _shadowPass = std::make_unique<ShadowPass>(_context, *_gpuScene, _gpuScene->ShadowCameraBatch());
     _skydomePass = std::make_unique<SkydomePass>(_context, uvSphere, _hdrTarget, _bloomTarget, _environmentMap, *_gBuffers, *_bloomSettings);
-    _tonemappingPass = std::make_unique<TonemappingPass>(_context, _settings.data.tonemapping, _hdrTarget, _bloomTarget, _tonemappingTarget, *_swapChain, *_gBuffers, *_bloomSettings);
+    _volumetricPass = std::make_unique<VolumetricPass>(_context, _hdrTarget, _bloomTarget, _volumetricTarget, *_gBuffers, *_bloomSettings, _ecs);
+    _tonemappingPass = std::make_unique<TonemappingPass>(_context, _settings.data.tonemapping, _hdrTarget, _bloomTarget, _volumetricTarget, _tonemappingTarget, *_swapChain, *_gBuffers, *_bloomSettings);
     _fxaaPass = std::make_unique<FXAAPass>(_context, _settings.data.fxaa, *_gBuffers, _fxaaTarget, _tonemappingTarget);
     _uiPass = std::make_unique<UIPass>(_context, _fxaaTarget, *_swapChain);
     _bloomDownsamplePass = std::make_unique<BloomDownsamplePass>(_context, _bloomTarget);
@@ -279,11 +283,21 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
         .SetDebugLabelColor(GetColor(ColorType::Lavender))
         .AddOutput(_bloomTarget, FrameGraphResourceType::eAttachment);
 
+    FrameGraphNodeCreation volumetricPass { *_volumetricPass };
+    volumetricPass.SetName("Volumetric pass")
+        .SetDebugLabelColor(GetColor(ColorType::Goldenrod))
+        .AddInput(_hdrTarget, FrameGraphResourceType::eTexture)
+        .AddInput(_bloomTarget, FrameGraphResourceType::eTexture)
+        .AddInput(_gBuffers->Attachments()[1], FrameGraphResourceType::eTexture)
+        .AddInput(_gBuffers->Depth(), FrameGraphResourceType::eTexture)
+        .AddOutput(_volumetricTarget, FrameGraphResourceType::eAttachment);
+
     FrameGraphNodeCreation toneMappingPass { *_tonemappingPass };
     toneMappingPass.SetName("Tonemapping pass")
         .SetDebugLabelColor(GetColor(ColorType::Seafoam))
         .AddInput(_hdrTarget, FrameGraphResourceType::eTexture)
         .AddInput(_bloomTarget, FrameGraphResourceType::eTexture)
+        .AddInput(_volumetricTarget, FrameGraphResourceType::eTexture)
         .AddInput(_gBuffers->Attachments()[1], FrameGraphResourceType::eTexture)
         .AddInput(_gBuffers->Depth(), FrameGraphResourceType::eTexture)
         .AddOutput(_tonemappingTarget, FrameGraphResourceType::eAttachment);
@@ -343,6 +357,7 @@ Renderer::Renderer(ApplicationModule& application, Viewport& viewport, const std
         .AddNode(particlePass)
         .AddNode(bloomDownsamplePass)
         .AddNode(bloomUpsamplePass)
+        .AddNode(volumetricPass)
         .AddNode(toneMappingPass)
         .AddNode(fxaaPass)
         .AddNode(uiPass)
@@ -529,6 +544,15 @@ void Renderer::InitializeTonemappingTarget()
     tonemappingCreation.SetName("Tonemapping Target").SetSize(size.x, size.y).SetFormat(_swapChain->GetFormat()).SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eTransferDst);
 
     _tonemappingTarget = _context->Resources()->ImageResourceManager().Create(tonemappingCreation);
+}
+void Renderer::InitializeVolumetricTarget()
+{
+    auto size = _swapChain->GetImageSize();
+
+    CPUImage volumetricCreation {};
+    volumetricCreation.SetName("Volumetric Target").SetSize(size.x / 6.0, size.y / 6.0).SetFormat(_swapChain->GetFormat()).SetFlags(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eTransferDst);
+
+    _volumetricTarget = _context->Resources()->ImageResourceManager().Create(volumetricCreation);
 }
 void Renderer::InitializeFXAATarget()
 {

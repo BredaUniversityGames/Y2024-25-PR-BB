@@ -14,12 +14,15 @@ class GraphicsContext;
 class TonemappingPass final : public FrameGraphRenderPass
 {
 public:
-    TonemappingPass(const std::shared_ptr<GraphicsContext>& context, const Settings::Tonemapping& settings, ResourceHandle<GPUImage> hdrTarget, ResourceHandle<GPUImage> bloomTarget, ResourceHandle<GPUImage> outputTarget, const SwapChain& _swapChain, const GBuffers& gBuffers, const BloomSettings& bloomSettings);
+    TonemappingPass(const std::shared_ptr<GraphicsContext>& context, const Settings::Tonemapping& settings, ResourceHandle<GPUImage> hdrTarget, ResourceHandle<GPUImage> bloomTarget, ResourceHandle<GPUImage> volumetricTarget, ResourceHandle<GPUImage> outputTarget, const SwapChain& _swapChain, const GBuffers& gBuffers, const BloomSettings& bloomSettings);
     ~TonemappingPass() final;
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
 
     void SetFlashColor(const glm::vec4& color) { _pushConstants.flashColor = color; }
+
+    void SetShotRayOrigin(const glm::vec3& origin) { _pushConstants.rayOrigin = glm::vec4(origin, 0.3f); }
+    void SetShotRayDirection(const glm::vec3& direction) { _pushConstants.rayDirection = glm::vec4(direction, 0.3f); }
 
     NON_COPYABLE(TonemappingPass);
     NON_MOVABLE(TonemappingPass);
@@ -46,7 +49,7 @@ private:
         // Register 1 (16 bytes)
         uint32_t normalRIndex;
         uint32_t tonemappingFunction;
-        uint32_t padding0; // added padding for alignment
+        uint32_t volumetricIndex;
         float exposure;
 
         // Register 2 (16 bytes)
@@ -86,6 +89,9 @@ private:
 
         glm::vec4 flashColor;
         glm::vec4 waterColor;
+
+        glm::vec4 rayOrigin;
+        glm::vec4 rayDirection;
     } _pushConstants;
 
     std::shared_ptr<GraphicsContext> _context;
@@ -94,6 +100,7 @@ private:
     const GBuffers& _gBuffers;
     ResourceHandle<GPUImage> _hdrTarget;
     ResourceHandle<GPUImage> _bloomTarget;
+    ResourceHandle<GPUImage> _volumetricTarget;
     ResourceHandle<GPUImage> _outputTarget;
 
     vk::PipelineLayout _pipelineLayout;
