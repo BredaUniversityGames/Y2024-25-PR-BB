@@ -179,6 +179,11 @@ float density(vec3 pos)
     // Just noise-based, optionally bias for "height" (e.g., less dense at y>2 or y<-2)
     float base = smoothstep(0.5, 1.0, fbm(vec3(pos.x * 0.1, pos.y * 0.2, pos.z * 0.1)));
     float den = base * 1.4 - 0.2 - smoothstep(2.0, 4.0, abs(pos.y));
+
+    // Fade out when z > 105 (starts at 105, fully gone at 110 for example)
+    float zFade = 1.0 - smoothstep(95.0, 100.0, pos.z);
+    den *= zFade;
+
     den = clamp(den, 0.0, 1.0);
 
     for (int i = 0; i < 8; i++) {
