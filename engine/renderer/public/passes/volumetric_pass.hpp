@@ -15,7 +15,7 @@ class GraphicsContext;
 class VolumetricPass final : public FrameGraphRenderPass
 {
 public:
-    VolumetricPass(const std::shared_ptr<GraphicsContext>& context, const Settings::Tonemapping& settings, ResourceHandle<GPUImage> hdrTarget, ResourceHandle<GPUImage> bloomTarget, ResourceHandle<GPUImage> outputTarget, const SwapChain& _swapChain, const GBuffers& gBuffers, const BloomSettings& bloomSettings, ECSModule& ecs);
+    VolumetricPass(const std::shared_ptr<GraphicsContext>& context, ResourceHandle<GPUImage> hdrTarget, ResourceHandle<GPUImage> bloomTarget, ResourceHandle<GPUImage> outputTarget, const GBuffers& gBuffers, const BloomSettings& bloomSettings, ECSModule& ecs);
     ~VolumetricPass() final;
 
     void RecordCommands(vk::CommandBuffer commandBuffer, uint32_t currentFrame, const RenderSceneDescription& scene) final;
@@ -76,8 +76,6 @@ private:
     } _pushConstants;
 
     std::shared_ptr<GraphicsContext> _context;
-    const Settings::Tonemapping& _settings;
-    const SwapChain& _swapChain;
     const GBuffers& _gBuffers;
     ResourceHandle<GPUImage> _hdrTarget;
     ResourceHandle<GPUImage> _bloomTarget;
@@ -94,12 +92,8 @@ private:
 
     const BloomSettings& _bloomSettings;
     float timePassed = 0.0f;
-    const uint32_t MAX_GUN_SHOTS = 8;
     int next_gunshot_index = 0; // Points to where the next shot will be added
     int next_player_pos_index = 0; // Points to where the next player position will be added
-
-    float _playerPosCounterMs = 0;
-    const float _playerPosCounterMaxMs = 300;
 
     ECSModule& _ecs;
     void CreatePipeline();

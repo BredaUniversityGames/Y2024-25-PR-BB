@@ -16,10 +16,8 @@
 #include "components/transform_component.hpp"
 #include "components/transform_helpers.hpp"
 
-VolumetricPass::VolumetricPass(const std::shared_ptr<GraphicsContext>& context, const Settings::Tonemapping& settings, ResourceHandle<GPUImage> hdrTarget, ResourceHandle<GPUImage> bloomTarget, ResourceHandle<GPUImage> outputTarget, const SwapChain& _swapChain, const GBuffers& gBuffers, const BloomSettings& bloomSettings, ECSModule& ecs)
+VolumetricPass::VolumetricPass(const std::shared_ptr<GraphicsContext>& context, ResourceHandle<GPUImage> hdrTarget, ResourceHandle<GPUImage> bloomTarget, ResourceHandle<GPUImage> outputTarget, const GBuffers& gBuffers, const BloomSettings& bloomSettings, ECSModule& ecs)
     : _context(context)
-    , _settings(settings)
-    , _swapChain(_swapChain)
     , _gBuffers(gBuffers)
     , _hdrTarget(hdrTarget)
     , _bloomTarget(bloomTarget)
@@ -73,8 +71,6 @@ void VolumetricPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cu
     for (uint32_t i = 0; i < playerTrailPositions.size(); ++i)
     {
         playerTrailPositions[i].a -= (0.45 * (scene.deltaTime / 1000.0f));
-
-        _playerPosCounterMs = 0;
         // Update the player position trail
         auto cameraView = _ecs.GetRegistry().view<CameraComponent, TransformComponent>();
         for (const auto& [entity, cameraComponent, transformComponent] : cameraView.each())
@@ -84,8 +80,6 @@ void VolumetricPass::RecordCommands(vk::CommandBuffer commandBuffer, uint32_t cu
             AddPlayerPos(position);
             break; // we only need the player
         }
-
-        _playerPosCounterMs += scene.deltaTime;
     }
 
     _pushConstants.time = timePassed;
