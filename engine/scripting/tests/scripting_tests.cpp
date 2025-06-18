@@ -1,5 +1,8 @@
 #include "scripting_context.hpp"
+
+#include <filesystem>
 #include <gtest/gtest.h>
+#include <physfs.hpp>
 #include <spdlog/sinks/ostream_sink.h>
 
 // Every test will initialize a wren virtual machine, better keep memory requirements low
@@ -7,8 +10,31 @@ const VMInitConfig MEMORY_CONFIG {
     { "./", "./game/tests/", "./game/" }, 256ull * 4ull, 256ull, 50
 };
 
+class FileMount
+{
+public:
+    FileMount()
+    {
+        if (!PhysFS::init(""))
+        {
+            bblog::error("Failed initializing PhysFS!\n{}", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
+            return;
+        }
+        if (!PhysFS::mount("./", "/", true))
+        {
+            bblog::error("Failed mounting PhysFS!\n{}", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
+        }
+    }
+
+    ~FileMount()
+    {
+        PHYSFS_deinit();
+    }
+};
+
 TEST(ScriptingContextTests, PrintHelloWorld)
 {
+    FileMount mount {};
     ScriptingContext context { MEMORY_CONFIG };
 
     std::ostringstream oss;
