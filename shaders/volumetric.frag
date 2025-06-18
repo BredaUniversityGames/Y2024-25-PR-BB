@@ -73,50 +73,14 @@ float linearize_depth(float d, float zNear, float zFar)
 
 // adding volumetric fog? god please help me
 
-// --- Custom Uniforms for Hole Parameters ---
-// These uniforms allow external control over the hole's properties.
-// In a typical application, these would be set from the CPU (e.g., JavaScript in WebGL).
+// --- Custom variables ---
 #define VOLUMETRIC_HEIGHT_OFFSET 10.0
-float iHoleRadius = 0.1; // Radius of the hole
-float iHoleFeather = 0.1; // Smoothness of the hole edges (blends from iHoleRadius to iHoleRadius + iHoleFeather)
+#define  HOLE_FEATHER 0.1
 // ---- Constants ----
 #define MAX_STEPS 128
 #define MAX_DIST 64.0
 
 // ---- Noise / Hash as in your code ----
-/**float hash(vec3 p) {
-    return fract(sin(dot(p, vec3(12.9898, 78.233, 37.719))) * 43758.5453123);
-}
-float noise(vec3 x) {
-    vec3 i = floor(x);
-    vec3 f = fract(x);
-    f = f * f * (3.0 - 2.0 * f);
-    float n000 = hash(i + vec3(0, 0, 0));
-    float n100 = hash(i + vec3(1, 0, 0));
-    float n010 = hash(i + vec3(0, 1, 0));
-    float n110 = hash(i + vec3(1, 1, 0));
-    float n001 = hash(i + vec3(0, 0, 1));
-    float n101 = hash(i + vec3(1, 0, 1));
-    float n011 = hash(i + vec3(0, 1, 1));
-    float n111 = hash(i + vec3(1, 1, 1));
-    float res = mix(
-        mix(mix(n000, n100, f.x), mix(n010, n110, f.x), f.y),
-        mix(mix(n001, n101, f.x), mix(n011, n111, f.x), f.y),
-        f.z
-    );
-    return res;
-}
-float fractal_noise(vec3 p) {
-    float f = 0.0;
-    p = p - vec3(1.0, 1.0, 0.0) * pc.time * 0.1;
-    p = p * 3.0;
-    f += 0.50000 * noise(p); p = 2.0 * p;
-    f += 0.25000 * noise(p); p = 2.0 * p;
-    f += 0.12500 * noise(p); p = 2.0 * p;
-    f += 0.06250 * noise(p); p = 2.0 * p;
-    f += 0.03125 * noise(p);
-    return f;
-}*/
 
 mat3 m = mat3(0.00, 1.60, 1.20, -1.60, 0.72, -0.96, -1.20, -0.96, 1.28);
 // hash function
@@ -200,7 +164,7 @@ float density(vec3 pos)
         //rayDir.y -= VOLUMETRIC_HEIGHT_OFFSET; // Offset the ray direction to match the hole height
 
         float dpr = distPointToRay(pos, origin, rayDir);
-        float holeInfluence = smoothstep(decay + iHoleFeather, decay, dpr);
+        float holeInfluence = smoothstep(decay + HOLE_FEATHER, decay, dpr);
         den *= (1.0 - holeInfluence);
         // Hole (as before)
     }
@@ -225,31 +189,12 @@ float density(vec3 pos)
     vec3 playerPos = camera.cameraPosition;
     playerPos.y -= VOLUMETRIC_HEIGHT_OFFSET; // Offset the player position to match the hole height
     float dpr = distance(playerPos, pos);
-    float holeInfluence = smoothstep(1.6 + iHoleFeather, 1.6, dpr);
+    float holeInfluence = smoothstep(1.6 + HOLE_FEATHER, 1.6, dpr);
     den *= (1.0 - holeInfluence);
-
-    // Add decay based on distance to the volume center
-
-/**
-    float distanceToVolume = distance(pos, vec3(-5.0, 9.595 - VOLUMETRIC_HEIGHT_OFFSET, 62.0));
-    float decayFactor = smoothstep(0.0, 1.0, distanceToVolume * 0.05);
-    den *= (1.0 - decayFactor);
-*/
 
     den = clamp(den, 0.0, 0.85);
     return den;
 }
-/**vec3 color(float den, float y)
-{
-    vec3 result = mix(vec3(1.0, 0.9, 0.8 + sin(pc.time) * 0.1),
-                      vec3(0.5, 0.15, 0.1 + sin(pc.time) * 0.1), den * den);
-    // Apply a vertical (y) gradient, can be subtle for infinite volume
-    vec3 colBot = 3.0 * vec3(1.0, 0.9, 0.5);
-    vec3 colTop = 2.0 * vec3(0.5, 0.55, 0.55);
-    result *= mix(colBot, colTop, smoothstep(-3.0, 3.0, y));
-    result *= vec3(0.1, 0.05, 0.05);
-    return result;
-}*/
 
 vec3 color(float den, float y)
 {
@@ -265,23 +210,6 @@ vec3 color(float den, float y)
     return result;
 }
 
-
-// ---- Camera ----
-mat3 setCamera(vec3 ro, vec3 ta, float cr) {
-    vec3 cw = normalize(ta - ro);
-    vec3 cp = vec3(sin(cr), cos(cr), 0.0);
-    vec3 cu = normalize(cross(cw, cp));
-    vec3 cv = normalize(cross(cu, cw));
-    return mat3(cu, cv, cw);
-}
-float BeerLambert(float absorptionCoefficient, float distanceTraveled)
-{
-    return exp(-absorptionCoefficient * distanceTraveled);
-}
-float LinearDepth(float z, float near, float far)
-{
-    return near * far / (far + z * (near - far));
-}
 
 float CalculateAttenuation(vec3 lightPos, vec3 position, float range) {
     float distance = length(lightPos - position);
