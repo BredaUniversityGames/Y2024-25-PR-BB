@@ -17,6 +17,11 @@ std::string ResolveImport(
     auto parent = Filepath(importer).parent_path();
     auto relative = (Filepath(parent) / Filepath(name)).lexically_normal().generic_string();
 
+    if (name == "engine_api.wren")
+    {
+        return "game/engine_api.wren";
+    }
+
     if (fileIO::Exists(relative))
     {
         return relative;

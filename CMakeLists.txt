@@ -59,9 +59,9 @@ add_subdirectory(engine)
 
 set(APP_ICON_RESOURCE_WINDOWS "${CMAKE_CURRENT_SOURCE_DIR}/icon.rc")
 if (EXISTS "${APP_ICON_RESOURCE_WINDOWS}")
-    unset(APP_ICON_RESOURCE_WINDOWS)
     message(STATUS "App icon resource found")
 else ()
+    unset(APP_ICON_RESOURCE_WINDOWS)
     message(STATUS "App icon resource not found!")
 endif ()
 
