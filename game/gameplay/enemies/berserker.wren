@@ -1,4 +1,4 @@
-import "engine_api.wren" for Vec3, Engine, ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, Perlin, Random, Achievements, Stat, Stats
+import "engine_api.wren" for Vec3, Vec2, Engine, ShapeFactory, Rigidbody, PhysicsObjectLayer, RigidbodyComponent, CollisionShape, Math, Audio, SpawnEmitterFlagBits, Perlin, Random, Achievements, Stat, Stats
 import "../player.wren" for PlayerVariables
 
 import "../soul.wren" for Soul, SoulManager, SoulType
@@ -7,6 +7,12 @@ import "gameplay/flash_system.wren" for FlashSystem
 import "../station.wren" for PowerUpType
 
 class BerserkerEnemy {
+
+    seekDepth { 4.0 }
+    rayCount { 6 }
+    rayAngle { 20 }
+
+    offsetToKnees { Vec3.new(0.0, -1.3, 0.0) }
 
     construct new(engine, spawnPosition) {
         
@@ -24,6 +30,10 @@ class BerserkerEnemy {
         _attackTiming = 1200 // TODO: Should be added to small melee enemies
         _recoveryMaxTime = 500
         _deathTimerMax = 3000
+        _reasonTimeout = 2000
+        _waypointRadius = 5.0
+        _honeInRadius = 30.0
+        _honeInMaxAltitude = 4.0
 
         _growlSFX = "event:/SFX/DemonGrowl"
         _hurtSFX = "event:/SFX/DemonHurt"
@@ -65,7 +75,7 @@ class BerserkerEnemy {
 
         var rb = Rigidbody.new(engine.GetPhysics(), colliderShape, PhysicsObjectLayer.eENEMY(), false)
         var body = _rootEntity.AddRigidbodyComponent(rb)
-        body.SetGravityFactor(2.2)
+        body.SetGravityFactor(10.0)
 
         var animations = _meshEntity.GetAnimationControlComponent()
         animations.Play("Walk", 0.528, true, 1.0, true)
@@ -74,7 +84,6 @@ class BerserkerEnemy {
 
         _currentPath = null
         _currentPathNodeIdx = null
-        _honeInRadius = 30.0
 
         _isAlive = true
 
@@ -110,7 +119,7 @@ class BerserkerEnemy {
         return false
     }
 
-    DecreaseHealth(amount, engine, coinManager, soulManager, waveSystem, playerVariables) {
+    DecreaseHealth(amount, engine, coinManager, soulManager, waveSystem, playerVariables, position) {
         var animations = _meshEntity.GetAnimationControlComponent()
         var body = _rootEntity.GetRigidbodyComponent()
 
@@ -121,7 +130,7 @@ class BerserkerEnemy {
 
         var forward = Math.ToVector(body.GetRotation()).mulScalar(-1.8)
 
-        transform.translation = body.GetPosition() + Vec3.new(forward.x, 2.0, forward.z)
+        transform.translation = position
         var lifetime = entity.AddLifetimeComponent()
         lifetime.lifetime = 170.0
         var emitterFlags = SpawnEmitterFlagBits.eIsActive() | SpawnEmitterFlagBits.eSetCustomPosition()// |
@@ -171,11 +180,9 @@ class BerserkerEnemy {
         } else {
             //animations.Play("Hit", 1.0, false, 0.1, false)
             //_rootEntity.GetRigidbodyComponent().SetVelocity(Vec3.new(0.0, 0.0, 0.0))
-            var hitmarkerSFX = engine.GetAudio().PlayEventOnce(_hitSFX)
             var eventInstance = engine.GetAudio().PlayEventOnce(_hurtSFX)
             var audioEmitter = _rootEntity.GetAudioEmitterComponent()
             audioEmitter.AddEvent(eventInstance)
-            audioEmitter.AddEvent(hitmarkerSFX)
         }
     }
 
@@ -190,6 +197,7 @@ class BerserkerEnemy {
     }
 
     Update(playerPos, playerVariables, engine, dt, soulManager, coinManager, flashSystem) {
+
         var body = _rootEntity.GetRigidbodyComponent()
         var pos = body.GetPosition()
         var animations = _meshEntity.GetAnimationControlComponent()
@@ -210,14 +218,18 @@ class BerserkerEnemy {
                     _rootEntity.GetAudioEmitterComponent().AddEvent(engine.GetAudio().PlayEventOnce(_attackHitSFX))
                     if (!playerVariables.IsInvincible()) {
 
-                        var forward = Math.ToVector(_rootEntity.GetTransformComponent().rotation).mulScalar(-1)
+                        var forward = Math.ToVector(_rootEntity.GetTransformComponent().rotation).mulScalar(-1).normalize()
                         var toPlayer = (playerPos - pos).normalize()
 
-                        if (Math.Dot(forward, toPlayer) >= 0.8 && Math.Distance(playerPos, pos) < _attackRange) {
+                        var forward2D = Vec2.new(forward.x, forward.z).normalize()
+                        var toPlayer2D = Vec2.new(toPlayer.x, toPlayer.z).normalize()
+
+                        if (Math.Dot2D(forward2D, toPlayer2D) >= 0.8 && Math.Distance(playerPos, pos) < _attackRange) {
                             var rayHitInfo = engine.GetPhysics().ShootMultipleRays(pos, toPlayer, _attackRange, 3, 20)
                             var isOccluded = false
                             if (!rayHitInfo.isEmpty) {
                                 for (rayHit in rayHitInfo) {
+
                                     var hitEntity = rayHit.GetEntity(engine.GetECS())
                                     if (hitEntity == _rootEntity || hitEntity.HasEnemyTag()) {
                                         continue
@@ -325,9 +337,8 @@ class BerserkerEnemy {
             }
             
             _noiseOffset = _noiseOffset + dt * 0.001 * __flickerSpeed
-            var noise = __perlin.Noise1D(_noiseOffset)
-            var flickerIntensity = __baseIntensity + ((noise - 0.5) * __flickerRange)
-            _pointLight.intensity = flickerIntensity
+            _pointLight.intensity = __baseIntensity + ((__perlin.Noise1D(_noiseOffset) - 0.5) * __flickerRange)
+
         } else {
             _deathTimer = _deathTimer - dt
             
@@ -343,82 +354,73 @@ class BerserkerEnemy {
                 // Wait for death animation before starting descent
                 if(_deathTimerMax - _deathTimer > 1800) {
                     transparencyComponent.transparency =  _deathTimer / (_deathTimerMax-1000)
-
-                    var newPos = pos - Vec3.new(0, 1, 0).mulScalar(1.0 * 0.00075 * dt)
-                    body.SetTranslation(newPos)
+                    body.SetTranslation(pos - Vec3.new(0, 1, 0).mulScalar(1.0 * 0.00075 * dt))
                 }
             }
         }
     }
 
     DoPathfinding(playerPos, engine, dt) {
+
         var body = _rootEntity.GetRigidbodyComponent()
         var pos = body.GetPosition()
 
-        if(Math.Distance(position, engine.GetECS().GetEntityByName("Player").GetTransformComponent().GetWorldTranslation()) > _honeInRadius) {
+        var distToPlayer = Math.Distance(pos, playerPos)
+        var altitudeToPlayer = Math.Distance(Vec3.new(0.0, pos.y, 0.0), Vec3.new(0.0, playerPos.y, 0.0))
+
+        if(distToPlayer > _honeInRadius || altitudeToPlayer > _honeInMaxAltitude) {
             _reasonTimer = _reasonTimer + dt
-            if(_reasonTimer > 2000) {
-                this.FindNewPath(engine)
+            if(_reasonTimer > _reasonTimeout) {
+                this.FindNewPath(engine, playerPos)
                 _reasonTimer = 0
             }
         } else {
             _currentPath = null
-            _reasonTimer = 2001
+            _reasonTimer = _reasonTimeout + 1.0
         }
+
+        var forwardVector = Vec3.new(0.0, 0.0, 0.0)
 
         // Pathfinding logic
         if(_currentPath != null && _currentPath.GetWaypoints().count > 0) {
-            var bias = 0.01
-            var waypoint = _currentPath.GetWaypoints()[_currentPathNodeIdx]
-
-            if(Math.Distance(waypoint.center, pos) < 3.0 + bias) {
+           
+            if (_currentPath.ShouldGoNextWaypoint(_currentPathNodeIdx, pos, offsetToKnees.y + 6.0)) {
                 _currentPathNodeIdx = _currentPathNodeIdx + 1
-                if(_currentPathNodeIdx == _currentPath.GetWaypoints().count) {
+
+                if (_currentPathNodeIdx >= _currentPath.Count()) {
                     body.SetVelocity(Vec3.new(0.0, 0.0, 0.0))
                     _currentPath = null
                     return
                 }
-                waypoint = _currentPath.GetWaypoints()[_currentPathNodeIdx]
             }
 
-            var p1 = _currentPath.GetWaypoints()[_currentPathNodeIdx]
-            var p2 = p1
-            if (_currentPathNodeIdx + 1 < _currentPath.GetWaypoints().count) {
-                p2 = _currentPath.GetWaypoints()[_currentPathNodeIdx + 1]
+            forwardVector = _currentPath.GetFollowDirection(pos, _currentPathNodeIdx)
+
+        } else {
+
+            forwardVector = (playerPos - position).normalize()
+
+            var localSteerForward = engine.GetPhysics().LocalEnemySteering(
+                body, 
+                forwardVector, 
+                offsetToKnees, 
+                rayAngle, rayCount
+            ) 
+
+            if(localSteerForward) {
+                forwardVector = localSteerForward
             }
-
-            var dst = Math.Distance(pos, p1.center)
-            var target = Math.MixVec3(p1.center, p2.center, dst * bias)
-            var forwardVector = (target - pos).normalize()
-
-            _rootEntity.GetRigidbodyComponent().SetVelocity(forwardVector.mulScalar(_maxVelocity))
-            
-            // Set forward rotation
-            var endRotation = Math.LookAt(Vec3.new(forwardVector.x, 0, forwardVector.z), Vec3.new(0, 1, 0))
-            var startRotation = body.GetRotation()
-            body.SetRotation(Math.Slerp(startRotation, endRotation, 0.01 *dt))
-        }else{
-            var forwardVector = playerPos - position
-            forwardVector.y = 0
-            forwardVector = (forwardVector.normalize() + _rootEntity.GetRigidbodyComponent().GetVelocity())
-            var maxVelocityScalar = 1.0
-            if(forwardVector.length() >= _maxVelocity) {
-                maxVelocityScalar = _maxVelocity / forwardVector.length()
-            }
-
-            var factor = Vec3.new(maxVelocityScalar, 1.0, maxVelocityScalar)
-            _rootEntity.GetRigidbodyComponent().SetVelocity(forwardVector * factor)
-
-            var endRotation = Math.LookAt(Vec3.new(forwardVector.x, 0, forwardVector.z), Vec3.new(0, 1, 0))
-            var startRotation = body.GetRotation()
-            body.SetRotation(Math.Slerp(startRotation, endRotation, 0.01 *dt))
         }
+
+        forwardVector = (body.GetVelocity() + forwardVector).normalize()
+        body.SetVelocity(forwardVector.mulScalar(_maxVelocity))
+
+        var endRotation = Math.LookAt(Vec3.new(forwardVector.x, 0, forwardVector.z), Vec3.new(0, 1, 0))
+        body.SetRotation(Math.Slerp(body.GetRotation(), endRotation, 0.01 *dt))
     }
 
-    FindNewPath(engine) {
-        var startPos = position
-        _currentPath = engine.GetPathfinding().FindPath(startPos, engine.GetECS().GetEntityByName("Player").GetTransformComponent().GetWorldTranslation())
-        
+    FindNewPath(engine, playerPos) {
+        _currentPath = engine.GetPathfinding().FindPath(this.position, playerPos)
         _currentPathNodeIdx = 1
     }
 

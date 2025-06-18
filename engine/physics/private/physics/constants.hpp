@@ -1,6 +1,7 @@
 #pragma once
 #include <Jolt/Jolt.h>
 
+constexpr float PHYSICS_MAX_DT = 200.0f;
 constexpr float PHYSICS_GRAVITATIONAL_CONSTANT = 9.81f;
 
 // This is the max amount of rigid bodies that you can add to the physics system. If you try to add more you'll get an error.

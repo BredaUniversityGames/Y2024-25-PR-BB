@@ -116,7 +116,7 @@ class RangedEnemy {
         return false
     }
 
-    DecreaseHealth(amount, engine, coinManager, soulManager, waveSystem, playerVariables) {
+    DecreaseHealth(amount, engine, coinManager, soulManager, waveSystem, playerVariables, position) {
         var body = _rootEntity.GetRigidbodyComponent()
         _health = Math.Max(_health - amount, 0)
 
@@ -174,11 +174,7 @@ class RangedEnemy {
 
         } else {
             _rootEntity.GetRigidbodyComponent().SetVelocity(Vec3.new(0.0, 0.0, 0.0))
-            //_hitState = true
-            //_movingState = false
-            //_evaluateState = false
-            //_attackingState = false
-            //_recoveryState = false
+
             _hasTakenDamage = true
             _hasDashedFromDamage = false
 

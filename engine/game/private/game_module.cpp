@@ -180,6 +180,7 @@ ModuleTickOrder GameModule::Init(Engine& engine)
 
     auto openControlsPause = [this, &engine]()
     {
+        this->_controlsMenu.lock()->UpdateBindings();
         this->PushUIMenu(this->_controlsMenu);
         this->PushPreviousFocusedElement(_pauseMenu.lock()->controlsButton);
         engine.GetModule<UIModule>().uiInputContext.focusedUIElement = this->_controlsMenu.lock()->backButton;
@@ -259,6 +260,7 @@ void GameModule::ApplySettings(Engine& engine)
 
 void GameModule::Shutdown(MAYBE_UNUSED Engine& engine)
 {
+    gameSettings.SaveToFile(GAME_SETTINGS_FILE);
 }
 
 std::optional<std::shared_ptr<MainMenu>> GameModule::GetMainMenu()

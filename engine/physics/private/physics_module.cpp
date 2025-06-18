@@ -81,7 +81,7 @@ void PhysicsModule::Shutdown(MAYBE_UNUSED Engine& engine)
 
 void PhysicsModule::Tick(MAYBE_UNUSED Engine& engine)
 {
-    float deltatimeSeconds = engine.GetModule<TimeModule>().GetDeltatime().count() * 0.001f;
+    float deltatimeSeconds = glm::min(engine.GetModule<TimeModule>().GetDeltatime().count(), PHYSICS_MAX_DT) * 0.001f;
 
     // This is being optimistic: we always do one collision step no matter how small the dt
     const int updatesNeeded = std::min(static_cast<int>(glm::ceil(deltatimeSeconds / PHYSICS_STEPS_PER_SECOND)), PHYSICS_MAX_STEPS_PER_FRAME);
@@ -128,7 +128,7 @@ std::vector<RayHitInfo> PhysicsModule::ShootRay(const glm::vec3& origin, const g
 
     if (_drawRays)
     {
-        if(_clearDrawnRaysPerFrame)
+        if (_clearDrawnRaysPerFrame)
             _debugRenderer->DrawLine(ray.mOrigin, ray.mOrigin + ray.mDirection, JPH::Color::sRed);
         else
             _debugRenderer->AddPersistentLine(ray.mOrigin, ray.mOrigin + ray.mDirection, JPH::Color::sRed);
@@ -154,8 +154,10 @@ std::vector<RayHitInfo> PhysicsModule::ShootRay(const glm::vec3& origin, const g
 
         if (hitEntity != entt::null)
         {
+            hitInfos[iterator].bodyID = hit.mBodyID;
             hitInfos[iterator].entity = hitEntity;
         }
+
         hitInfos[iterator].position = origin + hit.mFraction * ((direction * distance));
         hitInfos[iterator].hitFraction = hit.mFraction;
 
@@ -203,6 +205,9 @@ std::vector<RayHitInfo> PhysicsModule::ShootMultipleRays(const glm::vec3& origin
             results.insert(results.end(), rayHit.begin(), rayHit.end());
         }
     }
+
+    std::sort(results.begin(), results.end(), [&origin](const RayHitInfo& a, const RayHitInfo& b)
+        { return glm::distance(origin, a.position) < glm::distance(origin, b.position); });
 
     return results;
 }
