@@ -171,7 +171,7 @@ class Pistol {
             var muzzleLight = muzzleLightEntity.AddPointLightComponent()
             muzzleLight.color = Vec3.new(200/255, 83/255, 33/255)
             muzzleLight.range = 20.0
-            muzzleLight.intensity = 128.0
+            muzzleLight.intensity = 112.0
 
             // 1 - ((fov - minFov) / (maxFov - minFov)): minFov=50 maxFov=150
             var mul = 1 - ((fov - 50) / 100)

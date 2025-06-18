@@ -9,6 +9,7 @@
 #include <memory>
 
 class BloomSettings;
+class ECSModule;
 class GraphicsContext;
 
 class VolumetricPass final : public FrameGraphRenderPass

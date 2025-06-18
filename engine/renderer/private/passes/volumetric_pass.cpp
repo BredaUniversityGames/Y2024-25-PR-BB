@@ -1,6 +1,7 @@
 ﻿#include "passes/volumetric_pass.hpp"
 
 #include "bloom_settings.hpp"
+#include "ecs_module.hpp"
 #include "gpu_scene.hpp"
 #include "graphics_context.hpp"
 #include "graphics_resources.hpp"
