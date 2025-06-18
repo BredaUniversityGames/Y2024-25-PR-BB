@@ -61,7 +61,7 @@ stbi_uc* LoadImageFromIfstream(PhysFS::ifstream& file, int32_t* x, int32_t* y, i
 class FileSystem
 {
 public:
-    FileSystem()
+    FileSystem(bool useStandard)
     {
         if (!PhysFS::init(""))
         {
@@ -69,17 +69,20 @@ public:
             return;
         }
 
-#ifdef DISTRIBUTION
-        if (!PhysFS::mount("data.bin", "", true))
+        if (!useStandard)
         {
-            bblog::error("Failed mounting PhysFS!\n{}", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
+            if (!PhysFS::mount("data.bin", "", true))
+            {
+                bblog::error("Failed mounting PhysFS!\n{}", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
+            }
         }
-#else
-        if (!PhysFS::mount("./", "/", true))
+        else
         {
-            bblog::error("Failed mounting PhysFS!\n{}", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
+            if (!PhysFS::mount("./", "/", true))
+            {
+                bblog::error("Failed mounting PhysFS!\n{}", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
+            }
         }
-#endif
     }
 
     ~FileSystem()

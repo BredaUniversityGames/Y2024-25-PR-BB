@@ -16,7 +16,7 @@ const VMInitConfig MEMORY_CONFIG {
 
 TEST(MainScriptTests, MainScript)
 {
-    fileIO::FileSystem system {};
+    fileIO::FileSystem system { true };
 
     ScriptingContext context { MEMORY_CONFIG };
     context.GetVM().module("Engine.wren").klass<WrenEngine>("Engine");

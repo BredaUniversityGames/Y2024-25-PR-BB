@@ -23,8 +23,11 @@ int Main()
     bblog::StartWritingToFile();
 #endif
 
-    fileIO::FileSystem system {}; // RAII wrapper for mounting the file system.
-
+#ifdef DISTRIBUTION
+    fileIO::FileSystem system { false }; // RAII wrapper for mounting the file system.
+#else
+    fileIO::FileSystem system { true }; // RAII wrapper for mounting the file system.
+#endif
     MainEngine instance;
     Stopwatch startupTimer {};
 

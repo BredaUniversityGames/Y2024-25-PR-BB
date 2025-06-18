@@ -38,7 +38,7 @@ std::string Vec3ToString(glm::vec3& v)
 
 TEST(ForeignDataTests, ForeignBasicClass)
 {
-    fileIO::FileSystem system {};
+    fileIO::FileSystem system { true };
 
     ScriptingContext context { MEMORY_CONFIG };
 
@@ -69,7 +69,7 @@ TEST(ForeignDataTests, ForeignBasicClass)
 
 TEST(ForeignDataTests, EngineWrapper)
 {
-    fileIO::FileSystem system {};
+    fileIO::FileSystem system { true };
 
     MainEngine e {};
     e.AddModule<TimeModule>();

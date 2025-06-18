@@ -13,7 +13,7 @@ const VMInitConfig MEMORY_CONFIG {
 
 TEST(ScriptingContextTests, PrintHelloWorld)
 {
-    fileIO::FileSystem system {};
+    fileIO::FileSystem system { true };
 
     ScriptingContext context { MEMORY_CONFIG };
 
@@ -32,7 +32,7 @@ TEST(ScriptingContextTests, PrintHelloWorld)
 
 TEST(ScriptingContextTests, ModuleImports)
 {
-    fileIO::FileSystem system {};
+    fileIO::FileSystem system { true };
 
     ScriptingContext context { MEMORY_CONFIG };
 
