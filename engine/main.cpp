@@ -23,7 +23,7 @@ int Main()
 #endif
 
 #ifdef DISTRIBUTION
-    fileIO::FileSystem system { false }; // RAII wrapper for mounting the file system.
+    fileIO::Init(false); // RAII wrapper for mounting the file system.
 #else
     fileIO::Init(true); // RAII wrapper for mounting the file system.
 #endif
