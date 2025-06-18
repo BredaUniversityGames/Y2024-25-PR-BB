@@ -359,7 +359,6 @@ vec4 raymarching(vec3 ro, vec3 rd, float tmin, float tmax, vec3 sceneDepthPositi
 
             vec3 lightPos = light.position.xyz;
             lightPos.y -= VOLUMETRIC_HEIGHT_OFFSET; // Offset the light position to match the hole height
-            vec3 L = normalize(lightPos - pos);
             float attenuation = CalculateAttenuation(lightPos, pos, light.range);
 
             float phase = 1.0; // Or use Henyey-Greenstein, etc.
