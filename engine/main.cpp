@@ -25,45 +25,52 @@ int Main()
 #ifdef DISTRIBUTION
     fileIO::FileSystem system { false }; // RAII wrapper for mounting the file system.
 #else
-    fileIO::FileSystem system { true }; // RAII wrapper for mounting the file system.
+    fileIO::Init(true); // RAII wrapper for mounting the file system.
 #endif
-    MainEngine instance;
-    Stopwatch startupTimer {};
 
+    int result;
     {
-        ZoneScopedN("Engine Module Initialization");
+        MainEngine instance;
+        Stopwatch startupTimer {};
 
-        instance
-            .AddModule<ThreadModule>()
-            .AddModule<ECSModule>()
-            .AddModule<TimeModule>()
-            .AddModule<SteamModule>()
-            .AddModule<ApplicationModule>()
-            .AddModule<PhysicsModule>()
-            .AddModule<RendererModule>()
-            .AddModule<PathfindingModule>()
-            .AddModule<AudioModule>()
-            .AddModule<UIModule>()
-            .AddModule<ParticleModule>()
-            .AddModule<GameModule>()
-            .AddModule<InspectorModule>()
-            //.AddModule<AnalyticsModule>()
-            .AddModule<ScriptingModule>();
+        {
+            ZoneScopedN("Engine Module Initialization");
+
+            instance
+                .AddModule<ThreadModule>()
+                .AddModule<ECSModule>()
+                .AddModule<TimeModule>()
+                .AddModule<SteamModule>()
+                .AddModule<ApplicationModule>()
+                .AddModule<PhysicsModule>()
+                .AddModule<RendererModule>()
+                .AddModule<PathfindingModule>()
+                .AddModule<AudioModule>()
+                .AddModule<UIModule>()
+                .AddModule<ParticleModule>()
+                .AddModule<GameModule>()
+                .AddModule<InspectorModule>()
+                //.AddModule<AnalyticsModule>()
+                .AddModule<ScriptingModule>();
+        }
+
+        {
+            ZoneScopedN("Game Script Setup");
+            auto& scripting = instance.GetModule<ScriptingModule>();
+
+            scripting.ResetVM();
+            scripting.GenerateEngineBindingsFile();
+            scripting.SetMainScript(instance, "game/main_menu.wren");
+
+            instance.GetModule<TimeModule>().ResetTimer();
+        }
+
+        bblog::info("{}ms taken for complete startup!", startupTimer.GetElapsed().count());
+        result = instance.Run();
     }
 
-    {
-        ZoneScopedN("Game Script Setup");
-        auto& scripting = instance.GetModule<ScriptingModule>();
-
-        scripting.ResetVM();
-        scripting.GenerateEngineBindingsFile();
-        scripting.SetMainScript(instance, "game/main_menu.wren");
-
-        instance.GetModule<TimeModule>().ResetTimer();
-    }
-
-    bblog::info("{}ms taken for complete startup!", startupTimer.GetElapsed().count());
-    return instance.Run();
+    fileIO::Deinit();
+    return result;
 }
 
 #if defined(_WIN32) && defined(DISTRIBUTION)

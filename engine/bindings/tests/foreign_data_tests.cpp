@@ -38,7 +38,7 @@ std::string Vec3ToString(glm::vec3& v)
 
 TEST(ForeignDataTests, ForeignBasicClass)
 {
-    fileIO::FileSystem system { true };
+    fileIO::Init(true);
 
     ScriptingContext context { MEMORY_CONFIG };
 
@@ -65,11 +65,13 @@ TEST(ForeignDataTests, ForeignBasicClass)
 
     EXPECT_TRUE(result.has_value());
     EXPECT_NE(oss.str().find("[Script] 1, 2, 3"), std::string::npos);
+
+    fileIO::Deinit();
 }
 
 TEST(ForeignDataTests, EngineWrapper)
 {
-    fileIO::FileSystem system { true };
+    fileIO::Init(true);
 
     MainEngine e {};
     e.AddModule<TimeModule>();
@@ -97,4 +99,6 @@ TEST(ForeignDataTests, EngineWrapper)
     test_class.func("test(_)")(WrenEngine { &e });
 
     EXPECT_NE(oss.str().find("[Script] 0"), std::string::npos);
+
+    fileIO::Deinit();
 }

@@ -71,7 +71,7 @@ public:
 class ofstream : public base_fstream, public std::ostream
 {
 public:
-    ofstream(string const& filename, mode writeMode = WRITE);
+    ofstream(string const& filename);
     virtual ~ofstream();
 };
 

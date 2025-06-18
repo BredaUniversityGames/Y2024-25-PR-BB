@@ -50,44 +50,11 @@ bool Exists(const std::string& path);
 /// </summary>
 bool MakeDirectory(const std::string& path);
 
-/// <summary>
-/// Check the last time a file was modified. Nullopt if file doesn't exist
-/// </summary>
-std::optional<FileTime> GetLastModifiedTime(const std::string& path);
-
 float* LoadFloatImageFromIfstream(PhysFS::ifstream& file, int32_t* x, int32_t* y, int32_t* channels_in_file, int32_t desired_channels);
 stbi_uc* LoadImageFromIfstream(PhysFS::ifstream& file, int32_t* x, int32_t* y, int32_t* channels_in_file, int32_t desired_channels);
 
-class FileSystem
-{
-public:
-    FileSystem(bool useStandard)
-    {
-        if (!PhysFS::init(""))
-        {
-            bblog::error("Failed initializing PhysFS!\n{}", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
-            return;
-        }
+void Init(bool useStandard);
 
-        if (!useStandard)
-        {
-            if (!PhysFS::mount("data.bin", "", true))
-            {
-                bblog::error("Failed mounting PhysFS!\n{}", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
-            }
-        }
-        else
-        {
-            if (!PhysFS::mount("./", "/", true))
-            {
-                bblog::error("Failed mounting PhysFS!\n{}", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
-            }
-        }
-    }
+void Deinit();
 
-    ~FileSystem()
-    {
-        PHYSFS_deinit();
-    }
-};
 };

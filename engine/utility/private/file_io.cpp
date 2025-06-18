@@ -14,8 +14,9 @@ std::optional<PhysFS::ifstream> fileIO::OpenReadStream(const std::string& path)
     {
         return std::optional<PhysFS::ifstream> { path };
     }
-    catch (...)
+    catch (const std::exception& exception)
     {
+        bblog::error("File error: {}", exception.what());
         return std::nullopt;
     }
 }
@@ -29,10 +30,11 @@ std::optional<PhysFS::ofstream> fileIO::OpenWriteStream(const std::string& path)
 
     try
     {
-        return std::nullopt; // std::optional<PhysFS::ofstream> { path };
+        return std::optional<PhysFS::ofstream> { path };
     }
-    catch (...)
+    catch (const std::exception& exception)
     {
+        bblog::error("File error: {}", exception.what());
         return std::nullopt;
     }
 }
@@ -45,20 +47,6 @@ bool fileIO::Exists(const std::string& path)
 bool fileIO::MakeDirectory(const std::string& path)
 {
     return PhysFS::mkdir(path);
-}
-
-std::optional<fileIO::FileTime> fileIO::GetLastModifiedTime(const std::string& path)
-{
-
-    if (Exists(path))
-    {
-        // auto lastModTime = PhysFS::getLastModTime(path); // TODO: Figure out what unit this is and convert to chronos
-        return fileIO::FileTime {};
-    }
-    else
-    {
-        return std::nullopt;
-    }
 }
 
 std::vector<std::byte> fileIO::DumpStreamIntoBytes(std::istream& stream)
@@ -134,4 +122,33 @@ stbi_uc* fileIO::LoadImageFromIfstream(PhysFS::ifstream& file, int32_t* x, int32
     };
 
     return stbi_load_from_callbacks(&callbacks, &ctx, x, y, channels_in_file, desired_channels);
+}
+void fileIO::Init(bool useStandard)
+{
+    if (!PhysFS::init(""))
+    {
+        bblog::error("Failed initializing PhysFS!\n{}", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
+        return;
+    }
+
+    PhysFS::setWriteDir("./");
+
+    if (!useStandard)
+    {
+        if (!PhysFS::mount("data.bin", "", true))
+        {
+            bblog::error("Failed mounting PhysFS!\n{}", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
+        }
+    }
+    else
+    {
+        if (!PhysFS::mount("./", "/", true))
+        {
+            bblog::error("Failed mounting PhysFS!\n{}", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
+        }
+    }
+}
+void fileIO::Deinit()
+{
+    PHYSFS_deinit();
 }

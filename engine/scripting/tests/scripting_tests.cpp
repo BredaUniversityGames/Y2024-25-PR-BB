@@ -13,7 +13,7 @@ const VMInitConfig MEMORY_CONFIG {
 
 TEST(ScriptingContextTests, PrintHelloWorld)
 {
-    fileIO::FileSystem system { true };
+    fileIO::Init(true);
 
     ScriptingContext context { MEMORY_CONFIG };
 
@@ -28,11 +28,13 @@ TEST(ScriptingContextTests, PrintHelloWorld)
 
     EXPECT_TRUE(result);
     EXPECT_NE(oss.str().find("[Script] Hello World!"), std::string::npos);
+
+    fileIO::Deinit();
 }
 
 TEST(ScriptingContextTests, ModuleImports)
 {
-    fileIO::FileSystem system { true };
+    fileIO::Init(true);
 
     ScriptingContext context { MEMORY_CONFIG };
 
@@ -46,4 +48,6 @@ TEST(ScriptingContextTests, ModuleImports)
     auto result = context.RunScript("game/tests/import_modules.wren");
     EXPECT_TRUE(result);
     EXPECT_NE(oss.str().find("[Script] Hello World!"), std::string::npos);
+
+    fileIO::Deinit();
 }

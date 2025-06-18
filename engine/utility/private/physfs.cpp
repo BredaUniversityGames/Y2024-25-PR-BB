@@ -171,8 +171,8 @@ ifstream::~ifstream()
     delete rdbuf();
 }
 
-ofstream::ofstream(const string& filename, mode writeMode)
-    : base_fstream(openWithMode(filename.c_str(), writeMode))
+ofstream::ofstream(const string& filename)
+    : base_fstream(openWithMode(filename.c_str(), WRITE))
     , std::ostream(new fbuf(file))
 {
 }

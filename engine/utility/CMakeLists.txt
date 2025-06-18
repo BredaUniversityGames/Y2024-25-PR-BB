@@ -8,12 +8,10 @@ target_link_libraries(Utility
         PUBLIC glm::glm
         PUBLIC cereal::cereal
         PUBLIC physfs-static
-
-        PUBLIC Renderer
 )
 
 target_include_directories(Utility
         PUBLIC "${PROJECT_SOURCE_DIR}/external/visit_struct/include"
         PUBLIC "${PHYSFS_SOURCE_DIR}/src"
-        PRIVATE "${PROJECT_SOURCE_DIR}/external/stb"
+        PUBLIC "${PROJECT_SOURCE_DIR}/external/stb"
 )
