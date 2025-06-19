@@ -78,8 +78,8 @@ class MeleeEnemy {
 
         var transparencyComponent = _meshEntity.AddTransparencyComponent()
 
-        _pointLight.intensity = 10
-        _pointLight.range = 2
+        _pointLight.intensity = 16
+        _pointLight.range = 9
         _pointLight.color = Vec3.new(0.0, 1.0, 0.0)
 
         var rb = Rigidbody.new(engine.GetPhysics(), colliderShape, PhysicsObjectLayer.eENEMY(), false)
