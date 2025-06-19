@@ -23,10 +23,10 @@ std::optional<PhysFS::ifstream> fileIO::OpenReadStream(const std::string& path)
 
 std::optional<PhysFS::ofstream> fileIO::OpenWriteStream(const std::string& path)
 {
-    if (!PhysFS::exists(path))
-    {
-        return std::nullopt;
-    }
+    // if (!PhysFS::exists(path))
+    //{
+    //     return std::nullopt;
+    // }
 
     try
     {
