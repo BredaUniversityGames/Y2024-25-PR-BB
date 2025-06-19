@@ -11,10 +11,22 @@ CPUImage& CPUImage::FromPNG(std::string_view path)
     int height;
     int nrChannels;
 
-    auto stream = fileIO::OpenReadStream(std::string(path));
-    std::byte* data = reinterpret_cast<std::byte*>(fileIO::LoadImageFromIfstream(stream.value(),
-        &width, &height, &nrChannels,
-        4));
+    auto stream1 = fileIO::OpenReadStream(std::string(path));
+    auto stream2 = std::ifstream { std::string { path } };
+
+    std::byte* data = nullptr;
+    if (path.find("Steam") > path.size())
+    {
+        data = reinterpret_cast<std::byte*>(fileIO::LoadImageFromIfstream(stream1.value(),
+            &width, &height, &nrChannels,
+            4));
+    }
+    else
+    {
+        data = reinterpret_cast<std::byte*>(stbi_load(path.data(),
+            &width, &height, &nrChannels,
+            4));
+    }
 
     if (data == nullptr)
     {
