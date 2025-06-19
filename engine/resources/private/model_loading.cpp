@@ -3,6 +3,7 @@
 #include "animation.hpp"
 #include "batch_buffer.hpp"
 #include "ecs_module.hpp"
+#include "file_io.hpp"
 #include "lib/include_fastgltf.hpp"
 #include "log.hpp"
 #include "math_util.hpp"
@@ -44,22 +45,87 @@ fastgltf::math::fmat4x4 ToFastGLTFMat4(const glm::mat4& glm_mat)
     return out;
 }
 
+class IfstreamDataGetter : public fastgltf::GltfDataGetter
+{
+public:
+    explicit IfstreamDataGetter(const std::filesystem::path& path)
+        : stream(fileIO::OpenReadStream(path.generic_string()))
+        , position(0)
+    {
+        if (stream)
+        {
+            stream.value().seekg(0, std::ios::end);
+            size = static_cast<std::size_t>(stream.value().tellg());
+            stream.value().seekg(0, std::ios::beg);
+        }
+    }
+
+    void read(void* ptr, std::size_t count) override
+    {
+        stream.value().seekg(static_cast<std::streamoff>(position), std::ios::beg);
+        stream.value().read(reinterpret_cast<char*>(ptr), static_cast<std::streamsize>(count));
+        position += static_cast<std::size_t>(stream.value().gcount());
+    }
+
+    [[nodiscard]] fastgltf::span<std::byte> read(std::size_t count, std::size_t padding) override
+    {
+        tempBuffer.resize(count + padding);
+        stream.value().seekg(static_cast<std::streamoff>(position), std::ios::beg);
+        stream.value().read(reinterpret_cast<char*>(tempBuffer.data()), static_cast<std::streamsize>(count));
+        std::size_t bytesRead = static_cast<std::size_t>(stream.value().gcount());
+        position += bytesRead;
+        // Padding can be uninitialized, but we'll zero it for safety
+        std::memset(tempBuffer.data() + bytesRead, 0, padding);
+        return fastgltf::span<std::byte>(tempBuffer.data(), count + padding);
+    }
+
+    void reset() override
+    {
+        position = 0;
+        stream.value().clear(); // clear EOF or fail bits
+        stream.value().seekg(0, std::ios::beg);
+    }
+
+    [[nodiscard]] std::size_t bytesRead() override
+    {
+        return position;
+    }
+
+    [[nodiscard]] std::size_t totalSize() override
+    {
+        return size;
+    }
+
+private:
+    std::optional<PhysFS::ifstream> stream;
+    std::size_t position = 0;
+    std::size_t size = 0;
+    mutable std::vector<std::byte> tempBuffer;
+};
+
 fastgltf::Asset LoadFastGLTFAsset(std::string_view path)
 {
     ZoneScoped;
     std::string zone = std::string(path) + " fastgltf parse";
     ZoneName(zone.c_str(), 128);
 
-    fastgltf::GltfFileStream fileStream { path };
+    IfstreamDataGetter fileStream { path };
 
-    if (!fileStream.isOpen())
-        throw std::runtime_error("Path not found!");
+    // if (!fileStream.isOpen())
+    //   throw std::runtime_error("Path not found!");
 
+#ifdef DISTRIBUTION
+    std::string_view directory = "./";
+#else
     std::string_view directory = path.substr(0, path.find_last_of('/'));
+#endif
 
     auto loadedGltf = parser.loadGltf(fileStream, directory, DEFAULT_LOAD_FLAGS);
     if (!loadedGltf)
+    {
+        bblog::error("error in gltf");
         throw std::runtime_error(getErrorMessage(loadedGltf.error()).data());
+    }
 
     auto gltf = std::move(loadedGltf.get());
 
@@ -145,29 +211,28 @@ CPUModel ModelLoading::LoadGLTF(std::string_view path)
     std::string zone = std::string(path) + " Model Extraction";
     ZoneName(zone.c_str(), 128);
 
-    fastgltf::GltfFileStream fileStream { path };
+    detail::IfstreamDataGetter fileStream { path };
 
-    if (!fileStream.isOpen())
-        throw std::runtime_error("Path not found!");
+    // if (!fileStream.isOpen())
+    //   throw std::runtime_error("Path not found!");
 
+#ifdef DISTRIBUTION
+    std::string_view directory = "./";
+#else
     std::string_view directory = path.substr(0, path.find_last_of('/'));
+#endif
+
+    auto loadedGltf = parser.loadGltf(fileStream, directory, DEFAULT_LOAD_FLAGS);
+    if (!loadedGltf)
+    {
+        bblog::error("error in gltf");
+        throw std::runtime_error(getErrorMessage(loadedGltf.error()).data());
+    }
+
+    auto gltf = std::move(loadedGltf.get());
+
     size_t offset = path.find_last_of('/') + 1;
     std::string_view name = path.substr(offset, path.find_last_of('.') - offset);
-
-    fastgltf::Asset gltf {};
-
-    {
-        ZoneScoped;
-
-        std::string zone = std::string(path) + " FastGLTF parse";
-        ZoneName(zone.c_str(), 128);
-
-        auto loadedGltf = parser.loadGltf(fileStream, directory, DEFAULT_LOAD_FLAGS);
-        if (!loadedGltf)
-            throw std::runtime_error(getErrorMessage(loadedGltf.error()).data());
-
-        gltf = std::move(loadedGltf.get());
-    }
 
     if (gltf.scenes.size() > 1)
         bblog::warn("GLTF contains more than one scene, but we only load one scene!");
@@ -476,7 +541,8 @@ CPUImage ProcessImage(const fastgltf::Image& gltfImage, const fastgltf::Asset& g
                        int32_t width, height, nrChannels;
 
                        const std::string path(filePath.uri.path().begin(), filePath.uri.path().end()); // Thanks C++.
-                       stbi_uc* stbiData = stbi_load(path.c_str(), &width, &height, &nrChannels, 4);
+                       auto stream = fileIO::OpenReadStream(path);
+                       stbi_uc* stbiData = fileIO::LoadImageFromIfstream(stream.value(), &width, &height, &nrChannels, 4);
                        if (!stbiData)
                            bblog::error("Failed loading data from STBI at path: {}", path);
 

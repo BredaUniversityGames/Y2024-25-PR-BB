@@ -1,5 +1,9 @@
 #include "scripting_context.hpp"
+
+#include <file_io.hpp>
+#include <filesystem>
 #include <gtest/gtest.h>
+#include <physfs.hpp>
 #include <spdlog/sinks/ostream_sink.h>
 
 // Every test will initialize a wren virtual machine, better keep memory requirements low
@@ -9,6 +13,8 @@ const VMInitConfig MEMORY_CONFIG {
 
 TEST(ScriptingContextTests, PrintHelloWorld)
 {
+    fileIO::Init(true);
+
     ScriptingContext context { MEMORY_CONFIG };
 
     std::ostringstream oss;
@@ -22,10 +28,14 @@ TEST(ScriptingContextTests, PrintHelloWorld)
 
     EXPECT_TRUE(result);
     EXPECT_NE(oss.str().find("[Script] Hello World!"), std::string::npos);
+
+    fileIO::Deinit();
 }
 
 TEST(ScriptingContextTests, ModuleImports)
 {
+    fileIO::Init(true);
+
     ScriptingContext context { MEMORY_CONFIG };
 
     std::ostringstream oss;
@@ -38,4 +48,6 @@ TEST(ScriptingContextTests, ModuleImports)
     auto result = context.RunScript("game/tests/import_modules.wren");
     EXPECT_TRUE(result);
     EXPECT_NE(oss.str().find("[Script] Hello World!"), std::string::npos);
+
+    fileIO::Deinit();
 }

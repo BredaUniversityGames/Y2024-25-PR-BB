@@ -30,6 +30,7 @@
 #include "vulkan_context.hpp"
 #include "vulkan_helper.hpp"
 
+#include <file_io.hpp>
 #include <filesystem>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/dual_quaternion.hpp>
@@ -516,7 +517,7 @@ ResourceHandle<GPUImage>& GPUScene::GetDecalImage(std::string fileName)
 
     if (got == _decalImages.end())
     {
-        if (std::filesystem::exists("assets/textures/decals/" + fileName))
+        if (fileIO::Exists("assets/textures/decals/" + fileName))
         {
             CPUImage creation;
             creation.SetFlags(vk::ImageUsageFlagBits::eSampled);

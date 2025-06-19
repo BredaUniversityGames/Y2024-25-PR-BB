@@ -11,7 +11,7 @@ SteamActionManager::SteamActionManager(const SteamInputDeviceManager& steamInput
 {
     // Use the following lines of code to override and test new input action that is not yet on steam servers
     // std::string actionManifestFilePath = std::filesystem::current_path().string();
-    // actionManifestFilePath.append("\\assets\\input\\steam_input_manifest.vdf");
+    // actionManifestFilePath.append("\\content\\input\\steam_input_manifest.vdf");
     // SteamInput()->SetInputActionManifestFilePath(actionManifestFilePath.c_str());
 }
 

@@ -98,12 +98,12 @@ jobs:
       - name: Package Windows Project
         if: matrix.platform == 'windows-latest'
         run: |
-          python scripts/python/package.py -c "scripts/build_system/package_config/windows_dist.json"
+          python scripts/python/package.py -c "scripts/build_system/package_config/windows_dist.json" --distribution
 
       - name: Package Linux Project
         if: matrix.platform == 'ubuntu-latest'
         run: |
-          python scripts/python/package.py -c "scripts/build_system/package_config/linux_dist.json"
+          python scripts/python/package.py -c "scripts/build_system/package_config/linux_dist.json" --distribution
 
       # ZIP files to be artifacts to avoid linux file permissions
 

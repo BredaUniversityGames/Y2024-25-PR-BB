@@ -1,8 +1,11 @@
 #pragma once
 
+#include "log.hpp"
+#include "physfs.hpp"
 #include <chrono>
 #include <fstream>
 #include <optional>
+#include <stb_image.h>
 #include <string>
 #include <vector>
 
@@ -20,14 +23,12 @@ using FileTime = std::chrono::time_point<std::chrono::file_clock>;
 /// <summary>
 /// Open a file stream for reading. Specify 0 or std::ios::flags
 /// </summary>
-std::optional<std::ifstream> OpenReadStream(const std::string& path,
-    std::ios::openmode flags = DEFAULT_READ_FLAGS);
+std::optional<PhysFS::ifstream> OpenReadStream(const std::string& path);
 
 /// <summary>
 /// Open a file stream for writing. Specify 0 or std::ios::flags
 /// </summary>
-std::optional<std::ofstream> OpenWriteStream(const std::string& path,
-    std::ios::openmode flags = DEFAULT_WRITE_FLAGS);
+std::optional<PhysFS::ofstream> OpenWriteStream(const std::string& path);
 
 /// <summary>
 /// Dumps all bytes of a stream into a vector
@@ -49,14 +50,11 @@ bool Exists(const std::string& path);
 /// </summary>
 bool MakeDirectory(const std::string& path);
 
-/// <summary>
-/// Check the last time a file was modified. Nullopt if file doesn't exist
-/// </summary>
-std::optional<FileTime> GetLastModifiedTime(const std::string& path);
+float* LoadFloatImageFromIfstream(PhysFS::ifstream& file, int32_t* x, int32_t* y, int32_t* channels_in_file, int32_t desired_channels);
+stbi_uc* LoadImageFromIfstream(PhysFS::ifstream& file, int32_t* x, int32_t* y, int32_t* channels_in_file, int32_t desired_channels);
 
-/// <summary>
-/// Simplifies and Transforms the path into OS preference
-/// </summary>
-std::string CanonicalizePath(const std::string& path);
+void Init(bool useStandard);
+
+void Deinit();
 
 };

@@ -1,60 +1,52 @@
+#include "file_io.hpp"
 #include <bit>
-#include <file_io.hpp>
 #include <filesystem>
+#include <stb_image.h>
 
-std::optional<std::ifstream> fileIO::OpenReadStream(const std::string& path,
-    std::ios::openmode flags)
+std::optional<PhysFS::ifstream> fileIO::OpenReadStream(const std::string& path)
 {
-    std::ifstream stream(path, flags);
-    if (stream)
+    if (!PhysFS::exists(path))
     {
-        return stream;
+        return std::nullopt;
     }
-    else
+
+    try
     {
+        return std::optional<PhysFS::ifstream> { path };
+    }
+    catch (const std::exception& exception)
+    {
+        bblog::error("File error: {}", exception.what());
         return std::nullopt;
     }
 }
 
-std::optional<std::ofstream> fileIO::OpenWriteStream(const std::string& path,
-    std::ios::openmode flags)
+std::optional<PhysFS::ofstream> fileIO::OpenWriteStream(const std::string& path)
 {
-    std::ofstream stream(path, flags);
-    if (stream.is_open())
+    // if (!PhysFS::exists(path))
+    //{
+    //     return std::nullopt;
+    // }
+
+    try
     {
-        return stream;
+        return std::optional<PhysFS::ofstream> { path };
     }
-    else
+    catch (const std::exception& exception)
     {
+        bblog::error("File error: {}", exception.what());
         return std::nullopt;
     }
 }
 
 bool fileIO::Exists(const std::string& path)
 {
-    return std::filesystem::exists(path);
+    return PhysFS::exists(path);
 }
 
 bool fileIO::MakeDirectory(const std::string& path)
 {
-    std::error_code e {};
-    std::filesystem::create_directory(path, e);
-    if (e == std::error_code {})
-        return true;
-    else
-        return false;
-}
-
-std::optional<fileIO::FileTime> fileIO::GetLastModifiedTime(const std::string& path)
-{
-    if (Exists(path))
-    {
-        return std::filesystem::last_write_time(path);
-    }
-    else
-    {
-        return std::nullopt;
-    }
+    return PhysFS::mkdir(path);
 }
 
 std::vector<std::byte> fileIO::DumpStreamIntoBytes(std::istream& stream)
@@ -77,7 +69,86 @@ std::string fileIO::DumpStreamIntoString(std::istream& stream)
     return out;
 }
 
-std::string fileIO::CanonicalizePath(const std::string& path)
+struct STBIStreamContext
 {
-    return std::filesystem::path(path).make_preferred().lexically_normal().string();
+    PhysFS::ifstream* stream;
+};
+
+// Callback to read data from the stream
+int32_t stbi_read(void* user, char* data, int32_t size)
+{
+    auto* ctx = static_cast<STBIStreamContext*>(user);
+    ctx->stream->read(data, size);
+    return static_cast<int>(ctx->stream->gcount());
+}
+
+// Callback to skip bytes in the stream
+void stbi_skip(void* user, int32_t n)
+{
+    auto* ctx = static_cast<STBIStreamContext*>(user);
+    ctx->stream->clear(); // clear fail bits
+    ctx->stream->seekg(n, std::ios::cur);
+}
+
+// Callback to check if end of stream is reached
+int stbi_eof(void* user)
+{
+    auto* ctx = static_cast<STBIStreamContext*>(user);
+    return ctx->stream->eof() ? 1 : 0;
+}
+
+// Load float image from ifstream
+float* fileIO::LoadFloatImageFromIfstream(PhysFS::ifstream& file, int32_t* x, int32_t* y, int32_t* channels_in_file, int32_t desired_channels)
+{
+    STBIStreamContext ctx { &file };
+
+    stbi_io_callbacks callbacks {
+        stbi_read,
+        stbi_skip,
+        stbi_eof
+    };
+
+    return stbi_loadf_from_callbacks(&callbacks, &ctx, x, y, channels_in_file, desired_channels);
+}
+
+stbi_uc* fileIO::LoadImageFromIfstream(PhysFS::ifstream& file, int32_t* x, int32_t* y, int32_t* channels_in_file, int32_t desired_channels)
+{
+    STBIStreamContext ctx { &file };
+
+    stbi_io_callbacks callbacks {
+        stbi_read,
+        stbi_skip,
+        stbi_eof
+    };
+
+    return stbi_load_from_callbacks(&callbacks, &ctx, x, y, channels_in_file, desired_channels);
+}
+void fileIO::Init(bool useStandard)
+{
+    if (!PhysFS::init(""))
+    {
+        bblog::error("Failed initializing PhysFS!\n{}", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
+        return;
+    }
+
+    PhysFS::setWriteDir("./");
+
+    if (!useStandard)
+    {
+        if (!PhysFS::mount("data.bin", "", true))
+        {
+            bblog::error("Failed mounting PhysFS!\n{}", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
+        }
+    }
+    else
+    {
+        if (!PhysFS::mount("./", "/", true))
+        {
+            bblog::error("Failed mounting PhysFS!\n{}", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
+        }
+    }
+}
+void fileIO::Deinit()
+{
+    PHYSFS_deinit();
 }

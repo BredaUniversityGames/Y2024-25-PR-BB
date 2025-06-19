@@ -4,6 +4,17 @@ import os
 import argparse
 import json
 import stat
+import zipfile
+
+
+def zip_directories(output_zip, directories):
+    with zipfile.ZipFile(output_zip, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        for dir_path in directories:
+            for root, _, files in os.walk(dir_path):
+                for file in files:
+                    abs_path = os.path.join(root, file)
+                    arc_path = os.path.relpath(abs_path, start=os.path.commonpath(directories))
+                    zipf.write(abs_path, arc_path)
 
 
 def copy_dir(src_dir, dst_dir):
@@ -28,7 +39,7 @@ def copy_file(file, dest_folder):
     shutil.copy(file, dest_folder)
 
 
-def package_dir(config_path):
+def package_dir(config_path, useDistribution):
     config_file = open(config_path)
     config_data = json.load(config_file)
 
@@ -44,13 +55,21 @@ def package_dir(config_path):
     for file in config_data['files']:
         copy_file(file, output_dir)
 
+    if useDistribution:
+        zip_directories(output_dir + "/data.bin", ["assets", "game", "shaders"])
+        shutil.rmtree(output_dir + "/assets")
+        shutil.rmtree(output_dir + "/game")
+        shutil.rmtree(output_dir + "/shaders")
+
 
 def main():
     parser = argparse.ArgumentParser(description='Packages the project to /package/')
     parser.add_argument('-c', '--config', help="JSON config for packaging", type=str, required=True)
+    parser.add_argument('-dist', '--distribution', help="Sets the packaging ready for distribution",
+                        action='store_true', required=True)
 
     args = parser.parse_args()
-    package_dir(args.config)
+    package_dir(args.config, args.distribution)
 
 
 if __name__ == "__main__":

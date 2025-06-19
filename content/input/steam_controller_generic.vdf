@@ -1,0 +1,608 @@
+"controller_mappings"
+{
+	"version"		"3"
+	"revision"		"27"
+	"title"		"Custom Tech"
+	"description"		"Gamepad layout based on the first layout"
+	"controller_type"		"controller_generic"
+	"actions"
+	{
+		"Shooter"
+		{
+			"title"		"#Set_Shooter"
+			"legacy_set"		"0"
+			"StickPadGyro"
+			{
+				"Move"
+				{
+					"title"		"#Action_Move"
+					"input_mode"		"joystick_move"
+				}
+				"Look"
+				{
+					"title"		"#Action_Look"
+					"input_mode"		"joystick_move"
+				}
+			}
+			"Button"
+			{
+				"Pause"		"#Action_Pause"
+				"Interact"		"#Action_Shooter_Interact"
+				"Dash"		"#Action_Dash"
+				"Shoot"		"#Action_Shoot"
+				"ShootSecondary"		"#Action_ShootSecondary"
+				"Reload"		"#Action_Reload"
+				"Jump"		"#Action_Jump"
+			}
+		}
+		"UserInterface"
+		{
+			"title"		"#Set_UserInterface"
+			"legacy_set"		"0"
+			"StickPadGyro"
+			{
+				"Navigate"
+				{
+					"title"		"#Action_Navigate"
+					"input_mode"		"joystick_move"
+				}
+			}
+			"Button"
+			{
+				"Interact"		"#Action_UI_Interact"
+				"Back"		"#Action_Back"
+				"Unpause"		"#Action_Unpause"
+			}
+		}
+	}
+	"action_layers"
+	{
+	}
+	"localization"
+	{
+		"english"
+		{
+			"Set_Shooter"		"Shooter Controls Set"
+			"Action_Move"		"Movement"
+			"Action_Look"		"Looking Around"
+			"Action_Pause"		"Pause"
+			"Action_Shooter_Interact"		"Interact"
+			"Action_Dash"		"Dash"
+			"Action_Shoot"		"Shoot Weapon"
+			"Action_ShootSecondary"		"Shoot Secondary Weapon"
+			"Action_Reload"		"Reload Weapon"
+			"Action_Jump"		"Jump"
+			"Set_UserInterface"		"User Interface Controls Set"
+			"Action_Navigate"		"Navigate"
+			"Action_UI_Interact"		"Interact"
+			"Action_Back"		"Go Back"
+			"Action_Unpause"		"Unpause"
+		}
+	}
+	"group"
+	{
+		"id"		"1"
+		"mode"		"four_buttons"
+		"name"		""
+		"description"		""
+		"inputs"
+		{
+			"button_a"
+			{
+				"activators"
+				{
+					"Full_Press"
+					{
+						"bindings"
+						{
+							"binding"		"game_action Shooter Jump, , "
+						}
+					}
+				}
+				"disabled_activators"
+				{
+				}
+			}
+			"button_b"
+			{
+				"activators"
+				{
+					"Full_Press"
+					{
+						"bindings"
+						{
+							"binding"		"game_action Shooter Dash, Dash, , "
+						}
+					}
+				}
+				"disabled_activators"
+				{
+				}
+			}
+			"button_x"
+			{
+				"activators"
+				{
+					"Full_Press"
+					{
+						"bindings"
+						{
+							"binding"		"game_action Shooter Reload, , "
+						}
+					}
+				}
+				"disabled_activators"
+				{
+				}
+			}
+			"button_y"
+			{
+				"activators"
+				{
+					"Full_Press"
+					{
+						"bindings"
+						{
+							"binding"		"game_action Shooter Interact, Interact, , "
+						}
+					}
+				}
+				"disabled_activators"
+				{
+				}
+			}
+		}
+	}
+	"group"
+	{
+		"id"		"2"
+		"mode"		"trigger"
+		"name"		""
+		"description"		""
+		"inputs"
+		{
+			"click"
+			{
+				"activators"
+				{
+					"Full_Press"
+					{
+						"bindings"
+						{
+							"binding"		"game_action Shooter ShootSecondary, Shoot Secondary Weapon, , "
+						}
+						"settings"
+						{
+							"haptic_intensity"		"2"
+						}
+					}
+				}
+				"disabled_activators"
+				{
+				}
+			}
+			"edge"
+			{
+				"activators"
+				{
+					"Full_Press"
+					{
+						"bindings"
+						{
+							"binding"		"game_action Shooter ShootSecondary, Shoot Secondary Weapon, , "
+						}
+						"settings"
+						{
+							"haptic_intensity"		"2"
+						}
+					}
+				}
+				"disabled_activators"
+				{
+				}
+			}
+		}
+	}
+	"group"
+	{
+		"id"		"3"
+		"mode"		"trigger"
+		"name"		""
+		"description"		""
+		"inputs"
+		{
+			"click"
+			{
+				"activators"
+				{
+					"Full_Press"
+					{
+						"bindings"
+						{
+							"binding"		"game_action Shooter Shoot, , "
+						}
+						"settings"
+						{
+							"haptic_intensity"		"2"
+						}
+					}
+				}
+				"disabled_activators"
+				{
+				}
+			}
+			"edge"
+			{
+				"activators"
+				{
+					"Full_Press"
+					{
+						"bindings"
+						{
+							"binding"		"game_action Shooter Shoot, , "
+						}
+						"settings"
+						{
+							"haptic_intensity"		"2"
+						}
+					}
+				}
+				"disabled_activators"
+				{
+				}
+			}
+		}
+	}
+	"group"
+	{
+		"id"		"7"
+		"mode"		"joystick_move"
+		"name"		""
+		"description"		""
+		"inputs"
+		{
+		}
+		"settings"
+		{
+			"virtual_mode"		"1"
+		}
+		"gameactions"
+		{
+			"Shooter"		"Move"
+		}
+	}
+	"group"
+	{
+		"id"		"8"
+		"mode"		"joystick_move"
+		"name"		""
+		"description"		""
+		"inputs"
+		{
+		}
+		"settings"
+		{
+			"virtual_mode"		"1"
+		}
+		"gameactions"
+		{
+			"Shooter"		"Look"
+		}
+	}
+	"group"
+	{
+		"id"		"10"
+		"mode"		"joystick_move"
+		"name"		""
+		"description"		""
+		"inputs"
+		{
+		}
+		"settings"
+		{
+			"virtual_mode"		"1"
+		}
+		"gameactions"
+		{
+			"Shooter"		"Move"
+		}
+	}
+	"group"
+	{
+		"id"		"12"
+		"mode"		"four_buttons"
+		"name"		""
+		"description"		""
+		"inputs"
+		{
+		}
+	}
+	"group"
+	{
+		"id"		"13"
+		"mode"		"trigger"
+		"name"		""
+		"description"		""
+		"inputs"
+		{
+		}
+	}
+	"group"
+	{
+		"id"		"14"
+		"mode"		"trigger"
+		"name"		""
+		"description"		""
+		"inputs"
+		{
+		}
+	}
+	"group"
+	{
+		"id"		"15"
+		"mode"		"joystick_move"
+		"name"		""
+		"description"		""
+		"inputs"
+		{
+		}
+		"settings"
+		{
+			"virtual_mode"		"1"
+		}
+	}
+	"group"
+	{
+		"id"		"16"
+		"mode"		"joystick_move"
+		"name"		""
+		"description"		""
+		"inputs"
+		{
+		}
+		"settings"
+		{
+			"virtual_mode"		"1"
+		}
+	}
+	"group"
+	{
+		"id"		"18"
+		"mode"		"four_buttons"
+		"name"		""
+		"description"		""
+		"inputs"
+		{
+			"button_a"
+			{
+				"activators"
+				{
+					"Full_Press"
+					{
+						"bindings"
+						{
+							"binding"		"game_action UserInterface Interact, Interact, , "
+						}
+					}
+				}
+				"disabled_activators"
+				{
+				}
+			}
+			"button_b"
+			{
+				"activators"
+				{
+					"Full_Press"
+					{
+						"bindings"
+						{
+							"binding"		"game_action UserInterface Back, , "
+						}
+					}
+				}
+				"disabled_activators"
+				{
+				}
+			}
+		}
+	}
+	"group"
+	{
+		"id"		"19"
+		"mode"		"trigger"
+		"name"		""
+		"description"		""
+		"inputs"
+		{
+		}
+	}
+	"group"
+	{
+		"id"		"20"
+		"mode"		"trigger"
+		"name"		""
+		"description"		""
+		"inputs"
+		{
+		}
+	}
+	"group"
+	{
+		"id"		"21"
+		"mode"		"joystick_move"
+		"name"		""
+		"description"		""
+		"inputs"
+		{
+		}
+		"settings"
+		{
+			"virtual_mode"		"1"
+		}
+		"gameactions"
+		{
+			"UserInterface"		"Navigate"
+		}
+	}
+	"group"
+	{
+		"id"		"22"
+		"mode"		"joystick_move"
+		"name"		""
+		"description"		""
+		"inputs"
+		{
+		}
+		"settings"
+		{
+			"virtual_mode"		"1"
+		}
+		"gameactions"
+		{
+			"UserInterface"		"Navigate"
+		}
+	}
+	"group"
+	{
+		"id"		"0"
+		"mode"		"switches"
+		"name"		""
+		"description"		""
+		"inputs"
+		{
+			"button_escape"
+			{
+				"activators"
+				{
+					"Full_Press"
+					{
+						"bindings"
+						{
+							"binding"		"game_action Shooter Pause, Pause, , "
+						}
+					}
+				}
+				"disabled_activators"
+				{
+				}
+			}
+			"button_menu"
+			{
+				"activators"
+				{
+					"Full_Press"
+					{
+						"bindings"
+						{
+							"binding"		"game_action Shooter Pause, Pause, , "
+						}
+					}
+				}
+				"disabled_activators"
+				{
+				}
+			}
+			"left_bumper"
+			{
+				"activators"
+				{
+					"Full_Press"
+					{
+						"bindings"
+						{
+							"binding"		"game_action Shooter Dash, Dash, , "
+						}
+					}
+				}
+				"disabled_activators"
+				{
+				}
+			}
+		}
+	}
+	"group"
+	{
+		"id"		"11"
+		"mode"		"switches"
+		"name"		""
+		"description"		""
+		"inputs"
+		{
+		}
+	}
+	"group"
+	{
+		"id"		"17"
+		"mode"		"switches"
+		"name"		""
+		"description"		""
+		"inputs"
+		{
+			"button_escape"
+			{
+				"activators"
+				{
+					"Full_Press"
+					{
+						"bindings"
+						{
+							"binding"		"game_action UserInterface Unpause, Unpause, , "
+						}
+					}
+				}
+				"disabled_activators"
+				{
+				}
+			}
+			"button_menu"
+			{
+				"activators"
+				{
+					"Full_Press"
+					{
+						"bindings"
+						{
+							"binding"		"game_action UserInterface Unpause, Unpause, , "
+						}
+					}
+				}
+				"disabled_activators"
+				{
+				}
+			}
+		}
+	}
+	"preset"
+	{
+		"id"		"0"
+		"name"		"Shooter"
+		"group_source_bindings"
+		{
+			"0"		"switch active"
+			"1"		"button_diamond active"
+			"2"		"left_trigger active"
+			"3"		"right_trigger active"
+			"8"		"right_joystick active"
+			"7"		"dpad active"
+			"10"		"joystick active"
+		}
+	}
+	"preset"
+	{
+		"id"		"1"
+		"name"		"UserInterface"
+		"group_source_bindings"
+		{
+			"17"		"switch active"
+			"18"		"button_diamond active"
+			"19"		"left_trigger active"
+			"20"		"right_trigger active"
+			"22"		"dpad active"
+			"21"		"joystick active"
+		}
+	}
+	"settings"
+	{
+	}
+}

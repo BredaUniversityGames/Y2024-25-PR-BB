@@ -14,6 +14,7 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_vulkan.h>
 #include <backends/imgui_impl_sdl3.h>
+#include <file_io.hpp>
 #include <stb_image.h>
 
 ModuleTickOrder ApplicationModule::Init(Engine& engine)
@@ -30,6 +31,7 @@ ModuleTickOrder ApplicationModule::Init(Engine& engine)
     int32_t displayCount {};
     SDL_DisplayID* displayIds = SDL_GetDisplays(&displayCount);
     const SDL_DisplayMode* dm = SDL_GetCurrentDisplayMode(*displayIds);
+    glm::ivec2 screenSize { dm->w, dm->h };
 
     if (dm == nullptr)
     {
@@ -42,7 +44,7 @@ ModuleTickOrder ApplicationModule::Init(Engine& engine)
     if (_isFullscreen)
         flags |= SDL_WINDOW_FULLSCREEN;
 
-    _window = SDL_CreateWindow(_windowName.data(), dm->w, dm->h, flags);
+    _window = SDL_CreateWindow(_windowName.data(), screenSize.x, screenSize.y, flags);
 
     if (_window == nullptr)
     {
@@ -52,8 +54,9 @@ ModuleTickOrder ApplicationModule::Init(Engine& engine)
         return priority;
     }
 
+    auto stream = fileIO::OpenReadStream("assets/textures/icon.png");
     int32_t width, height, nrChannels;
-    stbi_uc* pixels = stbi_load("assets/textures/icon.png", &width, &height, &nrChannels, 4);
+    stbi_uc* pixels = fileIO::LoadImageFromIfstream(stream.value(), &width, &height, &nrChannels, 4);
     if (pixels)
     {
         SDL_Surface* icon = SDL_CreateSurfaceFrom(
@@ -74,8 +77,8 @@ ModuleTickOrder ApplicationModule::Init(Engine& engine)
     _vulkanInitInfo.extensions = SDL_Vulkan_GetInstanceExtensions(&sdlExtensionsCount);
     _vulkanInitInfo.extensionCount = sdlExtensionsCount;
 
-    _vulkanInitInfo.width = dm->w;
-    _vulkanInitInfo.height = dm->h;
+    _vulkanInitInfo.width = screenSize.x;
+    _vulkanInitInfo.height = screenSize.y;
     _vulkanInitInfo.retrieveSurface = [this](vk::Instance instance)
     {
         VkSurfaceKHR surface {};
