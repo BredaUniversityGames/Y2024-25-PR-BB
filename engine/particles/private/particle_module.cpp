@@ -118,7 +118,7 @@ ResourceHandle<GPUImage>& ParticleModule::GetEmitterImage(std::string fileName, 
 
     if (got == _emitterImages.end())
     {
-        if (std::filesystem::exists("assets/textures/particles/" + fileName))
+        if (fileIO::Exists("assets/textures/particles/" + fileName))
         {
             CPUImage creation;
             creation.SetFlags(vk::ImageUsageFlagBits::eSampled);
@@ -132,7 +132,7 @@ ResourceHandle<GPUImage>& ParticleModule::GetEmitterImage(std::string fileName, 
             return resource;
         }
 
-        bblog::error("[Particles] Emitter image %s not found!", fileName);
+        bblog::error("[Particles] Emitter image {} not found!", fileName);
         imageFound = false;
         return _emitterImages.begin()->second;
     }

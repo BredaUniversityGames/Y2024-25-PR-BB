@@ -6,16 +6,84 @@
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
+
+#include <file_io.hpp>
+#include <memory>
 #include <resource_management/sampler_resource_manager.hpp>
 #include <stb_rect_pack.h>
+
+struct FTStreamContext
+{
+    explicit FTStreamContext(PhysFS::ifstream* stream)
+        : stream(stream)
+    {
+    }
+    PhysFS::ifstream* stream;
+};
+
+unsigned long FTStreamRead(FT_Stream ftStream, unsigned long offset, unsigned char* buffer, unsigned long count)
+{
+    auto* ctx = static_cast<FTStreamContext*>(ftStream->descriptor.pointer);
+    auto& stream = *(ctx->stream);
+
+    stream.clear(); // clear any previous eof/fail bits
+    stream.seekg(offset, std::ios::beg);
+    if (!stream.good())
+        return 0;
+
+    if (buffer)
+    {
+        stream.read(reinterpret_cast<char*>(buffer), count);
+        return static_cast<unsigned long>(stream.gcount());
+    }
+    else
+    {
+        // FreeType may call this with buffer == nullptr to test size/seekability
+        return 0;
+    }
+}
+
+void FTStreamClose(MAYBE_UNUSED FT_Stream ftStream)
+{
+}
 
 std::shared_ptr<UIFont> LoadFromFile(const std::string& path, uint16_t characterHeight, GraphicsContext& context)
 {
     FT_Library library;
     FT_Init_FreeType(&library);
 
-    FT_Face fontFace;
-    FT_New_Face(library, path.c_str(), 0, &fontFace);
+    FT_Face fontFace = nullptr;
+
+    auto stream = fileIO::OpenReadStream(path.c_str());
+    if (!stream)
+        return nullptr;
+
+    stream->seekg(0, std::ios::end);
+    std::streamsize size = stream->tellg();
+    stream->seekg(0, std::ios::beg);
+
+    auto ftStream = std::make_unique<FT_StreamRec>();
+    auto ctx = std::make_unique<FTStreamContext>(&stream.value());
+
+    ftStream->size = static_cast<unsigned long>(size);
+    ftStream->pos = 0;
+    ftStream->descriptor.pointer = ctx.get();
+    ftStream->pathname.pointer = nullptr;
+    ftStream->read = FTStreamRead;
+    ftStream->close = FTStreamClose;
+    ftStream->memory = nullptr;
+    ftStream->cursor = nullptr;
+    ftStream->limit = nullptr;
+
+    FT_Open_Args args {};
+    args.flags = FT_OPEN_STREAM;
+    args.stream = ftStream.get();
+
+    auto err = FT_Open_Face(library, &args, 0, &fontFace);
+    if (err != 0)
+    {
+        return nullptr;
+    }
 
     std::shared_ptr<UIFont> font = std::make_shared<UIFont>();
 

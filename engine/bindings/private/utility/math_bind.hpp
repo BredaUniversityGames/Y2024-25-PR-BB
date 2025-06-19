@@ -213,9 +213,9 @@ public:
 
     static float Pow(float x, float e)
     {
-        return std::powf(x, e);
+        return powf(x, e);
     }
-  
+
     static glm::vec3 RotateY(const glm::vec3& v, float angle)
     {
         return glm::rotateY(v, angle);

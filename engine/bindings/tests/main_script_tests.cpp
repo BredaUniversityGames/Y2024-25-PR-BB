@@ -16,6 +16,8 @@ const VMInitConfig MEMORY_CONFIG {
 
 TEST(MainScriptTests, MainScript)
 {
+    fileIO::Init(true);
+
     ScriptingContext context { MEMORY_CONFIG };
     context.GetVM().module("Engine.wren").klass<WrenEngine>("Engine");
 
@@ -34,4 +36,6 @@ TEST(MainScriptTests, MainScript)
 
     EXPECT_TRUE(wrenMain.IsValid());
     EXPECT_NE(oss.str().find("[Script] 10"), std::string::npos);
+
+    fileIO::Deinit();
 }

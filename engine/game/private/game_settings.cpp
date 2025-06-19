@@ -5,9 +5,9 @@
 GameSettings GameSettings::FromFile(const std::string& path)
 {
     GameSettings out {};
-    if (auto stream = fileIO::OpenReadStream(path))
+    if (auto stream = std::ifstream { path })
     {
-        cereal::JSONInputArchive ar { stream.value() };
+        cereal::JSONInputArchive ar { stream };
 
         try
         {
@@ -27,9 +27,9 @@ GameSettings GameSettings::FromFile(const std::string& path)
 }
 void GameSettings::SaveToFile(const std::string& path) const
 {
-    if (auto stream = fileIO::OpenWriteStream(path))
+    if (auto stream = std::ofstream { path })
     {
-        cereal::JSONOutputArchive ar { stream.value() };
+        cereal::JSONOutputArchive ar { stream };
         ar(*this);
     }
     else

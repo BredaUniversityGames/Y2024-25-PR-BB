@@ -15,12 +15,12 @@ void ScriptingModule::ResetVM()
 
 void ScriptingModule::GenerateEngineBindingsFile()
 {
-    if (auto stream = fileIO::OpenWriteStream(_engineBindingsPath, fileIO::TEXT_WRITE_FLAGS))
+    auto& module = GetForeignAPI();
+    auto out_script = module.str();
+
+    if (auto stream = fileIO::OpenWriteStream(_engineBindingsPath))
     {
         auto& output = stream.value();
-
-        auto& module = GetForeignAPI();
-        auto out_script = module.str();
 
         // Craft the header of the Generated File
         output << "// Automatically generated file: DO NOT MODIFY!\n";
@@ -42,7 +42,7 @@ ModuleTickOrder ScriptingModule::Init(MAYBE_UNUSED Engine& engine)
     config.heapGrowthPercent = 0;
 
     _context = std::make_unique<ScriptingContext>(config);
-    _engineBindingsPath = fileIO::CanonicalizePath("game/engine_api.wren");
+    _engineBindingsPath = "game/engine_api.wren";
 
     _context->SetScriptingOutputStream(bblog::default_logger());
 

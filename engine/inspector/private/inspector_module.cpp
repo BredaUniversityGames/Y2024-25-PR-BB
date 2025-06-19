@@ -162,12 +162,12 @@ void InspectorModule::Tick(MAYBE_UNUSED Engine& engine)
             displayLayerToggle(PhysicsObjectLayer::ePROJECTILE, "Projectiles");
             displayLayerToggle(PhysicsObjectLayer::eSTATIC, "Static Geometry (SLOW)");
 
-            if(ImGui::TreeNodeEx("Raycasts", 0))
+            if (ImGui::TreeNodeEx("Raycasts", 0))
             {
                 ImGui::Checkbox("Enable", &physicsModule._drawRays);
-                if(ImGui::Checkbox("Clear per frame", &physicsModule._clearDrawnRaysPerFrame))
+                if (ImGui::Checkbox("Clear per frame", &physicsModule._clearDrawnRaysPerFrame))
                 {
-                    if(physicsModule._clearDrawnRaysPerFrame)
+                    if (physicsModule._clearDrawnRaysPerFrame)
                         physicsModule.ResetPersistentDebugLines(); // we have to do this to remove all lines
                 }
 
@@ -188,6 +188,11 @@ void InspectorModule::Tick(MAYBE_UNUSED Engine& engine)
             ImGui::EndMenu();
         }
 
+        if (ImGui::BeginMenu("Dump VMA stats"))
+        {
+            DumpVMAStats(engine);
+            ImGui::EndMenu();
+        }
         // This should be at the end of the menu bar
 
         if (ImGui::BeginMenu("Exit Program"))

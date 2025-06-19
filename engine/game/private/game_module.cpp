@@ -82,8 +82,8 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     // Audio Setup
     auto& audio = engine.GetModule<AudioModule>();
 
-    audio.LoadBank("assets/music/Master.strings.bank");
-    audio.LoadBank("assets/music/Master.bank");
+    audio.LoadBank("content/music/Master.strings.bank");
+    audio.LoadBank("content/music/Master.bank");
 
     audio.RegisterChannelBus("bus:/");
     audio.RegisterChannelBus("bus:/SFX");
@@ -105,6 +105,7 @@ ModuleTickOrder GameModule::Init(Engine& engine)
     if (auto versionFile = fileIO::OpenReadStream("version.txt"))
     {
         gameVersionText = fileIO::DumpStreamIntoString(versionFile.value());
+        viewport.AddElement(GameVersionVisualization::Create(graphicsContext, viewportSize, font, gameVersionText));
     }
     _gameVersionVisual = viewport.AddElement(GameVersionVisualization::Create(graphicsContext, viewportSize, font, gameVersionText));
 
@@ -233,7 +234,7 @@ void GameModule::ApplySettings(Engine& engine)
     }
 
     auto& swapchain = engine.GetModule<RendererModule>().GetRenderer()->GetSwapChain();
-    if (swapchain.SetPresentMode(gameSettings.vsync ? vk::PresentModeKHR::eFifo : vk::PresentModeKHR::eImmediate))
+    if (swapchain.SetPresentMode(gameSettings.vsync ? vk::PresentModeKHR::eFifo : vk::PresentModeKHR::eMailbox))
     {
         swapchain.Resize(swapchain.GetImageSize());
     }

@@ -13,6 +13,8 @@
 #include "main_engine.hpp"
 #include "wren_engine.hpp"
 
+#include <file_io.hpp>
+
 // Every test will initialize a wren virtual machine, better keep memory requirements low
 const VMInitConfig MEMORY_CONFIG {
     { "", "./game/tests/", "./game/" },
@@ -36,6 +38,8 @@ std::string Vec3ToString(glm::vec3& v)
 
 TEST(ForeignDataTests, ForeignBasicClass)
 {
+    fileIO::Init(true);
+
     ScriptingContext context { MEMORY_CONFIG };
 
     auto& vm = context.GetVM();
@@ -61,10 +65,14 @@ TEST(ForeignDataTests, ForeignBasicClass)
 
     EXPECT_TRUE(result.has_value());
     EXPECT_NE(oss.str().find("[Script] 1, 2, 3"), std::string::npos);
+
+    fileIO::Deinit();
 }
 
 TEST(ForeignDataTests, EngineWrapper)
 {
+    fileIO::Init(true);
+
     MainEngine e {};
     e.AddModule<TimeModule>();
 
@@ -91,4 +99,6 @@ TEST(ForeignDataTests, EngineWrapper)
     test_class.func("test(_)")(WrenEngine { &e });
 
     EXPECT_NE(oss.str().find("[Script] 0"), std::string::npos);
+
+    fileIO::Deinit();
 }
